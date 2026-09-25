@@ -76,6 +76,39 @@ Use regular local directories. The management scripts reject junctions,
 symbolic links, and private paths overlapping IIS physical directories. The
 default task state is stored separately in `C:\ProgramData\AlloyStudio`.
 
+Check the transferred backend before registering it with IIS:
+
+```powershell
+& $PythonExe -E -s (Join-Path $BackendRoot 'runtime_dependencies.py') --root $BackendRoot --java $JavaExe
+if ($LASTEXITCODE -ne 0) { throw 'Restore the missing or changed runtime files identified in the JSON report.' }
+```
+
+This target-side check requires the complete bundled dependency set, verifies
+each JAR's SHA-256 against `backend/vendor/acgn/snapshot.json`, checks the
+compiled entry classes, and runs 372 engine checks in a fresh JVM. The engine
+uses an explicit classpath built from these files and ignores ambient Java
+classpath/option settings. The check needs no compiler, download, network
+connection, credential, or original ACGN checkout. Retain all seven files under
+`backend/vendor/acgn/lib`:
+
+| File | Contents |
+| --- | --- |
+| `AlloyASG-Release.jar` | Compiled AlloyASG classes and bundled third-party classes. |
+| `AlloyASG.jar` | Source-only archive preserved from the framework snapshot. |
+| `AlloyParser.jar` | Parser AST classes. |
+| `alloy.jar` | Alloy parser and runtime classes. |
+| `commons-cli-1.4.jar` | Command-line parsing dependency. |
+| `json-java.jar` | JSON dependency. |
+| `slf4j-simple-1.7.36.jar` | Logging implementation. |
+
+The release JAR contains duplicate classes from the other compiled JARs, and
+`AlloyASG.jar` contains source files rather than `.class` files. A successful
+single repair request therefore cannot prove that every declared dependency was
+copied. The inventory/hash checks reject a missing, changed, or extra JAR before
+the JVM smoke test. Copy the entire private `backend` directory from the ZIP;
+copying only the public assets or Python files does not install the engine.
+Missing dependencies are identified by filename in the report.
+
 ## 2. Install IIS and enable the reverse proxy
 
 On Windows Server with IIS 10.0, install the static site and management features:
@@ -237,6 +270,10 @@ removed from the configured origin: for example, `https://alloy.example.org`.
 Multiple approved bindings can be supplied with
 `-PublicUrl 'https://alloy.example.org/','https://training.example.org/alloy/'`.
 Arbitrary forwarded headers do not authorize another origin.
+Install runs the complete dependency preflight before applying ACLs or registering
+the task. Start and Restart repeat it before changing task state, using the
+Python executable recorded in the scheduled task and the configured Java runtime.
+If a required JAR is missing, a running backend is not stopped by Restart.
 
 The default runtime parameters are four workers, a 12-second engine timeout,
 and `127.0.0.1:8080`. The port is intentionally shared with the fixed rewrite
@@ -361,7 +398,10 @@ path generated from `-RuntimeRoot`. It does not select another user's config.
 & "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot -CheckLuna
 ```
 
-The script runs through IIS, checks the scheduled task's identity, loopback
+The script first records all seven dependency filenames, expected/actual SHA-256
+hashes, compiled-class results, and the fresh JVM's 372-check result. Those
+details remain in `runtime_dependencies` even when a dependency failure prevents
+HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
 binding, configured origin, private ACLs and paths, all 181 public exercise
 projections, UTF-8 processing, and a real operator repair that reduces canonical
 distance from 1 to 0. It checks that denied cross-origin and malformed requests
@@ -425,6 +465,8 @@ Windows authentication. The selected site and pool use Microsoft's
 and [app pool start](https://learn.microsoft.com/en-us/powershell/module/webadministration/start-webapppool?view=windowsserver2025-ps)
 commands. Run the full deployment acceptance script after starting to check repair
 behavior and private-route isolation.
+The full dependency preflight also runs before the starter changes any IIS
+service, app pool, or website state.
 
 `Manage-AlloyStudio.ps1 -Action Status|Start|Stop|Restart|Uninstall` manages the
 scheduled backend task. Stop disables it until Start, preventing boot or failure
@@ -451,6 +493,7 @@ private `backend` contents into the public directory.
 | IIS 502.3 | Task state, private `backend.log`, the Python/Java paths, port 8080, and ARR proxy timeout. |
 | API POST returns 403 | Exact public scheme, hostname and port in `-PublicUrl`; re-register after changing bindings. |
 | Java analysis unavailable | Java 17+ runtime, LOCAL SERVICE read/execute access, and packaged classes/JARs. |
+| Missing/changed dependency or Java packages not found | Run `runtime_dependencies.py` with `--java`; restore all seven JARs from the same distribution instead of relying on duplicate classes in the release JAR. A source build also requires the complete `vendor/acgn/lib` directory. |
 | Task fails after boot | Machine-wide runtime paths and task-account policy; inspect Task Scheduler history. |
 | Luna is disabled/unavailable | Install with `-EnableLuna`, check the private `openai.local.json` values and ACLs, restart after adding/removing that config, and check outbound HTTPS/account access. The masked key setup is available when the config is absent. |
 | `/alloy/` assets or API fail | Use an IIS application and its trailing-slash URL; inspect inherited rewrite/authentication rules. |

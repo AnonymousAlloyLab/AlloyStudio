@@ -48,6 +48,7 @@ class IisPackageTests(unittest.TestCase):
         self.write('LICENSE', 'Portal licence')
         self.write('server.py', '"""Private backend."""\n')
         self.write('luna.py', '"""Private explanation client."""\n')
+        self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
         for name in RUNTIME_HELPERS:
             self.write(f'scripts/{name}', (ROOT / 'scripts' / name).read_bytes())
@@ -111,6 +112,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertTrue(all(b'PRIVATE_CORRECT_EXPRESSION' not in data for name, data in entries.items()
                             if name.startswith('wwwroot/')))
         self.assertIn('backend/server.py', entries)
+        self.assertIn('backend/runtime_dependencies.py', entries)
         self.assertEqual(json.loads(entries['backend/openai.example.json']), {'api_key': ''})
         self.assertNotIn('backend/openai.local.json', entries)
         self.assertEqual({name for name in entries if name.startswith('backend/scripts/')},
@@ -176,9 +178,17 @@ class IisPackageTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
     def test_dependency_hash_and_snapshot_inventory_are_enforced(self):
-        self.write('vendor/acgn/lib/alloy.jar', 'modified dependency')
-        with self.assertRaisesRegex(PackageError, 'differs from its snapshot'):
-            build_package(self.root, self.output)
+        for name in JAR_FILES:
+            with self.subTest(jar=name):
+                path = self.root / 'vendor/acgn/lib' / name
+                original = path.read_bytes()
+                path.unlink()
+                with self.assertRaisesRegex(PackageError, 'Missing deployment input'):
+                    build_package(self.root, self.output)
+                self.write(f'vendor/acgn/lib/{name}', 'modified dependency')
+                with self.assertRaisesRegex(PackageError, 'differs from its snapshot'):
+                    build_package(self.root, self.output)
+                path.write_bytes(original)
         self.fixture()
         self.snapshot['files'] = self.snapshot['files'][:-1]
         self.write('vendor/acgn/snapshot.json', json.dumps(self.snapshot))

@@ -33,11 +33,28 @@ $nodeCommand = Get-Command $Node -ErrorAction SilentlyContinue
 if ($RequireNode -and -not $nodeCommand) {
     throw 'Node.js is required by -RequireNode but was not found.'
 }
+$dependencyChecker = Join-Path $projectRoot 'runtime_dependencies.py'
+if (-not (Test-Path -LiteralPath $dependencyChecker -PathType Leaf)) {
+    throw 'Runtime dependency checker is missing. Copy the complete source distribution.'
+}
+$dependencyJson = & $Python '-E' '-s' $dependencyChecker '--root' $projectRoot '--dependencies-only'
+$dependencyExit = $LASTEXITCODE
+try { $dependencies = ($dependencyJson -join "`n") | ConvertFrom-Json }
+catch { throw 'Runtime dependency check did not produce a valid report. Check Python 3.10+ and the source distribution.' }
+if ($dependencyExit -ne 0 -or $dependencies.status -ne 'PASS') {
+    $missing = @($dependencies.errors | ForEach-Object { $_.path }) -join ', '
+    throw "Bundled Java dependencies are missing or changed: $missing. Restore vendor\acgn\lib from the complete distribution before building."
+}
+# Use explicit absolute JAR paths as a single argument. No wildcard expansion,
+# current directory, machine CLASSPATH, Maven cache, or upstream checkout is needed.
+$dependencyClassPath = @($dependencies.dependencies | ForEach-Object {
+    Join-Path $projectRoot $_.path
+}) -join [IO.Path]::PathSeparator
 $null = New-Item -ItemType Directory -Path $OutputDirectory -Force
 $sourcePath = (Join-Path $engineRoot 'src') + [IO.Path]::PathSeparator + (Join-Path $acgnRoot 'src')
 $compilerArguments = @(
     '-encoding', 'UTF-8', '--release', '17', '-Xprefer:source',
-    '-cp', (Join-Path $acgnRoot 'lib\*'), '-sourcepath', $sourcePath,
+    '-cp', $dependencyClassPath, '-sourcepath', $sourcePath,
     '-d', $OutputDirectory,
     (Join-Path $engineRoot 'src\live\LiveFeedback.java'),
     (Join-Path $engineRoot 'src\live\EngineSelfTest.java')
@@ -51,7 +68,7 @@ from pathlib import Path
 if sys.version_info < (3, 10):
     raise SystemExit('Python 3.10 or newer is required')
 root = Path(sys.argv[1])
-for name in ('server.py', 'luna.py', 'scripts/package_iis.py', 'deploy/iis/run_backend.py'):
+for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/package_iis.py', 'deploy/iis/run_backend.py'):
     ast.parse((root / name).read_text(encoding='utf-8'), filename=name)
 '@
 & $Python '-c' $pythonCheck $projectRoot

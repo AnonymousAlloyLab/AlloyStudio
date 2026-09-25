@@ -22,6 +22,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 
 WEB_FILES = ('index.html', 'app.js', 'styles.css')
 DEPLOY_FILES = (
@@ -29,14 +30,6 @@ DEPLOY_FILES = (
     'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1', 'README.md',
 )
 RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py')
-REQUIRED_CLASSES = (
-    'live/LiveFeedback.class', 'live/EngineSelfTest.class',
-    'is/fivefivefive/CanDis/LiveTrace.class',
-)
-JAR_FILES = (
-    'AlloyASG-Release.jar', 'AlloyASG.jar', 'AlloyParser.jar', 'alloy.jar',
-    'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
-)
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
@@ -92,7 +85,7 @@ def collect_files(root: Path) -> dict[str, bytes]:
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
     entries['LICENSE'] = read_source(root, 'LICENSE')
-    for name in ('server.py', 'luna.py'):
+    for name in ('server.py', 'luna.py', 'runtime_dependencies.py'):
         entries[f'backend/{name}'] = read_source(root, name)
     example_bytes = read_source(root, 'openai.example.json')
     if parse_json(example_bytes, 'OpenAI configuration template') != {'api_key': ''}:

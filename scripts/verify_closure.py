@@ -326,10 +326,10 @@ def execute():
         state["undeclared_dependencies"] = sorted(set(policy["required_dependencies"]) - dependencies)
         if state["undeclared_dependencies"]: block("UNDECLARED_DEPENDENCY")
         implementations = {
-            "V-PYTHON": ["scripts/verify_closure.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py", "tests/test_correct_pools.py", "tests/test_catalogue.py", "tests/test_portal.py", "tests/test_adversarial.py", "tests/test_repository.py", "tests/test_credentials.py", "tests/test_iis_package.py", "tests/test_iis_compat.py", "tests/test_iis_launcher.py"],
+            "V-PYTHON": ["scripts/verify_closure.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py", "tests/test_correct_pools.py", "tests/test_catalogue.py", "tests/test_portal.py", "tests/test_adversarial.py", "tests/test_repository.py", "tests/test_credentials.py", "tests/test_runtime_dependencies.py", "tests/test_windows_build.py", "tests/test_iis_package.py", "tests/test_iis_compat.py", "tests/test_iis_launcher.py"],
             "V-ENGINE": ["scripts/verify_closure.py", "tests/test_engine_corpus.py", "tests/test_expanded_trace.py", "tests/test_nearest_correct.py", "tests/test_pool_portal.py", "engine/src/live/EngineSelfTest.java", "engine/src/is/fivefivefive/CanDis/LiveTrace.java"],
             "V-BROWSER": ["scripts/verify_closure.py", "tests/browser.mjs"],
-            "V-BUILD": ["scripts/verify_closure.py", "scripts/build.sh", "engine/build.sh", "scripts/package_iis.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py"],
+            "V-BUILD": ["scripts/verify_closure.py", "scripts/build.sh", "engine/build.sh", "scripts/package_iis.py", "runtime_dependencies.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py"],
             "V-INTEGRITY": ["scripts/verify_closure.py", "closure/policy.json"],
         }
         for identifier, paths in implementations.items():

@@ -101,3 +101,41 @@ function Get-PublicOrigin {
     }
     return $uri.GetLeftPart([UriPartial]::Authority)
 }
+
+function Invoke-RuntimeDependencyCheck {
+    param(
+        [Parameter(Mandatory = $true)][string]$PythonExe,
+        [Parameter(Mandatory = $true)][string]$BackendRoot,
+        [Parameter(Mandatory = $true)][string]$JavaExe
+    )
+    $PythonExe = Get-LocalPath -Path $PythonExe
+    $BackendRoot = Get-LocalPath -Path $BackendRoot
+    $JavaExe = Get-LocalPath -Path $JavaExe
+    $checker = Get-LocalPath -Path (Join-Path $BackendRoot 'runtime_dependencies.py')
+    foreach ($requiredFile in @($PythonExe, $JavaExe, $checker)) {
+        if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+            throw ('Runtime dependency preflight requires: ' + [IO.Path]::GetFileName($requiredFile))
+        }
+    }
+    try {
+        # The checker emits sanitized JSON, reads no credentials, and bounds the
+        # fresh JVM test to 30 seconds. Ignore Python user-site/environment hooks.
+        $output = (& $PythonExe '-E' '-s' $checker '--root' $BackendRoot '--java' $JavaExe 2>$null) -join "`n"
+        $checkerExit = $LASTEXITCODE
+        $dependencyReport = $output | ConvertFrom-Json
+        if (-not $dependencyReport -or $dependencyReport.status -notin @('PASS', 'FAIL')) {
+            throw 'Invalid dependency checker result.'
+        }
+    } catch {
+        throw 'Runtime dependency checker could not return a valid report. Check the configured Python executable and complete backend distribution.'
+    }
+    if ($checkerExit -ne 0 -or $dependencyReport.status -ne 'PASS' -or
+        $dependencyReport.engine.status -ne 'PASS' -or $dependencyReport.engine.checks -lt 1) {
+        $details = @($dependencyReport.errors | ForEach-Object { [string]$_.code + ' (' + [string]$_.path + ')' }) -join '; '
+        if (-not $details) { $details = 'The fresh JVM engine self-test did not pass.' }
+        $failure = New-Object InvalidOperationException('Runtime dependency preflight failed: ' + $details)
+        $failure.Data['RuntimeDependencyReport'] = $dependencyReport
+        throw $failure
+    }
+    return $dependencyReport
+}

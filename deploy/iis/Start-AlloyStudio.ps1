@@ -78,6 +78,8 @@ if ($principal -notmatch '^S-1-') {
     $principal = $account.Translate([Security.Principal.SecurityIdentifier]).Value
 }
 if ($principal -ne 'S-1-5-19') { throw 'The installed backend task must run as LOCAL SERVICE.' }
+Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
+    -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe) | Out-Null
 
 # These are the two IIS prerequisite services; no service startup policy changes.
 foreach ($serviceName in @('WAS', 'W3SVC')) {

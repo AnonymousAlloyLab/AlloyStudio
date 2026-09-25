@@ -5,13 +5,13 @@ from collections import OrderedDict
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
 import threading
 from urllib.parse import unquote, urlsplit
 from luna import Explainer
+from runtime_dependencies import check_runtime, runtime_classpath
 from scripts.import_correct_pools import verify_document
 
 ROOT = Path(__file__).resolve().parent
@@ -147,7 +147,7 @@ class Portal(ThreadingHTTPServer):
                        'referenceSuffix': '\n}' + record['environmentAfter'],
                        'predicate': record['predicate']}
             command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
-                       str(self.root / 'build/engine/classes') + os.pathsep + str(self.root / 'vendor/acgn/lib/*'),
+                       runtime_classpath(self.root),
                        'live.LiveFeedback']
             try:
                 completed = subprocess.run(command, input=json.dumps(payload), text=True, encoding='utf-8',
@@ -279,6 +279,11 @@ def main():
     if args.timeout <= 0 or args.workers < 1: parser.error('timeout and workers must be positive')
     if not (ROOT / 'build/engine/classes/live/LiveFeedback.class').is_file():
         parser.error('Build the engine first: ./scripts/build.sh')
+    runtime = check_runtime(ROOT)
+    if runtime['status'] != 'PASS':
+        paths = sorted({error['path'] for error in runtime['errors']})
+        parser.error('Bundled Java runtime is incomplete or changed: ' + ', '.join(paths)
+                     + '. Restore the complete deployment archive and run runtime_dependencies.py.')
     if not (ROOT / 'exercises/correct-pools.json').is_file():
         parser.error('Import the private correct pools first: python scripts/import_correct_pools.py')
     server = Portal((args.host, args.port), timeout=args.timeout, workers=args.workers,

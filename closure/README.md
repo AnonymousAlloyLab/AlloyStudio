@@ -119,6 +119,24 @@ not establish that IIS, Windows PowerShell 5.1, NTFS ACLs, or Task Scheduler ran
 successfully on Windows. The supplied target acceptance script and actual
 Windows deployment remain outside this offline closure.
 
+## Runtime dependencies
+
+`C-RUNTIME`: the extracted package must contain each of the seven declared JARs
+at its snapshot SHA-256, including both AlloyASG archives. Tests remove and
+corrupt every JAR individually and require failure even when overlapping
+classes in another JAR could let an ordinary feedback request succeed. Missing
+compiled entry classes and an unavailable Java executable also fail. A relocated
+package under a path with spaces runs all 372 compiled engine checks with
+ambient Java classpaths/options and Python import paths excluded.
+
+The source-build witness uses a fresh relocated tree, preflights dependencies
+without requiring compiled classes, compiles with an explicit ordered JAR
+classpath, and executes the engine checks. Frozen structural assertions bind
+the Windows build script to that dependency report and the platform path
+separator. These tests run on Linux; actual Windows PowerShell invocation and
+Windows native argument passing remain outside the offline closure. No Maven,
+network download, or original ACGN checkout supplies a missing dependency.
+
 The TCB includes language runtimes and toolchains, browser and Playwright, vendored
 ACGN/Alloy code and jars, test interpretation, Linux namespaces, OS userland and
 libraries, corpus classifications and oracle truth, hardware, and SHA-256. Browser-cache files are hashed as external trusted

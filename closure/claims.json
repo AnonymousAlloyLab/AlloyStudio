@@ -71,7 +71,8 @@
           "tests/test_portal.py",
           "tests/test_adversarial.py",
           "engine/src",
-          "web"
+          "web",
+          "runtime_dependencies.py"
         ]
       },
       "public_claims": [
@@ -147,7 +148,8 @@
           "scripts/import_correct_pools.py",
           "scripts/import_exercises.py",
           "exercises/correct-pools.json",
-          "openai.example.json"
+          "openai.example.json",
+          "runtime_dependencies.py"
         ]
       },
       "public_claims": [
@@ -221,7 +223,8 @@
           "vendor/acgn",
           "engine/src",
           "tests/test_iis_launcher.py",
-          "openai.example.json"
+          "openai.example.json",
+          "runtime_dependencies.py"
         ]
       },
       "public_claims": [
@@ -316,6 +319,37 @@
       "witnesses": [
         "tests/test_credentials.py",
         "openai.example.json"
+      ]
+    },
+    {
+      "id": "C-RUNTIME",
+      "statement": "Frozen relocated-package and fresh-source assertions verify all seven pinned dependency JARs, reject each missing or corrupted JAR including redundant AlloyASG archives, reject missing compiled entry classes and unavailable Java, and run 372 engine checks using explicit bundled classpaths with poisoned ambient paths excluded. Windows build structural assertions require dependency preflight and explicit platform-separated JAR paths; actual Windows execution is outside this Linux test surface.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_runtime_dependencies.",
+        "test_windows_build."
+      ],
+      "scope": {
+        "inputs": [
+          "runtime_dependencies.py",
+          "server.py",
+          "scripts/build.ps1",
+          "scripts/package_iis.py",
+          "deploy/iis",
+          "vendor/acgn",
+          "engine/src",
+          "tests/test_runtime_dependencies.py",
+          "tests/test_windows_build.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#runtime-dependencies"
+      ],
+      "witnesses": [
+        "tests/test_runtime_dependencies.py",
+        "tests/test_windows_build.py",
+        "vendor/acgn/snapshot.json"
       ]
     }
   ]

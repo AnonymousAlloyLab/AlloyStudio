@@ -21,6 +21,17 @@ $RuntimeRoot = Get-LocalPath -Path $RuntimeRoot
 $configPath = Join-Path $RuntimeRoot 'backend-task.json'
 $existing = Get-ScheduledTask -TaskName $TaskName -TaskPath '\' -ErrorAction SilentlyContinue
 
+function Invoke-InstalledRuntimeDependencyCheck {
+    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
+        throw 'Backend configuration is missing; reinstall the complete private distribution.'
+    }
+    $installed = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $installedTask = Get-ScheduledTask -TaskName $TaskName -TaskPath '\'
+    if (@($installedTask.Actions).Count -ne 1) { throw 'The backend task must have exactly one Python action.' }
+    return Invoke-RuntimeDependencyCheck -PythonExe ([string]$installedTask.Actions[0].Execute) `
+        -BackendRoot ([string]$installed.backend_root) -JavaExe ([string]$installed.java_exe)
+}
+
 function Stop-BackendTask {
     Disable-ScheduledTask -TaskName $TaskName -TaskPath '\' | Out-Null
     Stop-ScheduledTask -TaskName $TaskName -TaskPath '\'
@@ -34,6 +45,8 @@ function Stop-BackendTask {
 }
 
 function Start-BackendTask {
+    param([switch]$RuntimeChecked)
+    if (-not $RuntimeChecked) { Invoke-InstalledRuntimeDependencyCheck | Out-Null }
     Enable-ScheduledTask -TaskName $TaskName -TaskPath '\' | Out-Null
     Start-ScheduledTask -TaskName $TaskName -TaskPath '\'
     $deadline = [DateTime]::UtcNow.AddSeconds(60)
@@ -82,6 +95,7 @@ if ($Action -eq 'Install') {
     $javaVersion = (& $JavaExe --version) -join "`n"
     if ($LASTEXITCODE -ne 0 -or $javaVersion -notmatch '(?im)^(?:openjdk|java)\s+(\d+)' -or
         [int]$Matches[1] -lt 17) { throw 'The configured Java runtime must be version 17 or newer.' }
+    Invoke-RuntimeDependencyCheck -PythonExe $PythonExe -BackendRoot $BackendRoot -JavaExe $JavaExe | Out-Null
     foreach ($directory in @($RuntimeRoot, (Join-Path $RuntimeRoot 'logs'), (Join-Path $RuntimeRoot 'secrets'))) {
         New-Item -ItemType Directory -Path $directory -Force | Out-Null
         Set-RestrictedAcl -Path $directory
@@ -112,7 +126,7 @@ if ($Action -eq 'Install') {
     Register-ScheduledTask -TaskName $TaskName -TaskPath '\' -Action $taskAction -Principal $principal `
         -Trigger (New-ScheduledTaskTrigger -AtStartup) -Settings $settings `
         -Description 'Alloy Studio loopback backend. Private oracle catalogue; static files are served separately by IIS.' | Out-Null
-    Start-BackendTask
+    Start-BackendTask -RuntimeChecked
     if ($EnableLuna -and -not (Test-Path -LiteralPath $config.key_file -PathType Leaf) -and
         -not (Test-Path -LiteralPath (Join-Path $BackendRoot 'openai.local.json') -PathType Leaf)) {
         Write-Output 'Luna is enabled but no credential file is installed. Configure backend\openai.local.json and restart, or use Set-OpenAIKey.ps1.'
@@ -124,7 +138,11 @@ if (-not $existing) { throw "Scheduled backend task '$TaskName' is not installed
 switch ($Action) {
     'Start' { Start-BackendTask }
     'Stop' { Stop-BackendTask; Write-Output 'Backend task stopped and disabled until Start.' }
-    'Restart' { Stop-BackendTask; Start-BackendTask }
+    'Restart' {
+        Invoke-InstalledRuntimeDependencyCheck | Out-Null
+        Stop-BackendTask
+        Start-BackendTask -RuntimeChecked
+    }
     'Status' {
         Get-ScheduledTask -TaskName $TaskName -TaskPath '\' | Select-Object TaskName, State
         Get-ScheduledTaskInfo -TaskName $TaskName -TaskPath '\' | Select-Object LastRunTime, LastTaskResult, NextRunTime

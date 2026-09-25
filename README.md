@@ -190,6 +190,52 @@ in an elevated Windows PowerShell session to start IIS and the backend together.
 The backend's repeatable `--public-origin` option accepts explicit browser origins
 behind the proxy; it does not trust forwarded headers as authorization.
 
+## Dependency and portability checks
+
+The complete source checkout and IIS archive include all seven pinned JARs:
+`AlloyASG-Release.jar`, `AlloyASG.jar`, `AlloyParser.jar`, `alloy.jar`,
+`commons-cli-1.4.jar`, `json-java.jar`, and `slf4j-simple-1.7.36.jar`.
+Their directory is `vendor/acgn/lib` in the source checkout, and
+`backend/vendor/acgn/lib` in the IIS archive. No Maven cache, upstream ACGN
+checkout, or separately installed AlloyASG library is required.
+
+For a Windows source build, run from the checkout root:
+
+```powershell
+python .\runtime_dependencies.py --dependencies-only
+.\scripts\build.ps1
+python .\runtime_dependencies.py --java java
+```
+
+The build checks every JAR against its snapshot SHA-256 before invoking `javac`,
+then passes all seven absolute JAR paths as one classpath argument using the
+operating system's separator. A missing or changed JAR stops the build with its
+filename. Errors such as `package edu.mit.csail.sdg.alloy4 does not exist`,
+`package org.json does not exist`, or `package is.fivefivefive.alloyasg.asg does
+not exist` indicate that the compiler cannot use the bundled classpath; copying
+only the Java source directories is insufficient.
+
+The IIS ZIP is precompiled, so deployment needs Java 17+ and Python 3.10+ and
+does not require a source build. From the extracted distribution root:
+
+```powershell
+python .\backend\runtime_dependencies.py --java java
+```
+
+This prints a JSON report with a result and SHA-256 for **each** dependency and
+runs 372 compiled engine checks in a fresh JVM. IIS Install, Start, Restart and
+the target acceptance script run the same check. Missing, changed, extra, or
+linked JARs fail the check before the backend starts. `AlloyASG.jar` contains
+source files; its compiled classes come from `AlloyASG-Release.jar`. Several
+other JARs overlap with that release JAR, so successful feedback alone cannot
+establish that the entire dependency set was copied.
+
+The offline portability tests extract the package into a moved directory with
+spaces, verify it without the original checkout or ambient Java/Python paths,
+and remove or corrupt each JAR in turn to confirm rejection. A separate fresh
+source build exercises the explicit classpath. Windows-specific execution still
+requires the supplied acceptance script on the target host.
+
 ## Checks and closure
 
 ```bash

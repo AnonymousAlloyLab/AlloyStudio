@@ -19,6 +19,7 @@ $ReportPath = Get-LocalPath -Path $ReportPath
 $checks = New-Object 'Collections.Generic.List[object]'
 $stage = 'initialization'
 $failed = $false
+$runtimeDependencies = $null
 
 function Assert-Check {
     param([bool]$Condition, [string]$Name)
@@ -66,11 +67,18 @@ function Assert-PrivateAcl {
 }
 
 try {
-    $stage = 'task identity, configuration, and isolation'
+    $stage = 'complete bundled runtime dependencies and fresh JVM self-test'
     Import-Module ScheduledTasks
     $task = Get-ScheduledTask -TaskName $TaskName -TaskPath '\'
     $configPath = Join-Path $RuntimeRoot 'backend-task.json'
     $config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (@($task.Actions).Count -ne 1) { throw 'The backend task must have exactly one Python action.' }
+    $runtimeDependencies = Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
+        -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe)
+    Assert-Check ($runtimeDependencies.dependencies.Count -eq 7) 'all seven bundled JARs have their recorded SHA-256 hashes'
+    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 372) 'fresh JVM passes 372 engine checks with the packaged classpath'
+
+    $stage = 'task identity, configuration, and isolation'
     $publicRoots = @(Get-IisPhysicalRoots)
     Assert-PrivatePath -Path $RuntimeRoot -PublicRoots $publicRoots
     Assert-PrivatePath -Path (Get-LocalPath $config.backend_root) -PublicRoots $publicRoots
@@ -160,15 +168,25 @@ try {
     }
 } catch {
     $failed = $true
+    if ($_.Exception.Data.Contains('RuntimeDependencyReport')) {
+        $runtimeDependencies = $_.Exception.Data['RuntimeDependencyReport']
+    }
     # Exception values and HTTP bodies are deliberately absent from the report.
     $checks.Add([ordered]@{name = $stage; status = 'FAIL'; detail = 'Deployment check failed; inspect this stage on the Windows host.'})
 } finally {
+    if ($null -ne $runtimeDependencies) {
+        foreach ($dependency in $runtimeDependencies.dependencies) {
+            $checks.Add([ordered]@{name = ('bundled dependency: ' + $dependency.name); status = $dependency.status;
+                sha256 = $dependency.sha256; expected_sha256 = $dependency.expectedSha256})
+        }
+    }
     $report = [ordered]@{
         generated_at = [DateTime]::UtcNow.ToString('o')
         status = $(if ($failed) { 'FAIL' } else { 'PASS' })
         environment = 'Windows IIS 10 deployment acceptance; not a universal correctness claim'
         public_url = $baseUrl
         live_luna_requested = [bool]$CheckLuna
+        runtime_dependencies = $runtimeDependencies
         checks = @($checks.ToArray())
     }
     [IO.File]::WriteAllText($ReportPath, ($report | ConvertTo-Json -Depth 6), (New-Object Text.UTF8Encoding($false)))

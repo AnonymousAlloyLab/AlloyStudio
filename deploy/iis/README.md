@@ -29,7 +29,11 @@ and create the distribution:
 python3 scripts/package_iis.py
 ```
 
-The Windows source-build equivalent is:
+Git Bash, MSYS2 and Cygwin on Windows can use the same `./scripts/build.sh`
+command. It detects the Windows shell, converts paths with `cygpath`, and
+delegates to the native PowerShell builder. Update `scripts/build-windows.sh`
+along with both Bash entry points when updating an existing checkout. The
+Windows PowerShell source-build equivalent is:
 
 ```powershell
 powershell -NoProfile -File scripts/build.ps1 -RequireNode

@@ -215,6 +215,24 @@ filename. Errors such as `package edu.mit.csail.sdg.alloy4 does not exist`,
 not exist` indicate that the compiler cannot use the bundled classpath; copying
 only the Java source directories is insufficient.
 
+When using **Git Bash, MSYS2, or Cygwin on Windows**, the original command also
+works:
+
+```bash
+./scripts/build.sh
+```
+
+Both Bash build entry points detect those Windows shells and invoke
+`scripts/build.ps1`. The bridge converts the script and output directory with
+`cygpath`, disables a second MSYS argument conversion, and lets native PowerShell
+construct Windows paths and semicolon-separated Java classpaths. The first line
+is `Windows Bash detected: building through scripts/build.ps1 with native Windows
+dependency paths.` If that line is absent on Git Bash, update **both** Bash entry
+points, `scripts/build-windows.sh`, and `scripts/build.ps1` from this checkout.
+Linux and WSL using Linux Java keep the POSIX build path. A custom output path
+remains relative to the project root for `scripts/build.sh`, and to the caller's
+directory for `engine/build.sh`.
+
 The IIS ZIP is precompiled, so deployment needs Java 17+ and Python 3.10+ and
 does not require a source build. From the extracted distribution root:
 

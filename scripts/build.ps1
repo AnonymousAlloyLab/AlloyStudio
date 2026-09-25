@@ -13,7 +13,8 @@ param(
     [string]$Python = 'python',
     [string]$Node = 'node',
     [string]$OutputDirectory = '',
-    [switch]$RequireNode
+    [switch]$RequireNode,
+    [switch]$EngineOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,7 +31,7 @@ if (-not $OutputDirectory) {
 $null = Get-Command $JavaCompiler -ErrorAction Stop
 $null = Get-Command $Python -ErrorAction Stop
 $nodeCommand = Get-Command $Node -ErrorAction SilentlyContinue
-if ($RequireNode -and -not $nodeCommand) {
+if ($RequireNode -and -not $EngineOnly -and -not $nodeCommand) {
     throw 'Node.js is required by -RequireNode but was not found.'
 }
 $dependencyChecker = Join-Path $projectRoot 'runtime_dependencies.py'
@@ -61,6 +62,10 @@ $compilerArguments = @(
 )
 & $JavaCompiler @compilerArguments
 if ($LASTEXITCODE -ne 0) { throw "Java compilation failed with exit code $LASTEXITCODE." }
+if ($EngineOnly) {
+    Write-Output "Built Java 17 compatible engine classes in $OutputDirectory"
+    return
+}
 
 $pythonCheck = @'
 import ast, sys

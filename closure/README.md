@@ -133,7 +133,10 @@ The source-build witness uses a fresh relocated tree, preflights dependencies
 without requiring compiled classes, compiles with an explicit ordered JAR
 classpath, and executes the engine checks. Frozen structural assertions bind
 the Windows build script to that dependency report and the platform path
-separator. These tests run on Linux; actual Windows PowerShell invocation and
+separator. Simulated MSYS, MINGW and Cygwin launchers exercise the actual Bash
+entry points and assert their native PowerShell delegation, absolute path
+conversion, conversion-disabling environment, output-directory semantics, and
+exit-code propagation. These tests run on Linux; actual Windows PowerShell invocation and
 Windows native argument passing remain outside the offline closure. No Maven,
 network download, or original ACGN checkout supplies a missing dependency.
 

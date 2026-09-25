@@ -4,6 +4,11 @@ ENGINE_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$ENGINE_ROOT/.." && pwd)"
 ACGN_ROOT="${ACGN_ROOT:-$PROJECT_ROOT/vendor/acgn}"
 OUTPUT_DIR="${1:-$ENGINE_ROOT/build/classes}"
+case "$(uname -s)" in
+  MSYS*|MINGW*|CYGWIN*)
+    exec "$PROJECT_ROOT/scripts/build-windows.sh" engine "$OUTPUT_DIR"
+    ;;
+esac
 mkdir -p -- "$OUTPUT_DIR"
 javac -encoding UTF-8 --release 17 -Xprefer:source -cp "$ACGN_ROOT/lib/*" \
   -sourcepath "$ENGINE_ROOT/src:$ACGN_ROOT/src" -d "$OUTPUT_DIR" \

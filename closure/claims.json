@@ -149,7 +149,9 @@
           "scripts/import_exercises.py",
           "exercises/correct-pools.json",
           "openai.example.json",
-          "runtime_dependencies.py"
+          "runtime_dependencies.py",
+          "scripts/build-windows.sh",
+          "scripts/build.ps1"
         ]
       },
       "public_claims": [
@@ -323,7 +325,7 @@
     },
     {
       "id": "C-RUNTIME",
-      "statement": "Frozen relocated-package and fresh-source assertions verify all seven pinned dependency JARs, reject each missing or corrupted JAR including redundant AlloyASG archives, reject missing compiled entry classes and unavailable Java, and run 372 engine checks using explicit bundled classpaths with poisoned ambient paths excluded. Windows build structural assertions require dependency preflight and explicit platform-separated JAR paths; actual Windows execution is outside this Linux test surface.",
+      "statement": "Frozen relocated-package and fresh-source assertions verify all seven pinned dependency JARs, reject each missing or corrupted JAR including redundant AlloyASG archives, reject missing compiled entry classes and unavailable Java, and run 372 engine checks using explicit bundled classpaths with poisoned ambient paths excluded. Windows build structural assertions require dependency preflight and explicit platform-separated JAR paths; actual Windows execution is outside this Linux test surface. Simulated Windows Bash launchers exercise both real shell entry points and check delegation to native PowerShell, absolute path conversion, output semantics, and propagated failures.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -340,7 +342,10 @@
           "vendor/acgn",
           "engine/src",
           "tests/test_runtime_dependencies.py",
-          "tests/test_windows_build.py"
+          "tests/test_windows_build.py",
+          "scripts/build.sh",
+          "engine/build.sh",
+          "scripts/build-windows.sh"
         ]
       },
       "public_claims": [

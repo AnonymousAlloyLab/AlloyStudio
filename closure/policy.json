@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0",
+  "status_policy": {
+    "unresolved_is_blocking": true,
+    "warning_is_blocking": true,
+    "manual_override_allowed": false
+  },
+  "required_clean_builds": 2,
+  "network": {
+    "external_network_allowed": false,
+    "loopback_allowed": true,
+    "enforcement": "Linux child user/network namespace; only loopback enabled; no routes; OPENAI_DISABLED=1"
+  },
+  "llm": {
+    "allowed_as_evidence_generator": false,
+    "allowed_as_final_verifier": false,
+    "allowed_for_candidate_generation_only": true
+  },
+  "determinism": {
+    "required": true,
+    "artifacts": [
+      "build/engine/classes/**/*.class",
+      "web/**",
+      "build/iis/alloy-studio-iis.zip",
+      "build/iis/alloy-studio-iis.zip.sha256"
+    ],
+    "compare": [
+      "proof inventory",
+      "correspondence metadata",
+      "provenance metadata",
+      "claim-status set",
+      "artifact hashes"
+    ],
+    "permitted_nondeterministic_fields": [
+      "closure ID",
+      "timestamps",
+      "elapsed times",
+      "absolute temporary paths",
+      "ephemeral loopback ports",
+      "raw test log timings",
+      "browser screenshot bytes"
+    ]
+  },
+  "correspondence": {
+    "required_objects": 0,
+    "mappings": [],
+    "interpretation": "No implementation-to-proof correspondence or proof-compilation claim is made. Passing tests do not establish such correspondence."
+  },
+  "proof_inventory": [],
+  "boundaries": [
+    {
+      "surface": "Frozen finite regression assertions and corpus byte preservation",
+      "classification": "VERIFIED",
+      "evidence_kind": "TESTED or CHECKED only, contingent on final VERIFIED state"
+    },
+    {
+      "surface": "The registered test assertions interpret the intended finite claims",
+      "classification": "SPECIFIED_BUT_TRUSTED",
+      "evidence_kind": "TRUSTED"
+    },
+    {
+      "surface": "Java, Python, Node, Chromium, ACGN/Alloy libraries, OS, libraries, hardware, SHA-256",
+      "classification": "SPECIFIED_BUT_TRUSTED",
+      "evidence_kind": "TRUSTED"
+    },
+    {
+      "surface": "Live OpenAI availability, account quota, model output truth, and remote service behavior",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Universal Alloy semantic equivalence, normalization soundness, certified optimal edit scripts, implementation-to-proof correspondence, bug freedom, multi-user deployment guarantees, future changes",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Actual Windows/IIS execution, Windows PowerShell 5.1, NTFS ACL enforcement, Scheduled Task startup/restart, and target-host acceptance",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Correctness of original corpus classifications and oracle solutions",
+      "classification": "SPECIFIED_BUT_TRUSTED",
+      "evidence_kind": "TRUSTED"
+    },
+    {
+      "surface": "Globally nearest semantically correct predicate outside the admitted finite pool, fresh SAT reclassification of corpus labels, and semantic completeness of the corpus",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    }
+  ],
+  "sequence_departures": [
+    "Each clean compilation precedes its dependent Java/Python/browser verifier execution; tests need the freshly compiled JVM classes. Both complete build/test runs remain required, and all claims are frozen before either build."
+  ],
+  "required_dependencies": [
+    "TCB-PYTHON",
+    "TCB-JAVA",
+    "TCB-NODE",
+    "TCB-BASH",
+    "TCB-NETNS",
+    "TCB-CHROMIUM",
+    "TCB-PLAYWRIGHT",
+    "TCB-ALLOY-ACGN",
+    "TCB-SHA256",
+    "TCB-OS",
+    "TCB-HARDWARE",
+    "TCB-TEST-INTERPRETATION",
+    "TCB-CORPUS-LABELS"
+  ],
+  "exit_code_mapping": {
+    "0": "PASS",
+    "1": "BLOCK",
+    "2": "INFRASTRUCTURE_FAILURE",
+    "other": "INFRASTRUCTURE_FAILURE"
+  }
+}

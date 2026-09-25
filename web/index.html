@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#18283a">
+    <title>Alloy Studio · Live predicate lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%234f46df'/%3E%3Cpath d='m11 27 9-17 9 17M15 21h10' stroke='white' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#predicate-editor">Skip to predicate editor</a>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="Alloy Studio home"><span class="brand-mark" aria-hidden="true">A<span>·</span></span><span>Alloy<span class="brand-light"> Studio</span></span></a>
+      <span class="header-divider" aria-hidden="true"></span><span class="header-section">Live predicate lab</span>
+      <div class="header-end"><span class="engine-badge"><span class="status-dot"></span>Powered by ACGN</span><span class="local-badge">LOCAL WORKSPACE</span></div>
+    </header>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Exercise navigation">
+        <div class="sidebar-heading"><h2>Exercises</h2><span id="exercise-count" class="count-badge">—</span></div>
+        <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path></svg><input id="exercise-search" type="search" placeholder="Find an exercise…" aria-label="Find an exercise" autocomplete="off"></label>
+        <label class="filter-label" for="group-filter">MODEL</label><select id="group-filter" aria-label="Filter by model"><option value="">All models</option></select>
+        <nav id="exercise-list" class="exercise-list" aria-label="Exercises"><p class="sidebar-message">Loading your workspace…</p></nav>
+        <div class="sidebar-note"><span class="note-symbol" aria-hidden="true">◇</span><div><strong>Learn through structure</strong><p>Explore how a predicate changes, one edit at a time.</p></div></div>
+        <div class="sidebar-footer"><span class="status-dot"></span>Drafts saved in this browser</div>
+      </aside>
+      <main id="main-content" class="main-content">
+        <div id="startup-error" class="startup-error" role="alert" hidden></div>
+        <section class="workspace-heading" aria-labelledby="exercise-title">
+          <div class="breadcrumbs"><span>Workspace</span><span aria-hidden="true">/</span><span id="exercise-group">Predicate exercises</span></div>
+          <div class="title-row"><div><div class="eyebrow">WRITE · COMPARE · REFINE</div><h1 id="exercise-title">Your next idea starts here.</h1></div><button id="download-button" class="button secondary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"></path></svg>Download .als</button></div>
+          <p id="exercise-description" class="exercise-description">Choose a predicate and explore its canonical structure with live feedback.</p>
+        </section>
+        <div class="workspace-grid">
+          <div class="editing-column">
+            <section class="editor-card" aria-labelledby="editor-heading">
+              <div class="editor-toolbar"><div class="panel-heading"><span class="code-icon" aria-hidden="true">&lt;/&gt;</span><h2 id="editor-heading">Predicate editor</h2></div><span id="draft-status" class="draft-status">Ready when you are</span></div>
+              <div class="file-tab"><span class="file-dot" aria-hidden="true"></span><span id="predicate-filename">predicate.als</span><span class="language-tag">ALLOY</span></div>
+              <div id="predicate-signature" class="predicate-signature">pred … {</div>
+              <div class="code-area"><pre id="line-numbers" class="line-numbers" aria-hidden="true">1</pre><textarea id="predicate-editor" aria-label="Predicate body" aria-describedby="editor-keyboard-help" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Select an exercise to begin…" disabled></textarea></div>
+              <span id="editor-keyboard-help" class="sr-only">Tab inserts two spaces. Press Escape then Tab, or Shift+Tab, to move focus out of the editor. Control+Enter or Command+Enter checks the predicate.</span>
+              <div class="closing-brace" aria-hidden="true">}</div>
+              <div class="editor-status"><span id="cursor-position">Ln 1, Col 1</span><span>UTF-8<span class="small-divider">·</span>Predicate body only</span></div>
+              <div class="editor-actions"><label class="live-label"><input id="live-feedback" type="checkbox" checked><span class="switch" aria-hidden="true"></span>Live feedback</label><div class="editor-action-end"><button id="reset-button" class="button text-button" type="button" disabled>Reset</button><button id="check-button" class="button primary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"></path></svg>Check predicate<span class="keyboard-hint" aria-hidden="true">⌘ ↵</span></button></div></div>
+            </section>
+            <details id="environment-panel" class="environment-card" open>
+              <summary><span class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v13H4ZM4 11h16"></path></svg><span>Model environment</span></span><span class="summary-meta">READ ONLY<span class="chevron" aria-hidden="true">⌄</span></span></summary>
+              <div class="environment-description">The original declarations and commands stay in place. Your predicate body is the only editable part.</div>
+              <div class="environment-tabs" role="group" aria-label="Model environment view"><button class="environment-tab active" type="button" data-context="before" aria-pressed="true">Before predicate</button><button class="environment-tab" type="button" data-context="after" aria-pressed="false">After predicate</button></div>
+              <pre id="environment-code" class="environment-code" tabindex="0" aria-label="Original Alloy model environment">Select an exercise to inspect its model.</pre>
+              <div id="source-info" class="source-info">Original model · preserved as supplied</div>
+            </details>
+          </div>
+          <div class="feedback-column">
+            <section class="feedback-card" aria-labelledby="feedback-heading">
+              <div class="light-panel-toolbar"><div class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 5-5 4 3 7-9M16 6h4v4"></path></svg><h2 id="feedback-heading">Structural feedback</h2></div><span id="feedback-state" class="feedback-state">Waiting</span></div>
+              <div id="feedback-result" aria-live="polite" aria-atomic="false"><div class="feedback-empty"><div class="empty-illustration" aria-hidden="true"><span>{</span><span class="empty-orbit">↗</span><span>}</span></div><h3>A little feedback goes a long way.</h3><p>Write your predicate to see its canonical distance and the edits that shape it.</p></div></div>
+              <div class="oracle-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2"></path></svg><span>Correct predicates, including the oracle, stay private. Feedback shows your fragments, edit types, and operator names.</span></div>
+            </section>
+            <section class="history-card" aria-labelledby="history-heading"><div class="history-heading"><h2 id="history-heading">Your progress</h2><span id="history-count">0 checks</span></div><div id="history-list"><p class="history-empty">Each successful check is a new point on your path.</p></div></section>
+            <div class="method-note"><span class="method-symbol" aria-hidden="true">i</span><p>Distance is the minimum across the oracle and compatible corpus-labelled correct predicates. Zero is a canonical match under ACGN’s rewrite rules, not a proof of full semantic equivalence.</p></div>
+          </div>
+        </div>
+        <footer class="workspace-footer"><span>Small edits. Clearer models.</span><span>Alloy + ACGN<span aria-hidden="true"> ↗</span></span></footer>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

@@ -1,0 +1,322 @@
+{
+  "schema_version": "1.0",
+  "claims": [
+    {
+      "id": "C-CATALOGUE",
+      "statement": "All 181 bundled records pass byte-preservation, coverage, mutation, and lexical extraction tests.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_catalogue."
+      ],
+      "scope": {
+        "inputs": [
+          "exercises/catalogue.json",
+          "scripts/import_exercises.py",
+          "tests/test_catalogue.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#catalogue"
+      ],
+      "witnesses": [
+        "exercises/catalogue.json",
+        "tests/test_catalogue.py"
+      ]
+    },
+    {
+      "id": "C-ENGINE",
+      "statement": "The frozen Java regressions, all 181 starter comparisons plus 181 oracle self-comparisons, and expanded-trace witnesses satisfy their assertions; matrix unit edits replay privately against the target under the selected variable and child alignments, while public context remains learner-derived.",
+      "required_engine_checks": 372,
+      "claim_class": "test",
+      "verifier": "V-ENGINE",
+      "test_prefixes": [
+        "test_engine_corpus.",
+        "test_expanded_trace."
+      ],
+      "scope": {
+        "inputs": [
+          "engine/src",
+          "vendor/acgn",
+          "tests/test_engine_corpus.py",
+          "exercises/catalogue.json",
+          "tests/test_expanded_trace.py",
+          "engine/src/is/fivefivefive/CanDis/LiveTrace.java"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#engine"
+      ],
+      "witnesses": [
+        "engine/src/live/EngineSelfTest.java",
+        "tests/test_engine_corpus.py",
+        "exercises/catalogue.json",
+        "tests/test_expanded_trace.py",
+        "engine/src/is/fivefivefive/CanDis/LiveTrace.java"
+      ]
+    },
+    {
+      "id": "C-HTTP",
+      "statement": "The frozen body-validation and HTTP tests pass for public projections, private-path isolation, request limits, worker failure handling, malformed UTF-8/JSON and comment escapes.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_portal.BodyTests.",
+        "test_portal.HTTPTests.",
+        "test_adversarial.AdversarialHTTPTests."
+      ],
+      "scope": {
+        "inputs": [
+          "server.py",
+          "tests/test_portal.py",
+          "tests/test_adversarial.py",
+          "engine/src",
+          "web"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#http"
+      ],
+      "witnesses": [
+        "tests/test_portal.py",
+        "tests/test_adversarial.py"
+      ]
+    },
+    {
+      "id": "C-LUNA",
+      "statement": "The frozen mock transport tests pass for the Luna outbound allowlist including completed nearest-correct comparison counts, credential placement, caching, capacity, response handling, malformed provider shapes, and sanitized failures.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_portal.LunaTests.",
+        "test_adversarial.AdversarialLunaTests."
+      ],
+      "scope": {
+        "inputs": [
+          "luna.py",
+          "tests/test_portal.py",
+          "tests/test_adversarial.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#luna"
+      ],
+      "witnesses": [
+        "tests/test_portal.py",
+        "tests/test_adversarial.py"
+      ]
+    },
+    {
+      "id": "C-BROWSER",
+      "statement": "The exact frozen Playwright browser workflow assertions pass in desktop and mobile Chromium sessions.",
+      "claim_class": "test",
+      "verifier": "V-BROWSER",
+      "scope": {
+        "inputs": [
+          "tests/browser.mjs",
+          "web",
+          "server.py",
+          "package-lock.json",
+          "node_modules"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#browser"
+      ],
+      "witnesses": [
+        "tests/browser.mjs"
+      ]
+    },
+    {
+      "id": "C-BUILDS",
+      "statement": "Two isolated fresh copies of the frozen inputs build and package successfully and produce identical class files, web assets, IIS ZIP/checksum files, inventories, provenance, correspondence metadata, and claim-status sets.",
+      "claim_class": "determinism",
+      "verifier": "V-BUILD",
+      "scope": {
+        "inputs": [
+          "scripts/build.sh",
+          "engine/build.sh",
+          "engine/src",
+          "vendor/acgn",
+          "web",
+          "scripts/package_iis.py",
+          "deploy/iis",
+          "exercises/catalogue.json",
+          "server.py",
+          "luna.py",
+          "scripts/import_correct_pools.py",
+          "scripts/import_exercises.py",
+          "exercises/correct-pools.json",
+          "openai.example.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#builds"
+      ],
+      "witnesses": []
+    },
+    {
+      "id": "C-INTEGRITY",
+      "statement": "Frozen input hashes, evidence bindings, trust classification, witnesses, provenance, network isolation, and negative decision controls satisfy the registered finite closure checks.",
+      "claim_class": "provenance",
+      "verifier": "V-INTEGRITY",
+      "scope": {
+        "inputs": [
+          "scripts/verify_closure.py",
+          "closure/claims.json",
+          "closure/policy.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#integrity"
+      ],
+      "witnesses": [
+        "closure/policy.json"
+      ]
+    },
+    {
+      "id": "C-DELIVERY",
+      "statement": "Vendor files match the frozen snapshot manifest, whose recorded origin is ACGN commit 1e2667351532b0c632166fa21ae5fbc7308a8fe7; the frozen delivery-source credential filename/token-pattern checks pass.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_repository.RepositoryTests."
+      ],
+      "scope": {
+        "inputs": [
+          "vendor/acgn",
+          "tests/test_repository.py",
+          ".gitignore"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#delivery"
+      ],
+      "witnesses": [
+        "vendor/acgn/snapshot.json",
+        "tests/test_repository.py"
+      ]
+    },
+    {
+      "id": "C-IIS",
+      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_iis_package.",
+        "test_iis_compat.",
+        "test_iis_launcher."
+      ],
+      "scope": {
+        "inputs": [
+          "scripts/package_iis.py",
+          "scripts/build.ps1",
+          "deploy/iis",
+          "tests/test_iis_package.py",
+          "tests/test_iis_compat.py",
+          "server.py",
+          "luna.py",
+          "web",
+          "exercises/catalogue.json",
+          "vendor/acgn",
+          "engine/src",
+          "tests/test_iis_launcher.py",
+          "openai.example.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#iis"
+      ],
+      "witnesses": [
+        "tests/test_iis_package.py",
+        "tests/test_iis_compat.py",
+        "deploy/iis/web.config",
+        "deploy/iis/run_backend.py",
+        "tests/test_iis_launcher.py"
+      ]
+    },
+    {
+      "id": "C-CORRECT-POOLS",
+      "statement": "The frozen private pool verifier checks all 181 pools and 7731 candidate source/context/body witnesses, exactly one explicit oracle per pool, corpus-correct source labels, deterministic ordering, and declared exclusion witnesses; correctness of corpus labels and oracles is trusted.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_correct_pools."
+      ],
+      "scope": {
+        "inputs": [
+          "scripts/import_correct_pools.py",
+          "scripts/import_exercises.py",
+          "exercises/correct-pools.json",
+          "exercises/catalogue.json",
+          "tests/test_correct_pools.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#correct-pools"
+      ],
+      "witnesses": [
+        "exercises/correct-pools.json",
+        "tests/test_correct_pools.py"
+      ]
+    },
+    {
+      "id": "C-NEAREST-CORRECT",
+      "statement": "Frozen real-JVM minimum-selection assertions, all 181 complete starter-pool comparisons with included-oracle upper bounds, winner-trace privacy/replay, alternative-correct zero matches, fail-closed pool errors, and HTTP/Luna pool-boundary assertions pass. Minimum means the admitted finite pool including its oracle, not all semantic solutions.",
+      "claim_class": "test",
+      "verifier": "V-ENGINE",
+      "test_prefixes": [
+        "test_nearest_correct.",
+        "test_pool_portal."
+      ],
+      "scope": {
+        "inputs": [
+          "engine/src/live/LiveFeedback.java",
+          "engine/src/live/EngineSelfTest.java",
+          "server.py",
+          "luna.py",
+          "scripts/import_correct_pools.py",
+          "scripts/import_exercises.py",
+          "exercises/correct-pools.json",
+          "exercises/catalogue.json",
+          "tests/test_nearest_correct.py",
+          "tests/test_pool_portal.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#nearest-correct"
+      ],
+      "witnesses": [
+        "tests/test_nearest_correct.py",
+        "tests/test_pool_portal.py",
+        "exercises/correct-pools.json"
+      ]
+    },
+    {
+      "id": "C-CREDENTIALS",
+      "statement": "Frozen synthetic-key tests check private JSON and key-file loading, deployment-relative paths after relocation, explicit precedence and fail-closed malformed configuration, credential-scoped explanation caches, ignored private config and HTTP isolation. Filesystem privacy on Windows depends on installer ACLs; actual Windows execution and cryptographic at-rest secrecy are excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_credentials."
+      ],
+      "scope": {
+        "inputs": [
+          "luna.py",
+          "server.py",
+          "openai.example.json",
+          ".gitignore",
+          "tests/test_credentials.py",
+          "scripts/verify_closure.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#credentials"
+      ],
+      "witnesses": [
+        "tests/test_credentials.py",
+        "openai.example.json"
+      ]
+    }
+  ]
+}

@@ -8,8 +8,11 @@ from copy import deepcopy
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 
 
@@ -160,12 +163,81 @@ class CatalogueTests(unittest.TestCase):
         with self.assertRaises(IMPORTER.ExtractionError):
             IMPORTER.verify_record(record)
 
-    def test_graph_exercises_have_reviewed_intentions(self):
-        graphs = [r for r in self.catalogue["exercises"] if r["group"] == "graphs"]
-        self.assertEqual(len(graphs), 8)
-        for record in graphs:
-            self.assertIn("Reviewed", record["descriptionProvenance"])
-            self.assertNotIn("no natural-language requirement", record["description"])
+    def test_all_exercises_have_source_bound_prose_requirements(self):
+        descriptions = IMPORTER.load_descriptions()
+        self.assertEqual(set(descriptions), {r["id"] for r in self.catalogue["exercises"]})
+        self.assertEqual(len(descriptions), 181)
+        for record in self.catalogue["exercises"]:
+            with self.subTest(exercise=record["id"]):
+                expected = descriptions[record["id"]]
+                self.assertEqual(expected["sourceSha256"], record["source"]["sha256"])
+                self.assertEqual(record["description"], expected["description"])
+                self.assertEqual(record["descriptionProvenance"], IMPORTER.DESCRIPTION_PROVENANCE)
+                self.assertTrue(record["description"].strip())
+                self.assertNotRegex(record["description"], r"[{}|`]|<=>|=>|->|\binv\d+c\b|\bpred\s")
+                self.assertNotIn("no natural-language requirement", record["description"])
+                self.assertNotIn("not been reviewed", record["description"])
+
+    def test_description_refresh_preserves_every_non_description_field(self):
+        catalogue = deepcopy(self.catalogue)
+        for record in catalogue["exercises"]:
+            record["description"] = "Old placeholder"
+            record["descriptionProvenance"] = "Old provenance"
+        IMPORTER.refresh_descriptions(catalogue, IMPORTER.load_descriptions())
+        self.assertEqual(catalogue, self.catalogue)
+        IMPORTER.refresh_descriptions(catalogue, IMPORTER.load_descriptions())
+        self.assertEqual(catalogue, self.catalogue, "Refreshing must be idempotent")
+
+    def test_changed_source_cannot_reuse_requirement_for_same_inv_number(self):
+        descriptions = IMPORTER.load_descriptions()
+        record = self.catalogue["exercises"][0]
+        self.assertIsNone(IMPORTER.description_for(record["id"], "0" * 64, descriptions))
+        self.assertIsNone(IMPORTER.description_for("newModel-inv1", record["source"]["sha256"], descriptions))
+
+    def test_invalid_late_binding_does_not_partially_refresh_catalogue(self):
+        catalogue = deepcopy(self.catalogue)
+        for record in catalogue["exercises"]:
+            record["description"] = "Old placeholder"
+        before = deepcopy(catalogue)
+        descriptions = IMPORTER.load_descriptions()
+        descriptions[catalogue["exercises"][-1]["id"]]["sourceSha256"] = "0" * 64
+        with self.assertRaisesRegex(IMPORTER.ExtractionError, "description binding"):
+            IMPORTER.refresh_descriptions(catalogue, descriptions)
+        self.assertEqual(catalogue, before)
+
+    def test_guide_matches_public_descriptions_without_private_record_fields(self):
+        guide = (ROOT / "docs/exercise-descriptions.md").read_text(encoding="utf-8")
+        self.assertEqual(guide, IMPORTER.render_description_guide(self.catalogue))
+        self.assertEqual(guide.count("### "), 181)
+        public_only = {"exercises": [{key: record[key] for key in ("id", "group", "description")}
+                                     for record in self.catalogue["exercises"]]}
+        self.assertEqual(guide, IMPORTER.render_description_guide(public_only))
+        self.assertNotRegex(guide, r"oracleBody|originalSource|\bpred\s+inv|[{}]")
+
+    def test_description_refresh_cli_needs_no_original_corpus_and_writes_private_catalogue(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            catalogue_path = root / "catalogue.json"
+            guide_path = root / "guide.md"
+            catalogue = deepcopy(self.catalogue)
+            for record in catalogue["exercises"]:
+                record["description"] = "Old placeholder"
+                record["descriptionProvenance"] = "Old provenance"
+            catalogue_path.write_text(json.dumps(catalogue), encoding="utf-8")
+            command = [sys.executable, str(ROOT / "scripts/import_exercises.py"),
+                       "--refresh-descriptions", "--output", str(catalogue_path),
+                       "--source-root", str(root / "no-original-corpus"), "--guide", str(guide_path)]
+            completed = subprocess.run(command, cwd=temporary, capture_output=True,
+                                       text=True, timeout=20, check=False)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(json.loads(catalogue_path.read_text()), self.catalogue)
+            self.assertEqual(guide_path.read_text(), IMPORTER.render_description_guide(self.catalogue))
+            if os.name != "nt":
+                self.assertEqual(catalogue_path.stat().st_mode & 0o777, 0o600)
+            checked = subprocess.run(command + ["--check"], cwd=temporary,
+                                     capture_output=True, text=True, timeout=20, check=False)
+            self.assertEqual(checked.returncode, 0, checked.stderr)
+            self.assertFalse(list(root.glob(".catalogue-*")))
 
 
 if __name__ == "__main__":

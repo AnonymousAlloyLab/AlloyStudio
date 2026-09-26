@@ -23,9 +23,24 @@ Choose an exercise, edit its predicate body, and pause to receive feedback.
 Ctrl/Cmd+Enter checks immediately. The complete surrounding Alloy environment
 is available beside the editor. Download exports that environment with your
 current predicate. Drafts and recent distance history stay in your browser.
-The eight graph exercises have reviewed natural-language requirements; the
-other corpus groups identify their original invariant because their source
-does not include a task statement.
+All 181 exercises have natural-language requirements displayed above the editor.
+Read them together in [the exercise guide](docs/exercise-descriptions.md).
+The descriptions state the task in prose while predicate implementations remain
+private. They account for each exercise's own declarations and facts, without
+assuming that other numbered invariants hold.
+
+Descriptions live in `scripts/exercise_descriptions.json`, bound to the original
+model's SHA-256 so a changed source cannot silently inherit an outdated task.
+Fresh imports apply matching descriptions automatically. To update an existing
+catalogue without the original ACGN checkout, run:
+
+```bash
+python3 scripts/import_exercises.py --refresh-descriptions --guide docs/exercise-descriptions.md
+```
+
+Restart the backend after refreshing. This command changes only description
+metadata; it preserves the Alloy environment, starter, reference, and correct
+candidate pools. The IIS ZIP includes the updated descriptions and helper data.
 
 ## Environment and reference isolation
 

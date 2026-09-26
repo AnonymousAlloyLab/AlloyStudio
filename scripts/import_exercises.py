@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,20 +27,90 @@ PUBLIC_FIELDS = (
     "environmentAfter", "predicateHeader", "starter", "source",
 )
 STATUS_ORDER = {"under": 0, "over": 1, "both": 2, "correct": 3}
-GRAPH_DESCRIPTIONS = {
-    "inv1": "Every directed edge has its reverse edge: the graph is undirected.",
-    "inv2": "No pair of nodes has edges in both directions, and no node has a self-loop.",
-    "inv3": "The directed graph has no cycles, including self-loops.",
-    "inv4": "Every node has an edge to every node, including itself.",
-    "inv5": "No node has an edge to itself.",
-    "inv6": "Every node can reach every other node if edges may be followed in either direction. A path of length zero is allowed.",
-    "inv7": "Every node can reach every other node by following directed edges. A path of length zero is allowed.",
-    "inv8": "Whenever there is a nonempty directed path from one node to another, there is also a direct edge between them.",
-}
+DESCRIPTION_PATH = Path(__file__).with_name("exercise_descriptions.json")
+DESCRIPTION_PROVENANCE = "Reviewed natural-language interpretation of the source-bound corpus predicate"
 
 
 class ExtractionError(ValueError):
     """The source cannot be safely split into public and private components."""
+
+
+def load_descriptions(path: Path = DESCRIPTION_PATH) -> dict:
+    """Load prose only; bind each interpretation to the exact original model."""
+    def unique_fields(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ExtractionError("Duplicate description entry")
+            result[key] = value
+        return result
+
+    document = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_fields)
+    if (not isinstance(document, dict) or set(document) != {"schemaVersion", "descriptions"}
+            or document["schemaVersion"] != 1 or not isinstance(document["descriptions"], dict)):
+        raise ExtractionError("Invalid description document")
+    for identifier, entry in document["descriptions"].items():
+        if (not re.fullmatch(r"[A-Za-z0-9_]+-inv\d+", identifier)
+                or not isinstance(entry, dict) or set(entry) != {"description", "sourceSha256"}
+                or not isinstance(entry["sourceSha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", entry["sourceSha256"])
+                or not isinstance(entry["description"], str)
+                or not entry["description"].strip() or len(entry["description"]) > 1600
+                or any(ord(char) < 32 for char in entry["description"])):
+            raise ExtractionError("Invalid exercise description")
+    return document["descriptions"]
+
+
+def description_for(identifier: str, source_hash: str, descriptions: dict) -> str | None:
+    entry = descriptions.get(identifier)
+    # A model with the same group/inv name may have different semantics. Never
+    # apply a previously authored requirement solely because its ID matches.
+    return entry["description"] if entry and entry["sourceSha256"] == source_hash else None
+
+
+def refresh_descriptions(catalogue: dict, descriptions: dict) -> None:
+    """Validate every binding before changing only the two prose metadata fields."""
+    updates = []
+    seen = set()
+    for record in catalogue["exercises"]:
+        verify_record(record)
+        identifier = record["id"]
+        description = description_for(identifier, record["source"]["sha256"], descriptions)
+        if identifier in seen or not description:
+            raise ExtractionError(f"Missing, stale, or duplicate description binding: {identifier}")
+        seen.add(identifier)
+        updates.append((record, description))
+    for record, description in updates:
+        record["description"] = description
+        record["descriptionProvenance"] = DESCRIPTION_PROVENANCE
+
+
+def render_description_guide(catalogue: dict) -> str:
+    """Render only public metadata; never include predicate implementations."""
+    lines = ["# Live programming exercise descriptions", "",
+             f"Natural-language requirements for all {len(catalogue['exercises'])} bundled exercises. Each requirement",
+             "uses its exercise's original model declarations and facts. Temporal descriptions",
+             "distinguish the initial state, later states, and properties that hold at every state.",
+             "", "These are task specifications; predicate implementations are kept private.", ""]
+    previous = None
+    for record in catalogue["exercises"]:
+        if record["group"] != previous:
+            previous = record["group"]
+            lines.extend(["## " + previous, ""])
+        lines.extend(["### " + record["id"], "", record["description"], ""])
+    return "\n".join(lines)
+
+
+def write_private_catalogue(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".catalogue-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(data)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 @dataclass(frozen=True)
@@ -265,6 +336,7 @@ def verify_record(record: dict) -> None:
 
 
 def build_catalogue(source_root: Path) -> dict:
+    descriptions = load_descriptions()
     corpus = source_root / "classified-data"
     if not corpus.is_dir():
         raise ExtractionError(f"Corpus not found: {corpus}")
@@ -289,19 +361,19 @@ def build_catalogue(source_root: Path) -> dict:
             except (ExtractionError, UnicodeError) as error:
                 rejected.append({"path": str(path.relative_to(source_root)), "reason": str(error)})
                 continue
-            description = GRAPH_DESCRIPTIONS.get(predicate) if group == "graphs" else None
+            description = description_for(f"{group}-{predicate}", digest(data), descriptions)
             record = {
                 "id": f"{group}-{predicate}",
                 "title": f"{group.replace('_', ' ')} · {predicate}",
                 "group": group, "predicate": predicate,
                 "description": description or (
                     f"Revise {predicate} using the canonical-distance feedback. "
-                    "The source corpus supplies no natural-language requirement for this exercise."
+                    "A natural-language requirement has not been reviewed for this source model."
                 ),
                 # Corpus paths are portable provenance identifiers, not native
                 # filesystem paths; keep JSON identical on Windows and POSIX.
                 "source": {"path": path.relative_to(source_root).as_posix(), "sha256": digest(data)},
-                "descriptionProvenance": "Reviewed natural-language interpretation of corpus oracle" if description else "No requirement text available",
+                "descriptionProvenance": DESCRIPTION_PROVENANCE if description else "No requirement text available for this source",
                 "sourceClassification": path.parent.name,
                 **extracted,
             }
@@ -331,16 +403,32 @@ def main() -> int:
                         default=Path(os.environ.get("ACGN_ROOT", ROOT.parent / "ACGN")))
     parser.add_argument("--output", type=Path, default=ROOT / "exercises" / "catalogue.json")
     parser.add_argument("--check", action="store_true", help="Verify deterministic regeneration without writing")
+    parser.add_argument("--refresh-descriptions", action="store_true",
+                        help="Update only descriptions in an existing catalogue; no original ACGN checkout needed")
+    parser.add_argument("--guide", type=Path,
+                        help="Also write (or --check) a Markdown guide containing only public descriptions")
     args = parser.parse_args()
-    catalogue = build_catalogue(args.source_root.resolve())
+    if args.refresh_descriptions:
+        catalogue = json.loads(args.output.read_text(encoding="utf-8"))
+        refresh_descriptions(catalogue, load_descriptions())
+    else:
+        catalogue = build_catalogue(args.source_root.resolve())
     encoded = (json.dumps(catalogue, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     if args.check:
         if not args.output.is_file() or args.output.read_bytes() != encoded:
             print("Catalogue differs from deterministic corpus import", file=sys.stderr)
             return 1
     else:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_bytes(encoded)
+        write_private_catalogue(args.output, encoded)
+    if args.guide:
+        guide = render_description_guide(catalogue).encode("utf-8")
+        if args.check:
+            if not args.guide.is_file() or args.guide.read_bytes() != guide:
+                print("Description guide differs from catalogue descriptions", file=sys.stderr)
+                return 1
+        else:
+            args.guide.parent.mkdir(parents=True, exist_ok=True)
+            args.guide.write_bytes(guide)
     print(json.dumps({"catalogue": str(args.output), "sha256": digest(encoded),
                       "imported": len(catalogue["exercises"]),
                       "dropped": catalogue["droppedGroups"],

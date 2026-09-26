@@ -55,6 +55,7 @@ try {
     assert.match(await page.locator('#luna-explanation-body').textContent(), /not configured/);
     record = await (await context.request.get(url + '/api/exercises/graphs-inv1')).json();
     assert(!('oracleBody' in record)); assert(!('originalSource' in record));
+    assert.equal(await page.locator('#exercise-description').textContent(), record.description);
     assert.equal(await page.locator('#environment-code').textContent(), record.environmentBefore);
     await page.screenshot({ path: path.join(artifacts, 'desktop.png'), fullPage: true });
   });
@@ -250,6 +251,22 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.screenshot({ path: path.join(artifacts, 'mobile.png'), fullPage: true });
     assert.equal(await editor.isEnabled(), true);
+  });
+  await check('all-exercise-descriptions-and-temporal-requirement-display', async () => {
+    const authored = JSON.parse(await readFile(path.join(root, 'scripts/exercise_descriptions.json'), 'utf8')).descriptions;
+    const listing = await (await context.request.get(url + '/api/exercises')).json();
+    assert.equal(listing.exercises.length, 181);
+    for (const exercise of listing.exercises) {
+      assert.equal(exercise.description, authored[exercise.id].description);
+      assert(!('oracleBody' in exercise));
+    }
+    // Select a temporal task with a longer requirement at mobile width. Avoid
+    // recomputation: this assertion is about selecting and reading the task.
+    await page.locator('#live-feedback').uncheck();
+    await page.goto(url + '/?exercise=trash_ltl-inv18');
+    await page.waitForFunction(() => document.querySelector('#exercise-title').textContent.includes('inv18'));
+    assert.equal(await page.locator('#exercise-description').textContent(), authored['trash_ltl-inv18'].description);
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   });
   await check('iis-prefix-proxy-assets-navigation-feedback-and-download', async () => {
     // Model an IIS virtual application: strip /alloy and rewrite Host to the

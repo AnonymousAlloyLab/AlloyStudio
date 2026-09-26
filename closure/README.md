@@ -21,6 +21,11 @@ downloaded during verification. Unavailable tooling produces infrastructure fail
 
 `C-CATALOGUE`: the 181 bundled exercises and lexical adversarial fixtures are checked
 for exact source-byte preservation, private/public splitting, and corruption detection.
+All 181 task descriptions must cover the catalogue exactly, match their frozen
+source hashes, reach the public API, and reproduce the prose-only guide. Refresh
+tests reject stale bindings before changing metadata and preserve every other
+catalogue field. These are coverage, binding, and delivery assertions; semantic
+equivalence between English prose and Alloy is outside this mechanical claim.
 
 ## Engine
 

@@ -129,18 +129,22 @@ class HTTPTests(unittest.TestCase):
         with response: return response.status, response.headers, response.read()
 
     def test_entire_catalogue_public_projection(self):
+        descriptions = json.loads((ROOT / 'scripts/exercise_descriptions.json').read_text())['descriptions']
         status, headers, body = self.request('/api/exercises')
         listing = json.loads(body)['exercises']
         self.assertEqual(status, 200)
         self.assertEqual(len(listing), 181)
         for item in listing:
             self.assertEqual(set(item), set(server.SUMMARY_FIELDS))
+            self.assertEqual(item['description'], descriptions[item['id']]['description'])
             code, _, content = self.request('/api/exercises/' + item['id'])
             self.assertEqual(code, 200)
             public = json.loads(content)
             self.assertEqual(set(public), set(server.PUBLIC_FIELDS))
             self.assertNotIn('oracleBody', public)
             self.assertNotIn('originalSource', public)
+            self.assertNotIn('descriptionProvenance', public)
+            self.assertEqual(public['description'], item['description'])
         self.assertIn("default-src 'self'", headers['Content-Security-Policy'])
 
     def test_static_allowlist_blocks_secrets_and_traversal(self):

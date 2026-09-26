@@ -3,7 +3,7 @@
   "claims": [
     {
       "id": "C-CATALOGUE",
-      "statement": "All 181 bundled records pass byte-preservation, coverage, mutation, and lexical extraction tests.",
+      "statement": "All 181 bundled records pass byte-preservation, coverage, mutation, and lexical extraction tests; source-bound prose descriptions cover every record, refresh only description metadata, reject stale bindings, and reproduce the public guide. English-to-Alloy semantic equivalence is not mechanically claimed.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -13,7 +13,9 @@
         "inputs": [
           "exercises/catalogue.json",
           "scripts/import_exercises.py",
-          "tests/test_catalogue.py"
+          "tests/test_catalogue.py",
+          "scripts/exercise_descriptions.json",
+          "docs/exercise-descriptions.md"
         ]
       },
       "public_claims": [
@@ -21,7 +23,9 @@
       ],
       "witnesses": [
         "exercises/catalogue.json",
-        "tests/test_catalogue.py"
+        "tests/test_catalogue.py",
+        "scripts/exercise_descriptions.json",
+        "docs/exercise-descriptions.md"
       ]
     },
     {
@@ -72,7 +76,8 @@
           "tests/test_adversarial.py",
           "engine/src",
           "web",
-          "runtime_dependencies.py"
+          "runtime_dependencies.py",
+          "scripts/exercise_descriptions.json"
         ]
       },
       "public_claims": [
@@ -118,7 +123,8 @@
           "web",
           "server.py",
           "package-lock.json",
-          "node_modules"
+          "node_modules",
+          "scripts/exercise_descriptions.json"
         ]
       },
       "public_claims": [
@@ -152,7 +158,8 @@
           "openai.example.json",
           "runtime_dependencies.py",
           "scripts/build-windows.sh",
-          "scripts/build.ps1"
+          "scripts/build.ps1",
+          "scripts/exercise_descriptions.json"
         ]
       },
       "public_claims": [
@@ -237,7 +244,8 @@
           "tests/test_iis_connection.py",
           "tests/test_private_data_import.py",
           "openai.example.json",
-          "runtime_dependencies.py"
+          "runtime_dependencies.py",
+          "scripts/exercise_descriptions.json"
         ]
       },
       "public_claims": [

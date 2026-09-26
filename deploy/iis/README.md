@@ -13,6 +13,22 @@ contains private oracle material and is a server distribution; keep it out of a
 public repository and never make the package root an IIS physical directory.
 Only `wwwroot` is public. No API key is included in the distribution.
 
+Every bundled invariant has a natural-language requirement displayed above the
+editor. The text is stored in the private catalogue and exposed through the
+existing public exercise projection. To refresh descriptions in an existing
+bundle, update `backend/scripts/import_exercises.py` and
+`backend/scripts/exercise_descriptions.json` from the new ZIP, then run from
+`backend` and restart the backend task:
+
+```powershell
+python .\scripts\import_exercises.py --refresh-descriptions
+```
+
+This needs no original ACGN checkout and changes only description metadata.
+Alternatively, copy the updated `backend/exercises/catalogue.json` from the ZIP
+when using the same bundled exercises. The correct pools and credential files
+do not need changing for this description update.
+
 This deployment support was developed on Linux. Cross-platform tests and
 PowerShell syntax checks do not establish that a particular Windows server is
 configured correctly. Run the Windows acceptance script below and the lifecycle

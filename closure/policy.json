@@ -87,6 +87,11 @@
       "surface": "Globally nearest semantically correct predicate outside the admitted finite pool, fresh SAT reclassification of corpus labels, and semantic completeness of the corpus",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Semantic equivalence of natural-language exercise descriptions and Alloy predicates; mechanical checks cover source binding, coverage, preservation, and delivery only",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
     }
   ],
   "sequence_departures": [

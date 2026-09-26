@@ -53,6 +53,8 @@ def read_source(root: Path, relative: str) -> bytes:
         if path.is_symlink():
             raise PackageError(f'Symlink deployment input is not allowed: {relative}')
     if not path.is_file():
+        if relative in ('exercises/catalogue.json', 'exercises/correct-pools.json'):
+            raise PackageError('Private exercise data are missing. Run scripts/prepare_private_data.py --source-root <original ACGN checkout containing classified-data>, or restore both ignored files from a trusted private bundle.')
         raise PackageError(f'Missing deployment input: {relative}; build the engine and import the catalogue first.')
     data = path.read_bytes()
     if TOKEN_PATTERN.search(data):

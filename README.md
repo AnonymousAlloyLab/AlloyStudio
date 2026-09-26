@@ -163,12 +163,24 @@ from the offline mechanical closure.
 
 ## IIS 10.0 deployment
 
-Build a Windows deployment archive from this complete local environment:
+Build a Windows deployment archive from this complete local environment. The
+catalogue and correct-predicate pools are private, ignored Git files. A fresh
+source checkout creates them from the original sibling `ACGN/classified-data`
+checkout automatically; if it is elsewhere, pass its path explicitly:
 
 ```bash
 ./scripts/build.sh
 python3 scripts/package_iis.py
 ```
+
+On Windows PowerShell, use `.\scripts\build.ps1 -ACGNRoot C:\path\to\ACGN`
+when the original ACGN checkout is not the sibling `ACGN` directory. Git Bash
+can set `ACGN_ROOT` before `./scripts/build.sh`. The original checkout must
+contain `classified-data/`. Without it, restore **both** ignored files from a
+trusted private bundle; a public source checkout does not contain enough data
+to recreate this corpus. `scripts/package_iis.py` checks the inputs and explains
+this prerequisite if either file is absent. The already-built private IIS ZIP
+contains both files and can be deployed without rebuilding the source.
 
 The output is `build/iis/alloy-studio-iis.zip` with a SHA-256 checksum. Follow
 [the IIS deployment guide](deploy/iis/README.md) for prerequisites, site or virtual

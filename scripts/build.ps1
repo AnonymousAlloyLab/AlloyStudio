@@ -12,6 +12,7 @@ param(
     [string]$JavaCompiler = 'javac',
     [string]$Python = 'python',
     [string]$Node = 'node',
+    [string]$ACGNRoot = '',
     [string]$OutputDirectory = '',
     [switch]$RequireNode,
     [switch]$EngineOnly
@@ -46,6 +47,35 @@ if ($dependencyExit -ne 0 -or $dependencies.status -ne 'PASS') {
     $missing = @($dependencies.errors | ForEach-Object { $_.path }) -join ', '
     throw "Bundled Java dependencies are missing or changed: $missing. Restore vendor\acgn\lib from the complete distribution before building."
 }
+# Private corpus outputs are intentionally excluded from source control. When a
+# fresh full-source build lacks either file, regenerate the pair from the
+# explicitly supplied ACGN checkout (or its conventional sibling directory).
+if (-not $EngineOnly) {
+    $privateExercises = Join-Path $projectRoot 'exercises'
+    $catalogue = Join-Path $privateExercises 'catalogue.json'
+    $correctPools = Join-Path $privateExercises 'correct-pools.json'
+    $hasCatalogue = Test-Path -LiteralPath $catalogue -PathType Leaf
+    $hasPools = Test-Path -LiteralPath $correctPools -PathType Leaf
+    if ($hasCatalogue -xor $hasPools) {
+        throw 'The private catalogue and correct pools must both exist. Restore both, or remove both and rebuild with -ACGNRoot pointing to the original ACGN checkout.'
+    }
+    if (-not $hasCatalogue) {
+        if (-not $ACGNRoot) { $ACGNRoot = $env:ACGN_ROOT }
+        if (-not $ACGNRoot) { $ACGNRoot = Join-Path (Split-Path -Parent $projectRoot) 'ACGN' }
+        $ACGNRoot = [IO.Path]::GetFullPath($ACGNRoot)
+        if (-not (Test-Path -LiteralPath (Join-Path $ACGNRoot 'classified-data') -PathType Container)) {
+            throw 'Private exercise data are absent from this checkout. Use -ACGNRoot with an original ACGN checkout containing classified-data, or restore the private catalogue and correct pools from a trusted deployment bundle.'
+        }
+        $prepareData = Join-Path $projectRoot 'scripts\prepare_private_data.py'
+        if (-not (Test-Path -LiteralPath $prepareData -PathType Leaf)) {
+            throw 'Private exercise data are absent and scripts\prepare_private_data.py is missing from this source checkout.'
+        }
+        & $Python '-E' '-s' $prepareData '--root' $projectRoot '--source-root' $ACGNRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Private corpus import failed. Check the original ACGN classified-data and its exercise sources.'
+        }
+    }
+}
 # Use explicit absolute JAR paths as a single argument. No wildcard expansion,
 # current directory, machine CLASSPATH, Maven cache, or upstream checkout is needed.
 $dependencyClassPath = @($dependencies.dependencies | ForEach-Object {
@@ -73,7 +103,7 @@ from pathlib import Path
 if sys.version_info < (3, 10):
     raise SystemExit('Python 3.10 or newer is required')
 root = Path(sys.argv[1])
-for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/package_iis.py', 'deploy/iis/run_backend.py'):
+for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
     ast.parse((root / name).read_text(encoding='utf-8'), filename=name)
 '@
 & $Python '-c' $pythonCheck $projectRoot

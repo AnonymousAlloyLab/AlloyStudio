@@ -14,6 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -297,7 +298,9 @@ def build_catalogue(source_root: Path) -> dict:
                     f"Revise {predicate} using the canonical-distance feedback. "
                     "The source corpus supplies no natural-language requirement for this exercise."
                 ),
-                "source": {"path": str(path.relative_to(source_root)), "sha256": digest(data)},
+                # Corpus paths are portable provenance identifiers, not native
+                # filesystem paths; keep JSON identical on Windows and POSIX.
+                "source": {"path": path.relative_to(source_root).as_posix(), "sha256": digest(data)},
                 "descriptionProvenance": "Reviewed natural-language interpretation of corpus oracle" if description else "No requirement text available",
                 "sourceClassification": path.parent.name,
                 **extracted,
@@ -324,7 +327,8 @@ def build_catalogue(source_root: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-root", type=Path, default=Path("/home/augustus/ACGN"))
+    parser.add_argument("--source-root", type=Path,
+                        default=Path(os.environ.get("ACGN_ROOT", ROOT.parent / "ACGN")))
     parser.add_argument("--output", type=Path, default=ROOT / "exercises" / "catalogue.json")
     parser.add_argument("--check", action="store_true", help="Verify deterministic regeneration without writing")
     args = parser.parse_args()

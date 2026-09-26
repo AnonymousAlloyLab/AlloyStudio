@@ -147,6 +147,7 @@
           "luna.py",
           "scripts/import_correct_pools.py",
           "scripts/import_exercises.py",
+          "scripts/prepare_private_data.py",
           "exercises/correct-pools.json",
           "openai.example.json",
           "runtime_dependencies.py",
@@ -209,12 +210,16 @@
       "test_prefixes": [
         "test_iis_package.",
         "test_iis_compat.",
-        "test_iis_launcher."
+        "test_iis_launcher.",
+        "test_private_data_import."
       ],
       "scope": {
         "inputs": [
           "scripts/package_iis.py",
           "scripts/build.ps1",
+          "scripts/prepare_private_data.py",
+          "scripts/import_correct_pools.py",
+          "scripts/import_exercises.py",
           "deploy/iis",
           "tests/test_iis_package.py",
           "tests/test_iis_compat.py",
@@ -225,6 +230,7 @@
           "vendor/acgn",
           "engine/src",
           "tests/test_iis_launcher.py",
+          "tests/test_private_data_import.py",
           "openai.example.json",
           "runtime_dependencies.py"
         ]

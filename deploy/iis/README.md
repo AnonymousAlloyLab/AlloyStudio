@@ -21,8 +21,13 @@ host was changed or claimed as verified during development.
 
 ## 1. Build and transfer the package
 
-From a source checkout containing the private catalogue, build the Java engine
-and create the distribution:
+From a source checkout, build the Java engine and create the distribution. The
+catalogue and correct-predicate pools are private ignored files. The build
+imports them from the sibling `ACGN/classified-data` checkout by default; pass
+`-ACGNRoot` (or set `ACGN_ROOT` for Git Bash) when that checkout is elsewhere.
+If you no longer have that original corpus, restore both files from a trusted
+private bundle. A public source checkout cannot recreate them. The existing
+private IIS ZIP already includes them and needs no source rebuild.
 
 ```bash
 ./scripts/build.sh
@@ -37,6 +42,13 @@ Windows PowerShell source-build equivalent is:
 
 ```powershell
 powershell -NoProfile -File scripts/build.ps1 -RequireNode
+python scripts/package_iis.py
+```
+
+For example, with the original corpus at `C:\alloystudio\ACGN`, use:
+
+```powershell
+powershell -NoProfile -File scripts/build.ps1 -RequireNode -ACGNRoot C:\alloystudio\ACGN
 python scripts/package_iis.py
 ```
 

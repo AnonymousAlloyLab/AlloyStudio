@@ -109,6 +109,13 @@ This finite pattern check is not a claim that arbitrary possible secrets can be 
 
 ## IIS
 
+Private source builds need both ignored exercise files. On a fresh checkout,
+the Windows build imports them from `-ACGNRoot` or `ACGN_ROOT`; package refusal
+names the import command and required original corpus when either file is
+missing. Tests cover verified pair publication, reruns, partial-pair refusal,
+and the missing-source case. This does not recreate the private classified
+corpus from a public checkout.
+
 `C-IIS`: frozen package and compatibility tests check deterministic archive
 contents and manifest hashes, public/private file isolation, rejected package
 inputs, explicit trusted origins behind a proxy, UTF-8 Java and key handling,

@@ -161,7 +161,10 @@ class IisPackageTests(unittest.TestCase):
                 path = self.root / name
                 payload = path.read_bytes()
                 path.unlink()
-                with self.assertRaisesRegex(PackageError, 'Missing deployment input'):
+                expected = ('Private exercise data are missing' if name in
+                            ('exercises/catalogue.json', 'exercises/correct-pools.json')
+                            else 'Missing deployment input')
+                with self.assertRaisesRegex(PackageError, expected):
                     build_package(self.root, self.output)
                 self.assertEqual(self.output.read_bytes(), original)
                 self.write(name, payload)

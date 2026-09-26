@@ -25,6 +25,10 @@ WINDOWS_BUILD_SCRIPT="$(cygpath -aw "$PROJECT_ROOT/scripts/build.ps1")"
 WINDOWS_OUTPUT_DIR="$(cygpath -aw "$OUTPUT_DIR")"
 BUILD_ARGUMENTS=(-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
   -File "$WINDOWS_BUILD_SCRIPT" -OutputDirectory "$WINDOWS_OUTPUT_DIR")
+if [[ -n "${ACGN_ROOT:-}" ]]; then
+  WINDOWS_ACGN_ROOT="$(cygpath -aw "$ACGN_ROOT")"
+  BUILD_ARGUMENTS+=(-ACGNRoot "$WINDOWS_ACGN_ROOT")
+fi
 if [[ "$BUILD_MODE" == portal ]]; then
   BUILD_ARGUMENTS+=(-RequireNode)
 else

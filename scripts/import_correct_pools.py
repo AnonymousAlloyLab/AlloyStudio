@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -268,7 +269,8 @@ def build_document(catalogue, source_root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-root", type=Path, default=Path("/home/augustus/ACGN"))
+    parser.add_argument("--source-root", type=Path,
+                        default=Path(os.environ.get("ACGN_ROOT", ROOT.parent / "ACGN")))
     parser.add_argument("--catalogue", type=Path, default=ROOT / "exercises/catalogue.json")
     parser.add_argument("--output", type=Path, default=ROOT / "exercises/correct-pools.json")
     parser.add_argument("--check", action="store_true")

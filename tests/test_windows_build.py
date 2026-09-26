@@ -116,6 +116,10 @@ class WindowsSourceBuildTests(unittest.TestCase):
         self.assertIn('ConvertFrom-Json', source[:compilation])
         self.assertRegex(source[:compilation], r'\.dependencies\b')
         self.assertIn('[IO.Path]::PathSeparator', between)
+        self.assertIn('[string]$ACGNRoot', source)
+        self.assertIn('scripts\\prepare_private_data.py', source)
+        self.assertIn('classified-data', source)
+        self.assertIn("$env:ACGN_ROOT", source)
         self.assertNotRegex(source, r"lib[\\/]\*")
         self.assertRegex(source, r"'-cp'\s*,\s*\$[A-Za-z][A-Za-z0-9_]*")
 

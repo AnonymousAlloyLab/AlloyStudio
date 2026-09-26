@@ -326,7 +326,7 @@ def execute():
         state["undeclared_dependencies"] = sorted(set(policy["required_dependencies"]) - dependencies)
         if state["undeclared_dependencies"]: block("UNDECLARED_DEPENDENCY")
         implementations = {
-            "V-PYTHON": ["scripts/verify_closure.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py", "scripts/prepare_private_data.py", "tests/test_correct_pools.py", "tests/test_catalogue.py", "tests/test_portal.py", "tests/test_adversarial.py", "tests/test_repository.py", "tests/test_credentials.py", "tests/test_runtime_dependencies.py", "tests/test_windows_build.py", "tests/test_iis_package.py", "tests/test_iis_compat.py", "tests/test_iis_launcher.py", "tests/test_private_data_import.py"],
+            "V-PYTHON": ["scripts/verify_closure.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py", "scripts/prepare_private_data.py", "tests/test_correct_pools.py", "tests/test_catalogue.py", "tests/test_portal.py", "tests/test_adversarial.py", "tests/test_repository.py", "tests/test_credentials.py", "tests/test_runtime_dependencies.py", "tests/test_windows_build.py", "tests/test_iis_package.py", "tests/test_iis_compat.py", "tests/test_iis_launcher.py", "tests/test_private_data_import.py", "tests/test_iis_connection.py", "deploy/iis/test_api_connection.py"],
             "V-ENGINE": ["scripts/verify_closure.py", "tests/test_engine_corpus.py", "tests/test_expanded_trace.py", "tests/test_nearest_correct.py", "tests/test_pool_portal.py", "engine/src/live/EngineSelfTest.java", "engine/src/is/fivefivefive/CanDis/LiveTrace.java"],
             "V-BROWSER": ["scripts/verify_closure.py", "tests/browser.mjs"],
             "V-BUILD": ["scripts/verify_closure.py", "scripts/build.sh", "scripts/build-windows.sh", "scripts/build.ps1", "engine/build.sh", "scripts/package_iis.py", "runtime_dependencies.py", "scripts/import_correct_pools.py", "scripts/import_exercises.py", "scripts/prepare_private_data.py"],
@@ -397,7 +397,7 @@ def execute():
                 "build": ["bash", "scripts/build.sh"],
                 "package": [sys.executable, "scripts/package_iis.py"],
                 "engine": ["java", "-Xmx256m", "-XX:ActiveProcessorCount=2", "-cp", "build/engine/classes:vendor/acgn/lib/*", "live.EngineSelfTest"],
-                "python": [sys.executable, "scripts/verify_closure.py", "--unittest-report", str(run / "logs" / f"{name}-python.json")],
+                "python": [sys.executable, "-X", "faulthandler", "scripts/verify_closure.py", "--unittest-report", str(run / "logs" / f"{name}-python.json")],
                 "browser": ["node", "tests/browser.mjs"],
             }
             for check, command in commands.items():

@@ -503,6 +503,30 @@ step and acceptance tests before restoring traffic. Roll back by restoring the
 old physical path and task registration. Never copy a source checkout or the
 private `backend` contents into the public directory.
 
+If the portal reports an unreadable response, run this read-only check **on the
+IIS host**. It requires Python, but no administrator privileges or installed task
+configuration. Use the deployment's actual public URL, including `/alloy/` when
+it is an IIS application:
+
+```powershell
+.\deploy\iis\Test-ApiConnection.ps1 -PublicUrl 'https://alloy.example.org/alloy/' -PythonExe 'C:\Python312\python.exe'
+```
+
+It compares public and loopback `api/health` requests, without following redirects
+or changing IIS. Output contains HTTP status, content-type category, health
+validation, and exercise counts; it excludes response bodies, URLs, and secrets.
+Each request has a five-second deadline. `local_backend_unavailable` means the
+loopback request failed: inspect the backend task and protected log.
+`public_proxy_or_routing` means loopback health passed while public health did
+not: inspect ARR, application paths, bindings, and inherited rules.
+`public_authentication_or_access` and `public_redirect` identify an access
+response or redirect; check the site's intended authentication policy. This
+diagnostic sends no Windows credentials. `catalogue_mismatch` means both
+endpoints returned health data with different exercise counts; check which
+backend the site routes to. The output retains both request results when more
+than one layer fails. A passing check confirms health connectivity and matching
+counts; run `Test-IisDeployment.ps1` for the full deployment acceptance checks.
+
 | Symptom | Check |
 | --- | --- |
 | IIS 500.19 | URL Rewrite/ARR installation, locked configuration sections, parent rules, and the parsed `web.config` error in IIS logs. |

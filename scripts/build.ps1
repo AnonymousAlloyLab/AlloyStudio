@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$acgnRoot = Join-Path $projectRoot 'vendor\acgn'
+$vendoredAcgnRoot = Join-Path $projectRoot 'vendor\acgn'
 $engineRoot = Join-Path $projectRoot 'engine'
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $projectRoot 'build\engine\classes'
@@ -82,7 +82,7 @@ $dependencyClassPath = @($dependencies.dependencies | ForEach-Object {
     Join-Path $projectRoot $_.path
 }) -join [IO.Path]::PathSeparator
 $null = New-Item -ItemType Directory -Path $OutputDirectory -Force
-$sourcePath = (Join-Path $engineRoot 'src') + [IO.Path]::PathSeparator + (Join-Path $acgnRoot 'src')
+$sourcePath = (Join-Path $engineRoot 'src') + [IO.Path]::PathSeparator + (Join-Path $vendoredAcgnRoot 'src')
 $compilerArguments = @(
     '-encoding', 'UTF-8', '--release', '17', '-Xprefer:source',
     '-cp', $dependencyClassPath, '-sourcepath', $sourcePath,

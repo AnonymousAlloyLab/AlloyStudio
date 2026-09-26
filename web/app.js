@@ -69,10 +69,31 @@ function showWaiting(message = 'Your next edit is ready to explore.') {
 }
 
 async function fetchJSON(url, options = {}) {
-  const response = await fetch(new URL(url, APP_BASE), { ...options, headers: { Accept: 'application/json', ...options.headers } });
+  const endpoint = new URL(url, APP_BASE);
+  const response = await fetch(endpoint, { ...options, headers: { Accept: 'application/json', ...options.headers } });
+  // An IIS error page or sign-in redirect is not an application result. Report
+  // only the requested path and status; response bodies may contain private
+  // server diagnostics, so never include them in the error or console.
+  const invalidResponse = () => {
+    const status = response.status;
+    let advice = 'Ask the server administrator to check the API connection.';
+    if (response.redirected || status === 401 || status === 403) {
+      advice = 'Access to the API requires attention. Sign in again or contact the server administrator.';
+    } else if ([502, 503, 504].includes(status)) {
+      advice = 'The analysis service is unavailable or timed out. Ask the server administrator to check the backend and proxy.';
+    } else if (status === 404 || status === 405 || status === 200) {
+      advice = 'The API route is not returning application data. Ask the server administrator to check the site routing.';
+    }
+    return new Error(`API response error: HTTP ${status} at ${endpoint.pathname}${response.redirected ? ' (redirected)' : ''}. ${advice}`);
+  };
+  if (response.redirected) throw invalidResponse();
   let data;
   try { data = await response.json(); }
-  catch { throw new Error('The server returned an unreadable response. Please try again.'); }
+  catch (error) {
+    if (error.name === 'AbortError') throw error;
+    throw invalidResponse();
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalidResponse();
   if (!response.ok && !(data && typeof data.status === 'string')) {
     throw new Error(data?.error?.message || data?.error || data?.message || `Request failed (${response.status}).`);
   }

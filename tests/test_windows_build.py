@@ -7,6 +7,7 @@ an actual PowerShell invocation is also run separately when that tool is present
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -123,6 +124,17 @@ class WindowsSourceBuildTests(unittest.TestCase):
         self.assertNotRegex(source, r"lib[\\/]\*")
         self.assertRegex(source, r"'-cp'\s*,\s*\$[A-Za-z][A-Za-z0-9_]*")
 
+    def test_powershell_corpus_parameter_is_distinct_from_vendored_source_variable(self):
+        source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
+        # PowerShell variable names are case insensitive: $acgnRoot would
+        # silently overwrite the caller's -ACGNRoot before the corpus import.
+        vendored_binding = re.search(
+            r"\$(\w+)\s*=\s*Join-Path\s+\$projectRoot\s+'vendor\\acgn'", source)
+        self.assertIsNotNone(vendored_binding)
+        self.assertNotEqual(vendored_binding.group(1).casefold(), 'acgnroot')
+        self.assertRegex(source, r"'--source-root'\s+\$ACGNRoot\b")
+        self.assertRegex(source, r"Join-Path\s+\$" + vendored_binding.group(1) + r"\s+'src'")
+
 
 class WindowsBashDispatchTests(unittest.TestCase):
     """Execute the real Bash entrypoints with controlled Windows-shell adapters."""
@@ -184,7 +196,8 @@ raise SystemExit(97)
     def windows_path(path):
         return 'C:\\mock' + str(path.resolve()).replace('/', '\\')
 
-    def invoke(self, entrypoint, arguments=(), *, system='MINGW64_NT-10.0', exit_code=0):
+    def invoke(self, entrypoint, arguments=(), *, system='MINGW64_NT-10.0', exit_code=0,
+               acgn_root=None):
         if self.capture.exists():
             self.capture.unlink()
         if self.conversions.exists():
@@ -199,13 +212,15 @@ raise SystemExit(97)
             'MOCK_JAVAC_MARKER': str(self.javac_marker),
             'MOCK_POWERSHELL_EXIT': str(exit_code),
         })
+        if acgn_root is not None:
+            environment['ACGN_ROOT'] = str(acgn_root)
         result = subprocess.run([self.bash, str(self.source / entrypoint), *arguments],
                                 cwd=self.unrelated, env=environment, capture_output=True,
                                 encoding='utf-8', timeout=20, check=False)
         self.assertFalse(self.javac_marker.exists(), 'Windows Bash must not call javac directly.')
         return result
 
-    def assert_dispatch(self, expected_output, *, engine_only=False):
+    def assert_dispatch(self, expected_output, *, engine_only=False, acgn_root=None):
         self.assertTrue(self.capture.is_file(), 'The native PowerShell launcher was not called.')
         capture = json.loads(self.capture.read_text())
         arguments = capture['argv']
@@ -218,10 +233,15 @@ raise SystemExit(97)
                          self.windows_path(expected_output))
         self.assertEqual('-EngineOnly' in arguments, engine_only)
         self.assertEqual('-RequireNode' in arguments, not engine_only)
+        expected_conversions = {self.windows_path(self.source / 'scripts/build.ps1'),
+                                self.windows_path(expected_output)}
+        if acgn_root is not None:
+            self.assertEqual(arguments[arguments.index('-ACGNRoot') + 1],
+                             self.windows_path(acgn_root))
+            expected_conversions.add(self.windows_path(acgn_root))
         conversions = [json.loads(line) for line in self.conversions.read_text().splitlines()]
         self.assertEqual({item['result'] for item in conversions},
-                         {self.windows_path(self.source / 'scripts/build.ps1'),
-                          self.windows_path(expected_output)})
+                         expected_conversions)
 
     def test_root_build_routes_all_windows_bash_variants_through_native_powershell(self):
         for system in ('MINGW64_NT-10.0', 'MSYS_NT-10.0', 'CYGWIN_NT-10.0'):
@@ -234,6 +254,12 @@ raise SystemExit(97)
         result = self.invoke('scripts/build.sh', ('custom output with spaces',))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assert_dispatch(self.source / 'custom output with spaces')
+
+    def test_root_build_forwards_original_corpus_path_with_spaces_to_powershell(self):
+        original_corpus = self.base / 'original ACGN corpus with spaces'
+        result = self.invoke('scripts/build.sh', acgn_root=original_corpus)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assert_dispatch(self.source / 'build/engine/classes', acgn_root=original_corpus)
 
     def test_direct_engine_default_and_caller_relative_output_are_preserved(self):
         cases = [((), self.source / 'engine/build/classes'),

@@ -27,7 +27,8 @@ from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 WEB_FILES = ('index.html', 'app.js', 'styles.css')
 DEPLOY_FILES = (
     'web.config', 'Common.ps1', 'Manage-AlloyStudio.ps1', 'Set-OpenAIKey.ps1',
-    'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1', 'README.md',
+    'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1',
+    'Test-ApiConnection.ps1', 'test_api_connection.py', 'README.md',
 )
 RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')

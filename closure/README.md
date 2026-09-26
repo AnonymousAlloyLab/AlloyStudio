@@ -80,6 +80,9 @@ dependency; actual Windows execution and encryption at rest are not claimed.
 
 `C-BROWSER`: the frozen `tests/browser.mjs` workflow assertions run in Chromium on
 both clean builds. The exact assertions and logs define the finite browser surface.
+HTML error pages, malformed API JSON, and redirected guidance must show the HTTP
+status and requested endpoint without exposing response bodies. Drafts and
+canonical feedback survive those failures, with retry after recovery.
 
 ## Builds
 
@@ -115,6 +118,12 @@ names the import command and required original corpus when either file is
 missing. Tests cover verified pair publication, reruns, partial-pair refusal,
 and the missing-source case. This does not recreate the private classified
 corpus from a public checkout.
+
+The read-only API diagnostic is exercised against local HTTP fixtures for
+backend failure, proxy errors, redirects, malformed health responses, and
+bounded reads. Its output excludes response bodies, URLs, and credentials.
+It identifies a failing connection boundary; an actual IIS repair and target
+acceptance still require execution on the deployment host.
 
 `C-IIS`: frozen package and compatibility tests check deterministic archive
 contents and manifest hashes, public/private file isolation, rejected package

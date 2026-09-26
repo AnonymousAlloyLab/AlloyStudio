@@ -204,13 +204,14 @@
     },
     {
       "id": "C-IIS",
-      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded.",
+      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, private corpus import, bounded HTTP diagnosis without response-body disclosure, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
         "test_iis_package.",
         "test_iis_compat.",
         "test_iis_launcher.",
+        "test_iis_connection.",
         "test_private_data_import."
       ],
       "scope": {
@@ -218,6 +219,9 @@
           "scripts/package_iis.py",
           "scripts/build.ps1",
           "scripts/prepare_private_data.py",
+          "scripts/build.sh",
+          "engine/build.sh",
+          "package.json",
           "scripts/import_correct_pools.py",
           "scripts/import_exercises.py",
           "deploy/iis",
@@ -230,6 +234,7 @@
           "vendor/acgn",
           "engine/src",
           "tests/test_iis_launcher.py",
+          "tests/test_iis_connection.py",
           "tests/test_private_data_import.py",
           "openai.example.json",
           "runtime_dependencies.py"

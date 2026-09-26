@@ -192,6 +192,56 @@ try {
     assert.equal(await feedback.textContent(), 'Checked');
     await page.unroute('**/api/explain');
   });
+  await check('non-json-api-errors-preserve-draft-and-identify-http-failure', async () => {
+    const privateBody = '<html><h1>PRIVATE_SERVER_DIAGNOSTIC</h1><script>window.LEAKED=true</script></html>';
+    for (const [status, contentType, body] of [
+      [502, 'text/html', privateBody], [503, 'text/html', privateBody],
+      [504, 'text/html', privateBody], [404, 'text/html', privateBody],
+      [500, 'text/html', privateBody], [401, 'text/html', privateBody],
+      [200, 'text/html', privateBody], [200, 'application/json', '{malformed'],
+      [200, 'application/json', 'null'], [204, 'application/json', ''],
+    ]) {
+      await page.route('**/api/feedback', route => route.fulfill({ status, contentType, body }));
+      const draft = `some Node // HTTP ${status}`;
+      await editor.fill(draft); await page.locator('#check-button').click();
+      await page.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
+      const message = await page.locator('#feedback-result').textContent();
+      assert(message.includes(`HTTP ${status} at /api/feedback`));
+      assert(!message.includes('PRIVATE_SERVER_DIAGNOSTIC'));
+      assert.equal(await editor.inputValue(), draft);
+      assert.equal(await editor.isEnabled(), true);
+      assert.equal(await page.evaluate(() => window.LEAKED), undefined);
+      await page.unroute('**/api/feedback');
+    }
+    await submit('adj = ~adj');
+    assert.equal(await page.locator('.distance-value').textContent(), '0');
+  });
+  await check('redirected-guidance-is-reported-and-retry-retains-canonical-feedback', async () => {
+    await page.route('**/api/explain', route => route.fulfill({ status: 302, headers: { location: '/index.html' } }));
+    await submit('adj = ~adj');
+    await page.locator('.explanation-unavailable').waitFor();
+    const message = await page.locator('.explanation-unavailable').textContent();
+    assert.match(message, /HTTP 200 at \/api\/explain \(redirected\)/);
+    assert(!message.includes('<html'));
+    assert.equal(await feedback.textContent(), 'Checked');
+    assert.equal(await page.locator('.distance-value').textContent(), '0');
+    await page.unroute('**/api/explain');
+    await page.locator('.explanation-retry').click();
+    await page.waitForFunction(() => document.querySelector('.explanation-unavailable')?.textContent.includes('not configured'));
+  });
+  await check('catalogue-proxy-error-can-be-retried-after-server-recovery', async () => {
+    await page.route('**/api/exercises', route => route.fulfill({ status: 502, contentType: 'text/html', body: 'PRIVATE_GATEWAY_PAGE' }));
+    await page.reload();
+    await page.locator('#startup-error').waitFor({ state: 'visible' });
+    assert.match(await page.locator('#startup-error').textContent(), /HTTP 502 at \/api\/exercises/);
+    assert(!(await page.locator('body').textContent()).includes('PRIVATE_GATEWAY_PAGE'));
+    await page.unroute('**/api/exercises');
+    await page.locator('#startup-error button').click();
+    await page.waitForFunction(() => !document.querySelector('#predicate-editor').disabled);
+    assert.equal(await page.locator('#exercise-count').textContent(), '181');
+    assert.equal(await editor.inputValue(), 'adj = ~adj');
+    assert.equal(await page.locator('#startup-error').isHidden(), true);
+  });
   await check('live-debounce-and-mobile-layout', async () => {
     await page.locator('#live-feedback').check();
     await editor.fill('no Node'); await editor.fill('some Node');

@@ -135,6 +135,13 @@ not establish that IIS, Windows PowerShell 5.1, NTFS ACLs, or Task Scheduler ran
 successfully on Windows. The supplied target acceptance script and actual
 Windows deployment remain outside this offline closure.
 
+The supplemental PowerShell path-policy fixtures use controlled filesystem
+adapters on Linux. The separate native Windows fixtures exercise actual file
+links, parent junctions, missing paths, cycles, and private/public overlap.
+Neither fixture suite is discharged by this offline Python/browser closure;
+their results must be reported separately, and native path resolution and
+Windows deployment remain excluded from its claims.
+
 ## Runtime dependencies
 
 `C-RUNTIME`: the extracted package must contain each of the seven declared JARs

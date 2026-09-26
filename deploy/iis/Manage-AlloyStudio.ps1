@@ -17,7 +17,7 @@ param(
 . (Join-Path $PSScriptRoot 'Common.ps1')
 Assert-Windows
 Import-Module ScheduledTasks -ErrorAction Stop
-$RuntimeRoot = Get-LocalPath -Path $RuntimeRoot
+$RuntimeRoot = Get-LocalPath -Path $RuntimeRoot -Purpose 'RuntimeRoot'
 $configPath = Join-Path $RuntimeRoot 'backend-task.json'
 $existing = Get-ScheduledTask -TaskName $TaskName -TaskPath '\' -ErrorAction SilentlyContinue
 
@@ -69,11 +69,11 @@ if ($Action -eq 'Install') {
     foreach ($required in @('BackendRoot', 'WebRoot', 'PythonExe', 'JavaExe', 'PublicUrl')) {
         if (-not (Get-Variable -Name $required -ValueOnly)) { throw "Install requires -$required." }
     }
-    $BackendRoot = Get-LocalPath -Path $BackendRoot
-    $WebRoot = Get-LocalPath -Path $WebRoot
-    $PythonExe = Get-LocalPath -Path $PythonExe
-    $JavaExe = Get-LocalPath -Path $JavaExe
-    $scriptRoot = Get-LocalPath -Path $PSScriptRoot
+    $BackendRoot = Get-LocalPath -Path $BackendRoot -Purpose 'BackendRoot'
+    $WebRoot = Get-LocalPath -Path $WebRoot -Purpose 'WebRoot'
+    $PythonExe = Get-ResolvedLocalPath -Path $PythonExe -Purpose 'PythonExe' -PathType Leaf
+    $JavaExe = Get-ResolvedLocalPath -Path $JavaExe -Purpose 'JavaExe' -PathType Leaf
+    $scriptRoot = Get-LocalPath -Path $PSScriptRoot -Purpose 'Administrator script directory'
     $publicRoots = @($WebRoot) + @(Get-IisPhysicalRoots)
     foreach ($private in @($BackendRoot, $RuntimeRoot, $scriptRoot)) {
         Assert-PrivatePath -Path $private -PublicRoots $publicRoots

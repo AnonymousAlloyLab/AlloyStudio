@@ -88,9 +88,30 @@ AlloyStudio\
   manifest.json         packaged file hashes
 ```
 
-Use regular local directories. The management scripts reject junctions,
-symbolic links, and private paths overlapping IIS physical directories. The
-default task state is stored separately in `C:\ProgramData\AlloyStudio`.
+Use regular local directories for Alloy's bundle and task state. If a directory
+or one of its parents is a junction or symbolic link, the error identifies the
+offending path and parameter; use its real directory path or move the bundle.
+Java/Python executable links (including linked parent directories) are resolved
+to real local files before the scheduled task is registered. Other sites may
+use local directory junctions: their resolved roots still participate in the
+private/public overlap check. Broken links, unsupported reparse points such as
+Microsoft Store execution aliases, and network targets fail with a named path.
+The default task state is stored in `C:\ProgramData\AlloyStudio`.
+
+For a Store Python alias, select a machine-wide Python installation readable by
+LOCAL SERVICE and pass its actual `python.exe` path with `-PythonExe`.
+The resolver uses Windows [GetFinalPathNameByHandleW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew)
+to resolve parent links and short names before checking path overlap. Native
+path regression fixtures are available in a source checkout:
+
+```powershell
+powershell.exe -NoProfile -File .\tests\iis_paths.Tests.ps1
+```
+
+Run elevated to permit creation of temporary file symlinks. These tests create
+and remove only their own temporary fixture tree; they do not change IIS or
+task configuration. Linux policy fixtures in `tests/iis_path_policy.Tests.ps1`
+use simulated filesystem calls and do not substitute for the native tests.
 
 Check the transferred backend before registering it with IIS:
 

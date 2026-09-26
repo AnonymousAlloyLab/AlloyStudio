@@ -6,23 +6,154 @@ function Assert-Windows {
     if ($env:OS -ne 'Windows_NT') { throw 'This script requires Windows and IIS 10.0.' }
 }
 
-function Get-LocalPath {
-    param([Parameter(Mandatory = $true)][string]$Path)
-    if ($Path -notmatch '^[A-Za-z]:[\\/]' -or $Path -match '["\r\n]') {
-        throw 'Use an absolute local drive path without quotes or newlines.'
-    }
-    $result = [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
-    if ($result.Length -le 2) { throw 'A drive root cannot be used as an application directory.' }
-    $ancestor = $result
-    while ($ancestor) {
-        if (Test-Path -LiteralPath $ancestor) {
-            if ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
-                throw 'Deployment paths must not contain junctions or symbolic links.'
+function Initialize-FinalPathResolver {
+    if ('AlloyStudio.Deployment.NativePath' -as [type]) { return }
+    # .NET Framework / Windows PowerShell 5.1 has no ResolveLinkTarget API.
+    # Open the target, not the reparse point, so Windows resolves parent links
+    # and short (8.3) names too. No file data or credentials are read.
+    Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+namespace AlloyStudio.Deployment {
+    public static class NativePath {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern SafeFileHandle CreateFileW(string path, uint access,
+            uint share, IntPtr security, uint creation, uint flags, IntPtr template);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern uint GetFinalPathNameByHandleW(SafeFileHandle handle,
+            StringBuilder path, uint length, uint flags);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern uint GetFileAttributesW(string path);
+        public static bool EntryExists(string path) {
+            // Attributes describe the link itself even when its target is gone.
+            if (GetFileAttributesW(path) != 0xffffffff) return true;
+            int error = Marshal.GetLastWin32Error();
+            if (error == 2 || error == 3) return false;
+            throw new Win32Exception(error);
+        }
+        public static string Resolve(string path) {
+            using (SafeFileHandle handle = CreateFileW(path, 0, 7, IntPtr.Zero,
+                    3, 0x02000000, IntPtr.Zero)) {
+                if (handle.IsInvalid) throw new Win32Exception(Marshal.GetLastWin32Error());
+                int capacity = 512;
+                while (capacity <= 32768) {
+                    var buffer = new StringBuilder(capacity);
+                    uint length = GetFinalPathNameByHandleW(handle, buffer, (uint)capacity, 0);
+                    if (length == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+                    if (length < capacity) return buffer.ToString();
+                    capacity = checked((int)length + 1);
+                }
+                throw new InvalidOperationException("Resolved path is too long.");
             }
+        }
+    }
+}
+'@
+}
+
+function ConvertTo-LocalPathText {
+    param([string]$Path, [string]$Purpose)
+    if ($Path -notmatch '^[A-Za-z]:[\\/]' -or $Path.Substring(2) -match '[:*?"<>|\r\n]') {
+        throw "$Purpose '$Path': use an absolute local drive path without wildcards, quotes, or newlines."
+    }
+    $result = [IO.Path]::GetFullPath($Path)
+    if ($result.Length -gt 3) { $result = $result.TrimEnd('\', '/') }
+    return $result
+}
+
+function Get-PathEntry {
+    param([string]$Path)
+    try { return Get-Item -LiteralPath $Path -Force -ErrorAction Stop }
+    catch [System.Management.Automation.ItemNotFoundException] {
+        # Some Windows provider versions report a dangling link as not found.
+        # Only a truly absent directory entry may become a missing suffix.
+        Initialize-FinalPathResolver
+        if ([AlloyStudio.Deployment.NativePath]::EntryExists($Path)) {
+            throw "Cannot inspect path '$Path'; it may be a broken junction or symbolic link."
+        }
+        return $null
+    }
+    # Access denied and other inspection failures must not count as missing.
+}
+
+function Get-FinalLocalPath {
+    param([string]$Path, [string]$Purpose)
+    Initialize-FinalPathResolver
+    try { $final = [AlloyStudio.Deployment.NativePath]::Resolve($Path) }
+    catch { throw "$Purpose '$Path': Windows could not resolve this path. Check for a broken link, a link cycle, an inaccessible target, or a Microsoft Store execution alias; use the real installed executable or directory." }
+    if ($final -notmatch '^\\\\\?\\[A-Za-z]:\\') {
+        throw "$Purpose '$Path': the resolved target is not a local drive path. UNC and device paths are unsupported."
+    }
+    $final = ConvertTo-LocalPathText -Path $final.Substring(4) -Purpose $Purpose
+    $drive = New-Object IO.DriveInfo([IO.Path]::GetPathRoot($final))
+    if ($drive.DriveType -notin @([IO.DriveType]::Fixed, [IO.DriveType]::Removable, [IO.DriveType]::Ram)) {
+        throw "$Purpose '$Path': the resolved target must be on a local drive, not a mapped network drive."
+    }
+    $ancestor = $final
+    while ($ancestor) {
+        $item = Get-PathEntry -Path $ancestor
+        if ($null -eq $item -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "$Purpose '$Path': resolved target '$ancestor' is unavailable or still a reparse point. Use a regular local target."
         }
         $ancestor = [IO.Path]::GetDirectoryName($ancestor)
     }
+    return $final
+}
+
+function Resolve-DeploymentPath {
+    param([string]$Path, [string]$Purpose, [switch]$AllowLinks,
+        [ValidateSet('Any', 'Leaf', 'Container')][string]$PathType = 'Any')
+    $result = ConvertTo-LocalPathText -Path $Path -Purpose $Purpose
+    if ($result.Length -le 3) { throw "$Purpose '$Path': a drive root cannot be used as an application directory." }
+    $ancestor = $result
+    $existingPath = $null
+    $suffix = New-Object 'System.Collections.Generic.List[string]'
+    while ($ancestor) {
+        $item = Get-PathEntry -Path $ancestor
+        if ($null -ne $item) {
+            if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                if (-not $AllowLinks) {
+                    throw "$Purpose '$Path' passes through junction or symbolic link '$ancestor'. Use the real directory path or move the Alloy bundle to a regular local directory."
+                }
+                $linkType = $item.PSObject.Properties['LinkType']
+                if ($null -eq $linkType -or $linkType.Value -notin @('SymbolicLink', 'Junction')) {
+                    throw "$Purpose '$Path' passes through unsupported reparse point '$ancestor'. Use the real installed executable or directory; Microsoft Store execution aliases are unsupported."
+                }
+            }
+            if (-not $existingPath) { $existingPath = $ancestor }
+        } elseif (-not $existingPath) {
+            $suffix.Insert(0, [IO.Path]::GetFileName($ancestor))
+        }
+        $ancestor = [IO.Path]::GetDirectoryName($ancestor)
+    }
+    if (-not $existingPath) { throw "$Purpose '$Path': no accessible local parent directory was found." }
+    if ($PathType -eq 'Leaf' -and $suffix.Count) { throw "$Purpose '$Path': the executable file does not exist." }
+    # Resolve even link-free private paths, so 8.3 aliases cannot bypass the
+    # public/private overlap check. A dangling link is opened here and fails;
+    # it must never be mistaken for an ordinary missing child directory.
+    $result = Get-FinalLocalPath -Path $existingPath -Purpose $Purpose
+    $resolvedItem = Get-PathEntry -Path $result
+    if ($null -eq $resolvedItem) { throw "$Purpose '$Path': the resolved target is unavailable." }
+    if (($suffix.Count -or $PathType -eq 'Container') -and -not $resolvedItem.PSIsContainer) {
+        throw "$Purpose '$Path': expected a directory."
+    }
+    if ($PathType -eq 'Leaf' -and $resolvedItem.PSIsContainer) { throw "$Purpose '$Path': expected an executable file." }
+    foreach ($part in $suffix) { $result = Join-Path $result $part }
     return $result
+}
+
+function Get-LocalPath {
+    param([Parameter(Mandatory = $true)][string]$Path, [string]$Purpose = 'Deployment path')
+    return Resolve-DeploymentPath -Path $Path -Purpose $Purpose
+}
+
+function Get-ResolvedLocalPath {
+    param([Parameter(Mandatory = $true)][string]$Path, [string]$Purpose = 'Runtime or IIS path',
+        [ValidateSet('Any', 'Leaf', 'Container')][string]$PathType = 'Any')
+    return Resolve-DeploymentPath -Path $Path -Purpose $Purpose -AllowLinks -PathType $PathType
 }
 
 function Test-WithinPath {
@@ -53,7 +184,7 @@ function Set-RestrictedAcl {
     }
     foreach ($item in $items) {
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-            throw 'Cannot assign private ACLs through a junction or symbolic link.'
+            throw "Cannot assign private ACLs through junction or symbolic link '$($item.FullName)'."
         }
         if ($item.PSIsContainer) {
             $acl = New-Object Security.AccessControl.DirectorySecurity
@@ -83,7 +214,8 @@ function Get-IisPhysicalRoots {
     $values = @(Get-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' `
         -Filter 'system.applicationHost/sites/site/application/virtualDirectory' -Name physicalPath)
     return @($values | ForEach-Object {
-        Get-LocalPath -Path ([Environment]::ExpandEnvironmentVariables([string]$_.Value))
+        Get-ResolvedLocalPath -Path ([Environment]::ExpandEnvironmentVariables([string]$_.Value)) `
+            -Purpose 'IIS physical directory' -PathType Container
     })
 }
 
@@ -108,9 +240,9 @@ function Invoke-RuntimeDependencyCheck {
         [Parameter(Mandatory = $true)][string]$BackendRoot,
         [Parameter(Mandatory = $true)][string]$JavaExe
     )
-    $PythonExe = Get-LocalPath -Path $PythonExe
-    $BackendRoot = Get-LocalPath -Path $BackendRoot
-    $JavaExe = Get-LocalPath -Path $JavaExe
+    $PythonExe = Get-ResolvedLocalPath -Path $PythonExe -Purpose 'PythonExe' -PathType Leaf
+    $BackendRoot = Get-LocalPath -Path $BackendRoot -Purpose 'BackendRoot'
+    $JavaExe = Get-ResolvedLocalPath -Path $JavaExe -Purpose 'JavaExe' -PathType Leaf
     $checker = Get-LocalPath -Path (Join-Path $BackendRoot 'runtime_dependencies.py')
     foreach ($requiredFile in @($PythonExe, $JavaExe, $checker)) {
         if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {

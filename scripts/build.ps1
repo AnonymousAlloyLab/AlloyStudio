@@ -47,9 +47,8 @@ if ($dependencyExit -ne 0 -or $dependencies.status -ne 'PASS') {
     $missing = @($dependencies.errors | ForEach-Object { $_.path }) -join ', '
     throw "Bundled Java dependencies are missing or changed: $missing. Restore vendor\acgn\lib from the complete distribution before building."
 }
-# Private corpus outputs are intentionally excluded from source control. When a
-# fresh full-source build lacks either file, regenerate the pair from the
-# explicitly supplied ACGN checkout (or its conventional sibling directory).
+# The default catalogue and pools are bundled in source control. Missing data
+# can also be recovered by importing an explicitly supplied custom ACGN corpus.
 if (-not $EngineOnly) {
     $privateExercises = Join-Path $projectRoot 'exercises'
     $catalogue = Join-Path $privateExercises 'catalogue.json'
@@ -57,21 +56,21 @@ if (-not $EngineOnly) {
     $hasCatalogue = Test-Path -LiteralPath $catalogue -PathType Leaf
     $hasPools = Test-Path -LiteralPath $correctPools -PathType Leaf
     if ($hasCatalogue -xor $hasPools) {
-        throw 'The private catalogue and correct pools must both exist. Restore both, or remove both and rebuild with -ACGNRoot pointing to the original ACGN checkout.'
+        throw 'The catalogue and correct pools must both exist. Restore the matching bundled exercises/ files from Git. For a custom corpus, restore your matching pair or rebuild with -ACGNRoot after backing up and moving both files.'
     }
     if (-not $hasCatalogue) {
         if (-not $ACGNRoot) { $ACGNRoot = $env:ACGN_ROOT }
         if (-not $ACGNRoot) { $ACGNRoot = Join-Path (Split-Path -Parent $projectRoot) 'ACGN' }
         $ACGNRoot = [IO.Path]::GetFullPath($ACGNRoot)
-        # Let the helper report the precise missing classified-data path or
-        # invalid corpus, together with its --from-bundle recovery command.
+        # A complete clone includes the data. The helper also supports legacy
+        # or custom classified-data imports and --from-bundle recovery.
         $prepareData = Join-Path $projectRoot 'scripts\prepare_private_data.py'
         if (-not (Test-Path -LiteralPath $prepareData -PathType Leaf)) {
-            throw 'Private exercise data are absent and scripts\prepare_private_data.py is missing from this source checkout.'
+            throw 'Bundled exercise data and scripts\prepare_private_data.py are missing. Restore the complete source checkout from Git.'
         }
         & $Python '-E' '-s' $prepareData '--root' $projectRoot '--source-root' $ACGNRoot
         if ($LASTEXITCODE -ne 0) {
-            throw 'Private data preparation failed; use the diagnostic code above. You can restore a trusted IIS ZIP with: python scripts/prepare_private_data.py --from-bundle PATH_TO_ZIP'
+            throw 'Exercise data preparation failed; use the diagnostic code above. Restore the bundled exercises/ files from Git. Optional custom data recovery: python scripts/prepare_private_data.py --from-bundle PATH_TO_ZIP'
         }
     }
 }

@@ -2,19 +2,22 @@
 
 IIS serves the three public assets and proxies this application's `api/*` requests
 to Python at `127.0.0.1:8080`. Python runs the bundled Java canonical engine and
-keeps the exercise catalogue and Luna credentials private. The backend runs as a
-Windows **scheduled task**, under LOCAL SERVICE, independently of IIS app pool
-recycling. Both a dedicated website and an application such as `/alloy/` work.
+keeps reference solutions and Luna credentials out of browser responses. The
+backend runs as a Windows **scheduled task**, under LOCAL SERVICE, independently
+of IIS app pool recycling. Both a dedicated website and an application such as
+`/alloy/` work.
 
 The package preserves all 181 exercises and their existing environments, plus
-private correct-predicate pools including every exercise's oracle. Each request
-compares all admitted candidates and traces one nearest match. The ZIP
-contains private oracle material and is a server distribution; keep it out of a
-public repository and never make the package root an IIS physical directory.
-Only `wwwroot` is public. No API key is included in the distribution.
+correct-predicate pools with 7,550 corpus candidates and 181 oracles. Each request
+compares all admitted candidates and traces one nearest match. These data are
+also tracked in the public repository: anyone reading or cloning it can inspect
+reference solutions. Browser redaction does not make that source data secret.
+The ZIP is a server distribution; never make its package root an IIS physical
+directory. Only `wwwroot` is served publicly. No API key is included in the
+distribution.
 
 Every bundled invariant has a natural-language requirement displayed above the
-editor. The text is stored in the private catalogue and exposed through the
+editor. The text is stored in the bundled catalogue and exposed through the
 existing public exercise projection. To refresh descriptions in an existing
 bundle, update `backend/scripts/import_exercises.py` and
 `backend/scripts/exercise_descriptions.json` from the new ZIP, then run from
@@ -37,27 +40,11 @@ host was changed or claimed as verified during development.
 
 ## 1. Build and transfer the package
 
-From a source checkout, build the Java engine and create the distribution. The
-catalogue and correct-predicate pools are private ignored files. The build
-imports them from the sibling `ACGN/classified-data` checkout by default; pass
-`-ACGNRoot` (or set `ACGN_ROOT` for Git Bash) when that checkout is elsewhere.
-If you no longer have that original corpus, restore both files from a trusted
-private bundle. A public source checkout cannot recreate them. The existing
-private IIS ZIP already includes them and needs no source rebuild.
-
-When reproducing a source checkout on another machine without the original
-ACGN corpus, restore its private data from the trusted ZIP before building:
-
-```powershell
-python .\scripts\prepare_private_data.py --from-bundle 'C:\Staging\alloy-studio-iis.zip'
-```
-
-The same command works on Linux/macOS with the appropriate ZIP path and Python
-command. It verifies the two data members against the manifest and their source
-witnesses, then restores only the catalogue and correct pools. Existing valid
-data can be checked without the original corpus; incomplete pairs and invalid
-inputs receive specific diagnostic codes. The ZIP and the restored private
-files belong outside public IIS directories and public source control.
+From a fresh source checkout, build the Java engine and create the distribution.
+The repository includes `exercises/catalogue.json` and
+`exercises/correct-pools.json`, so no original ACGN checkout or existing IIS ZIP
+is required. Packaging validates the correct-pool source witnesses. See
+[exercise data and provenance](../../exercises/README.md) for their contents.
 
 ```bash
 ./scripts/build.sh
@@ -75,19 +62,35 @@ powershell -NoProfile -File scripts/build.ps1 -RequireNode
 python scripts/package_iis.py
 ```
 
-For example, with the original corpus at `C:\alloystudio\ACGN`, use:
-
-```powershell
-powershell -NoProfile -File scripts/build.ps1 -RequireNode -ACGNRoot C:\alloystudio\ACGN
-python scripts/package_iis.py
-```
-
-This uses a JDK 17 or newer, Python 3.10 or newer, and Node 20 or newer for the
-JavaScript syntax check. Optional `-JavaCompiler` and `-Python` arguments accept
-absolute executable paths. The IIS runtime needs no Node, npm,
+The release build uses a JDK 17 or newer, Python 3.10 or newer, and Node 20 or
+newer for the JavaScript syntax check. Optional `-JavaCompiler` and `-Python`
+arguments accept absolute executable paths. The IIS runtime needs no Node, npm,
 bash, compiler, pip packages, or original ACGN checkout. Use a machine-wide
 64-bit Python installation and Java 17+ runtime readable by LOCAL SERVICE; avoid
 the Microsoft Store Python alias or executables in a user's private profile.
+
+If the bundled data are missing or damaged, preserve intentional local data
+edits and restore both files from Git before rebuilding:
+
+```powershell
+git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
+```
+
+For optional custom imports or legacy checkouts without tracked data, the build
+can import an original `classified-data/` corpus using
+`-ACGNRoot C:\alloystudio\ACGN` on PowerShell, or `ACGN_ROOT` on Bash. A trusted
+IIS ZIP is also an optional recovery source:
+
+```powershell
+python .\scripts\prepare_private_data.py --from-bundle 'C:\Staging\alloy-studio-iis.zip'
+```
+
+The same helper works on Linux/macOS with the appropriate ZIP path and Python
+command. It verifies manifest hashes and source witnesses, then restores only
+the catalogue and correct pools. Existing valid data are preserved, so back up
+and move both files first when intentionally importing a different corpus.
+Incomplete pairs and invalid inputs receive specific diagnostic codes and are
+left untouched. The restored files belong outside the public IIS directory.
 
 Transfer `build/iis/alloy-studio-iis.zip` and its `.sha256` sidecar through a private
 channel and compare the archive's SHA-256 with the sidecar after transfer. In an elevated
@@ -113,7 +116,7 @@ The extracted layout is:
 ```text
 AlloyStudio\
   wwwroot\              index.html, app.js, styles.css, web.config ONLY
-  backend\              Python code, classes, JARs, private catalogue and correct pools
+  backend\              Python code, classes, JARs, catalogue and correct pools
   deploy\iis\           administrator scripts and the task launcher
   manifest.json         packaged file hashes
 ```
@@ -400,7 +403,7 @@ arrangement. The resulting private layout is:
 ```text
 AlloyStudio\
   wwwroot\                    public IIS directory
-  backend\                    private engine and exercise data
+  backend\                    server-only engine and exercise data
     openai.example.json       shipped empty credential template
     openai.local.json         your private credential configuration
   deploy\iis\                 administrator scripts

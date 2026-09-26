@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate private exercise data, import the original corpus, or restore a trusted IIS ZIP."""
+"""Validate bundled server-side exercises, or optionally import/restore a replacement corpus."""
 from __future__ import annotations
 
 import argparse
@@ -150,14 +150,15 @@ def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None 
             missing = PRIVATE_NAMES[0 if not exists[0] else 1]
             raise PreparationError('PARTIAL_PRIVATE_DATA',
                 f'Only one private data file exists; exercises/{missing} is missing. '
-                'Restore the matching file from your trusted bundle, or back up and move the incomplete pair before retrying --from-bundle. Existing files were preserved.')
+                'Restore the matching bundled file from Git, or restore your matching custom data from a trusted bundle. '
+                'Back up and move an incomplete custom pair before retrying --from-bundle. Existing files were preserved.')
         try:
             catalogue_bytes, pool_bytes = (read_bounded(path) for path in paths)
             catalogue, pools = validate_pair(catalogue_bytes, pool_bytes)
         except (OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError) as error:
             raise PreparationError('PRIVATE_DATA_INVALID',
                 'The existing catalogue.json/correct-pools.json pair is unreadable or failed source/witness validation. '
-                'Restore both matching files from a trusted bundle. Existing files were preserved.') from error
+                'Restore both matching bundled files from Git, or your custom files from a trusted bundle. Existing files were preserved.') from error
         return result_metadata('validated-existing', catalogue, pools, catalogue_bytes, pool_bytes)
 
     if bundle is not None:
@@ -169,9 +170,10 @@ def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None 
         if not corpus.is_dir():
             raise PreparationError('SOURCE_CORPUS_MISSING',
                 f'Neither private exercise file is installed, and the original corpus was not found at {corpus}. '
-                'A Git clone includes the engine dependencies but not these oracle-bearing data. '
-                'Use --source-root with the original ACGN checkout containing classified-data/, '
-                'or --from-bundle /path/to/alloy-studio-iis.zip. vendor/acgn contains engine code, not the exercise corpus.')
+                'A complete Git clone includes exercises/catalogue.json and exercises/correct-pools.json. '
+                'Restore those tracked files from Git to use the bundled corpus. '
+                'For an optional custom import, use --source-root with an ACGN checkout containing classified-data/, '
+                'or --from-bundle /path/to/alloy-studio-iis.zip. vendor/acgn contains engine code, not classified-data/.')
         try:
             catalogue = build_catalogue(source_root)
             if not catalogue['exercises']:
@@ -223,7 +225,7 @@ def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT,
-                        help='Checkout that receives ignored private exercises/ files')
+                        help='Checkout containing the bundled server-side exercises/ files')
     source = parser.add_mutually_exclusive_group()
     source.add_argument('--source-root', type=Path,
                         default=Path(os.environ.get('ACGN_ROOT', ROOT.parent / 'ACGN')),

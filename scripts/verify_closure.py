@@ -107,7 +107,7 @@ def version(command):
 def tcb_record():
     commands = {"python": [sys.executable, "--version"], "java": ["java", "-version"],
                 "javac": ["javac", "-version"], "node": ["node", "--version"],
-                "bash": ["bash", "--version"], "unshare": ["unshare", "--version"],
+                "bash": ["bash", "--version"], "git": ["git", "--version"], "unshare": ["unshare", "--version"],
                 "ip": ["ip", "-Version"]}
     versions = {name: version(command) for name, command in commands.items()}
     executables = {name: {"path": str(Path(shutil.which(command[0])).resolve()),
@@ -124,11 +124,12 @@ def tcb_record():
         ("TCB-JAVA", versions["java"] + "; " + versions["javac"], "Java VM and compiler correctness"),
         ("TCB-NODE", versions["node"], "Node runtime and browser test execution"),
         ("TCB-BASH", versions["bash"], "Build shell and ordinary host userland commands"),
+        ("TCB-GIT", versions["git"], "Temporary repository creation, ignore rules, commits and local clones used by reproduction tests"),
         ("TCB-NETNS", versions["unshare"] + "; " + versions["ip"], "Kernel child user/network namespace and loopback enforcement"),
         ("TCB-CHROMIUM", version([str(browser), "--version"]), "Chromium engine and its runtime dependencies; cache tree pinned separately"),
         ("TCB-PLAYWRIGHT", playwright, "Playwright driver, assertions and protocol; installed package tree pinned in manifest"),
         ("TCB-ALLOY-ACGN", "Vendored files pinned by manifest", "ACGN normalization and Alloy parser semantics are trusted beyond finite assertions"),
-        ("TCB-CORPUS-LABELS", "Frozen private source witnesses and classification provenance", "Corpus correct labels and oracle truth are trusted; hashes and exact context/body checks do not re-prove semantic correctness"),
+        ("TCB-CORPUS-LABELS", "Frozen bundled source witnesses and classification provenance", "Corpus correct labels and oracle truth are trusted; hashes and exact context/body checks do not re-prove semantic correctness"),
         ("TCB-SHA256", ssl.OPENSSL_VERSION, "hashlib implementation and SHA-256 collision resistance"),
         ("TCB-OS", platform.platform(), "Linux, filesystem, process isolation and dynamically linked system libraries"),
         ("TCB-HARDWARE", platform.machine(), "Processor, memory and storage correctness"),

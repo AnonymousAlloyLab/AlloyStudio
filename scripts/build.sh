@@ -8,7 +8,7 @@ case "$(uname -s)" in
 esac
 if [[ -f exercises/catalogue.json && ! -f exercises/correct-pools.json ]] ||
    [[ ! -f exercises/catalogue.json && -f exercises/correct-pools.json ]]; then
-  printf '%s\n' 'The private catalogue and correct pools must both exist. Restore both, or remove both and rebuild with ACGN_ROOT pointing to the original ACGN checkout.' >&2
+  printf '%s\n' 'The catalogue and correct pools must both exist. Restore the matching bundled exercises/ files from Git. For a custom corpus, restore your matching pair or rebuild with ACGN_ROOT after backing up and moving both files.' >&2
   exit 1
 fi
 if [[ ! -f exercises/catalogue.json ]]; then

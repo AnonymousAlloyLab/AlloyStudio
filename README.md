@@ -3,26 +3,20 @@
 A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical repair metric. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and GPT-6 Luna guidance.
-Feedback uses the closest member of each private correct-predicate pool,
+Feedback uses the closest member of each bundled correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
 
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
-From a new clone, prepare the private exercises once using the trusted deployment
-archive supplied by the project owner:
-
-```bash
-./scripts/setup.sh --from-bundle /path/to/alloy-studio-iis.zip
-./scripts/run.sh
-```
-
-Alternatively, use `./scripts/setup.sh --source-root /path/to/ACGN` if you have
-the original `classified-data` corpus. A public clone includes all engine sources
-and seven dependency JARs; oracle-bearing exercise data are supplied privately.
-If both private exercise files are already present, just run:
+From a new clone, run:
 
 ```bash
 ./scripts/run.sh
 ```
+
+The repository includes the exercise catalogue, correct-predicate pools, engine
+sources, and seven dependency JARs. No IIS ZIP or original ACGN checkout is
+required. To prepare and check the checkout without starting the server, use
+`./scripts/setup.sh` without flags.
 
 Open **http://127.0.0.1:8080**. Setup and startup validate the bundled JARs, compile
 the engine, and run 372 engine checks. They need no Node, npm, pip packages, or
@@ -38,9 +32,9 @@ is available beside the editor. Download exports that environment with your
 current predicate. Drafts and recent distance history stay in your browser.
 All 181 exercises have natural-language requirements displayed above the editor.
 Read them together in [the exercise guide](docs/exercise-descriptions.md).
-The descriptions state the task in prose while predicate implementations remain
-private. They account for each exercise's own declarations and facts, without
-assuming that other numbered invariants hold.
+The descriptions state the task in prose while the browser hides reference
+predicate implementations. They account for each exercise's own declarations
+and facts, without assuming that other numbered invariants hold.
 
 Descriptions live in `scripts/exercise_descriptions.json`, bound to the original
 model's SHA-256 so a changed source cannot silently inherit an outdated task.
@@ -62,9 +56,9 @@ facts, imports, helpers, and other context. It removes the oracle predicate and
 the exact grading harness that references it. Predicate body editing cannot add
 top-level declarations or replace the context. Every retained and removed span
 is recorded against its source hash. All 181 original selected files are
-preserved in the private catalogue for reproduction.
+preserved in the bundled catalogue for reproduction.
 
-The server reads `exercises/catalogue.json` privately and exposes an explicit
+The server reads `exercises/catalogue.json` and exposes an explicit
 public field projection. Only three named web assets are served. It parses the
 learner and oracle in separate JVM modules so the learner cannot call the
 oracle. Reference bodies, canonical forms, target expressions, target-only names
@@ -72,11 +66,18 @@ and constants, raw exceptions, and credentials are not sent to the browser.
 Replacement operator names are explicitly permitted hints. Costs, operator hints,
 and redacted operation categories deliberately reveal repair information; repeated queries
 can help infer a solution. This is a learning interface, not a secrecy guarantee
-against a user with server filesystem access or the original public corpus.
+against someone reading this public repository or the original corpus.
 
-Keep the private catalogue, correct pools, and credentials out of a public repository.
-The catalogue and pools are excluded by `.gitignore` but included in this delivered local
-environment. Recreate it from an ACGN checkout with:
+`exercises/catalogue.json` and `exercises/correct-pools.json` are tracked public
+source data. Anyone reading or cloning this repository can inspect their oracle
+and candidate bodies. Browser redaction keeps solutions out of the learning
+interface; it does not make the repository data secret. The bundled pair contains
+181 exercises and 7,731 candidates: 7,550 deduplicated corpus candidates plus 181
+oracles. See [exercise data and provenance](exercises/README.md) for the source
+witnesses and validation boundary. Credentials remain private, ignored by Git,
+and excluded from release archives.
+
+For optional imports from a different ACGN corpus, inspect:
 
 ```bash
 python3 scripts/import_exercises.py --help
@@ -87,13 +88,13 @@ python3 scripts/import_correct_pools.py --help
 
 Each comparison set contains the exercise's oracle and corpus submissions
 labelled `correct` whose surrounding environment matches the preserved exercise
-byte for byte. The importer keeps source hashes and private source witnesses,
+byte for byte. The importer keeps source hashes and bundled source witnesses,
 deduplicates correct bodies by conservative code-token identity, and retains one
 explicit oracle. It excludes submissions from different environments: a correct
 label in a changed context does not establish correctness in this exercise.
 Every request prepares the learner once, compares **every** admitted candidate,
 and builds the trace against a minimum-distance candidate. Ties use deterministic
-private pool order. An invalid candidate or timeout produces an error, never a
+pool order. An invalid candidate or timeout produces an error, never a
 partial minimum or an oracle-only fallback. Exact matches to correct candidates
 return zero, including alternative formulations with positive oracle distance.
 
@@ -103,7 +104,7 @@ over every semantically correct Alloy predicate or a new solver proof. Unlike
 the augmenter's experiment on incorrect submissions, live feedback retains
 exact learner/candidate matches. Pools without compatible correct submissions
 contain only their oracle; the interface reports that limitation. Candidate
-bodies, identities, sources, and the selected target remain private.
+bodies, identities, sources, and the selected target are not sent to the browser.
 
 The Java adapter calls the bundled framework's `Canonical.prepare`,
 `Canonical.distanceBreakdown`, `Canonical.irTemporalFol`, and `Canonical.edits`.
@@ -191,56 +192,59 @@ from the offline mechanical closure.
 
 ## IIS 10.0 deployment
 
-Build a Windows deployment archive from this complete local environment. The
-catalogue and correct-predicate pools are private, ignored Git files. A fresh
-source checkout creates them from the original sibling `ACGN/classified-data`
-checkout automatically; if it is elsewhere, pass its path explicitly:
+Build a Windows deployment archive directly from a fresh source checkout. The
+tracked catalogue and correct-predicate pools contain all required exercise
+data; no original ACGN checkout or existing IIS archive is needed:
 
 ```bash
 ./scripts/build.sh
 python3 scripts/package_iis.py
 ```
 
-On Windows PowerShell, use `.\scripts\build.ps1 -ACGNRoot C:\path\to\ACGN`
-when the original ACGN checkout is not the sibling `ACGN` directory. Git Bash
-can set `ACGN_ROOT` before `./scripts/build.sh`. The original checkout must
-contain `classified-data/`. Without it, restore **both** ignored files from a
-trusted private bundle; a public source checkout does not contain enough data
-to recreate this corpus. `scripts/package_iis.py` checks the inputs and explains
-this prerequisite if either file is absent. The already-built private IIS ZIP
-contains both files and can be deployed without rebuilding the source.
+On Windows PowerShell, use `.\scripts\build.ps1`. If a bundled data file is
+missing or damaged, preserve any intentional local data edits, then restore
+the matching pair from Git:
 
-To reproduce a source checkout without the original ACGN corpus, obtain the
-trusted private `alloy-studio-iis.zip` from the deployment owner. From the new
-checkout, run this once, replacing the ZIP path with its actual location:
+```bash
+git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
+```
+
+For a custom import or a legacy checkout without tracked exercise data, the
+original corpus must contain `classified-data/`. Pass its location with
+`.\scripts\build.ps1 -ACGNRoot C:\path\to\ACGN` on PowerShell, or set `ACGN_ROOT`
+before `./scripts/build.sh` on Bash. A trusted IIS ZIP is also an optional
+recovery source:
 
 ```bash
 python scripts/prepare_private_data.py --from-bundle /path/to/alloy-studio-iis.zip
 ```
 
 Use `python3` if that is the Python 3.10+ command on the machine, then rerun the
-normal build command. The helper verifies the manifest hashes, catalogue source
-records, and correct-pool witnesses before restoring exactly
+normal build command. This legacy-named helper verifies the manifest hashes,
+catalogue source records, and correct-pool witnesses before restoring exactly
 `exercises/catalogue.json` and `exercises/correct-pools.json`. It copies no API
 keys or application files. Once that pair exists, validation needs neither the
 original ACGN checkout nor the ZIP. A valid existing pair is left unchanged;
-partial or invalid pairs are reported and preserved for recovery.
+back up and move both files first when intentionally importing a different
+corpus. Partial or invalid pairs are reported and preserved for recovery.
 
 Preparation failures now have specific codes: `SOURCE_CORPUS_MISSING` names the
 searched `classified-data` path; `EMPTY_CORPUS` identifies a directory with no
 usable exercise groups; `PARTIAL_PRIVATE_DATA` names the missing file;
 `PRIVATE_DATA_INVALID` identifies invalid existing data; and `BUNDLE_INVALID`
-identifies an incomplete or inconsistent ZIP. Diagnostic output omits private
+identifies an incomplete or inconsistent ZIP. Diagnostic output omits
 predicate contents. `vendor/acgn` supplies framework dependencies, not the
-original exercise corpus.
+original exercise corpus; the tracked exercise pair supplies the data needed
+for this portal.
 
 The output is `build/iis/alloy-studio-iis.zip` with a SHA-256 checksum. Follow
 [the IIS deployment guide](deploy/iis/README.md) for prerequisites, site or virtual
 application setup, HTTPS, startup task installation, and target-side acceptance.
 Only the archive's `wwwroot` directory becomes an IIS physical directory. The
-private `backend` directory contains the preserved exercise catalogue, correct pools, compiled
-engine, and runtime JARs; keep the archive and backend private. Credentials are
-excluded from the archive. Supply your own key in the private JSON configuration;
+server-only `backend` directory contains the preserved exercise catalogue,
+correct pools, compiled engine, and runtime JARs; keep it outside the public IIS
+directory. Credentials are excluded from the archive. Supply your own key in
+the private JSON configuration;
 the masked Windows key setup script also supports a separate private key file.
 
 IIS serves static assets and proxies `/api` to `127.0.0.1:8080` using URL Rewrite

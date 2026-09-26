@@ -13,7 +13,7 @@ read-only. There is no override; any repair requires a new run and input root.
 
 `python3 scripts/verify_closure.py --self-test` exercises the decision function with
 negative controls without creating or asserting a closure run. Required local
-dependencies are JDK 17+, Python 3, Node, installed locked Playwright dependencies,
+dependencies are JDK 17+, Python 3, Git, Node, installed locked Playwright dependencies,
 the matching cached Chromium browsers, `unshare`, and `ip`. No dependency is
 downloaded during verification. Unavailable tooling produces infrastructure failure.
 
@@ -43,7 +43,7 @@ limit, and worker error cases are tested against a loopback HTTP server.
 
 ## Correct pools
 
-`C-CORRECT-POOLS`: the private document covers all 181 exercises with 7,550
+`C-CORRECT-POOLS`: the bundled server-side document covers all 181 exercises with 7,550
 context-compatible corpus-correct candidates and 181 explicit oracles. Source,
 body, context, classification-path, ordering, and exclusion witnesses are checked
 offline. There are 92 excluded source contexts and five pools with only an
@@ -110,23 +110,28 @@ missing witnesses, correspondence defects, undefined behavior, and scope leakage
 `C-DELIVERY`: the vendored framework's exact snapshot hashes and recorded origin
 commit string are checked. Git history attribution is trusted; Git object membership
 is not verified. The declared delivery tree is scanned for the frozen credential
-filename and token patterns, and credential/catalogue ignore rules are checked.
+filename and token patterns. Git ignore rules are exercised in an isolated
+repository: the bundled catalogue and pools must be eligible for inclusion,
+while credentials and generated deployment output remain excluded. Dataset
+coverage and source-witness checks bind the included exercise data.
 Local credentials in `openai.local.json` and `secrets/` are excluded from the
 source distribution and frozen snapshots.
 This finite pattern check is not a claim that arbitrary possible secrets can be detected.
 
 ## IIS
 
-Private source builds need both ignored exercise files. On a fresh checkout,
-the Windows build imports them from `-ACGNRoot` or `ACGN_ROOT`; package refusal
-names the import command and required original corpus when either file is
-missing. Tests cover verified pair publication, reruns without an original
-checkout, partial-pair refusal, missing and empty corpora, and safe diagnostic
-codes. A trusted IIS ZIP can restore exactly the two private data files after
+Source checkouts include both exercise files. The Windows build can use them
+without an original ACGN checkout; package refusal names restoration from Git
+when bundled data are missing. Optional custom or legacy imports still support
+`-ACGNRoot` or `ACGN_ROOT`. Tests cover verified pair publication, reruns without
+an original checkout, partial-pair refusal, missing and empty custom corpora,
+and safe diagnostic codes. A trusted IIS ZIP can restore exactly the two server-side data files after
 manifest hash/count and source-witness checks; malformed, missing, duplicate,
 or altered required members are refused before publication, and unrelated ZIP
-paths are never extracted. This does not recreate the private classified
-corpus from a public checkout alone.
+paths are never extracted. Normal clones use the included catalogue and pools
+directly. They need neither ZIP restoration nor the original classified-data
+directory. Solutions remain excluded from public HTTP responses but can be
+read in the repository data.
 
 The read-only API diagnostic is exercised against local HTTP fixtures for
 backend failure, proxy errors, redirects, malformed health responses, and
@@ -174,16 +179,19 @@ network download, or original ACGN checkout supplies a missing dependency.
 
 ## Local Linux and macOS launcher
 
-`C-LOCAL`: frozen Linux regressions execute setup and startup in a fresh relocated
-source tree with spaces, a private ZIP fixture, no Node or original ACGN corpus,
-and poisoned ambient Java options. They require dependency validation, actual
-Java compilation and engine self-tests, HTTP feedback, private-path refusal, and
-terminal shutdown. Runtime selection tests cover missing, unusable, old, and
+`C-LOCAL`: frozen Linux regressions construct an isolated Git repository, clone
+its complete bundled data into a path with spaces, and execute setup and startup
+with no IIS archive, Node, original ACGN corpus, or credentials. All 181 records
+and pool witnesses are validated, including the explicit oracle in each pool.
+The tests require actual Java compilation, engine self-tests, HTTP feedback,
+solution/credential HTTP isolation, and terminal shutdown. Separate recovery
+fixtures exercise a private ZIP and poisoned ambient Java options. Runtime
+selection tests cover missing, unusable, old, and
 mismatched JDKs and Python selection failures. macOS discovery is tested with
 simulated `java_home` and PATH fixtures on Linux. Native macOS execution on Intel
 or Apple silicon remains OUT_OF_SCOPE.
 
-The TCB includes language runtimes and toolchains, browser and Playwright, vendored
+The TCB includes language runtimes and toolchains, Git, browser and Playwright, vendored
 ACGN/Alloy code and jars, test interpretation, Linux namespaces, OS userland and
 libraries, corpus classifications and oracle truth, hardware, and SHA-256. Browser-cache files are hashed as external trusted
 inputs and checked again before final decision. Project inputs include all source,

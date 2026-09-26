@@ -3,8 +3,9 @@
 The portal runs locally with Python 3.10+, a JDK 17+ containing both `java` and
 `javac`, and Bash. Its Python server uses only the standard library. All seven
 Java dependency JARs, including AlloyASG, AlloyParser, Alloy, and JSON, are in
-`vendor/acgn/lib`. Node, npm, pip packages, IIS, and a separate ACGN code checkout
-are unnecessary for local setup and use.
+`vendor/acgn/lib`. The exercise catalogue and correct pools are also included.
+Node, npm, pip packages, IIS, an IIS ZIP, and a separate ACGN checkout are
+unnecessary for local setup and use.
 
 ## Prerequisites
 
@@ -46,37 +47,57 @@ git clone REPOSITORY_URL AlloyStudio
 cd AlloyStudio
 ```
 
-The oracle-bearing catalogue and correct pools are private. A public Git clone
-cannot recreate them without one of the following inputs. Obtain the trusted
-`alloy-studio-iis.zip` privately from the project owner and run:
+Start directly from the clone:
 
 ```bash
-./scripts/setup.sh --from-bundle "/path/to/alloy-studio-iis.zip"
+./scripts/run.sh
 ```
 
-This works on Linux and macOS despite the archive's IIS name. Setup reads only
-the two exercise-data members, verifies their manifest hashes and source
-witnesses, and writes private `exercises/catalogue.json` and
-`exercises/correct-pools.json`. It does not extract the archive's other files or
-copy another deployment's credentials.
+Open **http://127.0.0.1:8080**. To prepare and check the checkout without starting
+the server, run `./scripts/setup.sh` without flags instead.
 
-Alternatively, if you have the original ACGN checkout containing
-`classified-data/`, use:
+Both commands validate the bundled exercise data and dependency hashes, compile
+from the bundled source using Java 17 bytecode, and run all 372 engine checks.
+A failure stops startup. Relative JDK paths are relative to the terminal's
+current directory; you may invoke the scripts from outside the checkout.
+
+The tracked `exercises/catalogue.json` and `exercises/correct-pools.json` contain
+181 exercises, 7,550 corpus candidates, and 181 oracle candidates. Their source
+witnesses support validation without the original corpus. The browser hides
+reference solutions, but anyone reading or cloning this public repository can
+inspect them in these files. See [exercise data and provenance](../exercises/README.md).
+API keys and local credential files remain private.
+
+## Restore or import exercise data
+
+If the bundled data are missing or damaged, preserve any intentional local
+data edits, then restore the matching pair from the current Git revision:
+
+```bash
+git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
+./scripts/setup.sh
+```
+
+For a custom corpus or a legacy checkout without tracked data, setup can import
+the original ACGN `classified-data/` directory or restore a trusted IIS archive:
 
 ```bash
 ./scripts/setup.sh --source-root "/path/to/original/ACGN"
+# Or restore a matching data pair from an existing deployment archive:
+./scripts/setup.sh --from-bundle "/path/to/alloy-studio-iis.zip"
 ```
 
-`ACGN_ROOT` can also select that original corpus. The bundled `vendor/acgn`
-directory supplies engine code and libraries; it is not a substitute for
-`classified-data/`. If both private exercise files are already installed, run
-`./scripts/setup.sh` without a source option. Valid existing files are preserved
-and need neither the original corpus nor the ZIP for subsequent launches.
+`ACGN_ROOT` can also select the original corpus. These options preserve a valid
+existing data pair; to import a different corpus, first back up and move both
+existing files out of `exercises`. Setup reports partial or invalid pairs and
+preserves them for recovery. The bundled `vendor/acgn` supplies engine code and
+libraries, rather than the original `classified-data/` corpus.
 
-Setup checks dependency hashes, compiles from the bundled source using Java 17
-bytecode, and runs all 372 engine checks. A failure stops startup. Relative
-bundle, corpus, and JDK paths are relative to the terminal's current directory;
-you may invoke the scripts from outside the checkout.
+Archive recovery works on Linux and macOS despite the archive's IIS name. It
+reads only the two exercise-data members, verifies manifest hashes and source
+witnesses, and copies no application files or credentials. Relative bundle and
+corpus paths are relative to the terminal's current directory. Neither optional
+source is required for a fresh clone or subsequent launches.
 
 ## Start and stop
 
@@ -86,8 +107,7 @@ you may invoke the scripts from outside the checkout.
 
 Open **http://127.0.0.1:8080**. The server stays in the terminal; Ctrl+C stops it.
 Startup repeats data/dependency checks, compilation, and engine tests, so source
-updates are built before serving requests. A first launch can also prepare data
-with `./scripts/run.sh --from-bundle "/path/to/alloy-studio-iis.zip"`.
+updates are built before serving requests.
 
 If port 8080 is occupied, use:
 
@@ -122,8 +142,8 @@ key file and configuration precedence.
 | --- | --- |
 | Python 3.10+ required | Install a current Python or set `ALLOY_PYTHON` to it. |
 | JDK missing, too old, or unusable | Install a complete JDK and set `JAVA_HOME` or pass `--java-home`. A JRE is insufficient for a source clone. |
-| `SOURCE_CORPUS_MISSING` | Supply the private ZIP with `--from-bundle` or original corpus with `--source-root`. |
-| Partial or invalid private data | Restore both matching private files; setup preserves existing data and reports the diagnostic code. |
+| `SOURCE_CORPUS_MISSING` | Restore the bundled data pair from Git using the command above. Legacy/custom checkouts can supply `--from-bundle` or `--source-root`. |
+| `PARTIAL_PRIVATE_DATA` or `PRIVATE_DATA_INVALID` | Restore both matching data files from Git after preserving local edits. These legacy diagnostic names refer to exercise data; setup leaves existing files untouched. |
 | Dependency missing or hash mismatch | Restore the complete checkout including all seven JARs in `vendor/acgn/lib`; do not copy source directories alone. |
 | Address already in use | Choose another `--port`, or stop the process using that port. |
 | OpenAI unavailable | Deterministic feedback still works; check your private configuration and account access. |
@@ -133,9 +153,9 @@ injection variables for its child processes. Python is launched with `-E -s`
 to avoid ambient Python import paths and user site packages. Neither launcher
 downloads dependencies nor installs system software automatically.
 
-Linux regression tests launch a fresh source tree from a path containing
-spaces, restore a private data fixture, build without Node or the original
-ACGN directory, request real JVM feedback over HTTP, and stop the server.
+Linux regression tests launch source trees from paths containing spaces, build
+without Node or the original ACGN directory, request real JVM feedback over
+HTTP, and stop the server. Optional archive restoration is also covered.
 macOS JDK discovery and failure handling are exercised with simulated fixtures
 on Linux. Native macOS execution, including Apple silicon, has not been tested
 in this environment. On a Mac, successful setup's engine checks followed by an

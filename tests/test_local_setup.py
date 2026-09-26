@@ -1,8 +1,8 @@
 """Local launcher regressions: mocked macOS discovery and real POSIX execution.
 
-The end-to-end witness uses a tiny synthetic private corpus and a relocated
-checkout. It never opens a real credential or contacts OpenAI. macOS discovery
-is mocked explicitly; these tests do not claim native macOS execution.
+Fresh Git clone and synthetic ZIP recovery witnesses never open real credentials
+or contact OpenAI. macOS discovery is mocked explicitly; these tests do not
+claim native macOS execution.
 """
 import contextlib
 import hashlib
@@ -38,6 +38,23 @@ pred over { !inv1 and inv1c }
 run over
 run under
 '''
+RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'web')
+RUNTIME_FILES = ('server.py', 'luna.py', 'runtime_dependencies.py',
+                 'scripts/local.sh', 'scripts/local_portal.py', 'scripts/setup.sh',
+                 'scripts/run.sh', 'scripts/prepare_private_data.py',
+                 'scripts/import_exercises.py', 'scripts/import_correct_pools.py',
+                 'scripts/exercise_descriptions.json')
+
+
+def copy_runtime(checkout):
+    """Copy only the runtime allowlist; never traverse local credentials or .git."""
+    checkout.mkdir()
+    for name in RUNTIME_DIRECTORIES:
+        shutil.copytree(ROOT / name, checkout / name)
+    for name in RUNTIME_FILES:
+        destination = checkout / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / name, destination)
 
 
 def isolated_environment(home):
@@ -57,6 +74,24 @@ def restricted_path(directory):
             raise RuntimeError(f'The POSIX launcher witness requires {name}.')
         (directory / name).symlink_to(Path(executable).resolve())
     return str(directory)
+
+
+def runtime_environment(base):
+    home = base / 'empty home'
+    home.mkdir()
+    _, compiler = local_portal.resolve_jdk(environ=local_portal.clean_environment())
+    environment = isolated_environment(home)
+    environment.update(PATH=restricted_path(base / 'minimal PATH'),
+                       ALLOY_PYTHON=sys.executable, JAVA_HOME=str(compiler.parent.parent),
+                       ACGN_ROOT=str(base / 'absent original ACGN'),
+                       PYTHONPATH=str(base / 'absent ambient Python modules'),
+                       PYTHONHOME=str(base / 'absent ambient Python home'),
+                       CLASSPATH=str(base / 'absent external Java classes'),
+                       JAVA_TOOL_OPTIONS='-XX:DefinitelyNotAnAlloyOption',
+                       _JAVA_OPTIONS='-XX:DefinitelyNotAnAlloyOption',
+                       JDK_JAVA_OPTIONS='--definitely-not-an-alloy-option',
+                       JDK_JAVAC_OPTIONS='--definitely-not-an-alloy-option')
+    return environment
 
 
 class JdkResolutionTests(unittest.TestCase):
@@ -286,6 +321,172 @@ class ShellEntrypointTests(unittest.TestCase):
 
 
 class RelocatedLocalSetupTests(unittest.TestCase):
+    def assert_served_portal(self, root, working_directory, environment, budget, log_path,
+                             *, exercises, exercise_id, body, pool_size):
+        with log_path.open('w+', encoding='utf-8') as log:
+            process = subprocess.Popen(
+                [str(root / 'scripts/run.sh'), '--port', '0'],
+                cwd=working_directory, env=environment, stdout=log, stderr=subprocess.STDOUT,
+                start_new_session=True)
+            try:
+                startup_deadline = time.monotonic() + budget(35)
+                address = None
+                while time.monotonic() < startup_deadline:
+                    log.seek(0)
+                    output = log.read()
+                    match = re.search(r'Alloy practice: (http://127\.0\.0\.1:\d+)', output)
+                    if match:
+                        address = match.group(1)
+                        break
+                    if process.poll() is not None:
+                        self.fail('Local server exited before startup: ' + output)
+                    time.sleep(0.05)
+                self.assertIsNotNone(address, 'Local server did not start: ' + output)
+                self.assertIn(f'Private exercises: {exercises} (validated-existing)', output)
+
+                def request(path, body=None):
+                    data = None if body is None else json.dumps(body).encode()
+                    request = Request(address + path, data=data,
+                                      headers={'Content-Type': 'application/json'})
+                    try:
+                        response = urlopen(request, timeout=budget(15))
+                    except HTTPError as error:
+                        response = error
+                    with response:
+                        return response.status, response.read()
+
+                status, raw = request('/api/health')
+                self.assertEqual(status, 200)
+                self.assertEqual(json.loads(raw)['exercises'], exercises)
+                self.assertEqual(request('/')[0], 200)
+                status, raw = request('/api/exercises')
+                self.assertEqual(status, 200)
+                summaries = json.loads(raw)['exercises']
+                self.assertEqual(len(summaries), exercises)
+                self.assertEqual(len({item['id'] for item in summaries}), exercises)
+                for item in summaries:
+                    self.assertNotIn('oracleBody', item)
+                    self.assertNotIn('originalSource', item)
+                status, raw = request('/api/exercises/' + exercise_id)
+                self.assertEqual(status, 200)
+                public = json.loads(raw)
+                self.assertEqual(public['id'], exercise_id)
+                self.assertNotIn('oracleBody', public)
+                self.assertNotIn('originalSource', public)
+                payload = {'exerciseId': exercise_id, 'body': body, 'revision': 7}
+                status, raw = request('/api/feedback', payload)
+                self.assertEqual(status, 200)
+                feedback = json.loads(raw)
+                self.assertEqual(feedback['status'], 'ok', feedback)
+                self.assertEqual(feedback['revision'], 7)
+                self.assertEqual(sum(item['cost'] for item in feedback['operations']),
+                                 feedback['distance'])
+                self.assertTrue(feedback['comparison']['complete'])
+                self.assertEqual(feedback['comparison']['poolSize'], pool_size)
+                self.assertNotIn('oracleBody', feedback)
+                status, raw = request('/api/explain', payload)
+                self.assertEqual(status, 200)
+                self.assertEqual(json.loads(raw)['status'], 'disabled')
+                for path in ('/exercises/catalogue.json', '/exercises/correct-pools.json',
+                             '/secrets/openai.key', '/openai.local.json', '/.env',
+                             '/vendor/acgn/lib/alloy.jar', '/server.py',
+                             '/%2e%2e/exercises/catalogue.json'):
+                    with self.subTest(private_path=path):
+                        self.assertEqual(request(path)[0], 404)
+                process.send_signal(signal.SIGINT)
+                self.assertEqual(process.wait(timeout=budget(10)), 0)
+                with self.assertRaises(ProcessLookupError,
+                                       msg='A child process survived launcher SIGINT.'):
+                    os.killpg(process.pid, 0)
+            finally:
+                # Also remove child processes when an assertion or startup
+                # fails, so a failed witness cannot leave a server running.
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait(timeout=5)
+
+    def test_real_git_clone_sets_up_bundled_181_exercises_without_data_flags(self):
+        deadline = time.monotonic() + 85
+
+        def budget(maximum):
+            remaining = deadline - time.monotonic()
+            self.assertGreater(remaining, 0, 'Fresh Git clone exceeded its 85-second budget.')
+            return min(maximum, remaining)
+
+        with tempfile.TemporaryDirectory(prefix='alloy-bundled-clone-') as directory:
+            base = Path(directory)
+            source = base / 'temporary source repository'
+            copy_runtime(source)
+            for name in ('.gitignore', 'exercises/catalogue.json', 'exercises/correct-pools.json'):
+                target = source / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / name, target)
+            # These are synthetic traps, never copied from the user's checkout.
+            credentials = ('.env', 'openai.local.json', 'secrets/openai.key')
+            for name in credentials:
+                target = source / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text('SYNTHETIC_CREDENTIAL_MUST_NOT_CLONE\n', encoding='utf-8')
+            environment = runtime_environment(base)
+            # Exercise the normal missing-key path, without forcing Luna off.
+            environment.pop('OPENAI_DISABLED')
+            git_environment = isolated_environment(Path(environment['HOME']))
+            git_environment.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+            git_executable = shutil.which('git')
+            self.assertIsNotNone(git_executable, 'The source-distribution witness requires Git.')
+
+            def git(*arguments, cwd=source):
+                result = subprocess.run([git_executable, *arguments], cwd=cwd, env=git_environment,
+                                        capture_output=True, text=True, encoding='utf-8',
+                                        timeout=budget(10), check=False)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                return result.stdout
+
+            git('init', '--quiet', '--template=')
+            # A normal add must admit the bundled data and reject local keys.
+            git('add', '--', '.')
+            git('-c', 'user.name=Source distribution witness',
+                '-c', 'user.email=source-witness@example.invalid',
+                '-c', 'commit.gpgSign=false', 'commit', '--quiet', '-m', 'Runtime source fixture')
+            checkout = base / 'fresh Git clone with spaces'
+            git('clone', '--quiet', '--no-hardlinks', str(source), str(checkout), cwd=base)
+            tracked = set(git('ls-files', cwd=checkout).splitlines())
+            self.assertTrue({'exercises/catalogue.json', 'exercises/correct-pools.json'} <= tracked)
+            self.assertTrue(set(credentials).isdisjoint(tracked))
+            for name in credentials:
+                self.assertFalse((checkout / name).exists(), 'A local credential entered the clone.')
+            shutil.rmtree(source)
+            self.assertFalse((checkout / 'build').exists())
+            self.assertFalse((base / 'ACGN').exists())
+            self.assertFalse(Path(environment['ACGN_ROOT']).exists())
+            self.assertFalse(list(base.rglob('*.zip')))
+            self.assertIsNone(shutil.which('node', path=environment['PATH']))
+            original_pair = {name: (checkout / 'exercises' / name).read_bytes()
+                             for name in prepare_private_data.PRIVATE_NAMES}
+            catalogue, pools = (json.loads(original_pair[name])
+                                for name in prepare_private_data.PRIVATE_NAMES)
+            self.assertEqual((len(catalogue['exercises']), len(pools['pools']),
+                              sum(len(pool['candidates']) for pool in pools['pools'])),
+                             (181, 181, 7731))
+            unrelated = base / 'unrelated working directory'
+            unrelated.mkdir()
+            completed = subprocess.run([str(checkout / 'scripts/setup.sh')],
+                                       cwd=unrelated, env=environment, capture_output=True,
+                                       text=True, encoding='utf-8', timeout=budget(45), check=False)
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn('Private exercises: 181 (validated-existing)', completed.stdout)
+            self.assertIn('Engine ready: 372 checks passed', completed.stdout)
+            pool = next(pool for pool in pools['pools'] if pool['exerciseId'] == 'cv_v1-inv4')
+            self.assert_served_portal(
+                checkout, unrelated, environment, budget, base / 'server output.log',
+                exercises=181, exercise_id=pool['exerciseId'],
+                body=pool['candidates'][0]['body'], pool_size=len(pool['candidates']))
+            self.assertEqual(original_pair,
+                             {name: (checkout / 'exercises' / name).read_bytes()
+                              for name in original_pair})
+
     def write_private_bundle(self, base):
         # Adapted from test_private_data_import: preserve and validate actual
         # importer witnesses instead of inventing private JSON records.
@@ -331,34 +532,11 @@ class RelocatedLocalSetupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='alloy-local-portability-') as directory:
             base = Path(directory)
             checkout = base / 'fresh source directory with spaces'
-            checkout.mkdir()
-            for name in ('engine/src', 'vendor/acgn', 'web'):
-                shutil.copytree(ROOT / name, checkout / name)
-            for name in ('server.py', 'luna.py', 'runtime_dependencies.py',
-                         'scripts/local.sh', 'scripts/local_portal.py', 'scripts/setup.sh',
-                         'scripts/run.sh', 'scripts/prepare_private_data.py',
-                         'scripts/import_exercises.py', 'scripts/import_correct_pools.py',
-                         'scripts/exercise_descriptions.json'):
-                destination = checkout / name
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(ROOT / name, destination)
+            copy_runtime(checkout)
             bundle = self.write_private_bundle(base)
             unrelated = base / 'unrelated working directory'
             unrelated.mkdir()
-            home = base / 'empty home'
-            home.mkdir()
-            runtime, compiler = local_portal.resolve_jdk(environ=local_portal.clean_environment())
-            environment = isolated_environment(home)
-            environment.update(PATH=restricted_path(base / 'minimal PATH'),
-                               ALLOY_PYTHON=sys.executable, JAVA_HOME=str(compiler.parent.parent),
-                               ACGN_ROOT=str(base / 'absent original ACGN'),
-                               PYTHONPATH=str(base / 'absent ambient Python modules'),
-                               PYTHONHOME=str(base / 'absent ambient Python home'),
-                               CLASSPATH=str(base / 'absent external Java classes'),
-                               JAVA_TOOL_OPTIONS='-XX:DefinitelyNotAnAlloyOption',
-                               _JAVA_OPTIONS='-XX:DefinitelyNotAnAlloyOption',
-                               JDK_JAVA_OPTIONS='--definitely-not-an-alloy-option',
-                               JDK_JAVAC_OPTIONS='--definitely-not-an-alloy-option')
+            environment = runtime_environment(base)
             self.assertIsNone(shutil.which('node', path=environment['PATH']))
             self.assertIsNone(shutil.which('javac', path=environment['PATH']))
             self.assertFalse((checkout / 'build').exists())
@@ -385,81 +563,9 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             relocated = base / 'moved installation with spaces'
             checkout.rename(relocated)
             bundle.unlink()
-            with (base / 'server output.log').open('w+', encoding='utf-8') as log:
-                process = subprocess.Popen(
-                    [str(relocated / 'scripts/run.sh'), '--port', '0'],
-                    cwd=unrelated, env=environment, stdout=log, stderr=subprocess.STDOUT,
-                    start_new_session=True)
-                try:
-                    startup_deadline = time.monotonic() + budget(35)
-                    address = None
-                    while time.monotonic() < startup_deadline:
-                        log.seek(0)
-                        output = log.read()
-                        match = re.search(r'Alloy practice: (http://127\.0\.0\.1:\d+)', output)
-                        if match:
-                            address = match.group(1)
-                            break
-                        if process.poll() is not None:
-                            self.fail('Local server exited before startup: ' + output)
-                        time.sleep(0.05)
-                    self.assertIsNotNone(address, 'Local server did not start: ' + output)
-                    self.assertIn('Private exercises: 1 (validated-existing)', output)
-
-                    def request(path, body=None):
-                        data = None if body is None else json.dumps(body).encode()
-                        request = Request(address + path, data=data,
-                                          headers={'Content-Type': 'application/json'})
-                        try:
-                            response = urlopen(request, timeout=budget(15))
-                        except HTTPError as error:
-                            response = error
-                        with response:
-                            return response.status, response.read()
-
-                    status, raw = request('/api/health')
-                    self.assertEqual(status, 200)
-                    self.assertEqual(json.loads(raw)['exercises'], 1)
-                    self.assertEqual(request('/')[0], 200)
-                    status, raw = request('/api/exercises/graphs-inv1')
-                    self.assertEqual(status, 200)
-                    public = json.loads(raw)
-                    self.assertEqual(public['id'], 'graphs-inv1')
-                    self.assertNotIn('oracleBody', public)
-                    self.assertNotIn('originalSource', public)
-                    payload = {'exerciseId': 'graphs-inv1', 'body': 'some Node', 'revision': 7}
-                    status, raw = request('/api/feedback', payload)
-                    self.assertEqual(status, 200)
-                    feedback = json.loads(raw)
-                    self.assertEqual(feedback['status'], 'ok', feedback)
-                    self.assertEqual(feedback['revision'], 7)
-                    self.assertEqual(sum(item['cost'] for item in feedback['operations']),
-                                     feedback['distance'])
-                    self.assertTrue(feedback['comparison']['complete'])
-                    self.assertEqual(feedback['comparison']['poolSize'], 2)
-                    self.assertNotIn('oracleBody', feedback)
-                    status, raw = request('/api/explain', payload)
-                    self.assertEqual(status, 200)
-                    self.assertEqual(json.loads(raw)['status'], 'disabled')
-                    for path in ('/exercises/catalogue.json', '/exercises/correct-pools.json',
-                                 '/secrets/openai.key', '/openai.local.json', '/.env',
-                                 '/vendor/acgn/lib/alloy.jar', '/server.py',
-                                 '/%2e%2e/exercises/catalogue.json'):
-                        with self.subTest(private_path=path):
-                            self.assertEqual(request(path)[0], 404)
-                    process.send_signal(signal.SIGINT)
-                    self.assertEqual(process.wait(timeout=budget(10)), 0)
-                    with self.assertRaises(ProcessLookupError,
-                                           msg='A child process survived launcher SIGINT.'):
-                        os.killpg(process.pid, 0)
-                finally:
-                    # Also remove child processes when an assertion or startup
-                    # fails, so a failed witness cannot leave a server running.
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    process.wait(timeout=5)
+            self.assert_served_portal(
+                relocated, unrelated, environment, budget, base / 'server output.log',
+                exercises=1, exercise_id='graphs-inv1', body='some Node', pool_size=2)
             self.assertEqual(original_pair,
                              {name: (relocated / 'exercises' / name).read_bytes()
                               for name in original_pair})

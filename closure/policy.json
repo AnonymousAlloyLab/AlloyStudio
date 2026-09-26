@@ -59,7 +59,7 @@
       "evidence_kind": "TRUSTED"
     },
     {
-      "surface": "Java, Python, Node, Chromium, ACGN/Alloy libraries, OS, libraries, hardware, SHA-256",
+      "surface": "Java, Python, Node, Git, Chromium, ACGN/Alloy libraries, OS, libraries, hardware, SHA-256",
       "classification": "SPECIFIED_BUT_TRUSTED",
       "evidence_kind": "TRUSTED"
     },
@@ -107,6 +107,7 @@
     "TCB-JAVA",
     "TCB-NODE",
     "TCB-BASH",
+    "TCB-GIT",
     "TCB-NETNS",
     "TCB-CHROMIUM",
     "TCB-PLAYWRIGHT",

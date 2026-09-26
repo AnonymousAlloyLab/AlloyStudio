@@ -104,7 +104,7 @@ def check_runtime(root, java=None, *, require_classes=True):
 
     if java is not None and report['status'] == 'PASS':
         environment = {name: value for name, value in os.environ.items()
-                       if name not in {'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS'}}
+                       if name not in {'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS'}}
         command = [str(java), '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
                    '-cp', runtime_classpath(root), 'live.EngineSelfTest']
         try:

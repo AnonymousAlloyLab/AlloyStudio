@@ -30,7 +30,8 @@ DEPLOY_FILES = (
     'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1',
     'Test-ApiConnection.ps1', 'test_api_connection.py', 'README.md',
 )
-RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_descriptions.json')
+RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_descriptions.json',
+                   'prepare_private_data.py')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 

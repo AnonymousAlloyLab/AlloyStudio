@@ -63,16 +63,15 @@ if (-not $EngineOnly) {
         if (-not $ACGNRoot) { $ACGNRoot = $env:ACGN_ROOT }
         if (-not $ACGNRoot) { $ACGNRoot = Join-Path (Split-Path -Parent $projectRoot) 'ACGN' }
         $ACGNRoot = [IO.Path]::GetFullPath($ACGNRoot)
-        if (-not (Test-Path -LiteralPath (Join-Path $ACGNRoot 'classified-data') -PathType Container)) {
-            throw 'Private exercise data are absent from this checkout. Use -ACGNRoot with an original ACGN checkout containing classified-data, or restore the private catalogue and correct pools from a trusted deployment bundle.'
-        }
+        # Let the helper report the precise missing classified-data path or
+        # invalid corpus, together with its --from-bundle recovery command.
         $prepareData = Join-Path $projectRoot 'scripts\prepare_private_data.py'
         if (-not (Test-Path -LiteralPath $prepareData -PathType Leaf)) {
             throw 'Private exercise data are absent and scripts\prepare_private_data.py is missing from this source checkout.'
         }
         & $Python '-E' '-s' $prepareData '--root' $projectRoot '--source-root' $ACGNRoot
         if ($LASTEXITCODE -ne 0) {
-            throw 'Private corpus import failed. Check the original ACGN classified-data and its exercise sources.'
+            throw 'Private data preparation failed; use the diagnostic code above. You can restore a trusted IIS ZIP with: python scripts/prepare_private_data.py --from-bundle PATH_TO_ZIP'
         }
     }
 }

@@ -211,7 +211,7 @@
     },
     {
       "id": "C-IIS",
-      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, private corpus import, bounded HTTP diagnosis without response-body disclosure, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded.",
+      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, private corpus import and validated ZIP restoration with source-independent existing-data checks and actionable sanitized failures, bounded HTTP diagnosis without response-body disclosure, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -375,6 +375,24 @@
         "tests/test_windows_build.py",
         "vendor/acgn/snapshot.json"
       ]
+    },
+    {
+      "id": "C-LOCAL",
+      "statement": "Frozen Linux tests exercise local setup and startup from a relocated fresh source tree with spaces, restored private exercise fixtures, no Node or original corpus dependency, sanitized Java options, real engine checks and HTTP feedback, private-path refusal, and terminal shutdown. Unit fixtures test macOS JDK discovery and failure handling; native macOS execution is excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": ["test_local_setup."],
+      "scope": {
+        "inputs": [
+          "scripts/local_portal.py", "scripts/local.sh", "scripts/setup.sh", "scripts/run.sh",
+          "runtime_dependencies.py", "scripts/prepare_private_data.py",
+          "scripts/import_exercises.py", "scripts/import_correct_pools.py",
+          "scripts/exercise_descriptions.json", "server.py", "luna.py", "web", "engine/src", "vendor/acgn",
+          "tests/test_local_setup.py", "tests/test_private_data_import.py", "README.md", "docs/local-setup.md"
+        ]
+      },
+      "public_claims": ["closure/README.md#local-linux-and-macos-launcher"],
+      "witnesses": ["tests/test_local_setup.py"]
     }
   ]
 }

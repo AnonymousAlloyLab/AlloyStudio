@@ -45,6 +45,20 @@ If you no longer have that original corpus, restore both files from a trusted
 private bundle. A public source checkout cannot recreate them. The existing
 private IIS ZIP already includes them and needs no source rebuild.
 
+When reproducing a source checkout on another machine without the original
+ACGN corpus, restore its private data from the trusted ZIP before building:
+
+```powershell
+python .\scripts\prepare_private_data.py --from-bundle 'C:\Staging\alloy-studio-iis.zip'
+```
+
+The same command works on Linux/macOS with the appropriate ZIP path and Python
+command. It verifies the two data members against the manifest and their source
+witnesses, then restores only the catalogue and correct pools. Existing valid
+data can be checked without the original corpus; incomplete pairs and invalid
+inputs receive specific diagnostic codes. The ZIP and the restored private
+files belong outside public IIS directories and public source control.
+
 ```bash
 ./scripts/build.sh
 python3 scripts/package_iis.py

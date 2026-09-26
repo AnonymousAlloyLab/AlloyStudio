@@ -79,6 +79,11 @@
       "evidence_kind": "OUT_OF_SCOPE"
     },
     {
+      "surface": "Native macOS execution on Intel or Apple silicon; macOS launcher fixtures run with simulated discovery on Linux only",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
       "surface": "Correctness of original corpus classifications and oracle solutions",
       "classification": "SPECIFIED_BUT_TRUSTED",
       "evidence_kind": "TRUSTED"

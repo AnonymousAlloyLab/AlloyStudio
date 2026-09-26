@@ -312,6 +312,18 @@ class IisPackageTests(unittest.TestCase):
                              {record['id'] for record in catalogue['exercises']})
             self.assertTrue(all(f'backend/vendor/acgn/lib/{name}' in archive.namelist() for name in JAR_FILES))
             self.assertGreater(result['files'], len(REQUIRED_CLASSES) + len(JAR_FILES))
+        # Reproduce a clone with no corpus using the real package, not just a
+        # synthetic two-entry ZIP. Source/witness validation runs on all pools.
+        from scripts.prepare_private_data import prepare
+        restored = self.base / 'fresh checkout without ACGN'
+        restored.mkdir()
+        restoration = prepare(restored, bundle=self.output)
+        self.assertEqual(restoration['action'], 'restored-bundle')
+        self.assertEqual(restoration['exercises'], 181)
+        self.assertEqual(restoration['correctCandidates'], 7550)
+        for name in ('catalogue.json', 'correct-pools.json'):
+            self.assertEqual((restored / 'exercises' / name).read_bytes(),
+                             (ROOT / 'exercises' / name).read_bytes())
 
     def test_packaged_backend_runs_from_unrelated_directory_and_keeps_private_paths_closed(self):
         build_package(ROOT, self.output)

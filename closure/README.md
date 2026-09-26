@@ -120,9 +120,13 @@ This finite pattern check is not a claim that arbitrary possible secrets can be 
 Private source builds need both ignored exercise files. On a fresh checkout,
 the Windows build imports them from `-ACGNRoot` or `ACGN_ROOT`; package refusal
 names the import command and required original corpus when either file is
-missing. Tests cover verified pair publication, reruns, partial-pair refusal,
-and the missing-source case. This does not recreate the private classified
-corpus from a public checkout.
+missing. Tests cover verified pair publication, reruns without an original
+checkout, partial-pair refusal, missing and empty corpora, and safe diagnostic
+codes. A trusted IIS ZIP can restore exactly the two private data files after
+manifest hash/count and source-witness checks; malformed, missing, duplicate,
+or altered required members are refused before publication, and unrelated ZIP
+paths are never extracted. This does not recreate the private classified
+corpus from a public checkout alone.
 
 The read-only API diagnostic is exercised against local HTTP fixtures for
 backend failure, proxy errors, redirects, malformed health responses, and
@@ -167,6 +171,17 @@ conversion, conversion-disabling environment, output-directory semantics, and
 exit-code propagation. These tests run on Linux; actual Windows PowerShell invocation and
 Windows native argument passing remain outside the offline closure. No Maven,
 network download, or original ACGN checkout supplies a missing dependency.
+
+## Local Linux and macOS launcher
+
+`C-LOCAL`: frozen Linux regressions execute setup and startup in a fresh relocated
+source tree with spaces, a private ZIP fixture, no Node or original ACGN corpus,
+and poisoned ambient Java options. They require dependency validation, actual
+Java compilation and engine self-tests, HTTP feedback, private-path refusal, and
+terminal shutdown. Runtime selection tests cover missing, unusable, old, and
+mismatched JDKs and Python selection failures. macOS discovery is tested with
+simulated `java_home` and PATH fixtures on Linux. Native macOS execution on Intel
+or Apple silicon remains OUT_OF_SCOPE.
 
 The TCB includes language runtimes and toolchains, browser and Playwright, vendored
 ACGN/Alloy code and jars, test interpretation, Linux namespaces, OS userland and

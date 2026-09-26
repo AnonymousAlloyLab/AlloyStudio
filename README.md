@@ -6,18 +6,31 @@ operations, the learner's canonical form, saved drafts, and GPT-6 Luna guidance.
 Feedback uses the closest member of each private correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
 
-Run from this directory:
+On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
+From a new clone, prepare the private exercises once using the trusted deployment
+archive supplied by the project owner:
+
+```bash
+./scripts/setup.sh --from-bundle /path/to/alloy-studio-iis.zip
+./scripts/run.sh
+```
+
+Alternatively, use `./scripts/setup.sh --source-root /path/to/ACGN` if you have
+the original `classified-data` corpus. A public clone includes all engine sources
+and seven dependency JARs; oracle-bearing exercise data are supplied privately.
+If both private exercise files are already present, just run:
 
 ```bash
 ./scripts/run.sh
 ```
 
-Open **http://127.0.0.1:8080**. Java 17+, Python 3.10+, and Node 20+ are installed
-in this environment. The Java framework sources and dependency JARs are bundled
-under `vendor/acgn`; runtime does not depend on `/home/augustus/ACGN` or npm.
-The build script uses Node for a JavaScript syntax check. No frontend CDN or
-external font is needed. Stop the server with Ctrl+C. Options include
-`--port 8081`, `--timeout 12`, and `--workers 4`.
+Open **http://127.0.0.1:8080**. Setup and startup validate the bundled JARs, compile
+the engine, and run 372 engine checks. They need no Node, npm, pip packages, or
+IIS. No frontend CDN or external font is needed. Stop with Ctrl+C. Options include
+`--port 8081`, `--timeout 12`, `--workers 4`, and `--java-home /path/to/jdk`.
+See [Linux and macOS setup](docs/local-setup.md) for installation, private config,
+and troubleshooting. The separate developer/release build uses Node for its
+JavaScript syntax check.
 
 Choose an exercise, edit its predicate body, and pause to receive feedback.
 Ctrl/Cmd+Enter checks immediately. The complete surrounding Alloy environment
@@ -197,6 +210,30 @@ to recreate this corpus. `scripts/package_iis.py` checks the inputs and explains
 this prerequisite if either file is absent. The already-built private IIS ZIP
 contains both files and can be deployed without rebuilding the source.
 
+To reproduce a source checkout without the original ACGN corpus, obtain the
+trusted private `alloy-studio-iis.zip` from the deployment owner. From the new
+checkout, run this once, replacing the ZIP path with its actual location:
+
+```bash
+python scripts/prepare_private_data.py --from-bundle /path/to/alloy-studio-iis.zip
+```
+
+Use `python3` if that is the Python 3.10+ command on the machine, then rerun the
+normal build command. The helper verifies the manifest hashes, catalogue source
+records, and correct-pool witnesses before restoring exactly
+`exercises/catalogue.json` and `exercises/correct-pools.json`. It copies no API
+keys or application files. Once that pair exists, validation needs neither the
+original ACGN checkout nor the ZIP. A valid existing pair is left unchanged;
+partial or invalid pairs are reported and preserved for recovery.
+
+Preparation failures now have specific codes: `SOURCE_CORPUS_MISSING` names the
+searched `classified-data` path; `EMPTY_CORPUS` identifies a directory with no
+usable exercise groups; `PARTIAL_PRIVATE_DATA` names the missing file;
+`PRIVATE_DATA_INVALID` identifies invalid existing data; and `BUNDLE_INVALID`
+identifies an incomplete or inconsistent ZIP. Diagnostic output omits private
+predicate contents. `vendor/acgn` supplies framework dependencies, not the
+original exercise corpus.
+
 The output is `build/iis/alloy-studio-iis.zip` with a SHA-256 checksum. Follow
 [the IIS deployment guide](deploy/iis/README.md) for prerequisites, site or virtual
 application setup, HTTPS, startup task installation, and target-side acceptance.
@@ -297,7 +334,7 @@ declared trusted dependencies, two isolated clean builds, reproducible class,
 web, and IIS archive hashes, and bound evidence. See `closure/README.md` and the
 machine-readable run report for the actual state. AI prose correctness, live
 OpenAI availability, universal parser/normalizer correctness, actual execution
-on Windows/IIS, and unrestricted semantic equivalence are outside its claim
+on Windows/IIS or macOS, and unrestricted semantic equivalence are outside its claim
 boundary. Local tests cover the packaged runtime, proxy paths, configuration,
 and Windows compatibility branches. The Windows acceptance script checks the
 installed target separately.

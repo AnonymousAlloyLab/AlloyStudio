@@ -136,7 +136,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/asg/AugmentedNode.java",
-      "sha256": "6382ae89443ba41296e9f4ac1e0189f0f8772c478a14f429f003f9dbf1fc5e5c"
+      "sha256": "61900e3fe8ee7799d2b4e8962d7c70fc163a88fc60cc1d7e742462f89880abf4"
     },
     {
       "path": "src/is/fivefivefive/ACGN/asg/MASGEdge.java",
@@ -232,7 +232,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-      "sha256": "33f8ccb1bb0908893c248b703f45a12e7ac61cb6189d5d7755e4d3738252afd3"
+      "sha256": "028be384f3468adda8002abd00560afe0ebab905256bf0f7816d84e8773cf5a6"
     },
     {
       "path": "src/is/fivefivefive/AlloyDataProcessor/ASGOutputer.java",
@@ -548,11 +548,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-      "sha256": "c4d398b99fb8706f2af89176bfab8f2701cd0937b0aaab010bd211fc5af62f5b"
+      "sha256": "899074d10420729a087ccbe990c36c2ef2dc3d79e4b479d59533cc36e392691f"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
-      "sha256": "e23d155e0b48317a6aef3dd6480ef9458dbcf47d46f1385a9d71beb9385fac30"
+      "sha256": "36506fe9b535e067eaa93d72a0d477f41741a81e17ee2b8d9a33aec9ec71785a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
@@ -560,7 +560,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
-      "sha256": "fa87624fdd2eb8af2e576c557ec2b9c843a3dc3135104d9510602750fec86f91"
+      "sha256": "8da4e25d08f77cd2a1ae2add79d1083c10ed90a5bc31723ead4aab4d206e84a3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/RenamedIdUnionFind.java",
@@ -632,7 +632,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
-      "sha256": "72c3f57102ef7c96d27aa02df2fc39d85fa3a42e2c73c90511892ccd4c929da0"
+      "sha256": "983b41317f78575dc39b3b0a47cde94af395a33d54c23cd55de61fb9ae369c90"
     },
     {
       "path": "src/is/fivefivefive/CanDis/macros/ModelEnv.java",
@@ -1421,6 +1421,38 @@
     {
       "path": "src/is/fivefivefive/CanDis/theory/package-info.java",
       "sha256": "f268b007a006556c71d68a2db81a1835481501a787871533e66e42c95eb7cc93"
+    }
+  ],
+  "localPatches": [
+    {
+      "id": "parser-source-origins",
+      "description": "Presentation-only parser occurrence metadata retained for structural edit highlighting; excluded from canonical semantic identity and metric costs.",
+      "files": [
+        {
+          "path": "src/is/fivefivefive/ACGN/asg/AugmentedNode.java",
+          "baseSha256": "6382ae89443ba41296e9f4ac1e0189f0f8772c478a14f429f003f9dbf1fc5e5c"
+        },
+        {
+          "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
+          "baseSha256": "33f8ccb1bb0908893c248b703f45a12e7ac61cb6189d5d7755e4d3738252afd3"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
+          "baseSha256": "c4d398b99fb8706f2af89176bfab8f2701cd0937b0aaab010bd211fc5af62f5b"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
+          "baseSha256": "e23d155e0b48317a6aef3dd6480ef9458dbcf47d46f1385a9d71beb9385fac30"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
+          "baseSha256": "fa87624fdd2eb8af2e576c557ec2b9c843a3dc3135104d9510602750fec86f91"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
+          "baseSha256": "72c3f57102ef7c96d27aa02df2fc39d85fa3a42e2c73c90511892ccd4c929da0"
+        }
+      ]
     }
   ]
 }

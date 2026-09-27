@@ -31,6 +31,20 @@ public class AugmentedNode implements Serializable {
     private Map<Pair<Multigraph, Integer>, ExactAlloyType> exactTypeMapTOV;
     private Map<Multigraph, Integer> exactTypeVisitMap;
     private ExactAlloyType defaultExactType;
+    private transient Map<Pair<Multigraph, Integer>, is.fivefivefive.CanDis.core.EGraphNode.SourceOrigin> sourceOrigins;
+
+    /** Parser occurrence positions are presentation metadata, never graph identity. */
+    public void setSourceOrigin(Multigraph graph, int timeOfVisit,
+            is.fivefivefive.CanDis.core.EGraphNode.SourceOrigin origin) {
+        if (origin == null || graph == null || timeOfVisit <= 0) return;
+        if (sourceOrigins == null) sourceOrigins = new HashMap<>();
+        sourceOrigins.put(Pair.of(graph, timeOfVisit), origin);
+    }
+
+    public is.fivefivefive.CanDis.core.EGraphNode.SourceOrigin getSourceOrigin(
+            Multigraph graph, int timeOfVisit) {
+        return sourceOrigins == null ? null : sourceOrigins.get(Pair.of(graph, timeOfVisit));
+    }
     public AugmentedNode(int syntactic, int semantic, Symbol symbol) throws IllegalArgumentException {
         if (syntactic > 127 || syntactic < -128) {
             throw new IllegalArgumentException("Syntactic is a single byte! ");

@@ -149,7 +149,7 @@ try {
     assert(selection.start >= 0 && selection.end <= body.length && selection.end > selection.start);
     assert(selection.selected.includes('some'));
     assert.equal(await page.locator('.source-range').textContent(), selection.selected);
-    assert.match(await page.locator('#source-location-status').textContent(), /Related source context.*Body Ln 1, Col 1.*Model Ln \d+, Col \d+/);
+    assert.match(await page.locator('#source-location-status').textContent(), /(?:Related source context|Expression selected by this edit).*Body Ln 1, Col 1.*Model Ln \d+, Col \d+/);
     assert((await page.locator('.canonical-range').count()) > 0);
     assert((await page.locator('#canonical-content pre').allTextContents()).every(form => !/\s{2,}/.test(form)));
     await page.screenshot({ path: path.join(artifacts, 'defect-locator.png'), fullPage: true });
@@ -332,6 +332,47 @@ try {
       assert.equal(await page.locator('.operation-locate').count(), 0);
       await page.unroute('**/api/feedback');
     }
+  });
+  await check('structural-node-locator-selects-repeated-occurrence-and-rejects-ambiguity', async () => {
+    const body = 'some Node and some Node';
+    const canonical = '(some Node) and (some Node)';
+    const start = body.lastIndexOf('some Node'), canonicalStart = canonical.lastIndexOf('some Node');
+    let invalid = '';
+    await page.route('**/api/feedback', route => {
+      const data = sourceResult(route.request().postDataJSON(), [[start, start + 9]], { precision: 'node' });
+      data.canonicalForm = [canonical];
+      data.operations[0].canonicalLocation = { status: 'located', precision: 'node', coordinateSystem: 'canonical', offsetEncoding: 'utf-16',
+        ranges: [{ formIndex: 0, start: canonicalStart, end: canonicalStart + 9, text: 'some Node' }] };
+      if (invalid === 'source') {
+        data.operations[0].sourceLocation.status = 'ambiguous';
+        data.operations[0].sourceLocation.ranges.push(sourceRange(body, 0, 9));
+      } else if (invalid === 'canonical') {
+        data.operations[0].canonicalLocation.status = 'ambiguous';
+        data.operations[0].canonicalLocation.ranges.push({ formIndex: 0, start: 1, end: 10, text: 'some Node' });
+      }
+      return route.fulfill({ json: data });
+    });
+    await submit(body); await page.locator('.operation-select').click();
+    assert.equal(await page.locator('.operation-locate').count(), 1);
+    assert.equal(await page.locator('.source-range').count(), 1);
+    assert.equal(await page.locator('.canonical-range').count(), 1);
+    assert.deepEqual(await editor.evaluate(element => [element.selectionStart, element.selectionEnd]), [start, start + 9]);
+    assert.equal(await page.locator('.canonical-range').evaluate(mark => mark.previousSibling.textContent.length), canonicalStart);
+    assert.match(await page.locator('#source-location-status').textContent(), /Expression selected by this edit/);
+    assert.match(await page.locator('#canonical-location-status').textContent(), /Expression selected by this edit/);
+    for (invalid of ['source', 'canonical']) {
+      await submit(body); await page.locator('.operation-select').click();
+      if (invalid === 'source') {
+        assert.equal(await page.locator('.operation-locate, .source-range').count(), 0);
+        assert.equal(await page.locator('.canonical-range').count(), 1);
+        assert.match(await page.locator('#source-location-status').textContent(), /Source location unavailable/);
+      } else {
+        assert.equal(await page.locator('.canonical-range').count(), 0);
+        assert.equal(await page.locator('.source-range').count(), 1);
+        assert.match(await page.locator('#canonical-location-status').textContent(), /Canonical form location unavailable/);
+      }
+    }
+    await page.unroute('**/api/feedback');
   });
   await check('canonical-panel-and-edit-step-share-source-highlight-color', async () => {
     const canonical = String.raw`(some Node) and label = "two  spaces \"inside\""`;

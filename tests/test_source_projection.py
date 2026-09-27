@@ -68,6 +68,29 @@ class SourceProjectionTests(unittest.TestCase):
         self.assertEqual([span['startLine'] for span in result['ranges']], [1, 2])
         self.assertEqual([span['start'] for span in result['ranges']], [0, 9])
 
+    def test_selected_node_preserves_second_repeated_source_occurrence(self):
+        body = '// 🌙\nno A\nand no A'
+        raw = location(body, ['no A', 'no A'], precision='node')
+        raw.update(status='located', ranges=raw['ranges'][1:])
+        raw['ranges'][0]['text'] = 'PRIVATE_TARGET'
+        result = self.project(body, raw)
+        self.assertEqual(result['precision'], 'node')
+        self.assertEqual(result['status'], 'located')
+        self.assertEqual(len(result['ranges']), 1)
+        self.assertEqual(result['ranges'][0]['start'], utf16(body[:body.rindex('no A')]))
+        self.assertEqual(result['ranges'][0]['startLine'], 3)
+        self.assertEqual(result['ranges'][0]['text'], 'no A')
+        self.assertNotIn('PRIVATE_TARGET', json.dumps(result))
+
+    def test_selected_source_node_cannot_claim_ambiguous_occurrences(self):
+        body = 'no A and no A'
+        raw = location(body, ['no A', 'no A'], precision='node')
+        for status in ('ambiguous', 'located'):
+            with self.subTest(status=status):
+                result = self.project(body, dict(raw, status=status))
+                self.assertEqual(result['status'], 'unavailable')
+                self.assertEqual(result['ranges'], [])
+
     def test_invalid_or_partial_mappings_are_unavailable_without_leaking_worker_text(self):
         body = '// 🌟\nno A'
         base = location(body, ['no A'])
@@ -155,6 +178,27 @@ class CanonicalProjectionTests(unittest.TestCase):
         self.assertEqual(locator['precision'], 'form')
         self.assertEqual(locator['ranges'][0]['text'], 'root := (NO A)')
         self.assertIn('a smaller matching part could not be found', locator['reason'])
+
+    def test_selected_node_preserves_second_canonical_occurrence_after_compaction(self):
+        form = '  🌙 root := (NO   A)  and\n (NO   A)  '
+        start = form.rindex('(NO')
+        result = self.project([form], [{'formIndex': 0, 'start': utf16(form[:start]),
+                                       'end': utf16(form[:start] + '(NO   A)')}], precision='node')
+        locator = result['operations'][0]['canonicalLocation']
+        compact = result['canonicalForm'][0]
+        self.assertEqual(locator['precision'], 'node')
+        self.assertEqual(locator['status'], 'located')
+        self.assertEqual(locator['ranges'], [{'formIndex': 0, 'start': utf16(compact[:compact.rindex('(NO')]),
+                                             'end': utf16(compact), 'text': '(NO A)'}])
+
+    def test_selected_canonical_node_cannot_claim_ambiguous_occurrences(self):
+        ranges = [{'formIndex': 0, 'start': 0, 'end': 6}, {'formIndex': 0, 'start': 11, 'end': 17}]
+        for status in ('ambiguous', 'located'):
+            with self.subTest(status=status):
+                result = self.project(['(NO A) and (NO A)'], ranges, precision='node', status=status)
+                locator = result['operations'][0]['canonicalLocation']
+                self.assertEqual(locator['status'], 'unavailable')
+                self.assertEqual(locator['ranges'], [])
 
     def test_invalid_canonical_mapping_fails_closed(self):
         form = '("🌙")'

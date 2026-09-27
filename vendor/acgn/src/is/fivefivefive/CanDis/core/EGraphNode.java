@@ -55,6 +55,10 @@ public final class EGraphNode {
     private int maxArity; // the maximum arity of this node, which is the maximum number of children this node can have, and it is determined by the operator of this node
     private boolean flexibleArity; // whether this node has flexible arity, which is determined by the operator of this node, e.g., "and" and "or" have flexible arity, while "implies" and "iff" have fixed arity of 2.
     private String sourceName;
+    /** Presentation-only parser occurrence; excluded from all semantic keys. */
+    private SourceOrigin sourceOrigin;
+    public record SourceOrigin(String filename, int x, int y, int x2, int y2)
+            implements java.io.Serializable { }
     private String sourceType;
     private ExactAlloyType exactAlloyType;
     private String alphaName;
@@ -494,6 +498,13 @@ public final class EGraphNode {
         requireLiveNode();
         return id;
     }
+    public SourceOrigin getSourceOrigin() {
+        requireLiveNode();
+        return eClass != null && eClass.sourceOriginAmbiguous ? null : sourceOrigin;
+    }
+    public void setSourceOrigin(SourceOrigin origin) {
+        arena.mutate(this, () -> sourceOrigin = origin);
+    }
     public Opcode getOpcode() {
         requireLiveNode();
         return opcode;
@@ -922,6 +933,15 @@ public final class EGraphNode {
             }
             canonicalLeft.eClass.ensureRegistered();
             canonicalRight.eClass.ensureRegistered();
+            // Union forgets which source invocation selected a representative.
+            // Do not attribute one occurrence's parser position to another.
+            if (canonicalLeft.eClass.sourceOriginAmbiguous
+                    || canonicalRight.eClass.sourceOriginAmbiguous
+                    || !Objects.equals(canonicalLeft.eClass.getRepresentative().sourceOrigin,
+                            canonicalRight.eClass.getRepresentative().sourceOrigin)) {
+                canonicalLeft.eClass.sourceOriginAmbiguous = true;
+                canonicalRight.eClass.sourceOriginAmbiguous = true;
+            }
             RenamedId leader = arena.unionFind.union(
                     left.asRenamedId(), right.asRenamedId());
             EClass leaderClass = arena.classes.get(leader.getId());
@@ -3799,6 +3819,7 @@ public final class EGraphNode {
         maxArity = replacement.maxArity;
         flexibleArity = replacement.flexibleArity;
         sourceName = replacement.sourceName;
+        sourceOrigin = replacement.getSourceOrigin();
         sourceType = replacement.sourceType;
         exactAlloyType = replacement.exactAlloyType;
         alphaName = replacement.alphaName;
@@ -7003,6 +7024,7 @@ public final class EGraphNode {
                 id, opcode, Collections.emptyList(), isCommutative, maxArity, flexibleArity,
                 metatype, semanticProfile, false, arena);
         copy.sourceName = sourceName;
+        copy.sourceOrigin = getSourceOrigin();
         copy.sourceType = sourceType;
         copy.exactAlloyType = exactAlloyType;
         copy.alphaName = alphaName;
@@ -7038,6 +7060,7 @@ public final class EGraphNode {
         maxArity = 0;
         flexibleArity = false;
         sourceName = null;
+        sourceOrigin = null;
         sourceType = null;
         exactAlloyType = null;
         alphaName = null;
@@ -7198,6 +7221,7 @@ public final class EGraphNode {
         private boolean registered;
         private boolean retired;
         private boolean slotsDirty = true;
+        private boolean sourceOriginAmbiguous;
 
         private EClass(int id, EGraphNode head) {
             this.id = id;

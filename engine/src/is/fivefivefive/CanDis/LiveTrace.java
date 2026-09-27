@@ -18,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Trace the pinned Fast Rewrite metric, retaining private labels only for replay.
  * The framework's public explanatory trace does not expose optimal assignments.
@@ -37,8 +39,38 @@ public final class LiveTrace {
     private static final Method QUANTIFIER_UPDATE = method("quantifierUpdateCost", QuantiVar.class, QuantiVar.class);
     private static final Method QUANTIFIER_RENDER = method("quantifierFormula", QuantiVar.class);
     private static final Map<String, String> OPERATORS = operators();
+    private static final Pattern MATRIX_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.matrix((?:\\.child\\[[0-9]+\\])*)$");
+    private static final Pattern CHILD_PATH = Pattern.compile("\\.child\\[([0-9]+)\\]");
+    private static final Pattern BINDING_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.quantifier\\[([0-9]+)\\]$");
 
     private LiveTrace() { }
+
+    /** Resolve the learner occurrence used by the metric, never a text match. */
+    public static EGraphNode learnerNode(Canonical.Prepared learner, String path) {
+        Matcher match = MATRIX_PATH.matcher(path);
+        if (!match.matches()) return null;
+        try {
+            EGraphNode node = learner.normalizedForms().get(Integer.parseInt(match.group(1))).getMatrixEGraph();
+            Matcher child = CHILD_PATH.matcher(match.group(2));
+            while (child.find()) {
+                if (node == null) return null;
+                node = node.getChildren().get(Integer.parseInt(child.group(1)));
+            }
+            return node;
+        } catch (IndexOutOfBoundsException | NumberFormatException error) { return null; }
+    }
+
+    /** Quantifier paths use the metric's ordering, which may differ from display order. */
+    @SuppressWarnings("unchecked")
+    public static QuantiVar learnerBinding(Canonical.Prepared learner, String path) {
+        Matcher match = BINDING_PATH.matcher(path);
+        if (!match.matches()) return null;
+        try {
+            NormalForm form = learner.normalizedForms().get(Integer.parseInt(match.group(1)));
+            List<QuantiVar> bindings = (List<QuantiVar>) invoke(QUANTIFIER_ORDER, form.getMatrixQuantiVars());
+            return bindings.get(Integer.parseInt(match.group(2)));
+        } catch (IndexOutOfBoundsException | NumberFormatException error) { return null; }
+    }
 
     public static final class Result {
         public final JSONArray matrix = new JSONArray();

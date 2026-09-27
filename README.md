@@ -32,10 +32,12 @@ is available beside the editor. Download exports that environment with your
 current predicate. Drafts and recent distance history stay in your browser.
 After a successful check, the panel below the editor shows your compiled
 predicate's canonical form with compact display whitespace. Click an edit step
-to color its canonical fragment and underline the related expression in your
-raw predicate. The locator reports both predicate-body and complete-model line
-and column positions. If several expressions match, choose a possible source
-location; editing the draft clears the highlights until the next check.
+to color the canonical expression selected by that edit and underline its
+original source occurrence when retained. When only related context is
+available, the locator labels it explicitly. It reports both predicate-body
+and complete-model line and column positions. If several source expressions
+remain possible, choose one to inspect; editing the draft clears the highlights
+until the next check.
 Behavioral feedback loads separately below the editor and feedback panels. It
 shows the **behavioral similarity score** to three decimal places and up to three
 instances in each oracle/student category: both accept, undercoverage (only the
@@ -146,13 +148,15 @@ source patch or a formal semantic proof. Normalization can change the shape of
 the learner's expression, so canonical locations are not claimed as source lines.
 The interface never automatically applies an unverified textual edit.
 
-Source locators use the learner parser's expression spans and conservative token
-matching against the canonical learner fragment. They show related context,
-not a certified defect position or an executable fix. Repeated expressions remain
-ambiguous, and rewrites with no matching source expression report an unavailable
-source location. Canonical highlights likewise identify matching rendered
-fragments; a whole-form highlight is explicitly labelled as context when no
-smaller match exists. Both views use the same color for the selected edit step.
+Canonical locators follow the edit trace's recorded child path to the selected
+rendered node. Equal text in another branch does not select that other occurrence.
+Source locators use the selected node's parser origin when normalization retains
+it. These locations are labelled **Expression selected by this edit**. Normalization
+can merge or remove source identity; those cases show explicitly labelled related
+context, possible source locations, or an unavailable location. Temporal or grouped
+edits can show whole-form context instead of one node. Node identity is not a proof
+of a defect or an executable source patch. Both views use the same color for the
+selected edit step.
 Whitespace compaction preserves quoted literal contents and does not alter the
 metric. Location text is derived from this learner draft and canonical form;
 reference solutions and credentials are never used to construct these locators.
@@ -163,7 +167,7 @@ Behavioral comparisons always use the original oracle. Canonical distance still
 uses the closest member of the correct pool. `live.BehaviorFeedback` adapts
 ACGN's `Rewarder` formula, with **model facts enforced** for both sampling and
 category searches. This intentionally fixes the upstream Rewarder's omission of
-module-level facts; the vendored framework is unchanged.
+module-level facts. This facts fix lives in the portal's behavior worker.
 
 The solver uses SAT4J, an overall scope of 3, 3-bit integers, maximum sequence
 length 3, temporal traces of 1–10 states, and up to 100 samples of each oracle
@@ -204,7 +208,7 @@ The server uses the [GPT-6 Luna model](https://developers.openai.com/api/docs/mo
 through the [Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create).
 Guidance is attached to individual edits and examples, followed by a short learning
 summary. Each operation receives a novice-friendly explanation using the learner's
-raw predicate body, compact canonical form, and validated related-context locators.
+raw predicate body, compact canonical form, and validated node or context locators.
 Each of the displayed instances (up to three in each of four categories) receives
 its own explanation using its public atoms, relations, truth category, and temporal
 states. Empty categories do not receive invented examples.
@@ -492,5 +496,9 @@ and execution time. For shared hosting, use a separately configured authenticate
 HTTPS reverse proxy; access control and multi-tenant deployment are outside this
 local portal's verification surface.
 
-ACGN source snapshot: `1e2667351532b0c632166fa21ae5fbc7308a8fe7`.
-The upstream checkout remains unchanged. See `vendor/acgn/LICENSE` for its license.
+ACGN base snapshot: `1e2667351532b0c632166fa21ae5fbc7308a8fe7`.
+The vendored copy includes a local presentation metadata patch that carries parser
+origins through canonicalization for the locators. `vendor/acgn/snapshot.json`
+records the delivered file hashes; this copy is not byte-identical to the base
+snapshot. The upstream checkout remains unchanged. See `vendor/acgn/LICENSE` for
+its license.

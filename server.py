@@ -251,7 +251,8 @@ def project_canonical_locations(result):
         if (not isinstance(raw, dict) or raw.get('coordinateSystem') != 'canonical'
                 or raw.get('offsetEncoding') != 'utf-16'
                 or raw.get('status') not in ('located', 'ambiguous')
-                or raw.get('precision') not in ('related', 'form')
+                or raw.get('precision') not in ('node', 'related', 'form')
+                or raw.get('precision') == 'node' and raw.get('status') != 'located'
                 or not isinstance(raw.get('ranges'), list) or not 1 <= len(raw['ranges']) <= 16
                 or (raw['status'] == 'located') != (len(raw['ranges']) == 1)):
             continue
@@ -272,7 +273,9 @@ def project_canonical_locations(result):
             projected.append({'formIndex': form_index, 'start': start, 'end': end,
                               'text': forms[form_index][a:b]})
         else:
-            reason = ('The whole simplified predicate is shown because a smaller matching part could not be found.'
+            reason = ('This is the expression selected by this edit in your simplified predicate.'
+                      if raw['precision'] == 'node' else
+                      'The whole simplified predicate is shown because a smaller matching part could not be found.'
                       if raw['precision'] == 'form' else
                       'Several parts of your simplified predicate match this hint. Inspect each highlighted possibility.'
                       if len(projected) > 1 else 'This part of your simplified predicate relates to the hint.')
@@ -285,8 +288,9 @@ def project_canonical_locations(result):
 def project_source_locations(operations, record, body):
     """Bind learner-only UTF-16 spans to this exact editable body.
 
-    The engine relates canonical hints to parser expressions, not certified
-    source repairs. Never trust its snippets, coordinates, or free-form reasons;
+    The engine selects a structural occurrence when available, or relates the
+    hint to parser expressions. Neither is a complete source repair. Never
+    trust its snippets, coordinates, or free-form reasons;
     derive the public text/coordinates here and reject an incomplete mapping.
     """
     prefix = record['environmentBefore'] + record['predicateHeader'] + '{\n'
@@ -319,7 +323,8 @@ def project_source_locations(operations, record, body):
         if (not isinstance(raw, dict) or raw.get('coordinateSystem') != 'module'
                 or raw.get('offsetEncoding') != 'utf-16'
                 or raw.get('status') not in ('located', 'ambiguous')
-                or raw.get('precision') not in ('exact', 'related', 'predicate')
+                or raw.get('precision') not in ('node', 'exact', 'related', 'predicate')
+                or raw.get('precision') == 'node' and raw.get('status') != 'located'
                 or not isinstance(raw.get('ranges'), list) or not 1 <= len(raw['ranges']) <= 16
                 or (raw['status'] == 'located') != (len(raw['ranges']) == 1)):
             continue
@@ -340,10 +345,12 @@ def project_source_locations(operations, record, body):
                               'moduleLine': first_line + start_line - 1,
                               'moduleColumn': start_column})
         else:
-            # Downgrade any engine precision claim: AST expression matching
-            # establishes a related region, not an exact defect provenance.
-            precision = 'predicate' if raw['precision'] == 'predicate' else 'related'
-            reason = ('Review the whole predicate; a smaller matching part could not be found.'
+            # A selected structural occurrence is distinct from a complete
+            # repair. Legacy exact claims still only establish related context.
+            precision = raw['precision'] if raw['precision'] in ('node', 'predicate') else 'related'
+            reason = ('This is the expression selected by this edit. Review it before changing your code.'
+                      if precision == 'node' else
+                      'Review the whole predicate; a smaller matching part could not be found.'
                       if precision == 'predicate' else
                       'Several parts of your code match this hint. Choose a highlight to inspect.'
                       if len(projected) > 1 else

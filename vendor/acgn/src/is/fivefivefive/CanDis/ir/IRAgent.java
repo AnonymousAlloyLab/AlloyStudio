@@ -518,6 +518,7 @@ public class IRAgent {
                     semanticProfile);
         }
         attachSourceMetadata(current, node, exactType);
+        current.setSourceOrigin(node.getSourceOrigin(graph, tov));
 
         if (opcode == Opcode.LET && (downlinks == null || downlinks.isEmpty())) {
             EGraphNode replacement = letBindings.get(node);

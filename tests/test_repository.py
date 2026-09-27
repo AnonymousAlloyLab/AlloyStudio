@@ -31,6 +31,21 @@ class RepositoryTests(unittest.TestCase):
                   for p in vendor.rglob('*') if p.is_file() and p.name != 'snapshot.json'}
         self.assertEqual(actual, expected)
         self.assertEqual(snapshot['commit'], '1e2667351532b0c632166fa21ae5fbc7308a8fe7')
+        patches = snapshot['localPatches']
+        self.assertEqual([patch['id'] for patch in patches], ['parser-source-origins'])
+        files = patches[0]['files']
+        self.assertEqual({entry['path'] for entry in files}, {
+            'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
+            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+            'src/is/fivefivefive/CanDis/ir/IRAgent.java',
+            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+            'src/is/fivefivefive/CanDis/core/NormalForm.java',
+            'src/is/fivefivefive/CanDis/core/QuantiVar.java',
+        })
+        self.assertEqual(len(files), 6)
+        for entry in files:
+            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
 
     def test_no_credential_files_or_token_patterns_in_delivery_source(self):
         token = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')

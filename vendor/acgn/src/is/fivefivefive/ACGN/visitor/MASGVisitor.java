@@ -148,6 +148,20 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
     public static final boolean USE_SHADOW = false;
     public static final boolean TYPE_SPECIAL_SETS = false;
 
+    /** Opt-in parser occurrence map for UI source locations; ordinary callers
+     * retain their original model construction and allocation behavior. */
+    public static ModelUnit modelWithSourceMap(CompModule module) {
+        Node owner = new Node(null, new parser.etc.NodeMap()) {
+            @Override public <R, A> R accept(GenericVisitor<R, A> visitor, A arg) {
+                throw new UnsupportedOperationException("Source-map owner is not an AST expression");
+            }
+            @Override public <A> void accept(parser.ast.visitor.VoidVisitor<A> visitor, A arg) {
+                throw new UnsupportedOperationException("Source-map owner is not an AST expression");
+            }
+        };
+        return new ModelUnit(owner, module);
+    }
+
     public MASGVisitor() {
         forest = new DoubleMap<>();
         aame = new AAME();
@@ -707,6 +721,64 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
         node.setExactType(
                 scope.getAffliation(), timeOfVisit,
                 ExactAlloyType.fromParser(source.getType(), parserModule));
+        recordSourceOrigin(node, source, scope, timeOfVisit);
+    }
+
+    private static void recordSourceOrigin(AugmentedNode node, Node source,
+            ScopeTreeNode scope, int timeOfVisit) {
+        if (source == null || source.getNodeMap() == null) return;
+        Object original = source.getNodeMap().findSrc(source);
+        // Signature, field and bound-variable AST objects belong to declarations.
+        // Recover their use-site from the mapped parent's exact operand slot.
+        // AlloyParser elides real NOOP wrappers and also introduces unmapped
+        // synthetic NOOP nodes, so a lexical lookup or declaration Pos is unsafe.
+        if (original instanceof Sig || original instanceof Sig.Field
+                || original instanceof edu.mit.csail.sdg.ast.ExprVar) {
+            original = sourceUseSite(source, (Expr) original);
+        }
+        if (!(original instanceof Expr)) return;
+        edu.mit.csail.sdg.alloy4.Pos span = ((Expr) original).span();
+        if (span == null || span.y < 1 || span.x < 1 || span.y2 < span.y || span.x2 < 1) return;
+        node.setSourceOrigin(scope.getAffliation(), timeOfVisit,
+                new is.fivefivefive.CanDis.core.EGraphNode.SourceOrigin(
+                        span.filename, span.x, span.y, span.x2, span.y2));
+    }
+
+    private static Expr sourceUseSite(Node source, Expr declaration) {
+        Node branch = source;
+        for (Node parent = source.getParent(); parent != null; parent = parent.getParent()) {
+            Object mapped = parent.getNodeMap() == null ? null : parent.getNodeMap().findSrc(parent);
+            Expr candidate = null;
+            if (parent instanceof Body && mapped instanceof Expr) {
+                candidate = (Expr) mapped;
+            } else if (parent instanceof parser.ast.nodes.UnaryExprOrFormula
+                    && mapped instanceof ExprUnary
+                    && ((parser.ast.nodes.UnaryExprOrFormula) parent).getSub() == branch) {
+                candidate = ((ExprUnary) mapped).sub;
+            } else if (parent instanceof parser.ast.nodes.BinaryExprOrFormula
+                    && mapped instanceof edu.mit.csail.sdg.ast.ExprBinary) {
+                parser.ast.nodes.BinaryExprOrFormula binary = (parser.ast.nodes.BinaryExprOrFormula) parent;
+                edu.mit.csail.sdg.ast.ExprBinary original = (edu.mit.csail.sdg.ast.ExprBinary) mapped;
+                if (binary.getLeft() == branch) candidate = original.left;
+                else if (binary.getRight() == branch) candidate = original.right;
+            } else if (parent instanceof parser.ast.nodes.ListExprOrFormula
+                    && mapped instanceof edu.mit.csail.sdg.ast.ExprList) {
+                int index = ((parser.ast.nodes.ListExprOrFormula) parent).getArguments().indexOf(branch);
+                edu.mit.csail.sdg.ast.ExprList original = (edu.mit.csail.sdg.ast.ExprList) mapped;
+                if (index >= 0 && index < original.args.size()) candidate = original.args.get(index);
+            } else if (parent instanceof Call && mapped instanceof edu.mit.csail.sdg.ast.ExprCall) {
+                int index = ((Call) parent).getArguments().indexOf(branch);
+                edu.mit.csail.sdg.ast.ExprCall original = (edu.mit.csail.sdg.ast.ExprCall) mapped;
+                if (index >= 0 && index < original.args.size()) candidate = original.args.get(index);
+            }
+            if (candidate != null && candidate != declaration && candidate.deNOP() == declaration)
+                return candidate;
+            // A mapped expression is the closest authentic parent. Crossing it
+            // would confuse a child occurrence with an enclosing expression.
+            if (mapped instanceof Expr) return null;
+            branch = parent;
+        }
+        return null;
     }
 
     private void recordLeafExactType(

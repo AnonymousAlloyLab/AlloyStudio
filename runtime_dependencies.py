@@ -19,7 +19,11 @@ REQUIRED_CLASSES = (
     'live/LiveFeedback.class', 'live/EngineSelfTest.class', 'live/BehaviorFeedback.class',
     'live/SourceLocator.class', 'live/SourceLocator$Range.class', 'live/SourceLocator$1.class',
     'live/CanonicalLocator.class', 'live/CanonicalLocator$Token.class', 'live/CanonicalLocator$Group.class',
+    'live/CanonicalLocator$Span.class', 'live/CanonicalLocator$FormIndex.class', 'live/CanonicalLocator$1.class',
     'is/fivefivefive/CanDis/LiveTrace.class',
+    'is/fivefivefive/CanDis/core/EGraphNode$SourceOrigin.class',
+    'is/fivefivefive/ACGN/visitor/MASGVisitor$1.class',
+    'is/fivefivefive/ACGN/visitor/MASGVisitor$2.class',
 )
 ENGINE_CHECKS = 372
 

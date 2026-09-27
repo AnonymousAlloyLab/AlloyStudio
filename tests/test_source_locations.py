@@ -1,4 +1,4 @@
-"""Real parser/JVM witnesses for conservative learner source correspondence.
+"""Real parser/JVM witnesses for structural learner source correspondence.
 
 These tests check original-source positions and explicit uncertainty. They do not
 claim that canonical edits identify unique defects or executable source patches.
@@ -38,7 +38,9 @@ class SourceLocationTests(unittest.TestCase):
             self.assertEqual(set(location), {"status", "precision", "coordinateSystem", "offsetEncoding", "reason", "ranges"})
             self.assertEqual(location["coordinateSystem"], "module")
             self.assertEqual(location["offsetEncoding"], "utf-16")
-            self.assertEqual(location["precision"], "related", "Canonical normalization must not imply exact provenance")
+            self.assertIn(location["precision"], ("node", "related"))
+            if location["precision"] == "node":
+                self.assertEqual(location["status"], "located")
             self.assertIn(location["status"], ("located", "ambiguous", "unavailable"))
             self.assertTrue(location["reason"])
             ranges = location["ranges"]
@@ -61,7 +63,9 @@ class SourceLocationTests(unittest.TestCase):
             self.assertEqual(set(canonical), {"status", "precision", "coordinateSystem", "offsetEncoding", "reason", "ranges"})
             self.assertEqual(canonical["coordinateSystem"], "canonical")
             self.assertEqual(canonical["offsetEncoding"], "utf-16")
-            self.assertIn(canonical["precision"], ("related", "form"))
+            self.assertIn(canonical["precision"], ("node", "related", "form"))
+            if canonical["precision"] == "node":
+                self.assertEqual(canonical["status"], "located")
             self.assertIn(canonical["status"], ("located", "ambiguous", "unavailable"))
             if canonical["status"] == "unavailable":
                 self.assertEqual(canonical["ranges"], [])
@@ -90,7 +94,7 @@ class SourceLocationTests(unittest.TestCase):
         self.assertEqual(len(result["operations"]), 1)
         return result["operations"][0], source
 
-    def test_simple_unary_expression_is_related_original_source(self):
+    def test_simple_unary_expression_uses_recorded_original_source(self):
         operation, source = self.only_operation("no A", "some A")
         self.assertEqual(operation["sourceLocation"]["status"], "located")
         self.assertEqual(self.snippets(operation, source), ["no A"])
@@ -108,17 +112,75 @@ class SourceLocationTests(unittest.TestCase):
         span = operation["sourceLocation"]["ranges"][0]
         self.assertEqual(span["start"], utf16_length(source[:source.rindex("no A.r")]))
 
-    def test_repeated_same_expression_retains_ambiguity(self):
+    def test_repeated_expression_selects_normalizations_retained_occurrence(self):
         operation, source = self.only_operation("some A and some A", "no A")
-        self.assertEqual(operation["sourceLocation"]["status"], "ambiguous")
-        self.assertEqual(self.snippets(operation, source), ["some A", "some A"])
-        spans = operation["sourceLocation"]["ranges"]
-        self.assertLess(spans[0]["end"], spans[1]["start"])
+        location = operation["sourceLocation"]
+        self.assertEqual(location["precision"], "node")
+        self.assertEqual(location["status"], "located")
+        self.assertEqual(self.snippets(operation, source), ["some A"])
+        self.assertEqual(location["ranges"][0]["start"], utf16_length(source[:source.index("some A")]))
 
     def test_same_operator_different_operands_selects_expression(self):
         prefix = "some A and no A.r and one A.r.r and "
         operation, source = self.only_operation(prefix + "lone A.r.r.r", prefix + "some A.r.r.r")
         self.assertEqual(self.snippets(operation, source), ["lone A.r.r.r"])
+
+    def test_repeated_leaves_follow_selected_branch_after_canonical_reordering(self):
+        for learner, reference, selected in (
+                ("some A.r or lone A.r", "some A.r or lone r.A", "lone"),
+                ("lone A.r or some A.r", "lone r.A or some A.r", "lone"),
+                ("some A.r or lone A.r", "some r.A or lone A.r", "some")):
+            with self.subTest(learner=learner, selected=selected):
+                result, source = self.compare(learner, reference)
+                self.assertEqual(result["distance"], 2)
+                for operation in result["operations"]:
+                    term = operation["sourceTerm"]
+                    self.assertIn(term, ("A", "r"))
+                    raw = operation["sourceLocation"]
+                    canonical = operation["canonicalLocation"]
+                    self.assertEqual(raw["precision"], "node")
+                    self.assertEqual(canonical["precision"], "node")
+                    self.assertEqual(self.snippets(operation, source), [term])
+                    expected = source.index(selected + " A.r") + len(selected) + (1 if term == "A" else 3)
+                    self.assertEqual(raw["ranges"], [{"start": expected, "end": expected + 1}])
+                    span = canonical["ranges"][0]
+                    form = result["canonicalForm"][span["formIndex"]]
+                    expected = form.index("(" + selected.upper() + " (A . r))") + len(selected) + (3 if term == "A" else 7)
+                    self.assertEqual(span["start"], expected)
+                    self.assertEqual(utf16_slice(form, span["start"], span["end"]), term)
+
+    def test_repeated_call_arguments_select_second_ordered_operand(self):
+        result, source = self.compare("p[A,A]", "p[A,none]",
+                environment=ENVIRONMENT + "pred p[a,b: set A] { a in b }\n")
+        self.assertEqual(result["distance"], 1)
+        operation = result["operations"][0]
+        self.assertTrue(operation["path"].endswith(".child[1]"))
+        self.assertEqual(operation["sourceLocation"]["precision"], "node")
+        expected = source.index("p[A,A]") + 4
+        self.assertEqual(operation["sourceLocation"]["ranges"], [{"start": expected, "end": expected + 1}])
+        span = operation["canonicalLocation"]["ranges"][0]
+        form = result["canonicalForm"][span["formIndex"]]
+        self.assertEqual(span["start"], form.index("p(A, A)") + 5)
+
+    def test_identical_shadowed_binding_headers_select_inner_quantifier(self):
+        operation, source = self.only_operation(
+                "all x: A | some x.r and (all x: A | lone x.r)",
+                "all x: A | some x.r and (some x: A | lone x.r)")
+        self.assertEqual(operation["component"], "quantifier")
+        self.assertEqual(operation["sourceLocation"]["precision"], "node")
+        expected = source.rindex("all x: A")
+        self.assertEqual(operation["sourceLocation"]["ranges"], [{"start": expected, "end": expected + 8}])
+        self.assertEqual(operation["canonicalLocation"]["ranges"][0]["start"], 34)
+
+    def test_deleted_repeated_leaves_keep_their_original_occurrence(self):
+        result, source = self.compare("some A.r or lone A.r", "lone A.r")
+        leaves = [operation for operation in result["operations"]
+                  if operation["kind"] == "delete" and operation.get("sourceTerm") == "A"]
+        self.assertEqual(len(leaves), 2)
+        self.assertTrue(all(operation["sourceLocation"]["precision"] == "node" for operation in leaves))
+        self.assertEqual({operation["sourceLocation"]["ranges"][0]["start"] for operation in leaves},
+                         {source.index("some A.r") + 5, source.index("lone A.r") + 5})
+        self.assertEqual(len({operation["canonicalLocation"]["ranges"][0]["start"] for operation in leaves}), 2)
 
     def test_nested_grouping_does_not_invent_ambiguity(self):
         operation, source = self.only_operation("(((no A)))", "some A")
@@ -142,9 +204,10 @@ class SourceLocationTests(unittest.TestCase):
         operation, source = self.only_operation("helper", "other", environment=environment)
         self.assertEqual(self.snippets(operation, source), ["helper"])
 
-    def test_unmatched_let_expansion_does_not_claim_source_position(self):
-        operation, _ = self.only_operation("let z=A | no z", "let z=A | some z")
-        self.assertEqual(operation["sourceLocation"]["status"], "unavailable")
+    def test_let_expansion_uses_origin_even_when_canonical_text_differs(self):
+        operation, source = self.only_operation("let z=A | no z", "let z=A | some z")
+        self.assertEqual(operation["sourceLocation"]["precision"], "node")
+        self.assertEqual(self.snippets(operation, source), ["no z"])
 
     def test_normalization_to_constant_has_no_guessed_source_range(self):
         result, _ = self.compare("no (A - A)", "some (A - A)")
@@ -164,9 +227,12 @@ class SourceLocationTests(unittest.TestCase):
             if operation["sourceLocation"]["status"] == "located":
                 self.assertIn("does not pinpoint where to add it", operation["sourceLocation"]["reason"])
 
-    def test_candidate_overflow_does_not_choose_arbitrary_occurrences(self):
-        operation, _ = self.only_operation(" and ".join(["some A"] * 17), "no A")
-        self.assertEqual(operation["sourceLocation"]["status"], "unavailable")
+    def test_repeated_occurrences_use_retained_origin_without_candidate_limit(self):
+        operation, source = self.only_operation(" and ".join(["some A"] * 17), "no A")
+        self.assertEqual(operation["sourceLocation"]["precision"], "node")
+        self.assertEqual(self.snippets(operation, source), ["some A"])
+        self.assertEqual(operation["sourceLocation"]["ranges"][0]["start"],
+                         utf16_length(source[:source.index("some A")]))
 
     def test_reference_name_changes_do_not_change_learner_locations(self):
         locations = []
@@ -182,7 +248,7 @@ class SourceLocationTests(unittest.TestCase):
         result, _ = self.compare("no A.r", "some A.r")
         operation = result["operations"][0]
         location = operation["canonicalLocation"]
-        self.assertEqual(location["precision"], "related")
+        self.assertEqual(location["precision"], "node")
         self.assertEqual(location["status"], "located")
         span = location["ranges"][0]
         self.assertEqual(utf16_slice(result["canonicalForm"][span["formIndex"]], span["start"], span["end"]), "(NO (A . r))")
@@ -190,7 +256,7 @@ class SourceLocationTests(unittest.TestCase):
     def test_canonical_binding_fragment_matches_printed_form(self):
         result, _ = self.compare("all x:A | some x.r", "some x:A | some x.r")
         location = result["operations"][0]["canonicalLocation"]
-        self.assertEqual(location["precision"], "related")
+        self.assertEqual(location["precision"], "node")
         span = location["ranges"][0]
         self.assertEqual(utf16_slice(result["canonicalForm"][span["formIndex"]], span["start"], span["end"]), "ALL x : one A")
 
@@ -210,7 +276,7 @@ class SourceLocationTests(unittest.TestCase):
         operation = result["operations"][0]
         location = operation["canonicalLocation"]
         self.assertEqual(location["status"], "located")
-        self.assertEqual(location["precision"], "related")
+        self.assertEqual(location["precision"], "node")
         span = location["ranges"][0]
         self.assertEqual(utf16_slice(result["canonicalForm"][span["formIndex"]], span["start"], span["end"]), "NO")
 

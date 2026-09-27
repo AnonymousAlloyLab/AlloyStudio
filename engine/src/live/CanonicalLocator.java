@@ -1,17 +1,26 @@
 package live;
 
+import is.fivefivefive.CanDis.Canonical;
+import is.fivefivefive.CanDis.core.CanonicalDistance;
+import is.fivefivefive.CanDis.core.EGraphNode;
+import is.fivefivefive.CanDis.core.NormalForm;
+import is.fivefivefive.CanDis.core.QuantiVar;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Presentation-only locations in the learner's rendered canonical forms.
- * These lexical correspondences do not certify canonical-node occurrence identity.
+/** Bind metric paths to learner canonical occurrences using a checked renderer.
+ * The production overload never chooses an occurrence by text matching.
  */
 final class CanonicalLocator {
     private static final Pattern PHASE = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.");
@@ -27,6 +36,222 @@ final class CanonicalLocator {
     private record Token(String text, int start, int end) { }
     private record Group(int start, int end) { }
     private CanonicalLocator() { }
+
+    private static final Pattern MATRIX_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.matrix(?:\\.child\\[[0-9]+\\])*$");
+    private static final Pattern BINDING_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.quantifier\\[([0-9]+)\\]$");
+    private static final Method NORMALIZED = method(Canonical.Prepared.class, "normalizedForms");
+    private static final Method FORM_LABEL = method(CanonicalDistance.class, "normalFormPath", NormalForm.class, int.class);
+    private static final Method NODE_RENDER = method(CanonicalDistance.class, "eGraphFormula", EGraphNode.class);
+    private static final Method BINDING_RENDER = method(CanonicalDistance.class, "quantifierFormula", QuantiVar.class);
+    private static final Method BINDING_ORDER = method(CanonicalDistance.class, "canonicalQuantifierOrder", List.class);
+    private record Span(int start, int end) { }
+    private record FormIndex(Map<String, Span> matrix, List<Span> bindings) { }
+
+    /** Shared read-only access to the same learner graph used by LiveTrace. */
+    @SuppressWarnings("unchecked")
+    static List<NormalForm> normalizedForms(Canonical.Prepared learner) {
+        return (List<NormalForm>) invoke(NORMALIZED, learner);
+    }
+
+    static void attach(Canonical.Prepared learner, JSONArray forms, JSONArray operations) {
+        List<FormIndex> indexes = new ArrayList<>();
+        try {
+            List<NormalForm> normalized = normalizedForms(learner);
+            if (normalized.size() != forms.length()) throw new IllegalArgumentException();
+            for (int phase = 0; phase < normalized.size(); phase++) {
+                try { indexes.add(index(normalized.get(phase), phase, forms.getString(phase))); }
+                catch (RuntimeException ignored) { indexes.add(null); }
+            }
+        } catch (RuntimeException ignored) {
+            for (int i = 0; i < operations.length(); i++) operations.getJSONObject(i).put("canonicalLocation", unavailable());
+            return;
+        }
+        for (int i = 0; i < operations.length(); i++) {
+            JSONObject operation = operations.getJSONObject(i);
+            JSONObject location;
+            try { location = structuralLocation(indexes, forms, operation); }
+            catch (RuntimeException ignored) { location = unavailable(); }
+            operation.put("canonicalLocation", location);
+        }
+    }
+
+    private static JSONObject structuralLocation(List<FormIndex> indexes, JSONArray forms, JSONObject operation) {
+        String component = operation.optString("component");
+        String path = operation.optString("path");
+        if (operation.optBoolean("aggregate") || component.equals("temporal")) {
+            List<Integer> phases = new ArrayList<>();
+            Matcher phase = PHASE.matcher(path);
+            if (phase.find()) {
+                int number = Integer.parseInt(phase.group(1));
+                if (number >= forms.length() || indexes.get(number) == null) return unavailable();
+                phases.add(number);
+            } else {
+                for (int i = 0; i < forms.length(); i++) if (indexes.get(i) != null) phases.add(i);
+            }
+            if (phases.isEmpty() || phases.size() > 16) return unavailable();
+            return formContext(forms, phases);
+        }
+        Matcher matrix = MATRIX_PATH.matcher(path);
+        if (component.equals("matrix") && matrix.matches()) {
+            int phase = Integer.parseInt(matrix.group(1));
+            if (phase >= indexes.size() || indexes.get(phase) == null) return unavailable();
+            Span span = indexes.get(phase).matrix.get(path);
+            if (span == null) return unavailable();
+            boolean anchor = operation.optString("sourceRole").equals("insertion-anchor");
+            return nodeLocation(phase, span, anchor
+                    ? "This is the existing canonical expression used as the insertion anchor."
+                    : "This is the canonical occurrence selected by the edit step.");
+        }
+        Matcher binding = BINDING_PATH.matcher(path);
+        if (component.equals("quantifier") && binding.matches()) {
+            int phase = Integer.parseInt(binding.group(1));
+            if (phase >= indexes.size() || indexes.get(phase) == null) return unavailable();
+            // An inserted binding is absent from the learner. Its metric index
+            // denotes an insertion gap, not an existing affected declaration.
+            int number = Integer.parseInt(binding.group(2));
+            List<Span> bindings = indexes.get(phase).bindings;
+            if (operation.optString("kind").equals("insert"))
+                return number <= bindings.size() ? formContext(forms, List.of(phase)) : unavailable();
+            if (number >= bindings.size()) return unavailable();
+            return nodeLocation(phase, bindings.get(number), "This is the canonical declaration selected by the edit step.");
+        }
+        return unavailable();
+    }
+
+    private static JSONObject nodeLocation(int phase, Span span, String reason) {
+        return metadata("located", "node", reason).put("ranges", new JSONArray().put(new JSONObject()
+                .put("formIndex", phase).put("start", span.start).put("end", span.end)));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static FormIndex index(NormalForm form, int phase, String authoritative) {
+        StringBuilder rendered = new StringBuilder((String) invoke(FORM_LABEL, null, form, phase)).append(" := ");
+        List<QuantiVar> printedOrder = form.getMatrixQuantiVars();
+        List<Span> printedBindings = new ArrayList<>();
+        for (int i = 0; i < printedOrder.size(); i++) {
+            if (i > 0) rendered.append(' ');
+            int start = rendered.length();
+            rendered.append((String) invoke(BINDING_RENDER, null, printedOrder.get(i)));
+            printedBindings.add(new Span(start, rendered.length()));
+        }
+        if (!printedOrder.isEmpty()) rendered.append(" . ");
+        Map<String, Span> matrix = new LinkedHashMap<>();
+        renderNode(form.getMatrixEGraph(), "normalForm[" + phase + "].matrix", rendered, matrix,
+                Collections.newSetFromMap(new IdentityHashMap<>()));
+        // This guards every formatter rule and prefix against framework drift.
+        // Never trust reconstructed offsets unless the complete rendered form
+        // agrees byte-for-byte (Java UTF-16 code units) with authoritative output.
+        if (!rendered.toString().equals(authoritative)) throw new IllegalStateException();
+        List<QuantiVar> metricOrder = (List<QuantiVar>) invoke(BINDING_ORDER, null, printedOrder);
+        List<Span> metricBindings = new ArrayList<>();
+        boolean[] consumed = new boolean[printedOrder.size()];
+        for (QuantiVar binding : metricOrder) {
+            int found = -1;
+            for (int i = 0; i < printedOrder.size(); i++) {
+                if (!consumed[i] && printedOrder.get(i) == binding) { found = i; break; }
+            }
+            if (found < 0) throw new IllegalStateException();
+            consumed[found] = true;
+            metricBindings.add(printedBindings.get(found));
+        }
+        return new FormIndex(matrix, metricBindings);
+    }
+
+    /** Mirror the pinned grammar, retaining each child edge's occurrence path. */
+    private static void renderNode(EGraphNode node, String path, StringBuilder text,
+            Map<String, Span> spans, Set<EGraphNode> active) {
+        if (node == null) { text.append("<empty>"); return; }
+        if (!active.add(node)) throw new IllegalStateException();
+        int start = text.length();
+        List<EGraphNode> children = node.getChildren();
+        switch (node.getOpcode()) {
+            case VARIABLE, GLOBALBINDING, CONSTANT -> text.append((String) invoke(NODE_RENDER, null, node));
+            case TEMPORALROOT -> {
+                if (children.size() == 1) renderChild(node, 0, path, text, spans, active);
+                else renderOperator(node, path, text, spans, active);
+            }
+            case NOT, SOME, NO, LONE, ONE, SETOF, EXACTLY, TRANSPOSE, RCLOSURE, CLOSURE,
+                    CARDINALITY, CAST2INT, CAST2SIGINT, PRIME, BEFORE, HISTORICALLY, ONCE,
+                    ALWAYS, EVENTUALLY, AFTER -> {
+                if (children.isEmpty()) text.append(node.getOpcode());
+                else {
+                    text.append('(').append(node.getOpcode()).append(' ');
+                    renderChild(node, 0, path, text, spans, active);
+                    text.append(')');
+                }
+            }
+            case AND, OR, IMPLIES, IFF, EQUALS, NOT_EQUALS, IN, NOT_IN, GT, GTE, LT, LTE,
+                    JOIN, ARROW, INTERSECT, PLUS, PLUSPLUS, MINUS, UNTIL, RELEASES, SINCE, TRIGGERED -> {
+                if (children.isEmpty()) text.append(node.getOpcode());
+                else {
+                    text.append('(');
+                    for (int i = 0; i < children.size(); i++) {
+                        if (i > 0) text.append(' ').append(infix(node)).append(' ');
+                        renderChild(node, i, path, text, spans, active);
+                    }
+                    text.append(')');
+                }
+            }
+            case ITE -> {
+                if (children.size() != 3) renderOperator(node, path, text, spans, active);
+                else {
+                    text.append("(if "); renderChild(node, 0, path, text, spans, active);
+                    text.append(" then "); renderChild(node, 1, path, text, spans, active);
+                    text.append(" else "); renderChild(node, 2, path, text, spans, active); text.append(')');
+                }
+            }
+            default -> renderOperator(node, path, text, spans, active);
+        }
+        spans.put(path, new Span(start, text.length()));
+        active.remove(node);
+    }
+
+    private static void renderChild(EGraphNode node, int index, String path, StringBuilder text,
+            Map<String, Span> spans, Set<EGraphNode> active) {
+        renderNode(node.getChildren().get(index), path + ".child[" + index + "]", text, spans, active);
+    }
+
+    private static void renderOperator(EGraphNode node, String path, StringBuilder text,
+            Map<String, Span> spans, Set<EGraphNode> active) {
+        String name = node.getSourceName();
+        text.append(name == null || name.isEmpty() ? node.getOpcode().toString() : name);
+        if (!node.getChildren().isEmpty()) {
+            text.append('(');
+            for (int i = 0; i < node.getChildren().size(); i++) {
+                if (i > 0) text.append(", ");
+                renderChild(node, i, path, text, spans, active);
+            }
+            text.append(')');
+        }
+    }
+
+    private static String infix(EGraphNode node) {
+        return switch (node.getOpcode()) {
+            case AND -> "&&"; case OR -> "||"; case IMPLIES -> "=>"; case IFF -> "<=>";
+            case EQUALS -> "="; case NOT_EQUALS -> "!="; case IN -> "in"; case NOT_IN -> "!in";
+            case GT -> ">"; case GTE -> ">="; case LT -> "<"; case LTE -> "<=";
+            case JOIN -> "."; case ARROW -> "->"; case INTERSECT -> "&";
+            case PLUS -> "+"; case PLUSPLUS -> "++"; case MINUS -> "-";
+            case UNTIL -> "until"; case RELEASES -> "releases"; case SINCE -> "since"; case TRIGGERED -> "triggered";
+            default -> throw new IllegalArgumentException();
+        };
+    }
+
+    private static Method method(Class<?> owner, String name, Class<?>... parameters) {
+        try {
+            Method result = owner.getDeclaredMethod(name, parameters);
+            result.setAccessible(true);
+            return result;
+        } catch (ReflectiveOperationException | RuntimeException ignored) { return null; }
+    }
+
+    private static Object invoke(Method method, Object target, Object... arguments) {
+        if (method == null) throw new IllegalStateException();
+        try { return method.invoke(target, arguments); }
+        catch (ReflectiveOperationException error) { throw new IllegalStateException(); }
+    }
+
+    /** Legacy presentation-only overload for callers without a prepared graph. */
 
     static void attach(JSONArray forms, JSONArray operations) {
         for (int i = 0; i < operations.length(); i++) {

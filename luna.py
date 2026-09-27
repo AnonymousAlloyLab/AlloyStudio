@@ -215,7 +215,8 @@ def _location(raw, texts, *, canonical):
         _require((status == 'located' and len(ranges) == 1)
                  or (status == 'ambiguous' and len(ranges) > 1))
         precision = raw.get('precision')
-        _require(precision in (('related', 'form') if canonical else ('related', 'predicate')))
+        _require(precision in (('node', 'related', 'form') if canonical else ('node', 'related', 'predicate')))
+        _require(precision != 'node' or status == 'located')
         projected, seen = [], set()
         for item in ranges:
             _require(isinstance(item, dict))

@@ -14,7 +14,6 @@ import is.fivefivefive.CanDis.LiveTrace;
 import is.fivefivefive.CanDis.core.CanonicalDistance;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import parser.ast.nodes.ModelUnit;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -172,9 +171,9 @@ public final class LiveFeedback {
                                     + " to the distance score, but individual edit hints are unavailable."));
                 }
             }
-            SourceLocator.attach(studentSource, learnerModule, predicate, operations);
+            SourceLocator.attach(studentSource, learnerModule, predicate, student, operations);
             JSONArray canonicalForm = new JSONArray(Canonical.irTemporalFol(student));
-            CanonicalLocator.attach(canonicalForm, operations);
+            CanonicalLocator.attach(student, canonicalForm, operations);
             Map<String, Integer> summary = new LinkedHashMap<>();
             for (int i = 0; i < operations.length(); i++) {
                 String kind = operations.getJSONObject(i).getString("kind");
@@ -195,7 +194,7 @@ public final class LiveFeedback {
                             .put("quantifierCostVerified", reconstructed.quantifierCostVerified)
                             .put("certifiedOptimalScript", false).put("components", components)
                             .put("note", "These hints compare simplified versions of the predicates. "
-                                    + "Highlights show related parts of your code to inspect; the change you need may look different. "
+                                    + "Highlights follow the selected expression when its source position is recorded; otherwise they show related context. "
                                     + "Operator suggestions are shown, while solution expressions, names and values stay hidden. "
                                     + "Use the hints to guide your own edits and check each change."))
                     .put("diagnostics", new JSONArray());
@@ -215,7 +214,7 @@ public final class LiveFeedback {
 
     private static Canonical.Prepared prepare(CompModule module, String predicate) {
         MASGVisitor visitor = new MASGVisitor(new GlobalVariables(), Set.of(predicate), module);
-        visitor.visit(new ModelUnit(null, module), null);
+        visitor.visit(MASGVisitor.modelWithSourceMap(module), null);
         Integer forestId = visitor.getForestId(predicate);
         if (forestId == null) throw new IllegalArgumentException("predicate unavailable");
         Multigraph graph = visitor.getForest().get(forestId);

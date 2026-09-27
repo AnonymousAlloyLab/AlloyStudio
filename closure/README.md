@@ -99,18 +99,24 @@ content-versioned assets and complete navigation, feedback, and download.
 
 ## Source and canonical locators
 
-`C-LOCATORS`: frozen JVM fixtures check learner AST expression spans, repeated
-matches, quantifier headers, comments, Unicode, target isolation and unavailable
-rewritten expressions. Canonical fixtures check rendered fragments and explicit
-whole-form context. HTTP-boundary fixtures check UTF-16 offsets, body containment,
-coordinate/text recomputation, invalid and partial mapping refusal, and
+`C-LOCATORS`: frozen JVM fixtures check that recorded canonical child paths select
+the corresponding rendered nodes, including distinct occurrences of equal text
+and quantifier ordering. Source-origin fixtures check parser positions retained
+through normalization, removed or merged origins, and equality of the fixture
+canonical forms and distance with presentation metadata present or erased.
+Other fixtures cover related and ambiguous source context, quantifier headers,
+comments, Unicode, target isolation, and explicit unavailable or whole-form context.
+HTTP-boundary fixtures check UTF-16 offsets, body containment, coordinate/text
+recomputation, invalid and partial mapping refusal, single-node precision, and
 literal-preserving canonical whitespace compaction with remapped ranges.
 The separate educational projection validates learner locator spans before they
 enter the Luna prompt. `C-BROWSER` separately discharges
-the paired color/underline, ambiguity, scroll/resize, keyboard and stale-draft
-interaction assertions. Matching is conservative related-context identification;
-exact canonical-node/source occurrence provenance, an exact defect proof, and
-automatic source-patch correctness are outside these claims.
+the paired color/underline, selected repeated occurrence, ambiguity, scroll/resize,
+keyboard and stale-draft interaction assertions. Node precision identifies the
+structural occurrence selected by the trace when that identity is retained;
+normalization can merge or remove it, requiring related or unavailable context.
+These finite fixture checks do not establish universal provenance preservation,
+a proof of a source defect, or executable source-patch correctness.
 
 ## Behavioral feedback
 
@@ -151,9 +157,11 @@ missing witnesses, correspondence defects, undefined behavior, and scope leakage
 
 ## Delivery
 
-`C-DELIVERY`: the vendored framework's exact snapshot hashes and recorded origin
-commit string are checked. Git history attribution is trusted; Git object membership
-is not verified. The declared delivery tree is scanned for the frozen credential
+`C-DELIVERY`: the vendored framework's delivered snapshot hashes and recorded base
+commit string are checked. The vendored copy includes a local presentation metadata
+patch for parser origins; it is not byte-identical to that upstream commit. Git
+history attribution is trusted; Git object membership is not verified. The declared
+delivery tree is scanned for the frozen credential
 filename and token patterns. Git ignore rules are exercised in an isolated
 repository: the bundled catalogue and pools must be eligible for inclusion,
 while credentials and generated deployment output remain excluded. Dataset

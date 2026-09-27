@@ -152,6 +152,35 @@ class EducationPromptTests(unittest.TestCase):
         self.assertEqual(projected['status'], 'unavailable')
         self.assertEqual(projected['ranges'], [])
 
+    def test_selected_node_evidence_retains_only_the_chosen_repeated_occurrence(self):
+        feedback = trace(1)
+        body = 'some A and some A'
+        feedback['canonicalForm'] = ['SOME A and SOME A']
+        for key, coordinate, text in (('sourceLocation', 'body', 'some A'),
+                                      ('canonicalLocation', 'canonical', 'SOME A')):
+            span = {'start': 11, 'end': 17, 'text': text}
+            if coordinate == 'canonical':
+                span['formIndex'] = 0
+            feedback['operations'][0][key] = {
+                'status': 'located', 'precision': 'node', 'coordinateSystem': coordinate,
+                'offsetEncoding': 'utf-16', 'reason': 'PRIVATE_REASON', 'ranges': [span]}
+        projected = luna.prompt_education(feedback, body)['trace']['operations'][0]
+        for key in ('sourceLocation', 'canonicalLocation'):
+            self.assertEqual(projected[key]['precision'], 'node')
+            self.assertEqual(projected[key]['status'], 'located')
+            self.assertEqual([span['start'] for span in projected[key]['ranges']], [11])
+        self.assertNotIn('PRIVATE_REASON', json.dumps(projected))
+        for status in ('ambiguous', 'located'):
+            invalid = deepcopy(feedback)
+            for key in ('sourceLocation', 'canonicalLocation'):
+                location = invalid['operations'][0][key]
+                location['status'] = status
+                location['ranges'].append(dict(location['ranges'][0], start=0, end=6))
+            projected = luna.prompt_education(invalid, body)['trace']['operations'][0]
+            for key in ('sourceLocation', 'canonicalLocation'):
+                self.assertEqual(projected[key]['status'], 'unavailable')
+                self.assertEqual(projected[key]['ranges'], [])
+
     def test_missing_behavior_is_explicitly_unavailable_and_has_no_witness_ids(self):
         for unavailable in (None, {'status': 'unavailable', 'message': 'PRIVATE_ERROR'}):
             projected = luna.prompt_education(trace(), 'some A', unavailable)

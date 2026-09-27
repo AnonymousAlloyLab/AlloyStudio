@@ -99,7 +99,7 @@
       "evidence_kind": "OUT_OF_SCOPE"
     },
     {
-      "surface": "Exact canonical-node to raw-source occurrence provenance, proof of source defect, and correctness of executable source repairs; locator claims cover only the frozen related-context and ambiguity fixtures",
+      "surface": "Universal canonical-node to raw-source provenance across all rewrites, proof of source defect, and correctness of executable source repairs; locator claims cover the frozen structural-path and retained-parser-origin fixtures with explicit related-context or unavailable fallback",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
     },

@@ -37,6 +37,8 @@ public class QuantiVar {
     private Cardinality cardinality;
     private int disjointnessClass;
     private String bindingPath;
+    private EGraphNode.SourceOrigin sourceOrigin;
+    private boolean sourceOriginAmbiguous;
     private ExactAlloyType exactAlloyType;
     private volatile boolean frozenForCertification;
     public QuantiVar(int id, String name, String typeName) {
@@ -58,6 +60,19 @@ public class QuantiVar {
     }
     public int getId() {
         return id;
+    }
+    /** Source quantifier context; never participates in binding identity. */
+    public EGraphNode.SourceOrigin getSourceOrigin() {
+        return sourceOriginAmbiguous ? null : sourceOrigin;
+    }
+    public synchronized void setSourceOrigin(EGraphNode.SourceOrigin origin) {
+        requireMutable();
+        sourceOrigin = origin;
+    }
+    synchronized void mergeSourceOrigin(QuantiVar other) {
+        requireMutable();
+        if (other.sourceOriginAmbiguous || !java.util.Objects.equals(sourceOrigin, other.sourceOrigin))
+            sourceOriginAmbiguous = true;
     }
     public String getName() {
         return name;

@@ -121,7 +121,7 @@
     },
     {
       "id": "C-BROWSER",
-      "statement": "The exact frozen Playwright browser workflow assertions pass in desktop and mobile Chromium sessions. The virtual-application fixture serves the actual packaged HTML and poisons stale unversioned asset URLs; the UI must load content-versioned assets and complete its feedback/navigation/download workflow.",
+      "statement": "The exact frozen Playwright browser workflow assertions pass in desktop and mobile Chromium sessions, including paired highlights at the selected repeated source/canonical occurrence and rejection of ambiguous single-node claims. The virtual-application fixture serves the actual packaged HTML and poisons stale unversioned asset URLs; the UI must load content-versioned assets and complete its feedback/navigation/download workflow.",
       "claim_class": "test",
       "verifier": "V-BROWSER",
       "scope": {
@@ -197,7 +197,7 @@
     },
     {
       "id": "C-DELIVERY",
-      "statement": "Vendor files match the frozen snapshot manifest, whose recorded origin is ACGN commit 1e2667351532b0c632166fa21ae5fbc7308a8fe7; the frozen delivery-source credential filename/token-pattern checks pass, Git ignore rules admit the bundled exercise data and exclude credentials, and the bundled data retain their expected coverage and source witnesses.",
+      "statement": "Vendor files match the frozen delivered snapshot manifest, based on ACGN commit 1e2667351532b0c632166fa21ae5fbc7308a8fe7 plus the local parser-origin presentation metadata patch; equality to the upstream commit is not claimed. The frozen delivery-source credential filename/token-pattern checks pass, Git ignore rules admit the bundled exercise data and exclude credentials, and the bundled data retain their expected coverage and source witnesses.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -440,12 +440,14 @@
     },
     {
       "id": "C-LOCATORS",
-      "statement": "Frozen JVM and HTTP projection assertions check learner-only parser spans, related and ambiguous source matches, canonical fragment/context ranges, literal-preserving canonical whitespace compaction with UTF-16 rebasing, invalid-range rejection, source/target isolation, and locations bound to the checked draft. Browser interaction is discharged separately by C-BROWSER. Exact source-defect provenance and executable repair correctness are excluded.",
+      "statement": "Frozen JVM and HTTP projection assertions check recorded canonical child paths selecting the corresponding rendered nodes and retained learner parser origins, including repeated-text occurrences, removed or merged origins, and fixture canonical-form/distance agreement with presentation metadata erased. They also check explicit related, ambiguous, unavailable and whole-form context, literal-preserving canonical whitespace compaction with UTF-16 rebasing, invalid-range and ambiguous-node rejection, source/target isolation, and locations bound to the checked draft. Browser interaction is discharged separately by C-BROWSER. Universal provenance preservation, proof of a source defect, and executable repair correctness are excluded.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
         "test_source_locations.",
-        "test_source_projection."
+        "test_source_projection.",
+        "test_canonical_structure.",
+        "test_source_origin_metadata."
       ],
       "scope": {
         "inputs": [
@@ -460,6 +462,8 @@
           "vendor/acgn",
           "tests/test_source_locations.py",
           "tests/test_source_projection.py",
+          "tests/test_canonical_structure.py",
+          "tests/test_source_origin_metadata.py",
           "tests/browser.mjs",
           "tests/test_engine_corpus.py"
         ]
@@ -469,7 +473,9 @@
       ],
       "witnesses": [
         "tests/test_source_locations.py",
-        "tests/test_source_projection.py"
+        "tests/test_source_projection.py",
+        "tests/test_canonical_structure.py",
+        "tests/test_source_origin_metadata.py"
       ]
     },
     {

@@ -1,4 +1,4 @@
-The Java adapter executes the original ACGN Fast Rewrite `Canonical` API. It does
+The Java adapter executes the pinned ACGN Fast Rewrite `Canonical` API. It does
 not substitute text, token, Levenshtein, or representative-tree distance for the
 framework's temporal + quantifier + matrix metric. This is the Fast Rewrite
 compatibility metric, not the certificate-integrated quotient metric.
@@ -45,8 +45,8 @@ identity change instead identifies the learner's current reference, constant,
 variable, or call and says which kind of item needs revision. Inserted reference
 operators and operands remain hidden. Paths use original learner child indices,
 including when an unordered assignment reorders the matched children. These
-paths and rendered fragments identify canonical structure, not precise source
-positions. A subtree deletion can contain several unit operations and must be
+paths select canonical structure; retained parser origins separately identify
+source occurrences. A subtree deletion can contain several unit operations and must be
 translated into a syntactically valid learner edit.
 
 Operations also carry `sourceLocation` and `canonicalLocation`. Each has a
@@ -55,10 +55,16 @@ end-exclusive `ranges`, and an explicit coordinate system. Source ranges refer
 to the learner module and are taken from parsed expressions inside the selected
 predicate; helper bodies and declaration positions are excluded. Canonical
 ranges include `formIndex` and refer to the corresponding `canonicalForm`
-string. Both matchers identify related context, not certified occurrence
-provenance. Multiple candidates remain ambiguous. If canonical matching fails,
-`precision: "form"` identifies whole-form context; a missing learner phase has
-no location. Neither matcher accepts the reference source or target expressions.
+string. Recorded structural paths select the corresponding rendered occurrence,
+including when equal text appears elsewhere. `precision: "node"` requires
+`status: "located"` and exactly one range. Source locations use the selected
+node's parser origin when retained. Normalization can merge or remove that
+identity; source lookup then reports related or ambiguous context, or an
+unavailable location. Canonical whole-form context is reserved for temporal or
+grouped edits and quantifier insertions without an existing binding. Invalid
+paths, missing learner phases, and renderer mismatches report unavailable
+canonical locations. Node identity is not proof of a defect or an executable
+source patch. Neither locator accepts reference source or target expressions.
 
 The HTTP layer validates and rebases source ranges to the editable body, derives
 snippets and body/model coordinates itself, and rejects invalid or incomplete
@@ -97,8 +103,10 @@ canonical feedback and discards stale draft responses.
 `LiveTrace` reconstructs the matrix metric's actual optimal alignment using
 ordered child dynamic programming and Hungarian assignment for unordered
 children. It reuses the pinned framework's coherent and local alpha mappings
-and atomic update costs through narrowly scoped reflection, without changing
-the vendored framework. Its operations include CALL identity changes omitted
+and atomic update costs through narrowly scoped reflection. The vendored
+framework includes a local parser-origin presentation metadata patch for the
+locators; its base commit and delivered hashes are recorded in
+`vendor/acgn/snapshot.json`. The trace includes CALL identity changes omitted
 by upstream `Canonical.edits`, and avoid the upstream trace's independently
 sorted ordered alignment. Quantifier edits likewise backtrack the metric's
 binding-tuple dynamic program.

@@ -1586,7 +1586,7 @@ public class NormalForm {
                 EGraphNode child = children.get(i);
                 if (isRelDecl(child.getOpcode())) {
                     RelDeclResult relDecl = prenexRelDecl(node.getOpcode(), child, scopedEnv, nextVarId, false, negated, localConstraints,
-                            bindingPath + "/decl[" + i + "]", slots);
+                            bindingPath + "/decl[" + i + "]", slots, node.getSourceOrigin());
                     if (relDecl.emptyDomainValue != null) {
                         throw new IllegalStateException(
                                 "Quantifier-domain preflight disagreed with transformed domain");
@@ -1659,7 +1659,7 @@ public class NormalForm {
             EGraphNode child = children.get(i);
             if (isRelDecl(child.getOpcode())) {
                 prenexRelDecl(Opcode.FORALL, child, env, nextVarId, true, false, constraints,
-                        bindingPath + "/param[" + i + "]", slots);
+                        bindingPath + "/param[" + i + "]", slots, null);
                 continue;
             }
             boolean childNegated = childNegated(node.getOpcode(), i, negated);
@@ -2018,7 +2018,7 @@ public class NormalForm {
             if (isRelDecl(child.getOpcode())) {
                 quantifier.addNormalizedChild(localRelDecl(node.getOpcode(), child, scopedEnv, nextVarId, negated,
                         localConstraints, bindingPath + "/local-decl[" + i + "]", slots,
-                        localDepth, localOrdinal));
+                        localDepth, localOrdinal, node.getSourceOrigin()));
             } else {
                 EGraphNode rewrittenChild = prenex(child, scopedEnv, nextVarId, false, localConstraints,
                         bindingPath + "/local-body[" + i + "]", true, true, false, slots);
@@ -2045,7 +2045,8 @@ public class NormalForm {
             String bindingPath,
             PrenexSlotAllocator slots,
             int localDepth,
-            int[] localOrdinal) {
+            int[] localOrdinal,
+            EGraphNode.SourceOrigin sourceOrigin) {
         EGraphNode copy = copyShallow(relDecl, relDecl.getOpcode());
         EGraphNode typeEGraph = null;
         if (!relDecl.getChildren().isEmpty()) {
@@ -2070,6 +2071,7 @@ public class NormalForm {
                 String alphaName = "_l" + localId;
                 String varType = primitiveVarType(candidate.getSourceType());
                 QuantiVar qv = new QuantiVar(localId, alphaName, originalName, varType);
+                qv.setSourceOrigin(sourceOrigin);
                 qv.addOriginalName(candidate.getSemanticIdentity());
                 qv.mergeExactAlloyType(bindingTypeEvidence(candidate, typeEGraph));
                 qv.setQuantifier(quantifierOf(quantifierOpcode, negated));
@@ -2339,7 +2341,8 @@ public class NormalForm {
             boolean negated,
             List<EGraphNode> constraints,
             String bindingPath,
-            PrenexSlotAllocator slots) {
+            PrenexSlotAllocator slots,
+            EGraphNode.SourceOrigin sourceOrigin) {
         EGraphNode typeEGraph = null;
         if (!relDecl.getChildren().isEmpty()) {
             PrenexSlotAllocator domainSlots = slots.domainView();
@@ -2369,6 +2372,7 @@ public class NormalForm {
             String alphaName = "_q" + nextVarId[0];
             String varType = primitiveVarType(candidate.getSourceType());
             QuantiVar qv = new QuantiVar(nextVarId[0], alphaName, originalName, varType);
+            qv.setSourceOrigin(sourceOrigin);
             qv.addOriginalName(candidate.getSemanticIdentity());
             qv.mergeExactAlloyType(bindingTypeEvidence(candidate, typeEGraph));
             qv.setQuantifier(quantifier);
@@ -3919,6 +3923,9 @@ public class NormalForm {
                 source.getMetatype(),
                 source.getSemanticProfile());
         copy.setSourceName(sameOpcode ? source.getSourceName() : null);
+        // A rewritten operator still derives from this parser occurrence; this
+        // position is context, never a claim of a source-level repair patch.
+        copy.setSourceOrigin(source.getSourceOrigin());
         copy.setSourceType(sameOpcode || !isBooleanBranchConnective(opcode)
                 ? source.getSourceType() : "Bool");
         copy.setExactAlloyType(sameOpcode || !isBooleanBranchConnective(opcode)
@@ -3964,6 +3971,7 @@ public class NormalForm {
                 source.getMetatype(),
                 source.getSemanticProfile());
         copy.setSourceType(source.getSourceType());
+        copy.setSourceOrigin(source.getSourceOrigin());
         copy.setExactAlloyType(source.getExactAlloyType());
         return copy;
     }
@@ -4117,6 +4125,7 @@ public class NormalForm {
                 node.getMetatype(),
                 node.getSemanticProfile());
         clone.setSourceName(node.getSourceName());
+        clone.setSourceOrigin(node.getSourceOrigin());
         clone.setSourceType(node.getSourceType());
         clone.setExactAlloyType(node.getExactAlloyType());
         clone.setAlphaName(node.getAlphaName());
@@ -4359,6 +4368,7 @@ public class NormalForm {
             BindingCoordinate coordinate = new BindingCoordinate(signature, ordinal);
             QuantiVar representative = representatives.get(coordinate);
             if (representative != null) {
+                representative.mergeSourceOrigin(candidate);
                 representative.mergeExactAlloyType(candidate.getExactAlloyType());
                 representative.addOriginalName(candidate.getOriginalName());
                 return representative;

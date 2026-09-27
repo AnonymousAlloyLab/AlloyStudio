@@ -3,6 +3,10 @@ package live;
 import edu.mit.csail.sdg.alloy4.Pos;
 import edu.mit.csail.sdg.ast.*;
 import edu.mit.csail.sdg.parser.CompModule;
+import is.fivefivefive.CanDis.Canonical;
+import is.fivefivefive.CanDis.LiveTrace;
+import is.fivefivefive.CanDis.core.EGraphNode;
+import is.fivefivefive.CanDis.core.QuantiVar;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,12 +17,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/** Learner-only, conservative correspondence between canonical terms and source.
- *
- * Positions come from parsed learner expressions, never a search for an operator
- * substring. Token equality only suggests related context: normalization erases
- * occurrence provenance, so even a unique candidate is deliberately not exact.
- * No reference source, target term, or canonical path is accepted by this index.
+/** Learner-only source positions selected by the recorded canonical node path.
+ * Parser origin metadata survives supported normalization steps independently
+ * of semantic identity. Lexical candidates remain a conservative fallback when
+ * a rewrite cannot retain a source origin; they never override a recorded one.
  */
 final class SourceLocator {
     private static final int MAX_CANDIDATES = 16;
@@ -26,6 +28,7 @@ final class SourceLocator {
     private final List<Integer> lineStarts = new ArrayList<>();
     private final Map<List<String>, List<Range>> expressions = new LinkedHashMap<>();
     private final Map<List<String>, List<Range>> bindings = new LinkedHashMap<>();
+    private final Map<Range, Range> bindingHeaders = new LinkedHashMap<>();
     private Range body;
     private String filename;
 
@@ -45,7 +48,7 @@ final class SourceLocator {
         }
     }
 
-    static void attach(String source, CompModule module, String predicate, JSONArray operations) {
+    static void attach(String source, CompModule module, String predicate, Canonical.Prepared learner, JSONArray operations) {
         SourceLocator locator = null;
         try { locator = new SourceLocator(source, module, predicate); }
         catch (RuntimeException | StackOverflowError ignored) { /* Location failure cannot alter metric feedback. */ }
@@ -53,7 +56,7 @@ final class SourceLocator {
             JSONObject operation = operations.getJSONObject(i);
             JSONObject location;
             try {
-                location = locator == null ? unavailable("A location in your code is unavailable for this hint.") : locator.locate(operation);
+                location = locator == null ? unavailable("A location in your code is unavailable for this hint.") : locator.locate(learner, operation);
             } catch (RuntimeException ignored) {
                 location = unavailable("A location in your code is unavailable for this hint.");
             }
@@ -61,7 +64,9 @@ final class SourceLocator {
         }
     }
 
-    private JSONObject locate(JSONObject operation) {
+    private JSONObject locate(Canonical.Prepared learner, JSONObject operation) {
+        JSONObject structural = structuralLocation(learner, operation);
+        if (structural != null) return structural;
         String term = operation.optString("sourceTerm", "");
         if (term.isBlank() || term.endsWith("..."))
             return unavailable("This hint has no complete expression to highlight in your code.");
@@ -98,6 +103,59 @@ final class SourceLocator {
         return metadata(ambiguous ? "ambiguous" : "located", "related", reason).put("ranges", ranges);
     }
 
+    private JSONObject structuralLocation(Canonical.Prepared learner, JSONObject operation) {
+        if (learner == null || operation.optBoolean("aggregate")) return null;
+        String component = operation.optString("component"), path = operation.optString("path");
+        boolean anchor = operation.optString("sourceRole").equals("insertion-anchor");
+        if (component.equals("quantifier")) {
+            // An inserted binding has no learner occurrence. Its target index
+            // must never be interpreted as a learner declaration position.
+            if (operation.optString("kind").equals("insert")) return null;
+            QuantiVar binding = LiveTrace.learnerBinding(learner, path);
+            if (binding == null) return null;
+            Range original = originRange(binding.getSourceOrigin());
+            if (original == null) return null;
+            Range header = bindingHeaders.get(original);
+            if (header == null) {
+                for (Range candidate : bindingHeaders.values()) {
+                    if (candidate.start <= original.start && original.start < candidate.end) {
+                        if (header != null && !header.equals(candidate)) return null;
+                        header = candidate;
+                    }
+                }
+            }
+            return insideBody(header) ? selected(header, false, true) : null;
+        }
+        if (!component.equals("matrix")) return null;
+        EGraphNode node = LiveTrace.learnerNode(learner, path);
+        if (node == null) return null;
+        Range original = originRange(node.getSourceOrigin());
+        if (insideBody(original)) return selected(original, anchor, true);
+        // Some normalization steps synthesize nodes. A recorded enclosing
+        // occurrence is useful context; it is explicitly not a node match.
+        while (path.lastIndexOf(".child[") >= 0) {
+            path = path.substring(0, path.lastIndexOf(".child["));
+            node = LiveTrace.learnerNode(learner, path);
+            if (node == null) break;
+            original = originRange(node.getSourceOrigin());
+            if (insideBody(original)) return selected(original, anchor, false);
+        }
+        return null;
+    }
+
+    private Range originRange(EGraphNode.SourceOrigin origin) {
+        return origin == null ? null : range(new Pos(origin.filename(), origin.x(), origin.y(), origin.x2(), origin.y2()));
+    }
+
+    private JSONObject selected(Range span, boolean anchor, boolean node) {
+        String reason = anchor
+                ? "Inspect this recorded source expression for a missing part; the highlight does not pinpoint where to add it."
+                : node ? "This is the source expression recorded for the node selected by this edit."
+                : "This enclosing source expression contains the part selected by this edit.";
+        return metadata("located", node ? "node" : "related", reason)
+                .put("ranges", new JSONArray().put(new JSONObject().put("start", span.start).put("end", span.end)));
+    }
+
     private void visit(Expr expression) {
         // Sig/Field/ExprVar objects are declaration-owned and can be shared by
         // occurrences. Their NOOP wrappers carry the actual use-site positions.
@@ -130,6 +188,8 @@ final class SourceLocator {
             end = Math.max(end, span.end);
         }
         Range header = new Range(operator.start, end);
+        Range original = range(quantifier.span());
+        if (original != null) bindingHeaders.put(original, header);
         for (Decl declaration : quantifier.decls) {
             Range bound = range(declaration.expr.span());
             if (!insideBody(bound)) continue;

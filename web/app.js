@@ -212,7 +212,8 @@ function renderCanonicalForms(ranges = []) {
 function validatedCanonicalLocation(location, context) {
   if (!sourceContextCurrent(context) || state.canonical?.context !== context
     || !location || !['located', 'ambiguous'].includes(location.status)
-    || !['related', 'form'].includes(location.precision) || location.coordinateSystem !== 'canonical'
+    || !['node', 'related', 'form'].includes(location.precision) || location.coordinateSystem !== 'canonical'
+    || (location.precision === 'node' && location.status !== 'located')
     || location.offsetEncoding !== 'utf-16' || !Array.isArray(location.ranges) || location.ranges.length > 32
     || (location.status === 'located' ? location.ranges.length !== 1 : location.ranges.length < 2)) return null;
   const seen = new Set();
@@ -239,7 +240,8 @@ function selectOperation(operation, context, item, sourceIndex = null, sourceBut
   const canonical = validatedCanonicalLocation(operation.canonicalLocation, context);
   if (canonical) {
     renderCanonicalForms(canonical.ranges);
-    const label = canonical.precision === 'form' ? 'Canonical form context' : 'Related part of your canonical form';
+    const label = canonical.precision === 'node' ? 'Expression selected by this edit'
+      : canonical.precision === 'form' ? 'Canonical form context' : 'Related part of your canonical form';
     const ambiguity = canonical.status === 'ambiguous' ? ` · ${canonical.ranges.length} possible parts highlighted. These highlights are not paired with the locations in your code.` : '.';
     elements.canonicalStatus.textContent = `${label}${ambiguity}${typeof canonical.reason === 'string' && canonical.reason ? ` ${canonical.reason}` : ''}`;
     $('#canonical-panel').open = true;
@@ -271,7 +273,8 @@ function bodyPosition(body, offset) {
 
 function validatedSourceLocation(location, context) {
   if (!sourceContextCurrent(context) || !location || !['located', 'ambiguous'].includes(location.status)
-    || !['exact', 'related', 'predicate'].includes(location.precision)
+    || !['node', 'exact', 'related', 'predicate'].includes(location.precision)
+    || (location.precision === 'node' && location.status !== 'located')
     || location.coordinateSystem !== 'body' || location.offsetEncoding !== 'utf-16'
     || !Array.isArray(location.ranges) || location.ranges.length > 32
     || (location.status === 'located' ? location.ranges.length !== 1 : location.ranges.length < 2)) return null;
@@ -298,7 +301,8 @@ function validatedSourceLocation(location, context) {
 }
 
 function sourceLocationLabel(location) {
-  return location.precision === 'exact' ? 'Source expression'
+  return location.precision === 'node' ? 'Expression selected by this edit'
+    : location.precision === 'exact' ? 'Source expression'
     : location.precision === 'predicate' ? 'Predicate context' : 'Related source context';
 }
 

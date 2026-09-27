@@ -209,7 +209,8 @@ if ($LASTEXITCODE -ne 0) { throw 'ARR proxy configuration failed.' }
 
 This changes ARR's **server-wide** proxy setting, which is shared with other IIS
 sites. The 60-second timeout exceeds the default 12-second canonical calculation
-plus the 20-second Luna request; retain at least 60 seconds. The included
+plus the 40-second Luna request; retain at least 60 seconds. The behavioral check
+uses a separate request before educational guidance is requested. The included
 `web.config` has only a fixed loopback upstream. Its second rule allows only the
 three known public assets. No wildcard filesystem handler exposes the backend.
 Application-relative rewrite matching also supports `/alloy/api/...`; see the

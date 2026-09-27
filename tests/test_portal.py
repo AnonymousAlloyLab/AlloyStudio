@@ -19,7 +19,17 @@ from luna import Explainer, MODEL, prompt_trace
 TRACE = {'status': 'ok', 'distance': 2, 'breakdown': {'temporal': 0, 'quantifier': 0, 'matrix': 2},
          'operations': [{'kind': 'replace', 'component': 'matrix', 'cost': 1, 'path': 'matrix.child[0]', 'target': 'PRIVATE_CANARY'},
                         {'kind': 'delete', 'component': 'matrix', 'cost': 1}],
-         'oracleBody': 'PRIVATE_CANARY', 'canonicalForm': 'LEARNER_CANARY'}
+         'oracleBody': 'PRIVATE_CANARY', 'canonicalForm': ['LEARNER_CANARY']}
+
+
+def education_reply(descriptions=('Review the first matrix edit.', 'Review the second matrix edit.'),
+                    summary='Review the two matrix edits.'):
+    content = {'operations': [{'id': 'operation-' + str(index), 'description': description}
+                              for index, description in enumerate(descriptions, 1)],
+               'instances': [], 'summary': summary}
+    return io.BytesIO(json.dumps({'status': 'completed', 'output': [
+        {'type': 'reasoning'}, {'type': 'message', 'content': [
+            {'type': 'output_text', 'text': json.dumps(content)}]}]}).encode())
 
 
 class BodyTests(unittest.TestCase):
@@ -65,8 +75,7 @@ class LunaTests(unittest.TestCase):
         seen = []
         def transport(request, timeout):
             seen.append(request)
-            return io.BytesIO(json.dumps({'status': 'completed', 'output': [
-                {'type': 'reasoning'}, {'type': 'message', 'content': [{'type': 'output_text', 'text': 'Review the two matrix edits.'}]}]}).encode())
+            return education_reply()
         client = Explainer(transport=transport, key_reader=lambda: 'UNIT_TEST_SECRET')
         answer = client.explain(TRACE)
         self.assertEqual(answer['status'], 'ok')
@@ -76,9 +85,14 @@ class LunaTests(unittest.TestCase):
         self.assertEqual(payload['model'], MODEL)
         self.assertFalse(payload['store'])
         self.assertEqual(seen[0].get_header('Authorization'), 'Bearer UNIT_TEST_SECRET')
-        for forbidden in ('PRIVATE_CANARY', 'LEARNER_CANARY', 'UNIT_TEST_SECRET', 'oracleBody'):
+        for forbidden in ('PRIVATE_CANARY', 'UNIT_TEST_SECRET', 'oracleBody'):
             self.assertNotIn(forbidden, seen[0].data.decode())
         self.assertNotIn('target', payload['input'])
+        self.assertIn('LEARNER_CANARY', payload['input'])
+        self.assertEqual(payload['text']['format']['type'], 'json_schema')
+        self.assertTrue(payload['text']['format']['strict'])
+        self.assertEqual([item['id'] for item in answer['operations']], ['operation-1', 'operation-2'])
+        self.assertEqual(answer['instances'], [])
 
     def test_failures_are_sanitized(self):
         errors = [HTTPError('https://example.invalid', 401, 'SECRET', {}, io.BytesIO(b'SECRET')),
@@ -94,10 +108,12 @@ class LunaTests(unittest.TestCase):
 
     def test_output_redaction_and_partial_response(self):
         def transport(request, timeout):
-            return io.BytesIO(json.dumps({'status': 'completed', 'output': [{'type': 'message', 'content': [
-                {'type': 'output_text', 'text': 'SECRET sk-abcdefghijklmnopqrstuv'}]}]}).encode())
+            return education_reply(descriptions=('SECRET sk-abcdefghijklmnopqrstuv', 'SECRET'),
+                                   summary='SECRET sk-abcdefghijklmnopqrstuv')
         output = Explainer(transport=transport, key_reader=lambda: 'SECRET').explain(TRACE)
-        self.assertEqual(output['text'], '[redacted] [redacted]')
+        self.assertEqual(output['summary'], '[redacted] [redacted]')
+        self.assertEqual(output['operations'][0]['description'], '[redacted] [redacted]')
+        self.assertEqual(output['operations'][1]['description'], '[redacted]')
         client = Explainer(transport=lambda *a, **k: io.BytesIO(b'{"status":"incomplete"}'), key_reader=lambda: 'SECRET')
         self.assertEqual(client.explain(TRACE)['status'], 'unavailable')
 
@@ -192,12 +208,14 @@ class HTTPTests(unittest.TestCase):
             for _ in range(4): self.app.slots.release()
 
     def test_explanation_endpoint_uses_server_trace(self):
-        with patch.object(self.app.explainer, 'explain', return_value={'status': 'ok', 'model': MODEL, 'text': 'Examine matrix edits.'}) as explain:
+        with patch.object(self.app.explainer, 'explain', return_value={'status': 'ok', 'model': MODEL, 'operations': [], 'instances': [], 'summary': 'Examine matrix edits.'}) as explain:
             code, _, response = self.request('/api/explain', {'exerciseId': 'graphs-inv1', 'body': 'some Node', 'revision': 12})
             self.assertEqual(code, 200)
             self.assertEqual(json.loads(response)['revision'], 12)
             self.assertEqual(explain.call_args[0][0]['status'], 'ok')
             self.assertNotIn('oracleSource', explain.call_args[0][0])
+            self.assertEqual(explain.call_args.kwargs['student_body'], 'some Node')
+            self.assertIsNone(explain.call_args.kwargs['behavior'])
 
 
 if __name__ == '__main__': unittest.main()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check live Luna access using one actual, redacted exercise repair trace."""
+"""Check live Luna access using learner code, redacted edits, and public examples."""
 import json
 from pathlib import Path
 import sys
@@ -16,7 +16,9 @@ def main():
         if feedback.get('status') != 'ok':
             print(json.dumps({'status': 'unavailable', 'message': 'Build the engine before checking Luna.'}))
             return 1
-        result = app.explainer.explain(feedback)
+        behavior = app.evaluate_behavior(exercise, exercise['starter'])
+        result = app.explainer.explain(feedback, student_body=exercise['starter'],
+                                       behavior=behavior if behavior.get('status') == 'ok' else None)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result['status'] == 'ok' else 1
     finally:

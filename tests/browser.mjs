@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer, request as httpRequest } from 'node:http';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -45,6 +46,31 @@ const someSourceResult = payload => {
   const start = payload.body.indexOf('some Node');
   return sourceResult(payload, [[start, start + 'some Node'.length]]);
 };
+const behaviorInstance = (identity, states = 1) => ({ traceLength: states, loopState: states > 1 ? 0 : -1,
+  truncated: false, stringsAnonymized: false,
+  states: Array.from({ length: states }, (_, index) => ({ index,
+    signatures: [{ label: 'Node', atoms: [`Node$${identity}`, `State$${index}`] }],
+    relations: [{ label: 'adj', arity: 2, tuples: [[`Node$${identity}`, `State$${index}`]] }] })) });
+const behaviorResult = (payload, score = 0.6665) => ({ exerciseId: payload.exerciseId, revision: payload.revision,
+  behaviorToken: createHash('sha256').update(JSON.stringify([payload.exerciseId, payload.body, payload.revision])).digest('hex'),
+  status: 'ok', metric: 'acgn-reward', score, scoreStatus: 'ok', scoreReason: 'OK',
+  scope: { overall: 3, bitwidth: 3, maxSequence: 3, poolSize: 100, minTrace: 1, maxTrace: 10, moduleFacts: true },
+  sampling: { positiveTested: 4, positiveAccepted: 3, negativeTested: 4, negativeRejected: 2, semanticCounterexamples: 1 },
+  categories: [['both', true, true], ['undercoverage', true, false], ['overcoverage', false, true], ['neither', false, false]]
+    .map(([id, oracle, student]) => ({ id, oracle, student, status: 'sat', enumerationComplete: false,
+      instances: Array.from({ length: 3 }, (_, index) => behaviorInstance(`${id}-${index + 1}`)) })) });
+const mockBehaviorUnavailable = route => {
+  const { exerciseId, revision } = route.request().postDataJSON();
+  return route.fulfill({ json: { exerciseId, revision, status: 'unavailable' } });
+};
+const educationResult = (payload, { operationIds = ['operation-1'], instanceIds = payload.behaviorToken
+  ? ['both', 'undercoverage', 'overcoverage', 'neither'].flatMap(id => [1, 2, 3].map(index => `${id}-${index}`)) : [],
+  prefix = 'Learner explanation', summary = 'Review one edit and compare its example before changing the predicate.' } = {}) => ({
+  exerciseId: payload.exerciseId, revision: payload.revision, status: 'ok', model: 'gpt-6-luna',
+  ...(payload.behaviorToken ? { behaviorToken: payload.behaviorToken } : {}),
+  operations: operationIds.map(id => ({ id, description: `${prefix}: ${id}. This edit changes which structures your predicate accepts.` })),
+  instances: instanceIds.map(id => ({ id, description: `${prefix}: ${id}. Read the listed atoms and relation tuples to see the example.` })), summary,
+});
 try {
   const url = await new Promise((resolve, reject) => {
     let output = '';
@@ -58,6 +84,7 @@ try {
     if (!route.request().url().startsWith(url) && !route.request().url().startsWith('blob:')) {
       externalRequests.push(route.request().url()); return route.abort();
     }
+    if (route.request().url().endsWith('/api/behavior')) return mockBehaviorUnavailable(route);
     return route.continue();
   });
   const page = await context.newPage();
@@ -65,6 +92,7 @@ try {
   const editor = page.locator('#predicate-editor');
   const feedback = page.locator('#feedback-state');
   const waitChecked = async () => { await page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Checked'); };
+  const waitBehavior = async (status = 'ok') => page.waitForFunction(expected => document.querySelector('#behavior-state').dataset.state === expected, status);
   const submit = async body => { await editor.fill(body); await page.locator('#check-button').click(); await waitChecked(); };
   let record;
 
@@ -135,7 +163,7 @@ try {
     await submit('all n: Node | n not in n.adj');
     assert.equal(await page.locator('.distance-value').textContent(), '0');
     assert.match(await page.locator('.distance-description').allTextContents().then(values => values.join(' ')),
-      /Compared all \d+ private candidates, including the oracle/);
+      /Compared with all \d+ saved correct answers, including the oracle/);
     const response = await context.request.post(url + '/api/feedback', {
       data: { exerciseId: 'graphs-inv5', body: 'all n: Node | n not in n.adj', revision: 401 },
     });
@@ -346,7 +374,7 @@ try {
     await submit('some Node\nsome Node'); await page.locator('.operation-select').click();
     assert.equal(await page.locator('.canonical-range').count(), 2);
     assert.equal(await page.locator('.source-range').count(), 0);
-    assert.match(await page.locator('#canonical-location-status').textContent(), /2 possible fragments highlighted; source candidates are independent/);
+    assert.match(await page.locator('#canonical-location-status').textContent(), /2 possible parts highlighted.*not paired with the locations in your code/);
     assert.match(await page.locator('.source-location-unavailable').textContent(), /No reliable source mapping/);
     sourceUnavailable = false;
     await submit('some Node\nsome Node'); await page.locator('.operation-select').click();
@@ -355,7 +383,7 @@ try {
     await page.getByRole('button', { name: 'Locate candidate 2' }).click();
     assert.equal(await page.locator('.canonical-range').count(), 2);
     assert.equal(await editor.evaluate(element => element.selectionStart), 10);
-    assert.match(await page.locator('#canonical-location-status').textContent(), /source candidates are independent/);
+    assert.match(await page.locator('#canonical-location-status').textContent(), /not paired with the locations in your code/);
     await page.unroute('**/api/feedback');
   });
   await check('canonical-form-clears-on-new-draft-and-rejects-invalid-locations', async () => {
@@ -388,6 +416,391 @@ try {
     assert.equal(await page.locator('.canonical-range, .source-range').count(), 0);
     assert.match(await page.locator('.canonical-empty').textContent(), /unavailable for this draft/);
     await page.unroute('**/api/feedback');
+  });
+  await check('real-behavior-score-and-four-bounded-categories', async () => {
+    await page.route('**/api/behavior', route => route.continue());
+    await submit('adj = ~adj'); await waitBehavior();
+    assert.equal(await page.locator('.behavior-score').textContent(), '1.000');
+    assert.equal(await page.locator('.behavior-category-choice').count(), 4);
+    assert.match(await page.locator('.behavior-facts').textContent(), /Model facts enforced/);
+    assert.match(await page.locator('.behavior-scope').textContent(), /atom scope 3.*3-bit integers.*traces 1–10/);
+    assert.match(await page.locator('.behavior-bound-note').textContent(), /do not prove equivalence/);
+    for (const id of ['undercoverage', 'overcoverage']) {
+      await page.locator(`.behavior-category-choice[data-category="${id}"]`).click();
+      assert.match(await page.locator('.behavior-category-content').textContent(), /No instance within these bounds/);
+      assert.equal(await page.locator('.behavior-example-choice').count(), 0);
+    }
+    await page.locator('.behavior-category-choice[data-category="both"]').click();
+    const count = await page.locator('.behavior-example-choice').count();
+    assert(count >= 1 && count <= 3);
+    assert((await page.locator('.behavior-signatures td').count()) > 0);
+    assert.equal(await page.locator('.distance-value').textContent(), '0');
+    await submit('no (iden & adj)'); await waitBehavior();
+    assert.match(await page.locator('.behavior-score').textContent(), /^\d\.\d{3}$/);
+    for (const id of ['both', 'undercoverage', 'overcoverage', 'neither']) {
+      await page.locator(`.behavior-category-choice[data-category="${id}"]`).click();
+      const examples = await page.locator('.behavior-example-choice').count();
+      assert(examples >= 1 && examples <= 3);
+    }
+    await page.locator('.behavior-category-choice[data-category="undercoverage"]').click();
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'behavioral-examples.png') });
+    await page.unroute('**/api/behavior');
+  });
+  await check('behavior-rounding-categories-and-three-example-choices', async () => {
+    let score = 0.6665;
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => route.fulfill({ json: behaviorResult(route.request().postDataJSON(), score) }));
+    await submit('some Node'); await waitBehavior();
+    assert.equal(await page.locator('.behavior-score').textContent(), '0.667');
+    for (const [id, oracle, student] of [['both', true, true], ['undercoverage', true, false], ['overcoverage', false, true], ['neither', false, false]]) {
+      const choice = page.locator(`.behavior-category-choice[data-category="${id}"]`);
+      assert((await choice.textContent()).includes(`Oracle: ${oracle} · Yours: ${student}`));
+      await choice.click();
+      assert.equal(await choice.getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('.behavior-example-choice').count(), 3);
+      await page.getByRole('button', { name: 'Example 3', exact: true }).click();
+      assert((await page.locator('.behavior-signatures').textContent()).includes(`Node$${id}-3`));
+      assert.deepEqual(await page.locator('.behavior-relation th').allTextContents(), ['From', 'To']);
+      assert.match(await page.locator('.behavior-enumeration').textContent(), /More may exist/);
+    }
+    await page.locator('.behavior-category-choice[data-category="undercoverage"]').click();
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'behavioral-example-controls.png') });
+    for (const [value, text] of [[0, '0.000'], [1, '1.000'], [0.0005, '0.001'], [0.9995, '1.000'], [0.1234, '0.123']]) {
+      score = value; await submit(`some Node // score ${value}`); await waitBehavior();
+      assert.equal(await page.locator('.behavior-score').textContent(), text);
+      if (text === '1.000') assert.match(await page.locator('.behavior-rounding-note').textContent(), /counterexamples still exist/);
+    }
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('behavior-temporal-tables-truncation-and-text-safety', async () => {
+    const markup = '<img src=x onerror="window.BEHAVIOR_INJECTED=true">';
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      const instance = behaviorInstance('temporal', 3);
+      instance.truncated = true; instance.stringsAnonymized = true;
+      instance.states.forEach(state => {
+        state.signatures.push({ label: markup, atoms: ['String$0'] });
+        state.relations.push({ label: '<script>window.BEHAVIOR_INJECTED=true</script>', arity: 3, tuples: [['String$0', markup, `State$${state.index}`]] });
+      });
+      data.categories[0].instances = [instance, { ...instance, loopState: 1, states: instance.states.slice(0, 1) }];
+      data.categories[0].enumerationComplete = true;
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node'); await waitBehavior();
+    assert.match(await page.locator('.behavior-truncated').textContent(), /only partially displayed/);
+    assert.match(await page.locator('.behavior-string-note').textContent(), /String contents are hidden; atom identities are preserved/);
+    assert.match(await page.locator('.behavior-state-controls').textContent(), /repeat from state 1/);
+    assert.equal(await page.locator('.behavior-state-select option').count(), 3);
+    await page.locator('.behavior-state-select').selectOption('2');
+    assert.match(await page.locator('.behavior-state-content').textContent(), /State\$2/);
+    assert(!(await page.locator('.behavior-state-content').textContent()).includes('State$0'));
+    assert((await page.locator('.behavior-state-content').textContent()).includes(markup));
+    assert.equal(await page.locator('#behavior-result img, #behavior-result script').count(), 0);
+    assert.equal(await page.evaluate(() => window.BEHAVIOR_INJECTED), undefined);
+    await page.getByRole('button', { name: 'Example 2', exact: true }).click();
+    assert.equal(await page.locator('.behavior-state-select').count(), 0);
+    assert.match(await page.locator('.behavior-instance .behavior-enumeration').textContent(), /Only state 1 of 3 is displayed.*repeats from state 2/);
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('behavior-unavailable-polarity-and-timeout-are-distinct', async () => {
+    let mode = 'ORACLE_POSITIVE_UNSAT';
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const payload = route.request().postDataJSON();
+      if (['timeout', 'unsupported', 'unavailable'].includes(mode)) return route.fulfill({ json: { exerciseId: payload.exerciseId, revision: payload.revision, status: mode,
+        message: 'The predicate introduces String literals outside the oracle sampling universe.' } });
+      const data = behaviorResult(payload, null); data.scoreStatus = 'unavailable'; data.scoreReason = mode;
+      data.categories.forEach(category => {
+        if (category.oracle === (mode === 'ORACLE_POSITIVE_UNSAT')) {
+          category.status = 'unsat'; category.instances = []; category.enumerationComplete = true;
+        }
+      });
+      return route.fulfill({ json: data });
+    });
+    for (mode of ['ORACLE_POSITIVE_UNSAT', 'ORACLE_NEGATIVE_UNSAT']) {
+      await submit('some Node'); await waitBehavior();
+      assert.equal(await page.locator('.behavior-score').textContent(), 'Unavailable');
+      assert.match(await page.locator('.behavior-score-reason').textContent(), /oracle (accepts|rejects) no instance within these bounds/);
+      assert.equal(await page.locator('.behavior-category-choice').count(), 4);
+      const emptyId = mode === 'ORACLE_POSITIVE_UNSAT' ? 'both' : 'neither';
+      await page.locator(`.behavior-category-choice[data-category="${emptyId}"]`).click();
+      assert.match(await page.locator('.behavior-empty').textContent(), /No instance within these bounds/);
+    }
+    for (mode of ['timeout', 'unsupported', 'unavailable']) {
+      await submit('some Node'); await waitBehavior(mode === 'timeout' ? 'timeout' : 'error');
+      assert.equal(await page.locator('.behavior-category-choice, .behavior-score').count(), 0);
+      assert(!(await page.locator('#behavior-result').textContent()).includes('No instance within these bounds'));
+      assert.equal(await page.locator('.distance-value').textContent(), '2');
+      if (mode === 'unsupported') assert.match(await page.locator('.behavior-message').textContent(), /outside the oracle sampling universe/);
+    }
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('behavior-pending-does-not-block-structure-and-clears-on-draft-change', async () => {
+    let release, started;
+    let pending = new Promise(resolve => { release = resolve; });
+    const entered = new Promise(resolve => { started = resolve; });
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', async route => {
+      started(); await pending;
+      try { await route.fulfill({ json: behaviorResult(route.request().postDataJSON()) }); } catch {}
+    });
+    await submit('some Node'); await entered;
+    assert.equal(await feedback.textContent(), 'Checked');
+    assert.equal(await page.locator('.distance-value').textContent(), '2');
+    assert.equal(await page.locator('#behavior-state').textContent(), 'Analyzing…');
+    assert.equal(await page.locator('.behavior-score').count(), 0);
+    release(); await waitBehavior(); pending = Promise.resolve();
+    pending = new Promise(resolve => { release = resolve; });
+    await page.locator('#check-button').click(); await waitChecked();
+    assert.equal(await page.locator('.behavior-score, .behavior-category-choice').count(), 0);
+    assert.equal(await page.locator('#behavior-state').textContent(), 'Analyzing…');
+    release(); await waitBehavior(); pending = Promise.resolve();
+    await editor.fill('some Node // edit');
+    assert.equal(await page.locator('.behavior-score, .behavior-category-choice').count(), 0);
+    await submit('some Node'); await waitBehavior();
+    await page.locator('#reset-button').click();
+    assert.equal(await page.locator('.behavior-score').count(), 0);
+    await submit('some Node'); await waitBehavior();
+    await page.locator('[data-exercise-id="graphs-inv2"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv2'));
+    assert.equal(await page.locator('.behavior-score').count(), 0);
+    await page.locator('[data-exercise-id="graphs-inv1"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv1'));
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('behavior-stale-results-and-invalid-payloads-cannot-replace-current-draft', async () => {
+    let oldStarted;
+    const entered = new Promise(resolve => { oldStarted = resolve; });
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', async route => {
+      const payload = route.request().postDataJSON(), old = payload.body.includes('older');
+      if (old) { oldStarted(); await delay(350); }
+      try { await route.fulfill({ json: behaviorResult(payload, old ? 0.111 : 0.988) }); } catch {}
+    });
+    await submit('some Node // older'); await entered;
+    await submit('some Node // current'); await waitBehavior(); await delay(500);
+    assert.equal(await page.locator('.behavior-score').textContent(), '0.988');
+    await page.unroute('**/api/behavior');
+    for (const mutate of [
+      data => { data.score = NaN; }, data => { data.score = 2; }, data => { data.score = -1; },
+      data => { data.score = '0.8'; }, data => { data.scope.moduleFacts = false; },
+      data => { data.categories[0].oracle = false; }, data => { data.categories[0].instances.push(behaviorInstance('extra')); },
+      data => { data.categories[0].instances[0].states[0].relations[0].tuples = [['arity mismatch']]; },
+      data => { data.categories[0].instances[0].states[0].index = 3; },
+      data => { data.revision -= 1; }, data => { delete data.exerciseId; },
+    ]) {
+      await page.route('**/api/behavior', route => {
+        const data = behaviorResult(route.request().postDataJSON()); mutate(data); return route.fulfill({ json: data });
+      });
+      await submit('some Node'); await waitBehavior('error');
+      assert.equal(await page.locator('.behavior-score, .behavior-category-choice').count(), 0);
+      assert.equal(await page.locator('.distance-value').textContent(), '2');
+      await page.unroute('**/api/behavior');
+    }
+    await page.unroute('**/api/feedback');
+  });
+  await check('behavior-mobile-layout-and-table-navigation', async () => {
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      data.categories[0].instances[0].states[0].relations.push({ label: 'long relation', arity: 3,
+        tuples: [['Atom$' + 'a'.repeat(140), 'Node$1', 'Node$2']] });
+      return route.fulfill({ json: data });
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await submit('some Node'); await waitBehavior();
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    const choice = page.locator('.behavior-category-choice[data-category="overcoverage"]');
+    await choice.focus(); await choice.press('Enter');
+    assert.equal(await choice.getAttribute('aria-pressed'), 'true');
+    await page.getByRole('button', { name: 'Example 2', exact: true }).focus();
+    await page.getByRole('button', { name: 'Example 2', exact: true }).press('Enter');
+    assert.match(await page.locator('.behavior-signatures').textContent(), /Node\$overcoverage-2/);
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'behavioral-mobile.png'),
+      // A tall element capture can include normally offscreen fixed overlays.
+      style: '.skip-link, .toast { visibility: hidden !important; }' });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('luna-learning-hints-cover-every-operation-and-twelve-instances', async () => {
+    let releaseBehavior, enterBehavior, checkedBehavior;
+    const behaviorGate = new Promise(resolve => { releaseBehavior = resolve; });
+    const behaviorEntered = new Promise(resolve => { enterBehavior = resolve; });
+    const explanationRequests = [];
+    const markup = '<img src=x onerror="window.ITEM_HINT_INJECTED=true">';
+    await page.route('**/api/feedback', route => {
+      const data = someSourceResult(route.request().postDataJSON());
+      data.operations.push({ ...data.operations[0], action: 'Review a second related edit' });
+      return route.fulfill({ json: data });
+    });
+    await page.route('**/api/behavior', async route => {
+      checkedBehavior = behaviorResult(route.request().postDataJSON());
+      checkedBehavior.categories[0].instances[0] = behaviorInstance('both-1', 2);
+      enterBehavior(); await behaviorGate; await route.fulfill({ json: checkedBehavior });
+    });
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON(); explanationRequests.push(payload);
+      const data = educationResult(payload, { operationIds: ['operation-2', 'operation-1'], prefix: markup,
+        summary: 'Compare one highlighted edit with an example before revising your predicate.' });
+      data.instances.reverse(); data.text = 'OBSOLETE_FREEFORM_ROUTE_GUIDANCE';
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node'); await behaviorEntered;
+    assert.equal(explanationRequests.length, 0);
+    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    assert.equal(await page.locator('.operation-explanation').count(), 2);
+    assert.equal(await page.locator('.operation-explanation .education-description').count(), 0);
+    releaseBehavior(); await page.locator('.explanation-text').waitFor();
+    assert.equal(explanationRequests.length, 1);
+    assert.equal(explanationRequests[0].body, 'some Node');
+    assert.equal(explanationRequests[0].behaviorToken, checkedBehavior.behaviorToken);
+    for (let index = 1; index <= 2; index += 1) {
+      assert((await page.locator(`[data-operation-id="operation-${index}"] .education-description`).textContent()).includes(`operation-${index}`));
+    }
+    const seen = [];
+    for (const category of ['both', 'undercoverage', 'overcoverage', 'neither']) {
+      await page.locator(`.behavior-category-choice[data-category="${category}"]`).click();
+      for (let index = 1; index <= 3; index += 1) {
+        await page.getByRole('button', { name: `Example ${index}`, exact: true }).click();
+        const id = `${category}-${index}`;
+        const description = await page.locator('.instance-explanation .education-description').textContent();
+        assert(description.includes(id)); assert(description.includes(markup)); seen.push(id);
+        if (category === 'both' && index === 1) {
+          await page.locator('.behavior-state-select').selectOption('1');
+          assert.equal(await page.locator('.instance-explanation .education-description').textContent(), description);
+        }
+      }
+    }
+    assert.equal(new Set(seen).size, 12);
+    await page.locator('.behavior-category-choice[data-category="both"]').click();
+    assert((await page.locator('.instance-explanation .education-description').textContent()).includes('both-1'));
+    assert.equal(await page.locator('.education-slot img, .education-slot script').count(), 0);
+    assert.equal(await page.evaluate(() => window.ITEM_HINT_INJECTED), undefined);
+    assert.equal(await page.locator('.explanation-text').textContent(), 'Compare one highlighted edit with an example before revising your predicate.');
+    assert(!(await page.locator('body').textContent()).includes('OBSOLETE_FREEFORM_ROUTE_GUIDANCE'));
+    await page.locator('.operation-locate').first().click();
+    assert.equal(await page.locator('.source-range').textContent(), 'some Node');
+    assert.equal(await page.locator('.operation-explanation .education-description').count(), 2);
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('luna-rejects-mismatched-token-and-incomplete-item-identities', async () => {
+    await page.route('**/api/feedback', route => route.fulfill({ json: someSourceResult(route.request().postDataJSON()) }));
+    await page.route('**/api/behavior', route => route.fulfill({ json: behaviorResult(route.request().postDataJSON()) }));
+    for (const mutate of [
+      data => { data.behaviorToken = '0'.repeat(64); }, data => { delete data.behaviorToken; },
+      data => { data.operations.pop(); }, data => { data.operations[0].id = 'operation-99'; },
+      data => { data.operations.push(data.operations[0]); }, data => { data.instances.pop(); },
+      data => { data.instances[0].id = 'unknown-1'; }, data => { data.instances[11] = data.instances[0]; },
+      data => { data.instances[0].description = 'x'.repeat(361); }, data => { data.summary = 'x'.repeat(701); },
+      data => { delete data.operations; delete data.instances; delete data.summary; data.text = 'OLD_FREEFORM_ONLY'; },
+      data => { data.revision -= 1; }, data => { data.exerciseId = 'graphs-inv8'; },
+    ]) {
+      await page.route('**/api/explain', route => {
+        const data = educationResult(route.request().postDataJSON()); mutate(data); return route.fulfill({ json: data });
+      });
+      await submit('some Node'); await page.locator('.explanation-unavailable').waitFor();
+      assert.equal(await page.locator('.education-description, .explanation-text').count(), 0);
+      assert.equal(await page.locator('.distance-value').textContent(), '1');
+      assert.equal(await page.locator('.behavior-score').textContent(), '0.667');
+      assert.equal(await page.locator('.behavior-category-choice').count(), 4);
+      assert.equal(await page.locator('.operation-locate').count(), 1);
+      assert(!(await page.locator('body').textContent()).includes('OLD_FREEFORM_ONLY'));
+      await page.unroute('**/api/explain');
+    }
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('luna-explains-operations-after-behavior-failure-without-token', async () => {
+    let explanationRequest;
+    await page.route('**/api/feedback', route => route.fulfill({ json: someSourceResult(route.request().postDataJSON()) }));
+    await page.route('**/api/behavior', route => {
+      const payload = route.request().postDataJSON();
+      return route.fulfill({ json: { exerciseId: payload.exerciseId, revision: payload.revision, status: 'timeout' } });
+    });
+    await page.route('**/api/explain', route => {
+      explanationRequest = route.request().postDataJSON();
+      return route.fulfill({ json: educationResult(explanationRequest, { prefix: 'Operation-only hint' }) });
+    });
+    await submit('some Node'); await page.locator('.explanation-text').waitFor();
+    assert(!('behaviorToken' in explanationRequest));
+    assert.match(await page.locator('.operation-explanation .education-description').textContent(), /Operation-only hint/);
+    assert.equal(await page.locator('.instance-explanation').count(), 0);
+    assert.equal(await page.locator('#behavior-state').textContent(), 'Timed out');
+    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('luna-stale-instance-hints-clear-on-edit-and-exercise-switch', async () => {
+    let oldStarted;
+    const started = new Promise(resolve => { oldStarted = resolve; });
+    await page.route('**/api/feedback', route => route.fulfill({ json: someSourceResult(route.request().postDataJSON()) }));
+    await page.route('**/api/behavior', route => route.fulfill({ json: behaviorResult(route.request().postDataJSON()) }));
+    await page.route('**/api/explain', async route => {
+      const payload = route.request().postDataJSON(), old = payload.body.includes('older');
+      if (old) { oldStarted(); await delay(350); }
+      try { await route.fulfill({ json: educationResult(payload, { prefix: old ? 'OBSOLETE_INSTANCE' : 'CURRENT_INSTANCE' }) }); } catch {}
+    });
+    await submit('some Node // older'); await started;
+    await editor.fill('some Node // current');
+    assert.equal(await page.locator('.education-description, .explanation-text').count(), 0);
+    await page.locator('#check-button').click(); await waitChecked();
+    await page.locator('.explanation-text').waitFor(); await delay(500);
+    assert.match(await page.locator('.instance-explanation .education-description').textContent(), /CURRENT_INSTANCE/);
+    assert(!(await page.locator('body').textContent()).includes('OBSOLETE_INSTANCE'));
+    await editor.fill('some Node // unsubmitted');
+    assert.equal(await page.locator('.education-slot, .explanation-text').count(), 0);
+    await page.locator('[data-exercise-id="graphs-inv2"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv2'));
+    assert.equal(await page.locator('.education-slot').count(), 0);
+    await page.locator('[data-exercise-id="graphs-inv1"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv1'));
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('luna-unavailable-and-retry-preserve-checked-items', async () => {
+    let available = false;
+    let behaviorCalls = 0;
+    await page.route('**/api/feedback', route => route.fulfill({ json: someSourceResult(route.request().postDataJSON()) }));
+    await page.route('**/api/behavior', route => { behaviorCalls += 1; return route.fulfill({ json: behaviorResult(route.request().postDataJSON()) }); });
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON();
+      if (!available) return route.fulfill({ json: {
+        exerciseId: payload.exerciseId, revision: payload.revision, status: 'unavailable', message: 'Luna is not configured for this workspace.' } });
+      const data = educationResult(payload, { summary: 'Compare an undercoverage example with an overcoverage example, then revisit one highlighted expression.' });
+      data.operations[0].description = 'Inspect the highlighted expression. How does its operator affect which cases are accepted?';
+      data.instances.forEach(item => {
+        const id = item.id.slice(0, item.id.lastIndexOf('-'));
+        item.description = {
+          both: 'Both checks accept this example. Follow the relation tuples and find what makes it fit your current rule.',
+          undercoverage: 'The oracle accepts this example, but your rule rejects it. Which part of your rule might exclude a case that should be allowed?',
+          overcoverage: 'Your rule accepts this example, but the oracle rejects it. Look for a condition your rule may be missing.',
+          neither: 'Both checks reject this example. Which relation tuple shows why your current rule excludes it?',
+        }[id];
+      });
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node'); await page.locator('.explanation-unavailable').waitFor();
+    assert.equal(await page.locator('.education-description').count(), 0);
+    assert.equal(await page.locator('.education-unavailable').count(), 2);
+    const before = await page.locator('.behavior-signatures').textContent();
+    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    assert.equal(await page.locator('.behavior-score').textContent(), '0.667');
+    available = true; await page.locator('.explanation-retry').click(); await page.locator('.explanation-text').waitFor();
+    assert.equal(behaviorCalls, 1);
+    assert.equal(await page.locator('.education-description').count(), 2);
+    assert.equal(await page.locator('.behavior-signatures').textContent(), before);
+    await page.locator('[data-category="undercoverage"]').click();
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'luna-instance-hint.png'),
+      style: '.skip-link, .toast { visibility: hidden !important; }' });
+    await page.locator('.operation-item').screenshot({ path: path.join(artifacts, 'luna-operation-hint.png'),
+      style: '.skip-link, .toast { visibility: hidden !important; }' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    // Keep the fixed skip link out of Chromium's stitched tall-element capture.
+    await page.locator('.skip-link').evaluate(element => { element.hidden = true; });
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'luna-instance-hint-mobile.png'),
+      style: '.skip-link, .toast { visibility: hidden !important; }' });
+    await page.locator('.skip-link').evaluate(element => { element.hidden = false; });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
   });
   await check('draft-survives-reload-and-exercise-switch', async () => {
     await editor.fill('some Node // browser draft');
@@ -452,8 +865,8 @@ try {
       const payload = route.request().postDataJSON();
       const old = payload.body.includes('old guidance');
       if (old) { resolveOld(); await delay(350); }
-      try { await route.fulfill({ json: { exerciseId: payload.exerciseId, revision: payload.revision, status: 'ok', model: 'gpt-6-luna',
-        text: old ? 'OBSOLETE_GUIDANCE' : '<img src=x onerror="window.INJECTED=true"> Current guidance.' } }); } catch {}
+      try { await route.fulfill({ json: educationResult(payload, {
+        summary: old ? 'OBSOLETE_GUIDANCE' : '<img src=x onerror="window.INJECTED=true"> Current guidance.' }) }); } catch {}
     });
     await submit('some Node // old guidance'); await started;
     await submit('some Node // current guidance');
@@ -598,6 +1011,7 @@ try {
         if (!route.request().url().startsWith(proxyOrigin + '/') && !route.request().url().startsWith('blob:')) {
           externalRequests.push(route.request().url()); return route.abort();
         }
+        if (route.request().url().endsWith('/api/behavior')) return mockBehaviorUnavailable(route);
         return route.continue();
       });
       const proxyPage = await proxyContext.newPage();

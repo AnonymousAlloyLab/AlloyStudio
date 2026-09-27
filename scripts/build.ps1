@@ -86,7 +86,8 @@ $compilerArguments = @(
     '-cp', $dependencyClassPath, '-sourcepath', $sourcePath,
     '-d', $OutputDirectory,
     (Join-Path $engineRoot 'src\live\LiveFeedback.java'),
-    (Join-Path $engineRoot 'src\live\EngineSelfTest.java')
+    (Join-Path $engineRoot 'src\live\EngineSelfTest.java'),
+    (Join-Path $engineRoot 'src\live\BehaviorFeedback.java')
 )
 & $JavaCompiler @compilerArguments
 if ($LASTEXITCODE -ne 0) { throw "Java compilation failed with exit code $LASTEXITCODE." }

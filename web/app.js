@@ -6,12 +6,13 @@ const elements = {
   status: $('#feedback-state'), lines: $('#line-numbers'), draft: $('#draft-status'),
   highlight: $('#source-highlight'), locationBar: $('#source-location-bar'), locationStatus: $('#source-location-status'),
   canonical: $('#canonical-content'), canonicalStatus: $('#canonical-location-status'),
+  behavior: $('#behavior-result'), behaviorStatus: $('#behavior-state'),
 };
 const state = {
   exercises: [], exercise: null, revision: 0, selection: 0,
-  feedbackAbort: null, explainAbort: null, detailAbort: null, timer: null, context: 'before',
+  feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
-  sourceHighlight: null, canonical: null,
+  sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
 const APP_BASE = new URL('.', import.meta.url);
@@ -52,6 +53,7 @@ function setStatus(status, text) {
 
 function invalidateFeedback() {
   clearOperationHighlight();
+  resetBehavior();
   state.revision += 1;
   clearTimeout(state.timer);
   state.feedbackAbort?.abort();
@@ -68,8 +70,8 @@ function showWaiting(message = 'Your next edit is ready to explore.') {
   illustration.setAttribute('aria-hidden', 'true');
   illustration.append(node('span', '', '{'), node('span', 'empty-orbit', '↗'), node('span', '', '}'));
   wrapper.append(illustration, node('h3', '', message), node('p', '', elements.live.checked
-    ? 'Live feedback will find the closest predicate in the private correct pool, including the oracle.'
-    : 'Check your predicate to see its distance and structural edit operations.'));
+    ? 'Live feedback compares your predicate with the closest answer in the private set of correct answers, including the oracle.'
+    : 'Check your predicate to see its distance from a correct answer and suggestions for what to review.'));
   elements.result.replaceChildren(wrapper);
 }
 
@@ -237,12 +239,12 @@ function selectOperation(operation, context, item, sourceIndex = null, sourceBut
   const canonical = validatedCanonicalLocation(operation.canonicalLocation, context);
   if (canonical) {
     renderCanonicalForms(canonical.ranges);
-    const label = canonical.precision === 'form' ? 'Canonical form context' : 'Related canonical fragment';
-    const ambiguity = canonical.status === 'ambiguous' ? ` · ${canonical.ranges.length} possible fragments highlighted; source candidates are independent.` : '.';
+    const label = canonical.precision === 'form' ? 'Canonical form context' : 'Related part of your canonical form';
+    const ambiguity = canonical.status === 'ambiguous' ? ` · ${canonical.ranges.length} possible parts highlighted. These highlights are not paired with the locations in your code.` : '.';
     elements.canonicalStatus.textContent = `${label}${ambiguity}${typeof canonical.reason === 'string' && canonical.reason ? ` ${canonical.reason}` : ''}`;
     $('#canonical-panel').open = true;
   } else {
-    elements.canonicalStatus.textContent = 'Canonical fragment location unavailable for this edit step.';
+    elements.canonicalStatus.textContent = 'Canonical form location unavailable for this edit step.';
   }
   elements.canonicalStatus.hidden = false;
   const source = validatedSourceLocation(operation.sourceLocation, context);
@@ -342,7 +344,7 @@ function renderSourceLocator(operation, context, index, item) {
   }
   const note = node('p', 'operation-location-note');
   note.id = `source-location-note-${index}`;
-  const ambiguity = location.status === 'ambiguous' ? ` · ${location.ranges.length} possible locations; choose a candidate.` : '.';
+  const ambiguity = location.status === 'ambiguous' ? ` · ${location.ranges.length} possible locations; choose one to inspect.` : '.';
   note.textContent = `${sourceLocationLabel(location)}${ambiguity}${typeof location.reason === 'string' && location.reason ? ` ${location.reason}` : ''}`;
   container.append(note);
   const choices = node('div', 'source-location-choices');
@@ -459,6 +461,7 @@ async function checkPredicate() {
   if (!state.exercise || elements.editor.disabled) return;
   clearOperationHighlight();
   clearCanonicalForm('Checking this draft…');
+  resetBehavior('Waiting for this draft to compile…', 'Waiting');
   state.feedbackAbort?.abort();
   state.explainAbort?.abort();
   const controller = new AbortController();
@@ -472,7 +475,7 @@ async function checkPredicate() {
   const pending = node('div', 'pending-message');
   const spinner = node('span', 'spinner');
   spinner.setAttribute('aria-hidden', 'true');
-  pending.append(spinner, node('span', '', 'Comparing canonical structure…'));
+  pending.append(spinner, node('span', '', 'Comparing your predicate with the correct answers…'));
   elements.result.replaceChildren(pending);
   try {
     const result = await fetchJSON('api/feedback', {
@@ -483,6 +486,11 @@ async function checkPredicate() {
     if (revision !== state.revision || selection !== state.selection || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
     if ((result.exerciseId !== undefined && result.exerciseId !== exerciseId) || (result.revision !== undefined && result.revision !== revision)) {
       throw new Error('The server returned feedback for a different draft. Check your predicate again.');
+    }
+    if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
+      state.education = { context: { exerciseId, revision, selection, body }, phase: 'waiting',
+        operationIds: (Array.isArray(result.operations) ? result.operations : []).map((_, index) => `operation-${index + 1}`),
+        operations: new Map(), instances: new Map() };
     }
     // A locator needs the echoed request identity, even when an older server
     // can still provide useful feedback without those fields.
@@ -496,7 +504,9 @@ async function checkPredicate() {
       renderHistory();
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
-      requestExplanation({ exerciseId, body, revision }, selection);
+      requestBehavior({ exerciseId, body, revision }, selection, true);
+    } else if (result.status === 'unsupported') {
+      requestBehavior({ exerciseId, body, revision }, selection);
     }
   } catch (error) {
     if (error.name === 'AbortError' || revision !== state.revision || selection !== state.selection) return;
@@ -514,6 +524,7 @@ function renderOperation(operation, index, sourceContext) {
   const kind = String(operation.kind || 'edit');
   const item = node('li', 'operation-item');
   item.dataset.kind = kind;
+  item.dataset.operationId = `operation-${index + 1}`;
   if (operation.aggregate) item.dataset.aggregate = 'true';
   const symbols = { insert: '+', delete: '−', replace: '↔', modify: '↔', update: '↔', reorder: '↕', move: '↕' };
   const icon = node('span', 'operation-icon', symbols[kind] || '~');
@@ -528,12 +539,12 @@ function renderOperation(operation, index, sourceContext) {
   select.setAttribute('aria-pressed', 'false');
   select.disabled = !sourceContextCurrent(sourceContext);
   select.addEventListener('click', () => selectOperation(operation, sourceContext, item));
-  heading.append(node('span', 'operation-step', String(index + 1).padStart(2, '0')), select, node('span', 'operation-cost', `${formatNumber(operation.cost)} cost`));
+  heading.append(node('span', 'operation-step', String(index + 1).padStart(2, '0')), select, node('span', 'operation-cost', `${formatNumber(operation.cost)} edit cost`));
   detail.append(heading);
 
   if (typeof operation.sourceTerm === 'string' && operation.sourceTerm.length) {
     const fragment = node('div', 'operation-fragment');
-    const label = operation.sourceRole === 'insertion-anchor' ? 'Your insertion context · canonical' : 'Your affected fragment · canonical';
+    const label = operation.sourceRole === 'insertion-anchor' ? 'Where to look · canonical form' : 'Part to review · canonical form';
     fragment.append(node('span', 'operation-fragment-label', label), node('code', '', operation.sourceTerm));
     detail.append(fragment);
   }
@@ -541,14 +552,14 @@ function renderOperation(operation, index, sourceContext) {
     const operators = node('div', 'operation-operators');
     if (typeof operation.sourceOperator === 'string') {
       const current = node('span', 'operator-chip current-operator');
-      current.append(node('span', '', operation.sourceRole === 'insertion-anchor' ? 'Context' : 'Current'), node('code', '', operation.sourceOperator));
+      current.append(node('span', '', operation.sourceRole === 'insertion-anchor' ? 'Operator here' : 'Your operator'), node('code', '', operation.sourceOperator));
       operators.append(current);
     }
     if (typeof operation.replacementOperator === 'string') {
       const arrow = node('span', 'operator-arrow', '→');
       arrow.setAttribute('aria-hidden', 'true');
       const replacement = node('span', 'operator-chip replacement-operator');
-      replacement.append(node('span', '', kind === 'insert' ? 'Insert operator' : 'Replacement'), node('code', '', operation.replacementOperator));
+      replacement.append(node('span', '', kind === 'insert' ? 'Operator to add' : 'Suggested operator'), node('code', '', operation.replacementOperator));
       if (operators.children.length) operators.append(arrow);
       operators.append(replacement);
     }
@@ -560,16 +571,17 @@ function renderOperation(operation, index, sourceContext) {
     instruction.append(node('strong', '', 'Try this: '), node('span', '', operation.nextStep));
     detail.append(instruction);
   }
-  if (operation.aggregate) detail.append(node('p', 'operation-aggregate', 'Component summary · several edit units; no precise source repair is available.'));
+  if (operation.aggregate) detail.append(node('p', 'operation-aggregate', 'Several edits are grouped here. This hint does not identify one specific change to make in your code.'));
 
   const path = typeof operation.path === 'string' ? operation.path : JSON.stringify(operation.path || '');
   const structure = node('details', 'operation-structure');
-  const structureSummary = node('summary', '', 'Canonical location');
+  const structureSummary = node('summary', '', 'Technical location');
   structureSummary.append(node('span', 'chevron', '⌄'));
   structure.append(structureSummary, node('div', 'operation-path', [operation.component, operation.sourceNodeKind, path].filter(Boolean).join(' · ')));
   detail.append(structure);
 
   detail.append(renderSourceLocator(operation, sourceContext, index, item));
+  detail.append(educationSlot('operation', `operation-${index + 1}`));
   item.append(icon, detail);
   return item;
 }
@@ -577,9 +589,10 @@ function renderOperation(operation, index, sourceContext) {
 function renderFeedback(result, sourceContext = null) {
   if (result.status !== 'ok') {
     clearCanonicalForm('Canonical form unavailable for this draft. Check the feedback and try again.');
+    resetBehavior('Behavioral feedback needs a successful check of this draft.', 'Not checked');
     const statuses = {
       invalid: ['invalid', 'Check syntax', 'Your model needs a small repair.'],
-      unsupported: ['invalid', 'Unsupported', 'This structure is outside the supported rewrite rules.'],
+      unsupported: ['invalid', 'Unsupported', 'The checker cannot yet compare this kind of expression.'],
       timeout: ['timeout', 'Timed out', 'This check took too long.'],
       busy: ['pending', 'Server busy', 'The comparison engine is busy.'],
       error: ['error', 'Unavailable', 'The check could not be completed.'],
@@ -618,16 +631,16 @@ function renderFeedback(result, sourceContext = null) {
   const value = node('div', 'distance-value-row');
   value.append(node('span', `distance-value${result.distance === 0 ? ' zero' : ''}`, formatNumber(result.distance)), node('span', 'distance-unit', 'edit cost'));
   distance.append(caption, value, node('p', 'distance-description', result.distance === 0
-    ? 'Your predicate shares a canonical form with a member of the correct pool under the supported rewrite rules.'
-    : 'The minimum weighted edit cost across compatible known-correct predicates, including the oracle.'));
+    ? 'After rewriting both predicates into canonical form, yours matches one of the known-correct answers.'
+    : 'The lowest total edit cost among the saved correct answers, including the oracle. Different edits can have different costs.'));
   if (result.comparison?.complete === true && Number.isInteger(result.comparison.poolSize) && result.comparison.poolSize > 0) {
     const count = result.comparison.poolSize;
     distance.append(node('p', 'distance-description', count === 1
-      ? 'Compared the oracle; this exercise has no compatible correct corpus alternatives.'
-      : `Compared all ${formatNumber(count)} private candidates, including the oracle. The edits follow one closest candidate.`));
+      ? 'Compared with the oracle. No other saved correct answers are available for this exercise.'
+      : `Compared with all ${formatNumber(count)} saved correct answers, including the oracle. These hints use one of the closest matches.`));
   }
   const components = node('div', 'component-grid');
-  const labels = { temporal: 'Temporal', quantifier: 'Quantifier', matrix: 'Matrix' };
+  const labels = { temporal: 'Time rules', quantifier: 'Variable rules', matrix: 'Expressions' };
   Object.entries(labels).forEach(([key, label]) => {
     const component = node('div', 'component');
     component.append(node('span', 'component-value', formatNumber(result.breakdown?.[key])), node('span', 'component-name', label));
@@ -640,47 +653,372 @@ function renderFeedback(result, sourceContext = null) {
   heading.append(node('span', '', 'Edit operations'), node('span', 'section-count', `${list.length} operation${list.length === 1 ? '' : 's'}`));
   operations.append(heading);
   if (list.length) {
-    operations.append(node('p', 'operations-intro', 'Use your canonical fragments and the operator hints to guide the next edit.'));
+    operations.append(node('p', 'operations-intro', 'Select an edit to highlight the related expression. Use the operator hint to decide what to try next.'));
     const operationList = node('ol', 'operation-list');
     list.forEach((operation, index) => operationList.append(renderOperation(operation, index, sourceContext)));
     operations.append(operationList);
   } else operations.append(node('p', 'no-operations', result.distance === 0 ? 'No structural edits are needed.' : 'No detailed operations are available for this comparison.'));
   if (result.trace) {
     const reconciliation = result.trace.matchesDistance
-      ? `Hint costs sum to ${formatNumber(result.trace.cost)}.`
-      : 'The engine reports these hints separately from the distance.';
-    const aggregate = result.trace.hasAggregates ? ' Some entries aggregate several edits.' : '';
-    operations.append(node('p', 'trace-note', `${reconciliation}${aggregate} Hints are not a certified replayable minimum edit script. Reference expressions stay hidden.`));
+      ? `These hints have a total edit cost of ${formatNumber(result.trace.cost)}.`
+      : 'Hint costs are shown separately from the distance.';
+    const aggregate = result.trace.hasAggregates ? ' Some hints group several edits.' : '';
+    operations.append(node('p', 'trace-note', `${reconciliation}${aggregate} Use these hints to decide what to try next. They may not form a complete or shortest repair. Correct expressions stay hidden.`));
   }
   const explanation = node('section', 'explanation-section');
   explanation.id = 'luna-explanation';
-  explanation.setAttribute('aria-label', 'Luna repair guidance');
+  explanation.setAttribute('aria-label', 'Luna learning guidance');
   const explanationHeading = node('div', 'section-label');
-  explanationHeading.append(node('span', '', 'Luna · repair guidance'), node('span', 'ai-badge', 'AI'));
-  explanation.append(explanationHeading, node('p', 'explanation-caption', 'AI explanation of the redacted trace'));
+  explanationHeading.append(node('span', '', 'Luna · summary'), node('span', 'ai-badge', 'AI'));
+  explanation.append(explanationHeading, node('p', 'explanation-caption', 'Short learning hints appear beside each edit and example.'));
   const explanationBody = node('div', 'explanation-body');
   explanationBody.id = 'luna-explanation-body';
-  explanationBody.append(node('p', 'explanation-pending', 'Preparing guidance from the redacted edit trace…'));
+  explanationBody.append(node('p', 'explanation-pending', 'Waiting for the behavioral check before preparing explanations…'));
   explanation.append(explanationBody);
   elements.result.replaceChildren(distance, operations, explanation);
 }
 
+const BEHAVIOR_CATEGORIES = [
+  { id: 'both', title: 'Both accept', oracle: true, student: true, description: 'The oracle and your predicate both accept this instance.' },
+  { id: 'undercoverage', title: 'Undercoverage', oracle: true, student: false, description: 'The oracle accepts this instance, but your predicate excludes it.' },
+  { id: 'overcoverage', title: 'Overcoverage', oracle: false, student: true, description: 'Your predicate accepts this instance, but the oracle excludes it.' },
+  { id: 'neither', title: 'Neither accepts', oracle: false, student: false, description: 'The oracle and your predicate both reject this instance.' },
+];
+
+function behaviorMessage(status, label, message) {
+  elements.behaviorStatus.dataset.state = status;
+  elements.behaviorStatus.textContent = label;
+  const paragraph = node('p', 'behavior-message', message);
+  if (status === 'pending') {
+    const spinner = node('span', 'spinner');
+    spinner.setAttribute('aria-hidden', 'true');
+    paragraph.prepend(spinner);
+  }
+  elements.behavior.replaceChildren(paragraph);
+}
+
+function resetBehavior(message = 'Check this draft to compare its behavior with the oracle.', label = 'Not checked') {
+  state.behaviorAbort?.abort();
+  state.behaviorAbort = null;
+  state.behaviorEvidence = null;
+  resetEducation();
+  behaviorMessage('waiting', label, message);
+}
+
+function validBehaviorResult(result) {
+  const integer = (value, minimum = 0, maximum = 10000) => Number.isInteger(value) && value >= minimum && value <= maximum;
+  const label = value => typeof value === 'string' && value.length > 0 && value.length <= 256 && !value.includes('\0');
+  const list = (value, maximum, check) => Array.isArray(value) && value.length <= maximum && value.every(check);
+  const scope = result.scope, sampling = result.sampling;
+  if (result.metric !== 'acgn-reward' || !scope || scope.moduleFacts !== true
+    || !integer(scope.overall, 1) || !integer(scope.bitwidth, 1, 32) || !integer(scope.maxSequence)
+    || !integer(scope.poolSize, 1, 100) || !integer(scope.minTrace, 1, 10) || !integer(scope.maxTrace, scope.minTrace, 10)
+    || !sampling || !['positiveTested', 'positiveAccepted', 'negativeTested', 'negativeRejected'].every(key => integer(sampling[key], 0, 100))
+    || !integer(sampling.semanticCounterexamples, 0, 2)
+    || sampling.positiveAccepted > sampling.positiveTested || sampling.negativeRejected > sampling.negativeTested) return false;
+  if (result.scoreStatus === 'ok') {
+    if (typeof result.score !== 'number' || !Number.isFinite(result.score) || result.score < 0 || result.score > 1 || result.scoreReason !== 'OK') return false;
+  } else if (result.scoreStatus !== 'unavailable' || result.score !== null
+    || !['ORACLE_POSITIVE_UNSAT', 'ORACLE_NEGATIVE_UNSAT'].includes(result.scoreReason)) return false;
+  const validState = (stateData, index) => stateData && stateData.index === index
+    && list(stateData.signatures, 128, signature => signature && label(signature.label) && list(signature.atoms, 128, label))
+    && list(stateData.relations, 128, relation => relation && label(relation.label) && integer(relation.arity, 1, 8)
+      && list(relation.tuples, 512, tuple => Array.isArray(tuple) && tuple.length === relation.arity && tuple.every(label)));
+  const validInstance = instance => instance && integer(instance.traceLength, 1, scope.maxTrace)
+    && integer(instance.loopState, -1, instance.traceLength - 1)
+    && (instance.truncated === undefined || typeof instance.truncated === 'boolean')
+    && (instance.stringsAnonymized === undefined || typeof instance.stringsAnonymized === 'boolean')
+    && Array.isArray(instance.states) && instance.states.length >= 1 && instance.states.length <= instance.traceLength
+    && (instance.states.length === instance.traceLength || instance.truncated === true)
+    && instance.states.every(validState);
+  if (!Array.isArray(result.categories) || result.categories.length !== BEHAVIOR_CATEGORIES.length) return false;
+  return BEHAVIOR_CATEGORIES.every(expected => {
+    const matching = result.categories.filter(category => category?.id === expected.id);
+    if (matching.length !== 1) return false;
+    const category = matching[0];
+    return category.oracle === expected.oracle && category.student === expected.student
+      && typeof category.enumerationComplete === 'boolean' && list(category.instances, 3, validInstance)
+      && (category.enumerationComplete || category.instances.length === 3)
+      && (category.status === 'unsat' ? category.instances.length === 0 && category.enumerationComplete
+        : category.status === 'sat' && category.instances.length > 0);
+  });
+}
+
+function behaviorTable(caption, headings, rows) {
+  const wrapper = node('div', 'behavior-table-scroll');
+  wrapper.tabIndex = 0;
+  wrapper.setAttribute('role', 'region');
+  wrapper.setAttribute('aria-label', caption);
+  const table = node('table', 'behavior-table');
+  table.append(node('caption', '', caption));
+  const header = node('tr');
+  headings.forEach(heading => {
+    const th = node('th', '', heading);
+    th.scope = 'col';
+    header.append(th);
+  });
+  const thead = node('thead');
+  thead.append(header);
+  const tbody = node('tbody');
+  rows.forEach(values => {
+    const row = node('tr');
+    values.forEach(value => row.append(node('td', '', value)));
+    tbody.append(row);
+  });
+  table.append(thead, tbody);
+  wrapper.append(table);
+  return wrapper;
+}
+
+function renderBehaviorState(container, stateData) {
+  container.replaceChildren();
+  const signatures = node('div', 'behavior-signatures');
+  if (stateData.signatures.length) {
+    signatures.append(behaviorTable('Atoms in this state', ['Signature', 'Atoms'],
+      stateData.signatures.map(signature => [signature.label, signature.atoms.length ? signature.atoms.join(', ') : 'No atoms'])));
+  } else signatures.append(node('p', 'behavior-empty', 'No named signatures in this state.'));
+  container.append(signatures);
+  const relations = node('div', 'behavior-relations');
+  relations.append(node('h4', '', 'Relations'));
+  if (!stateData.relations.length) relations.append(node('p', 'behavior-empty', 'No relations in this state.'));
+  stateData.relations.forEach((relation, index) => {
+    const detail = node('details', 'behavior-relation');
+    detail.open = index < 3;
+    detail.append(node('summary', '', `${relation.label} · ${relation.tuples.length} tuple${relation.tuples.length === 1 ? '' : 's'}`));
+    if (relation.tuples.length) {
+      const headings = relation.arity === 2 ? ['From', 'To']
+        : Array.from({ length: relation.arity }, (_, position) => `Atom ${position + 1}`);
+      detail.append(behaviorTable(relation.label, headings, relation.tuples));
+    } else detail.append(node('p', 'behavior-empty', 'No tuples in this state.'));
+    relations.append(detail);
+  });
+  container.append(relations);
+}
+
+function renderBehaviorInstance(container, instance, categoryId, exampleIndex) {
+  container.replaceChildren();
+  container.append(educationSlot('instance', `${categoryId}-${exampleIndex + 1}`));
+  if (instance.truncated) container.append(node('p', 'behavior-truncated', 'This instance is only partially displayed; some atoms, relations, tuples, or states were omitted.'));
+  if (instance.stringsAnonymized) container.append(node('p', 'behavior-string-note', 'String contents are hidden; atom identities are preserved.'));
+  const stateContent = node('div', 'behavior-state-content');
+  if (instance.states.length > 1) {
+    const controls = node('div', 'behavior-state-controls');
+    const id = `behavior-trace-${categoryId}-${exampleIndex}`;
+    const label = node('label', '', 'Trace state');
+    label.htmlFor = id;
+    const select = node('select', 'behavior-state-select');
+    select.id = id;
+    instance.states.forEach((stateData, index) => select.append(new Option(`State ${stateData.index + 1}`, index)));
+    select.addEventListener('change', () => renderBehaviorState(stateContent, instance.states[Number(select.value)]));
+    controls.append(label, select, node('span', '', `${instance.traceLength} states${instance.loopState >= 0 ? ` · after the last state, repeat from state ${instance.loopState + 1}` : ''}`));
+    container.append(controls);
+  } else if (instance.traceLength > 1) {
+    container.append(node('p', 'behavior-enumeration', `Only state 1 of ${instance.traceLength} is displayed.${instance.loopState >= 0 ? ` After its last state, the trace repeats from state ${instance.loopState + 1}.` : ''}`));
+  } else if (instance.loopState >= 0) container.append(node('p', 'behavior-enumeration', 'One-state trace; this state repeats.'));
+  renderBehaviorState(stateContent, instance.states[0]);
+  container.append(stateContent);
+}
+
+function renderBehaviorCategory(container, category, description) {
+  container.replaceChildren(node('h3', '', description.title), node('p', 'behavior-category-description', description.description));
+  if (category.status === 'unsat') {
+    container.append(node('p', 'behavior-empty', 'No instance within these bounds.'));
+    return;
+  }
+  const count = category.instances.length;
+  container.append(node('p', 'behavior-enumeration', category.enumerationComplete
+    ? `All ${count} enumerated example${count === 1 ? '' : 's'} shown within these bounds.`
+    : `${count} example${count === 1 ? '' : 's'} shown, up to three per category. More may exist within these bounds.`));
+  const choices = node('div', 'behavior-example-choices');
+  choices.setAttribute('role', 'group');
+  choices.setAttribute('aria-label', `${description.title} examples`);
+  const content = node('div', 'behavior-instance');
+  content.id = `behavior-instance-${category.id}`;
+  const buttons = category.instances.map((instance, index) => {
+    const button = node('button', 'button behavior-example-choice', `Example ${index + 1}`);
+    button.type = 'button';
+    button.setAttribute('aria-pressed', String(index === 0));
+    button.setAttribute('aria-controls', content.id);
+    button.addEventListener('click', () => {
+      buttons.forEach((choice, choiceIndex) => choice.setAttribute('aria-pressed', String(choiceIndex === index)));
+      renderBehaviorInstance(content, instance, category.id, index);
+    });
+    return button;
+  });
+  choices.append(...buttons);
+  renderBehaviorInstance(content, category.instances[0], category.id, 0);
+  container.append(choices, content);
+}
+
+function renderBehavior(result) {
+  elements.behaviorStatus.dataset.state = 'ok';
+  elements.behaviorStatus.textContent = 'Checked';
+  const summary = node('div', 'behavior-summary');
+  const score = node('div', 'behavior-score-block');
+  const available = result.scoreStatus === 'ok';
+  const rounded = available ? (Math.round((result.score + Number.EPSILON) * 1000) / 1000).toFixed(3) : 'Unavailable';
+  score.append(node('span', `behavior-score${available ? '' : ' unavailable'}`, rounded), node('span', 'behavior-score-range', available ? 'out of 1.000' : 'within these bounds'));
+  const explanation = node('div', 'behavior-score-description');
+  explanation.append(node('p', '', 'ACGN reward against the exercise oracle. Structural distance above uses the closest correct predicate.'), node('span', 'behavior-facts', 'Model facts enforced'));
+  if (!available) explanation.append(node('p', 'behavior-score-reason', result.scoreReason === 'ORACLE_POSITIVE_UNSAT'
+    ? 'The oracle accepts no instance within these bounds, so the score is unavailable.'
+    : 'The oracle rejects no instance within these bounds, so the score is unavailable.'));
+  if (rounded === '1.000' && result.categories.some(category => ['undercoverage', 'overcoverage'].includes(category.id) && category.status === 'sat')) {
+    explanation.append(node('p', 'behavior-rounding-note', 'Rounding shows 1.000; counterexamples still exist within these bounds.'));
+  }
+  summary.append(score, explanation);
+  const scope = result.scope;
+  const bounds = node('p', 'behavior-scope', `Bounds: default atom scope ${scope.overall} · ${scope.bitwidth}-bit integers · sequence bound ${scope.maxSequence} · traces ${scope.minTrace}–${scope.maxTrace} states · sample pool ${scope.poolSize}.`);
+  const sampling = result.sampling;
+  const samples = node('p', 'behavior-sampling', `Oracle-accepted samples your predicate accepts: ${sampling.positiveAccepted}/${sampling.positiveTested}. Oracle-rejected samples your predicate rejects: ${sampling.negativeRejected}/${sampling.negativeTested}. Extra counterexample correction: ${sampling.semanticCounterexamples}.`);
+  const note = node('p', 'behavior-bound-note', 'This bounded score and these examples do not prove equivalence. Each example satisfies the model facts.');
+  const navigation = node('div', 'behavior-category-choices');
+  navigation.setAttribute('role', 'group');
+  navigation.setAttribute('aria-label', 'Behavior categories');
+  const content = node('div', 'behavior-category-content');
+  content.id = 'behavior-category-content';
+  const buttons = BEHAVIOR_CATEGORIES.map((description, index) => {
+    const category = result.categories.find(item => item.id === description.id);
+    const button = node('button', 'behavior-category-choice');
+    button.type = 'button';
+    button.dataset.category = category.id;
+    button.setAttribute('aria-pressed', String(index === 0));
+    button.setAttribute('aria-controls', content.id);
+    button.append(node('strong', '', description.title), node('span', 'behavior-truth', `Oracle: ${category.oracle} · Yours: ${category.student}`),
+      node('span', 'behavior-category-count', category.status === 'unsat' ? 'No instance within bounds' : `${category.instances.length} example${category.instances.length === 1 ? '' : 's'}`));
+    button.addEventListener('click', () => {
+      buttons.forEach((choice, choiceIndex) => choice.setAttribute('aria-pressed', String(choiceIndex === index)));
+      renderBehaviorCategory(content, category, description);
+    });
+    return button;
+  });
+  navigation.append(...buttons);
+  renderBehaviorCategory(content, result.categories.find(category => category.id === 'both'), BEHAVIOR_CATEGORIES[0]);
+  elements.behavior.replaceChildren(summary, bounds, samples, note, navigation, content);
+}
+
+async function requestBehavior(payload, selection, explain = false) {
+  state.behaviorAbort?.abort();
+  state.behaviorEvidence = null;
+  const controller = new AbortController();
+  state.behaviorAbort = controller;
+  const current = () => payload.revision === state.revision && selection === state.selection
+    && payload.exerciseId === state.exercise?.id && payload.body === elements.editor.value && !controller.signal.aborted;
+  behaviorMessage('pending', 'Analyzing…', 'Comparing behavior with the oracle and finding examples within the model bounds…');
+  try {
+    const result = await fetchJSON('api/behavior', { method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!current()) return;
+    if (result.exerciseId !== payload.exerciseId || result.revision !== payload.revision) throw new Error('Behavioral feedback for this draft is unavailable. Check your predicate again.');
+    if (result.status !== 'ok') {
+      const errors = {
+        timeout: ['timeout', 'Timed out', 'The behavioral check timed out. No score or examples are available for this draft.'],
+        busy: ['waiting', 'Server busy', 'The behavioral checker is busy. Check your predicate again shortly.'],
+        unsupported: ['error', 'Unavailable', typeof result.message === 'string' && result.message
+          ? result.message : 'Behavioral analysis is unavailable for this model structure.'],
+        invalid: ['error', 'Unavailable', 'The behavioral checker could not compile this draft.'],
+      };
+      behaviorMessage(...(errors[result.status] || ['error', 'Unavailable', 'Behavioral analysis is unavailable for this draft. Check your predicate again.']));
+      return;
+    }
+    if (!validBehaviorResult(result)) throw new Error('The behavioral checker returned an invalid result. Check your predicate again.');
+    state.behaviorEvidence = { token: typeof result.behaviorToken === 'string' && /^[a-f0-9]{64}$/.test(result.behaviorToken) ? result.behaviorToken : null,
+      instanceIds: result.categories.flatMap(category => category.instances.map((_, index) => `${category.id}-${index + 1}`)) };
+    renderBehavior(result);
+  } catch (error) {
+    if (error.name === 'AbortError' || !current()) return;
+    state.behaviorEvidence = null;
+    behaviorMessage('error', 'Unavailable', error.message);
+  } finally {
+    if (state.behaviorAbort === controller) state.behaviorAbort = null;
+    if (current() && explain) {
+      const token = state.behaviorEvidence?.token;
+      requestExplanation({ ...payload, ...(token ? { behaviorToken: token } : {}) }, selection);
+    }
+  }
+}
+
+function resetEducation() {
+  state.explainAbort?.abort();
+  state.explainAbort = null;
+  state.education = null;
+  document.querySelectorAll('.education-slot').forEach(slot => slot.remove());
+}
+
+function educationSlot(kind, id) {
+  const slot = node('aside', `education-slot ${kind}-explanation`);
+  slot.dataset.educationKind = kind;
+  slot.dataset.educationId = id;
+  slot.append(node('span', 'education-label', kind === 'operation' ? 'Luna · edit hint' : 'Luna · example hint'), node('div', 'education-copy'));
+  updateEducationSlot(slot);
+  return slot;
+}
+
+function updateEducationSlot(slot) {
+  const education = state.education;
+  const kind = slot.dataset.educationKind;
+  const current = education && sourceContextCurrent(education.context);
+  const description = current && (kind === 'operation' ? education.operations : education.instances).get(slot.dataset.educationId);
+  const instanceBound = kind !== 'instance' || (education?.behaviorToken && education.behaviorToken === state.behaviorEvidence?.token);
+  if (description && instanceBound) {
+    slot.querySelector('.education-copy').replaceChildren(node('p', 'education-description', description));
+  } else {
+    const unavailable = !current || ['unavailable', 'ready'].includes(education.phase);
+    slot.querySelector('.education-copy').replaceChildren(node('p', unavailable ? 'education-unavailable' : 'education-pending',
+      unavailable ? 'AI explanation unavailable. The checked result is still shown.' : 'Preparing a short explanation…'));
+  }
+}
+
+function refreshEducationSlots() {
+  document.querySelectorAll('.education-slot').forEach(updateEducationSlot);
+}
+
+function validEducation(explanation, operationIds, instanceIds) {
+  const validText = (value, limit) => typeof value === 'string' && value.trim().length > 0
+    && Array.from(value).length <= limit && !value.includes('\0');
+  const covers = (items, ids) => {
+    if (!Array.isArray(items) || items.length !== ids.length) return false;
+    const expected = new Set(ids);
+    return items.every(item => item && expected.delete(item.id) && validText(item.description, 360));
+  };
+  return validText(explanation.summary, 700) && covers(explanation.operations, operationIds) && covers(explanation.instances, instanceIds);
+}
+
 async function requestExplanation(payload, selection) {
+  const education = state.education;
+  if (!education || !sourceContextCurrent(education.context) || payload.body !== education.context.body
+    || payload.revision !== education.context.revision || selection !== education.context.selection
+    || payload.exerciseId !== education.context.exerciseId) return;
+  const behaviorToken = payload.behaviorToken || null;
+  if (behaviorToken !== (state.behaviorEvidence?.token || null)) return;
   state.explainAbort?.abort();
   const controller = new AbortController();
   state.explainAbort = controller;
-  const current = () => payload.revision === state.revision && selection === state.selection && payload.exerciseId === state.exercise?.id && !controller.signal.aborted;
+  const current = () => state.education === education && sourceContextCurrent(education.context)
+    && behaviorToken === (state.behaviorEvidence?.token || null) && !controller.signal.aborted;
+  const instanceIds = behaviorToken ? [...state.behaviorEvidence.instanceIds] : [];
+  education.phase = 'pending';
+  education.behaviorToken = behaviorToken;
+  education.operations.clear(); education.instances.clear();
+  refreshEducationSlots();
+  $('#luna-explanation-body')?.replaceChildren(node('p', 'explanation-pending', 'Preparing short explanations…'));
   try {
     const explanation = await fetchJSON('api/explain', {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     if (!current()) return;
-    if ((explanation.exerciseId !== undefined && explanation.exerciseId !== payload.exerciseId) || (explanation.revision !== undefined && explanation.revision !== payload.revision)) throw new Error('Guidance for this draft is unavailable. Please check again.');
+    if (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision) throw new Error('Guidance for this draft is unavailable. Please check again.');
     const container = $('#luna-explanation-body');
     if (!container) return;
-    if (explanation.status === 'ok' && typeof explanation.text === 'string') {
-      container.replaceChildren(node('p', 'explanation-text', explanation.text));
+    if (explanation.status === 'ok') {
+      if ((explanation.behaviorToken ?? null) !== behaviorToken
+        || !validEducation(explanation, education.operationIds, instanceIds)) throw new Error('AI explanations could not be matched to the displayed edits and examples. Check again or retry guidance.');
+      education.phase = 'ready';
+      education.operations = new Map(explanation.operations.map(item => [item.id, item.description]));
+      education.instances = new Map(explanation.instances.map(item => [item.id, item.description]));
+      refreshEducationSlots();
+      container.replaceChildren(node('p', 'explanation-text', explanation.summary));
     } else renderExplanationUnavailable(container, explanation.message || 'AI guidance is currently unavailable. Canonical feedback remains available.', payload, selection);
   } catch (error) {
     if (error.name === 'AbortError' || !current()) return;
@@ -692,10 +1030,14 @@ async function requestExplanation(payload, selection) {
 }
 
 function renderExplanationUnavailable(container, message, payload, selection) {
+  if (state.education) {
+    state.education.phase = 'unavailable';
+    state.education.operations.clear(); state.education.instances.clear();
+    refreshEducationSlots();
+  }
   const retry = node('button', 'button text-button explanation-retry', 'Retry guidance');
   retry.type = 'button';
   retry.addEventListener('click', () => {
-    container.replaceChildren(node('p', 'explanation-pending', 'Preparing guidance…'));
     requestExplanation(payload, selection);
   });
   container.replaceChildren(node('p', 'explanation-unavailable', message), retry);

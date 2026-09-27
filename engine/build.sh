@@ -12,5 +12,6 @@ esac
 mkdir -p -- "$OUTPUT_DIR"
 javac -encoding UTF-8 --release 17 -Xprefer:source -cp "$ACGN_ROOT/lib/*" \
   -sourcepath "$ENGINE_ROOT/src:$ACGN_ROOT/src" -d "$OUTPUT_DIR" \
-  "$ENGINE_ROOT/src/live/LiveFeedback.java" "$ENGINE_ROOT/src/live/EngineSelfTest.java"
+  "$ENGINE_ROOT/src/live/LiveFeedback.java" "$ENGINE_ROOT/src/live/EngineSelfTest.java" \
+  "$ENGINE_ROOT/src/live/BehaviorFeedback.java"
 printf 'Built engine classes in %s\n' "$OUTPUT_DIR"

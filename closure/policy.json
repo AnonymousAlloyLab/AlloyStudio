@@ -64,7 +64,7 @@
       "evidence_kind": "TRUSTED"
     },
     {
-      "surface": "Live OpenAI availability, account quota, model output truth, and remote service behavior",
+      "surface": "Live OpenAI availability, account quota, model output truth, universal prevention of solutions inferable from generated prose, and remote service behavior",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
     },
@@ -100,6 +100,11 @@
     },
     {
       "surface": "Exact canonical-node to raw-source occurrence provenance, proof of source defect, and correctness of executable source repairs; locator claims cover only the frozen related-context and ambiguity fixtures",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Behavioral-score calibration or unbounded equivalence, exhaustive instance enumeration beyond declared bounds, all-model solver success, and equality to upstream Rewarder when omitted module facts affect its results",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
     }

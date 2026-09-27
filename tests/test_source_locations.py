@@ -162,7 +162,7 @@ class SourceLocationTests(unittest.TestCase):
             for snippet in self.snippets(operation, source):
                 self.assertIn(snippet, ("A", "no A"))
             if operation["sourceLocation"]["status"] == "located":
-                self.assertIn("not an exact insertion point", operation["sourceLocation"]["reason"])
+                self.assertIn("does not pinpoint where to add it", operation["sourceLocation"]["reason"])
 
     def test_candidate_overflow_does_not_choose_arbitrary_occurrences(self):
         operation, _ = self.only_operation(" and ".join(["some A"] * 17), "no A")

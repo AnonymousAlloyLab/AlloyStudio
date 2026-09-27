@@ -64,9 +64,14 @@ semantic solution or solver synthesis claim is made.
 
 ## Luna
 
-`C-LUNA`: mocked transport tests check outbound field allowlisting, credential
-placement, response parsing, and failure behavior. Live Luna availability and the
-truth of AI explanations are OUT_OF_SCOPE. Actual API quota/access is an independent
+`C-LUNA`: mocked transport and HTTP tests check outbound field allowlisting,
+learner-only raw/canonical context and validated spans, all operation and instance
+IDs, structured output validation, bounded hint lengths, obvious solution-shaped
+output refusal, credential placement, caching, and failure behavior. Exact cached
+behavior snapshots are bound to an exercise/draft token before annotation; client
+supplied evidence is rejected. Live Luna availability, the truth of AI explanations,
+and a universal guarantee against inferable solutions in prose are OUT_OF_SCOPE.
+Actual API quota/access is an independent
 deployment condition and cannot be discharged by these offline tests.
 
 ## Credentials
@@ -97,11 +102,29 @@ rewritten expressions. Canonical fixtures check rendered fragments and explicit
 whole-form context. HTTP-boundary fixtures check UTF-16 offsets, body containment,
 coordinate/text recomputation, invalid and partial mapping refusal, and
 literal-preserving canonical whitespace compaction with remapped ranges.
-Locator details do not enter the Luna prompt. `C-BROWSER` separately discharges
+The separate educational projection validates learner locator spans before they
+enter the Luna prompt. `C-BROWSER` separately discharges
 the paired color/underline, ambiguity, scroll/resize, keyboard and stale-draft
 interaction assertions. Matching is conservative related-context identification;
 exact canonical-node/source occurrence provenance, an exact defect proof, and
 automatic source-patch correctness are outside these claims.
+
+## Behavioral feedback
+
+`C-BEHAVIOR`: frozen real-JVM fixtures check the ACGN reward formula, fact-aware
+sampling and semantic-counterexample correction, bounded truth categories,
+temporal tuples, oracle isolation, and explicit undefined scores. Projection and
+HTTP fixtures check arithmetic, witness limits, metadata exclusion, request
+validation, independent worker/cache behavior, and sanitized failures. Browser
+rendering, example/state selection, three-decimal formatting, and stale-draft
+handling are discharged separately by `C-BROWSER`.
+
+The score uses ACGN's fixed scope and sampling constants with model facts enforced,
+an intentional difference from the original Rewarder's omitted module facts.
+SAT4J/Alloy solving and classification of the original oracle are trusted. No
+exhaustive unbounded model coverage, calibrated probability, or semantic
+equivalence proof is claimed; a displayed rounded 1.000 can still have a bounded
+counterexample. The finite fixtures, not all possible models, define this claim.
 
 ## Builds
 

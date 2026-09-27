@@ -5,6 +5,7 @@ from collections import OrderedDict
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
@@ -52,6 +53,135 @@ def project(record, fields):
 def model(record, body):
     return (record['environmentBefore'] + record['predicateHeader'] + '{\n' + body
             + '\n}' + record['environmentAfter'])
+
+
+def behavior_token(exercise_id, body, evidence):
+    """Bind educational annotations to the exact public witness snapshot."""
+    encoded = json.dumps([exercise_id, body, evidence], sort_keys=True,
+                         separators=(',', ':'), ensure_ascii=True).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def project_behavior(raw):
+    """Validate bounded behavior evidence and discard all worker metadata.
+
+    No source, command, XML, skolems or unrestricted diagnostic text crosses
+    this boundary. Only signatures/relations serialized by the engine survive.
+    """
+    def require(condition):
+        if not condition:
+            raise ValueError('Invalid behavioral evidence')
+
+    def integer(value, low, high):
+        require(type(value) is int and low <= value <= high)
+        return value
+
+    def boolean(value):
+        require(type(value) is bool)
+        return value
+
+    def sequence(value, maximum):
+        require(isinstance(value, list) and len(value) <= maximum)
+        return value
+
+    def text(value):
+        require(isinstance(value, str) and 0 < len(value) <= 256 and '\x00' not in value)
+        value.encode('utf-8')  # Reject lone surrogates before HTTP serialization.
+        return value
+
+    def object_(value):
+        require(isinstance(value, dict))
+        return value
+
+    object_(raw)
+    require(raw.get('status') == 'ok' and raw.get('metric') == 'acgn-reward')
+    expected_scope = {'overall': 3, 'bitwidth': 3, 'maxSequence': 3, 'poolSize': 100,
+                      'minTrace': 1, 'maxTrace': 10, 'moduleFacts': True}
+    scope = object_(raw.get('scope'))
+    for key, value in expected_scope.items():
+        require(type(scope.get(key)) is type(value) and scope[key] == value)
+    sample = object_(raw.get('sampling'))
+    sampling = {key: integer(sample.get(key), 0, 100) for key in
+                ('positiveTested', 'positiveAccepted', 'negativeTested', 'negativeRejected')}
+    sampling['semanticCounterexamples'] = integer(sample.get('semanticCounterexamples'), 0, 2)
+    require(sampling['positiveAccepted'] <= sampling['positiveTested']
+            and sampling['negativeRejected'] <= sampling['negativeTested'])
+    category_types = {'both': (True, True), 'undercoverage': (True, False),
+                      'overcoverage': (False, True), 'neither': (False, False)}
+    categories, seen = [], set()
+    for item in sequence(raw.get('categories'), 4):
+        object_(item)
+        name = item.get('id')
+        require(isinstance(name, str) and name in category_types and name not in seen)
+        seen.add(name)
+        truth = (boolean(item.get('oracle')), boolean(item.get('student')))
+        require(truth == category_types[name] and item.get('status') in ('sat', 'unsat'))
+        complete = boolean(item.get('enumerationComplete'))
+        instances = []
+        for instance in sequence(item.get('instances'), 3):
+            object_(instance)
+            length = integer(instance.get('traceLength'), 1, 10)
+            loop = integer(instance.get('loopState'), -1, length - 1)
+            truncated = boolean(instance.get('truncated', False))
+            strings_anonymized = boolean(instance.get('stringsAnonymized', False))
+            states = []
+            for state in sequence(instance.get('states'), 10):
+                object_(state)
+                require(state.get('index') == len(states) and type(state.get('index')) is int)
+                signatures, relations = [], []
+                for signature in sequence(state.get('signatures'), 128):
+                    object_(signature)
+                    signatures.append({'label': text(signature.get('label')),
+                                       'atoms': [text(atom) for atom in sequence(signature.get('atoms'), 128)]})
+                for relation in sequence(state.get('relations'), 128):
+                    object_(relation)
+                    arity = integer(relation.get('arity'), 1, 8)
+                    tuples = []
+                    for row in sequence(relation.get('tuples'), 512):
+                        require(isinstance(row, list) and len(row) == arity)
+                        tuples.append([text(atom) for atom in row])
+                    relations.append({'label': text(relation.get('label')), 'arity': arity, 'tuples': tuples})
+                states.append({'index': len(states), 'signatures': signatures, 'relations': relations})
+            require(0 < len(states) <= length and (len(states) == length or truncated))
+            instances.append({'traceLength': length, 'loopState': loop, 'truncated': truncated,
+                              'stringsAnonymized': strings_anonymized, 'states': states})
+        require((item['status'] == 'sat') == bool(instances))
+        require(item['status'] != 'unsat' or complete)
+        # With fewer than the three requested witnesses, enumeration must have
+        # reached UNSAT, not merely stopped early without accounting for it.
+        require(complete or len(instances) == 3)
+        categories.append({'id': name, 'oracle': truth[0], 'student': truth[1],
+                           'status': item['status'], 'enumerationComplete': complete, 'instances': instances})
+    require(seen == set(category_types))
+    by_name = {item['id']: item for item in categories}
+    positive = sampling['positiveTested']
+    negative = sampling['negativeTested']
+    accepted = sampling['positiveAccepted']
+    rejected = sampling['negativeRejected']
+    correction = sampling['semanticCounterexamples']
+    require(bool(positive) == any(by_name[name]['status'] == 'sat' for name in ('both', 'undercoverage')))
+    require(bool(negative) == any(by_name[name]['status'] == 'sat' for name in ('overcoverage', 'neither')))
+    require(not accepted or by_name['both']['status'] == 'sat')
+    require(accepted == positive or by_name['undercoverage']['status'] == 'sat')
+    require(not rejected or by_name['neither']['status'] == 'sat')
+    require(rejected == negative or by_name['overcoverage']['status'] == 'sat')
+    if positive and negative:
+        require(raw.get('scoreStatus') == 'ok' and raw.get('scoreReason') == 'OK')
+        score = raw.get('score')
+        require(type(score) in (int, float) and math.isfinite(score) and 0 <= score <= 1)
+        perfect_sample = accepted == positive and rejected == negative
+        expected_correction = sum(by_name[name]['status'] == 'sat' for name in ('undercoverage', 'overcoverage')) if perfect_sample else 0
+        require(correction == expected_correction)
+        expected = accepted * rejected / (positive * negative + correction)
+        require(abs(score - math.floor(expected * 1000 + 0.5) / 1000) < 1e-9)
+    else:
+        require(raw.get('scoreStatus') == 'unavailable' and raw.get('score') is None and correction == 0)
+        require(raw.get('scoreReason') == ('ORACLE_POSITIVE_UNSAT' if not positive else 'ORACLE_NEGATIVE_UNSAT'))
+        score = None
+    return {'status': 'ok', 'metric': 'acgn-reward', 'score': score,
+            'scoreStatus': raw['scoreStatus'], 'scoreReason': raw['scoreReason'],
+            'scope': expected_scope, 'sampling': sampling,
+            'categories': [by_name[name] for name in category_types]}
 
 
 def compact_canonical_text(text):
@@ -117,7 +247,7 @@ def project_canonical_locations(result):
         raw = operation.get('canonicalLocation')
         operation['canonicalLocation'] = {
             'status': 'unavailable', 'coordinateSystem': 'canonical', 'offsetEncoding': 'utf-16',
-            'ranges': [], 'reason': 'No corresponding learner canonical fragment is available.'}
+            'ranges': [], 'reason': 'There is no matching part of your simplified predicate to highlight.'}
         if (not isinstance(raw, dict) or raw.get('coordinateSystem') != 'canonical'
                 or raw.get('offsetEncoding') != 'utf-16'
                 or raw.get('status') not in ('located', 'ambiguous')
@@ -142,10 +272,10 @@ def project_canonical_locations(result):
             projected.append({'formIndex': form_index, 'start': start, 'end': end,
                               'text': forms[form_index][a:b]})
         else:
-            reason = ('Canonical form context; a smaller fragment could not be identified.'
+            reason = ('The whole simplified predicate is shown because a smaller matching part could not be found.'
                       if raw['precision'] == 'form' else
-                      'Matching canonical fragments; the normalized occurrence may be ambiguous.'
-                      if len(projected) > 1 else 'Learner canonical fragment related to this edit step.')
+                      'Several parts of your simplified predicate match this hint. Inspect each highlighted possibility.'
+                      if len(projected) > 1 else 'This part of your simplified predicate relates to the hint.')
             operation['canonicalLocation'] = {
                 'status': raw['status'], 'coordinateSystem': 'canonical', 'offsetEncoding': 'utf-16',
                 'precision': raw['precision'], 'reason': reason,
@@ -176,7 +306,7 @@ def project_source_locations(operations, record, body):
     def unavailable():
         return {'status': 'unavailable', 'coordinateSystem': 'body',
                 'offsetEncoding': 'utf-16', 'ranges': [],
-                'reason': 'No reliable location in this predicate body is available for this normalized edit.'}
+                'reason': 'This hint could not be matched reliably to a location in your code.'}
 
     if not isinstance(operations, list):
         return
@@ -213,11 +343,11 @@ def project_source_locations(operations, record, body):
             # Downgrade any engine precision claim: AST expression matching
             # establishes a related region, not an exact defect provenance.
             precision = 'predicate' if raw['precision'] == 'predicate' else 'related'
-            reason = ('The whole predicate is context for this edit; a smaller location is unavailable.'
+            reason = ('Review the whole predicate; a smaller matching part could not be found.'
                       if precision == 'predicate' else
-                      'These source expressions may correspond to the normalized edit; choose a location to inspect.'
+                      'Several parts of your code match this hint. Choose a highlight to inspect.'
                       if len(projected) > 1 else
-                      'This source expression corresponds to the learner fragment; normalization can change the required repair.')
+                      'This highlight shows a related part of your code to inspect. The change you need may look different from the hint.')
             operation['sourceLocation'] = {'status': raw['status'], 'precision': precision,
                                            'coordinateSystem': 'body', 'offsetEncoding': 'utf-16',
                                            'ranges': sorted(projected, key=lambda item: (item['start'], item['end'])),
@@ -300,6 +430,10 @@ class Portal(ThreadingHTTPServer):
         self.explainer = Explainer()
         self.slots = threading.BoundedSemaphore(workers)
         self.cache, self.cache_lock = OrderedDict(), threading.Lock()
+        # SAT enumeration has its own small lane, so a slow behavior request
+        # cannot occupy the canonical feedback workers.
+        self.behavior_slots = threading.BoundedSemaphore(1)
+        self.behavior_cache = OrderedDict()
         super().__init__(address, Handler)
 
     def evaluate(self, record, body):
@@ -363,6 +497,49 @@ class Portal(ThreadingHTTPServer):
         finally:
             self.slots.release()
 
+    def evaluate_behavior(self, record, body):
+        key = (record['id'], hashlib.sha256(body.encode()).hexdigest())
+        with self.cache_lock:
+            if key in self.behavior_cache:
+                self.behavior_cache.move_to_end(key)
+                return self.behavior_cache[key]
+        if not self.behavior_slots.acquire(blocking=False):
+            return {'status': 'busy', 'message': 'Behavioral analysis is busy. Try again shortly.'}
+        try:
+            payload = {'studentSource': model(record, body), 'studentBody': body,
+                       'oracleSource': model(record, record['oracleBody']), 'predicate': record['predicate']}
+            command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
+                       runtime_classpath(self.root), 'live.BehaviorFeedback']
+            completed = subprocess.run(command, input=json.dumps(payload), text=True, encoding='utf-8',
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.root,
+                                       timeout=max(30, self.timeout), check=False)
+            if completed.returncode or len(completed.stdout.encode('utf-8')) > 4 * 1024 * 1024:
+                return {'status': 'error', 'message': 'Behavioral analysis could not complete.'}
+            raw = json.loads(completed.stdout)
+            if isinstance(raw, dict) and raw.get('status') in ('invalid', 'unsupported', 'error', 'invalid_request'):
+                status = 'invalid' if raw['status'] in ('invalid', 'invalid_request') else raw['status']
+                message = 'The solver could not evaluate this predicate in the fixed model. Canonical feedback remains available.'
+                diagnostics = raw.get('diagnostics')
+                code = diagnostics[0].get('code') if (isinstance(diagnostics, list) and diagnostics
+                        and isinstance(diagnostics[0], dict)) else None
+                if status == 'unsupported' and code == 'STUDENT_STRING_UNIVERSE':
+                    message = 'This draft introduces a string literal outside the oracle sampling universe. Behavioral analysis is unavailable for this form.'
+                elif status == 'unsupported' and code == 'RECURSIVE_OR_CONTEXT_DEPENDENCY':
+                    message = 'Behavioral analysis does not support recursion or model facts and shared helpers that depend on the edited predicate.'
+                return {'status': status, 'message': message}
+            result = project_behavior(raw)
+            with self.cache_lock:
+                self.behavior_cache[key] = result
+                if len(self.behavior_cache) > 32:
+                    self.behavior_cache.popitem(last=False)
+            return result
+        except subprocess.TimeoutExpired:
+            return {'status': 'timeout', 'message': 'Behavioral analysis exceeded its time limit. Canonical feedback remains available.'}
+        except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            return {'status': 'error', 'message': 'Behavioral analysis returned no usable evidence. Try again.'}
+        finally:
+            self.behavior_slots.release()
+
 
 class Handler(BaseHTTPRequestHandler):
     server_version = 'AlloyPractice/1.0'
@@ -402,7 +579,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path not in ('/api/feedback', '/api/explain'):
+        if path not in ('/api/feedback', '/api/explain', '/api/behavior'):
             return self.reply(404, {'error': 'Not found.'})
         origin = self.headers.get('Origin')
         if origin:
@@ -423,18 +600,44 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(length))
         except (ValueError, OSError, RecursionError):
             return self.reply(400, {'error': 'Invalid JSON request.'})
-        if (not isinstance(data, dict) or set(data) != {'exerciseId', 'body', 'revision'}
+        expected = {'exerciseId', 'body', 'revision'}
+        fields = set(data) if isinstance(data, dict) else set()
+        if (not isinstance(data, dict)
+                or fields not in (expected, expected | {'behaviorToken'} if path == '/api/explain' else expected)
                 or not isinstance(data['exerciseId'], str)
-                or type(data['revision']) is not int or not 0 <= data['revision'] <= 2**53 - 1):
+                or type(data['revision']) is not int or not 0 <= data['revision'] <= 2**53 - 1
+                or ('behaviorToken' in data and (not isinstance(data['behaviorToken'], str)
+                    or re.fullmatch(r'[0-9a-f]{64}', data['behaviorToken']) is None))):
             return self.reply(400, {'error': 'Expected exerciseId, body, and a nonnegative integer revision.'})
         record = self.server.exercises.get(data['exerciseId'])
         if not record: return self.reply(404, {'error': 'Exercise not found.'})
         error = validate_body(data['body'])
+        if path == '/api/behavior':
+            result = ({'status': 'invalid', 'message': error} if error
+                      else self.server.evaluate_behavior(record, data['body']))
+            if result.get('status') == 'ok':
+                result = dict(result, behaviorToken=behavior_token(record['id'], data['body'], result))
+            return self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision']))
         result = ({'status': 'invalid', 'diagnostics': [{'message': error}]} if error
                   else self.server.evaluate(record, data['body']))
         if path == '/api/explain':
-            result = (self.server.explainer.explain(result) if result.get('status') == 'ok'
-                      else {'status': 'unavailable', 'model': 'gpt-6-luna', 'message': 'Check a valid predicate before requesting an explanation.'})
+            if result.get('status') != 'ok':
+                result = {'status': 'unavailable', 'model': 'gpt-6-luna',
+                          'message': 'Check a valid predicate before requesting an explanation.'}
+            else:
+                evidence = None
+                token = data.get('behaviorToken')
+                if token is not None:
+                    cache_key = (record['id'], hashlib.sha256(data['body'].encode()).hexdigest())
+                    with self.server.cache_lock:
+                        evidence = self.server.behavior_cache.get(cache_key)
+                    if evidence is None or behavior_token(record['id'], data['body'], evidence) != token:
+                        return self.reply(200, {'status': 'unavailable', 'model': 'gpt-6-luna',
+                            'message': 'These examples have expired. Check your predicate again to refresh their guidance.',
+                            'exerciseId': record['id'], 'revision': data['revision']})
+                result = self.server.explainer.explain(result, student_body=data['body'], behavior=evidence)
+                if token is not None:
+                    result = dict(result, behaviorToken=token)
         self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision']))
 
 

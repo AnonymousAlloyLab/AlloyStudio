@@ -82,8 +82,8 @@ final class CanonicalLocator {
         }
         if (ranges.isEmpty()) return formContext(forms, phases);
         return metadata(ranges.length() == 1 ? "located" : "ambiguous", "related",
-                ranges.length() == 1 ? "Matching fragment in the learner canonical form."
-                        : "Several canonical fragments match; no unique displayed occurrence is known.").put("ranges", ranges);
+                ranges.length() == 1 ? "This part of your simplified predicate relates to the hint."
+                        : "Several parts of your simplified predicate match this hint. Inspect each highlighted possibility.").put("ranges", ranges);
     }
 
     private static List<Token> tokenize(String text, boolean canonical) {
@@ -138,11 +138,11 @@ final class CanonicalLocator {
             if (!form.isEmpty()) ranges.put(new JSONObject().put("formIndex", phase).put("start", 0).put("end", form.length()));
         }
         return metadata(ranges.length() == 1 ? "located" : "ambiguous", "form",
-                "Learner canonical-form context; this operation has no unique matching displayed fragment.").put("ranges", ranges);
+                "The whole simplified predicate is shown because a smaller matching part could not be found.").put("ranges", ranges);
     }
 
     private static JSONObject unavailable() {
-        return metadata("unavailable", "form", "No existing learner canonical form is available for this operation.")
+        return metadata("unavailable", "form", "There is no matching part of your simplified predicate to highlight.")
                 .put("ranges", new JSONArray());
     }
 

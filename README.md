@@ -36,6 +36,13 @@ to color its canonical fragment and underline the related expression in your
 raw predicate. The locator reports both predicate-body and complete-model line
 and column positions. If several expressions match, choose a possible source
 location; editing the draft clears the highlights until the next check.
+Behavioral feedback loads separately below the editor and feedback panels. It
+shows the **behavioral similarity score** to three decimal places and up to three
+instances in each oracle/student category: both accept, undercoverage (only the
+oracle accepts), overcoverage (only your predicate accepts), and neither accepts.
+Select an example to inspect its atoms and relations; temporal instances also
+let you select a state. Empty categories mean no instance exists **within the
+displayed bounds**. Changing the draft clears the previous behavioral results.
 All 181 exercises have natural-language requirements displayed above the editor.
 Read them together in [the exercise guide](docs/exercise-descriptions.md).
 The descriptions state the task in prose while the browser hides reference
@@ -67,8 +74,10 @@ preserved in the bundled catalogue for reproduction.
 The server reads `exercises/catalogue.json` and exposes an explicit
 public field projection. Only three named web assets are served. It parses the
 learner and oracle in separate JVM modules so the learner cannot call the
-oracle. Reference bodies, canonical forms, target expressions, target-only names
-and constants, raw exceptions, and credentials are not sent to the browser.
+oracle. Reference bodies, canonical forms, target expressions, private predicate
+and variable names, raw exceptions, and credentials are not sent to the browser.
+Behavioral instances expose concrete model atoms and relations, including integer
+values; String contents use opaque identities so private string literals stay hidden.
 Replacement operator names are explicitly permitted hints. Costs, operator hints,
 and redacted operation categories deliberately reveal repair information; repeated queries
 can help infer a solution. This is a learning interface, not a secrecy guarantee
@@ -148,16 +157,83 @@ Whitespace compaction preserves quoted literal contents and does not alter the
 metric. Location text is derived from this learner draft and canonical form;
 reference solutions and credentials are never used to construct these locators.
 
+## Behavioral similarity and examples
+
+Behavioral comparisons always use the original oracle. Canonical distance still
+uses the closest member of the correct pool. `live.BehaviorFeedback` adapts
+ACGN's `Rewarder` formula, with **model facts enforced** for both sampling and
+category searches. This intentionally fixes the upstream Rewarder's omission of
+module-level facts; the vendored framework is unchanged.
+
+The solver uses SAT4J, an overall scope of 3, 3-bit integers, maximum sequence
+length 3, temporal traces of 1–10 states, and up to 100 samples of each oracle
+polarity. These are ACGN's fixed bounds, not the scopes of source run/check commands.
+If `P` oracle-positive samples contain `p` learner acceptances and `N`
+oracle-negative samples contain `n` learner rejections, the reward is
+`(p * n) / (P * N + c)`. The correction `c` is zero unless every sample agrees;
+then it counts the satisfiable undercoverage and overcoverage directions (0–2).
+The displayed value is rounded to the nearest 0.001. Rounding can display `1.000`
+even when a rare counterexample exists; inspect the categories as well.
+
+The four categories are solved independently, so a sampled pool missing a case
+does not label that category empty. Each category exposes at most three examples,
+and says whether enumeration finished. Atom/relation output is bounded, with
+truncation labeled. Temporal instances include state and loop information. String
+values are anonymized consistently within an instance; signatures, field names,
+and other atom identities come from the public model. No solver command, private
+source, XML metadata, or skolem bindings are returned. Only this public instance
+projection is available to Luna for explaining the displayed examples.
+
+If model facts make either oracle polarity unsatisfiable within these bounds,
+ACGN's sampled reward is undefined: the score is unavailable while the categories
+remain usable. A timeout or unsupported form is also distinct from UNSAT. Models
+whose facts or shared helpers depend on the edited predicate are rejected by this
+adapter rather than silently evaluated against a different environment.
+Learner-only String literals outside the oracle's sampling universe are also
+reported as unsupported, rather than silently changing the sampling universe.
+
+`POST /api/behavior` accepts the same exercise/body/revision fields as feedback.
+It uses a separate single-worker slot, a cache bound to the exercise and exact
+draft, and a process timeout of at least 30 seconds (`max(30, --timeout)`).
+Canonical checks remain independent. Scores are bounded sample measurements,
+not probabilities of correctness or unrestricted equivalence proofs.
+
 ## GPT-6 Luna
 
 The server uses the [GPT-6 Luna model](https://developers.openai.com/api/docs/models/gpt-6-luna)
 through the [Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create).
-It sends a positive allowlist of completed pool-comparison counts, numeric components, operation kinds/costs,
-affected learner canonical fragments, action guidance, and permitted replacement
-operators. It sends no full learner module, oracle source, environment, target
-expression, or target-only name/constant. Detail is bounded to 32 operations and
-600 characters per field, with truncation reported. Responses use `store: false`. AI guidance is
-separate from the deterministic feedback and cannot change the reported metric.
+Guidance is attached to individual edits and examples, followed by a short learning
+summary. Each operation receives a novice-friendly explanation using the learner's
+raw predicate body, compact canonical form, and validated related-context locators.
+Each of the displayed instances (up to three in each of four categories) receives
+its own explanation using its public atoms, relations, truth category, and temporal
+states. Empty categories do not receive invented examples.
+
+Luna is instructed to explain concepts and suggest what to inspect, without giving
+a repaired predicate, hidden replacement expression, or complete repair route.
+Permitted replacement-operator hints remain available. The server sends a positive
+allowlist: it never sends the oracle body, correct-pool bodies, target expressions,
+full module/environment, solver commands, or private metadata. The model sees only
+the learner's code and public feedback. AI guidance cannot change distances,
+scores, category membership, or instance tuples.
+
+Responses use `store: false` and
+[strict structured output](https://developers.openai.com/api/docs/guides/structured-outputs).
+The server verifies that every operation and instance has exactly one description
+with the correct ID; missing, duplicated, or unexpected IDs are rejected. Each
+description is at most 360 characters; the summary is at most 700. Requests exceeding
+128 operations, 600 characters in an operation detail field, 64 KiB of canonical
+text, or 128 KiB of serialized context return
+an explicit unavailable result rather than silently omitting items. Obvious code
+solutions and fenced code are rejected; this is a bounded output check, not a proof
+about all possible AI wording.
+
+The browser requests explanations after the behavioral check completes. A
+`behaviorToken` binds descriptions to the exact cached examples, exercise, and
+draft. Expired snapshots require a fresh check. When behavior is unavailable,
+operation guidance still works and the summary acknowledges the missing evidence.
+Editing or switching exercises clears old guidance; all AI text is rendered as
+plain text. Deterministic results remain available if Luna is disabled or fails.
 
 Supply your own key once per deployment in a **private configuration file**.
 Copy `openai.example.json` to `openai.local.json` beside `luna.py` (inside
@@ -198,12 +274,9 @@ and closure snapshots. The archive ships only the checked, blank
 not encryption; server administrators can read it. Keep custom credential files
 outside the source tree or inside the ignored `secrets` directory.
 
-The end-to-end live check on September 25, 2026 succeeded: `/api/explain`
-computed a real repair trace and received a GPT-6 Luna explanation. An earlier
-request returned HTTP 429 `credit_balance_exhausted`; that transient account
-condition no longer blocked the later check. The UI handles quota failures while
-preserving canonical feedback. No different model is substituted.
-Run `python3 scripts/check_luna.py` to check current access with one redacted trace.
+The UI handles quota failures while preserving canonical feedback. No different
+model is substituted. Run `python3 scripts/check_luna.py` to check current access
+with one learner draft, its redacted trace, and its public behavioral examples.
 Live service availability and nondeterministic explanation content remain separate
 from the offline mechanical closure.
 

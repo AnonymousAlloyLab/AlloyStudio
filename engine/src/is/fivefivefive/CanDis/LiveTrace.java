@@ -330,13 +330,13 @@ public final class LiveTrace {
             }
             String replacement = target == null ? null : quantifierOperator(target);
             if (replacement != null && source.getQuantifier() != target.getQuantifier()) op.put("replacementOperator", replacement);
-            String action = kind.equals("insert") ? "Introduce one quantified binding; its variable and domain remain hidden."
-                    : kind.equals("delete") ? "Remove this quantified binding from the canonical prefix."
-                    : op.has("replacementOperator") ? "Change this binding's quantifier from " + op.getString("sourceOperator") + " to " + replacement + "."
-                    : "Revise this binding's domain, multiplicity, or disjointness; required terms remain hidden.";
+            String action = kind.equals("insert") ? "Check for a missing variable declaration; choose the variable and its set yourself."
+                    : kind.equals("delete") ? "Consider whether this variable declaration is needed."
+                    : op.has("replacementOperator") ? "Compare how " + op.getString("sourceOperator") + " and " + replacement + " affect this variable declaration."
+                    : "Review which set this variable ranges over, how many values it can hold, and whether variables must have different values.";
             op.put("action", action).put("description", action)
-                    .put("reason", "The aligned canonical binding tuple differs by one metric edit unit.")
-                    .put("nextStep", "Find the corresponding declaration in your predicate and revise it; normalization can move bindings.");
+                    .put("reason", "The comparison points to a difference in how a variable is introduced or used.")
+                    .put("nextStep", "Look for the matching declaration in your code. It may appear in a different place in the simplified form; try one change and check again.");
             output.put(op);
         }
     }
@@ -348,31 +348,31 @@ public final class LiveTrace {
         if (source != null) op.put("sourceTerm", shorten(renderSource(source)))
                 .put("sourceOperator", sourceOperator == null ? nodeKind : sourceOperator)
                 .put("sourceNodeKind", nodeKind).put("sourceRole", role);
-        else op.put("sourceTerm", "[no existing learner matrix in this phase]")
+        else op.put("sourceTerm", "[no matching part in your current expression]")
                 .put("sourceOperator", "none").put("sourceNodeKind", "structure").put("sourceRole", "insertion-anchor");
         String replacement = target == null ? null : operator(target);
         if (kind.equals("replace") && replacement != null && source.getOpcode() != target.getOpcode())
             op.put("replacementOperator", replacement);
         String action;
         if (kind.equals("insert")) action = source == null
-                ? "Add one node to a new canonical matrix; its required term remains hidden."
-                : "Add one node within this canonical expression; its required term remains hidden.";
-        else if (kind.equals("delete")) action = "Remove this " + (sourceOperator == null ? nodeKind : "“" + sourceOperator + "” operator") + " node from the canonical expression.";
-        else if (op.has("replacementOperator")) action = "Replace " + (sourceOperator == null ? "this " + nodeKind : "“" + sourceOperator + "”") + " with the “" + replacement + "” operator in this expression.";
+                ? "Check whether your predicate is missing a condition."
+                : "Check for a missing part in this expression.";
+        else if (kind.equals("delete")) action = "Consider removing this " + (sourceOperator == null ? "part of the expression" : "“" + sourceOperator + "” operator") + ".";
+        else if (op.has("replacementOperator")) action = "Consider the “" + replacement + "” operator in place of " + (sourceOperator == null ? "this part of your expression" : "“" + sourceOperator + "”") + ".";
         else action = switch (nodeKind) {
-            case "reference" -> "Use a different relation reference at this position; the required name remains hidden.";
-            case "variable" -> "Revise which bound variable this occurrence refers to; the required binding remains hidden.";
-            case "constant" -> "Change this constant; the required value remains hidden.";
-            case "call" -> "Change which predicate or function is called here; the required name remains hidden.";
-            default -> "Revise this canonical node; the required term remains hidden.";
+            case "reference" -> "Check which relation name belongs here.";
+            case "variable" -> "Check which declared variable you mean to use here.";
+            case "constant" -> "Check whether this constant has the value you need.";
+            case "call" -> "Check which predicate or function you want to call here.";
+            default -> "Review this part of your expression.";
         };
-        String reason = kind.equals("insert") ? "The optimal matrix alignment includes an inserted node at this learner-side context."
-                : kind.equals("delete") ? "The optimal matrix alignment removes this learner node."
-                : "The optimal matrix alignment changes this learner node's operator or identity.";
+        String reason = kind.equals("insert") ? "The comparison suggests that something is missing near this part of your expression."
+                : kind.equals("delete") ? "The comparison suggests that this part of your expression may not be needed."
+                : "The comparison suggests checking the operator, name, or value used here.";
         return op.put("action", action).put("description", action).put("reason", reason)
-                .put("nextStep", kind.equals("insert") ? "Review this expression for a missing operand or connective. Insertions may form one larger expression."
-                        : kind.equals("delete") ? "Repair or remove the affected subtree while preserving Alloy syntax; its nodes can account for several edit units."
-                        : "Find this expression or its normalized equivalent in your predicate, make one change, and compare again.");
+                .put("nextStep", kind.equals("insert") ? "Look for a missing value, relation, or operator. Several addition hints may belong to the same expression."
+                        : kind.equals("delete") ? "Review the highlighted part and what surrounds it. If you remove it, check that the remaining expression still compiles."
+                        : "Find the matching part of your code, consider one change, and check again. The simplified form may look different from what you typed.");
     }
 
     private static String renderSource(EGraphNode node) {

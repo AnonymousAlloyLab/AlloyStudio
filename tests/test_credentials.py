@@ -243,8 +243,10 @@ class DeploymentCredentialCacheTests(unittest.TestCase):
             seen = []
             def transport(request, timeout):
                 seen.append(request.get_header("Authorization"))
+                education = {"operations": [{"id": "operation-1", "description": "Review this edit."}],
+                             "instances": [], "summary": "Account response " + str(len(seen))}
                 return io.BytesIO(json.dumps({"status": "completed", "output": [
-                    {"type": "message", "content": [{"type": "output_text", "text": "Account response " + str(len(seen))}]}]}).encode())
+                    {"type": "message", "content": [{"type": "output_text", "text": json.dumps(education)}]}]}).encode())
             trace = {"distance": 1, "breakdown": {"temporal": 0, "quantifier": 0, "matrix": 1},
                      "operations": [{"kind": "replace", "component": "matrix", "cost": 1}]}
             with patch.object(luna, "BACKEND_ROOT", backend), patch.dict(os.environ, {"OPENAI_DISABLED": "0"}, clear=True):
@@ -258,7 +260,7 @@ class DeploymentCredentialCacheTests(unittest.TestCase):
                 repeated = client.explain(trace)
             self.assertEqual(first["status"], "ok")
             self.assertEqual(second["status"], "ok")
-            self.assertNotEqual(first["text"], second["text"])
+            self.assertNotEqual(first["summary"], second["summary"])
             self.assertEqual(repeated, first)
             self.assertEqual(seen, ["Bearer " + KEY_A, "Bearer " + KEY_B])
             self.assertNotIn(KEY_A, repr(client.cache))
@@ -302,7 +304,7 @@ class CredentialHTTPTests(unittest.TestCase):
              patch.object(self.app.explainer, "explain", return_value={"status": "disabled"}) as explain:
             with urlopen(request, timeout=5) as response:
                 body = response.read().decode()
-        explain.assert_called_once_with(feedback)
+        explain.assert_called_once_with(feedback, student_body="some Node", behavior=None)
         self.assertNotIn(KEY_A, body)
 
 

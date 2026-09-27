@@ -118,6 +118,28 @@ class AdversarialLunaTests(unittest.TestCase):
                 client.slots.release()
                 client.slots.release()
 
+    def test_unbound_or_incomplete_structured_descriptions_are_rejected(self):
+        valid = {'operations': [{'id': 'operation-1', 'description': 'Review the multiplicity.'}],
+                 'instances': [], 'summary': 'One operation needs attention.'}
+        malformed = [None, [], 'PRIVATE_SENTINEL', {}, dict(valid, operations=[]),
+                     dict(valid, operations=valid['operations'] * 2),
+                     dict(valid, operations=[{'id': 'operation-2', 'description': 'PRIVATE_SENTINEL'}]),
+                     dict(valid, operations=[{'id': 'operation-1', 'description': ''}]),
+                     dict(valid, instances=[{'id': 'both-1', 'description': 'PRIVATE_SENTINEL'}]),
+                     dict(valid, privateTarget='PRIVATE_SENTINEL')]
+        for index, value in enumerate(malformed):
+            with self.subTest(fixture=index):
+                def transport(*args, **kwargs):
+                    return io.BytesIO(json.dumps({'status': 'completed', 'output': [
+                        {'type': 'message', 'content': [{'type': 'output_text', 'text': json.dumps(value)}]}]}).encode())
+                client = luna.Explainer(transport=transport, key_reader=lambda: 'UNIT_TEST_KEY')
+                result = client.explain(TRACE)
+                self.assertEqual(result['status'], 'unavailable')
+                self.assertNotIn('PRIVATE_SENTINEL', json.dumps(result))
+                self.assertNotIn('operations', result)
+                self.assertNotIn('instances', result)
+                self.assertEqual(len(client.cache), 0)
+
     def test_invalid_utf8_key_file_is_unavailable(self):
         with tempfile.TemporaryDirectory() as directory:
             key_path = Path(directory) / 'test.key'

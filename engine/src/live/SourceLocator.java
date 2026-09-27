@@ -53,9 +53,9 @@ final class SourceLocator {
             JSONObject operation = operations.getJSONObject(i);
             JSONObject location;
             try {
-                location = locator == null ? unavailable("Learner source locations are unavailable.") : locator.locate(operation);
+                location = locator == null ? unavailable("A location in your code is unavailable for this hint.") : locator.locate(operation);
             } catch (RuntimeException ignored) {
-                location = unavailable("Learner source locations are unavailable.");
+                location = unavailable("A location in your code is unavailable for this hint.");
             }
             operation.put("sourceLocation", location);
         }
@@ -64,11 +64,11 @@ final class SourceLocator {
     private JSONObject locate(JSONObject operation) {
         String term = operation.optString("sourceTerm", "");
         if (term.isBlank() || term.endsWith("..."))
-            return unavailable("This normalized operation has no complete learner expression to locate.");
+            return unavailable("This hint has no complete expression to highlight in your code.");
         Map<List<String>, List<Range>> index = operation.optString("component").equals("quantifier") ? bindings : expressions;
         List<Range> candidates = index.get(tokens(term));
         if (candidates == null || candidates.isEmpty())
-            return unavailable("Normalization has no reliable expression match in the learner predicate.");
+            return unavailable("The simplified expression could not be matched reliably to your code.");
 
         // Parentheses and the predicate's brace wrapper can have the same token
         // sequence as a child. Keep the smallest parsed expression for each
@@ -85,16 +85,16 @@ final class SourceLocator {
             if (!enclosesSmaller && !minimal.contains(candidate)) minimal.add(candidate);
         }
         if (minimal.size() > MAX_CANDIDATES)
-            return unavailable("Too many matching learner expressions to identify a useful source location.");
+            return unavailable("Too many parts of your code look alike to choose a useful highlight.");
         minimal.sort(Comparator.comparingInt(Range::start).thenComparingInt(Range::end));
         JSONArray ranges = new JSONArray();
         for (Range range : minimal) ranges.put(new JSONObject().put("start", range.start).put("end", range.end));
         boolean ambiguous = minimal.size() > 1;
         String reason = ambiguous
-                ? "Several learner expressions match this normalized term; no unique source occurrence is known."
+                ? "Several parts of your code match this hint. Inspect each highlighted possibility."
                 : operation.optString("sourceRole").equals("insertion-anchor")
-                ? "Related learner context for an insertion, not an exact insertion point."
-                : "Matching learner expression; normalization makes this related context, not a verified source edit.";
+                ? "Inspect this area for a missing part; the highlight does not pinpoint where to add it."
+                : "This highlight shows a related part of your code to inspect. The change you need may look different from the hint.";
         return metadata(ambiguous ? "ambiguous" : "located", "related", reason).put("ranges", ranges);
     }
 

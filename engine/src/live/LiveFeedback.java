@@ -168,8 +168,8 @@ public final class LiveFeedback {
                     operations.put(new JSONObject().put("kind", "component-edit")
                             .put("component", entry.getKey()).put("path", entry.getKey())
                             .put("cost", entry.getValue()).put("aggregate", true)
-                            .put("description", "This component needs " + entry.getValue()
-                                    + " edit units; the framework does not supply a matching operation trace."));
+                            .put("description", "This part of the comparison adds " + entry.getValue()
+                                    + " to the distance score, but individual edit hints are unavailable."));
                 }
             }
             SourceLocator.attach(studentSource, learnerModule, predicate, operations);
@@ -194,11 +194,10 @@ public final class LiveFeedback {
                             .put("matrixTraceAlgorithm", "ordered-dp-unordered-assignment-v1")
                             .put("quantifierCostVerified", reconstructed.quantifierCostVerified)
                             .put("certifiedOptimalScript", false).put("components", components)
-                            .put("note", "Learner fragments and paths refer to normalized canonical structure. "
-                                    + "Source locations identify related learner expressions when available, not verified source edits. "
-                                    + "Matrix operations privately replay the metric view at its optimal cost. "
-                                    + "Replacement operators are shown; reference expressions, names and values remain hidden. "
-                                    + "These unit operations are not an executable source patch."))
+                            .put("note", "These hints compare simplified versions of the predicates. "
+                                    + "Highlights show related parts of your code to inspect; the change you need may look different. "
+                                    + "Operator suggestions are shown, while solution expressions, names and values stay hidden. "
+                                    + "Use the hints to guide your own edits and check each change."))
                     .put("diagnostics", new JSONArray());
             if (poolMode) response.put("comparison", new JSONObject()
                     .put("strategy", "nearest-known-correct").put("poolSize", referenceCount)
@@ -251,11 +250,14 @@ public final class LiveFeedback {
             }
             Matcher indices = CHILD_INDEX.matcher(originalPath);
             while (indices.find()) path += indices.group();
-            String unit = component.equals("quantifier") ? "binding" : "node";
-            String verb = kind.equals("modify") || kind.equals("replace") ? "Update" : kind.equals("insert") ? "Insert" : "Delete";
+            String part = component.equals("quantifier") ? "a variable declaration"
+                    : component.equals("temporal") ? "a condition about when something holds"
+                    : "part of an expression";
+            String verb = kind.equals("modify") || kind.equals("replace") ? "Consider changing" : kind.equals("insert") ? "Check for a missing" : "Consider removing";
+            if (kind.equals("insert") && part.startsWith("a ")) part = part.substring(2);
             result.put(new JSONObject().put("kind", kind).put("component", component)
                     .put("path", path).put("cost", 1).put("aggregate", false)
-                    .put("description", verb + " a " + component + " " + unit + "."));
+                    .put("description", verb + " " + part + "."));
         }
         return result;
     }

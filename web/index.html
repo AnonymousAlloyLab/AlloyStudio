@@ -31,7 +31,7 @@
         <section class="workspace-heading" aria-labelledby="exercise-title">
           <div class="breadcrumbs"><span>Workspace</span><span aria-hidden="true">/</span><span id="exercise-group">Predicate exercises</span></div>
           <div class="title-row"><div><div class="eyebrow">WRITE · COMPARE · REFINE</div><h1 id="exercise-title">Your next idea starts here.</h1></div><button id="download-button" class="button secondary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"></path></svg>Download .als</button></div>
-          <p id="exercise-description" class="exercise-description">Choose a predicate and explore its canonical structure with live feedback.</p>
+          <p id="exercise-description" class="exercise-description">Choose a predicate, write your answer, and use the feedback to improve it.</p>
         </section>
         <div class="workspace-grid">
           <div class="editing-column">
@@ -48,7 +48,7 @@
             </section>
             <details id="canonical-panel" class="canonical-details canonical-editor" open>
               <summary>Your canonical form<span class="chevron" aria-hidden="true">⌄</span></summary>
-              <p class="canonical-caption">The checked version of your predicate. Select an edit step to see its related fragments.</p>
+              <p class="canonical-caption">The checker rewrites your predicate into this standard form for comparison. Select an edit to highlight the related parts.</p>
               <p id="canonical-location-status" class="canonical-location-status" role="status" aria-live="polite" hidden></p>
               <div id="canonical-content"><p class="canonical-empty">Check your predicate to see its canonical form.</p></div>
             </details>
@@ -63,13 +63,17 @@
           <div class="feedback-column">
             <section class="feedback-card" aria-labelledby="feedback-heading">
               <div class="light-panel-toolbar"><div class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 5-5 4 3 7-9M16 6h4v4"></path></svg><h2 id="feedback-heading">Structural feedback</h2></div><span id="feedback-state" class="feedback-state">Waiting</span></div>
-              <div id="feedback-result" aria-live="polite" aria-atomic="false"><div class="feedback-empty"><div class="empty-illustration" aria-hidden="true"><span>{</span><span class="empty-orbit">↗</span><span>}</span></div><h3>A little feedback goes a long way.</h3><p>Write your predicate to see its canonical distance and the edits that shape it.</p></div></div>
-              <div class="oracle-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2"></path></svg><span>Correct predicates, including the oracle, stay private. Feedback shows your fragments, edit types, and operator names.</span></div>
+              <div id="feedback-result" aria-live="polite" aria-atomic="false"><div class="feedback-empty"><div class="empty-illustration" aria-hidden="true"><span>{</span><span class="empty-orbit">↗</span><span>}</span></div><h3>A little feedback goes a long way.</h3><p>Write your predicate to see how closely its structure matches a correct answer and which parts to review.</p></div></div>
+              <div class="oracle-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2"></path></svg><span>Correct answers, including the oracle, stay private. Feedback shows parts of your code and hints about which operators to review.</span></div>
             </section>
             <section class="history-card" aria-labelledby="history-heading"><div class="history-heading"><h2 id="history-heading">Your progress</h2><span id="history-count">0 checks</span></div><div id="history-list"><p class="history-empty">Each successful check is a new point on your path.</p></div></section>
-            <div class="method-note"><span class="method-symbol" aria-hidden="true">i</span><p>Distance is the minimum across the oracle and compatible corpus-labelled correct predicates. Zero is a canonical match under ACGN’s rewrite rules, not a proof of full semantic equivalence.</p></div>
+            <div class="method-note"><span class="method-symbol" aria-hidden="true">i</span><p>The distance uses the closest match among the saved correct answers, including the oracle. Zero means their canonical forms match. It does not prove that they behave the same in every case.</p></div>
           </div>
         </div>
+        <section id="behavior-card" class="behavior-card" aria-labelledby="behavior-heading">
+          <div class="light-panel-toolbar"><div class="panel-heading"><h2 id="behavior-heading">Behavioral similarity score</h2></div><span id="behavior-state" class="feedback-state" data-state="waiting">Not checked</span></div>
+          <div id="behavior-result" aria-live="polite" aria-atomic="false"><p class="behavior-message">Check your predicate to compare its behavior with the oracle.</p></div>
+        </section>
         <footer class="workspace-footer"><span>Small edits. Clearer models.</span><span>Alloy + ACGN<span aria-hidden="true"> ↗</span></span></footer>
       </main>
     </div>

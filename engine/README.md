@@ -54,7 +54,33 @@ mapping sets. It compacts whitespace outside quoted literals in canonical displa
 strings and remaps canonical ranges before returning them. These presentation
 transformations do not change the canonical metric. The browser binds locations
 to the checked exercise, revision, and exact draft, and clears them on edits.
-Source and canonical locator data are excluded from the Luna prompt allowlist.
+The educational Luna prompt can include learner-only source and canonical locator
+data after validating spans against the exact learner text. Private target data
+remains excluded.
+
+`live.BehaviorFeedback` is a separate JSON worker for `POST /api/behavior`.
+Its private input contains `studentSource`, `studentBody`, `oracleSource`, and
+`predicate`. Both modules are checked independently; their environments must
+match after removing the selected body. Recursive predicates and facts/shared
+helpers depending on that predicate are rejected. The learner expression is
+then evaluated in the oracle module with shared signature identities.
+
+The worker uses ACGN's scope/pool constants and Rewarder product formula, with
+all reachable model facts conjoined to every sampling and category query.
+This is an explicit correction to upstream fact omission. Up to 100 instances
+per oracle polarity determine the score; perfect sampled classification triggers
+the original one-per-satisfiable-direction denominator correction. Each of the
+four oracle/learner truth combinations is separately solved for up to three
+examples. The output contains rounded score, sample counts, bounds, category
+statuses, and atom/relation tuples for each temporal state, with enumeration and
+truncation flags. No original commands, source, XML, or skolems are serialized;
+String atoms use consistent opaque identifiers within each instance.
+
+The HTTP boundary revalidates counts, rounded score arithmetic, category
+identities and statuses, witness shapes, and limits, then projects an explicit
+allowlist. A missing oracle polarity leaves the score unavailable; it does not
+invent a perfect score. The browser treats these results independently from
+canonical feedback and discards stale draft responses.
 
 `LiveTrace` reconstructs the matrix metric's actual optimal alignment using
 ordered child dynamic programming and Hungarian assignment for unordered

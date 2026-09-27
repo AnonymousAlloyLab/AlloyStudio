@@ -75,7 +75,8 @@ class WindowsSourceBuildTests(unittest.TestCase):
             [self.javac, '-encoding', 'UTF-8', '--release', '17', '-Xprefer:source',
              '-cp', classpath, '-sourcepath', sourcepath, '-d', str(output),
              str(self.source / 'engine/src/live/LiveFeedback.java'),
-             str(self.source / 'engine/src/live/EngineSelfTest.java')],
+             str(self.source / 'engine/src/live/EngineSelfTest.java'),
+             str(self.source / 'engine/src/live/BehaviorFeedback.java')],
             cwd=self.unrelated, env=self.environment(), capture_output=True,
             encoding='utf-8', timeout=90, check=False,
         )

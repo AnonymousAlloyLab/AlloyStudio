@@ -16,7 +16,7 @@ JAR_FILES = (
     'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
 )
 REQUIRED_CLASSES = (
-    'live/LiveFeedback.class', 'live/EngineSelfTest.class',
+    'live/LiveFeedback.class', 'live/EngineSelfTest.class', 'live/BehaviorFeedback.class',
     'live/SourceLocator.class', 'live/SourceLocator$Range.class', 'live/SourceLocator$1.class',
     'live/CanonicalLocator.class', 'live/CanonicalLocator$Token.class', 'live/CanonicalLocator$Group.class',
     'is/fivefivefive/CanDis/LiveTrace.class',

@@ -154,7 +154,7 @@ class CanonicalProjectionTests(unittest.TestCase):
         locator = result['operations'][0]['canonicalLocation']
         self.assertEqual(locator['precision'], 'form')
         self.assertEqual(locator['ranges'][0]['text'], 'root := (NO A)')
-        self.assertIn('context', locator['reason'])
+        self.assertIn('a smaller matching part could not be found', locator['reason'])
 
     def test_invalid_canonical_mapping_fails_closed(self):
         form = '("🌙")'

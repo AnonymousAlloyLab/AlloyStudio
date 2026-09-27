@@ -40,7 +40,8 @@ host was changed or claimed as verified during development.
 
 ## 1. Build and transfer the package
 
-From a fresh source checkout, build the Java engine and create the distribution.
+From a fresh source checkout, build the Java engine and create the distribution
+with one command from the checkout root.
 The repository includes `exercises/catalogue.json` and
 `exercises/correct-pools.json`, so no original ACGN checkout or existing IIS ZIP
 is required. Packaging validates the correct-pool source witnesses. See
@@ -48,24 +49,48 @@ is required. Packaging validates the correct-pool source witnesses. See
 
 ```bash
 ./scripts/build.sh
-python3 scripts/package_iis.py
 ```
 
 Git Bash, MSYS2 and Cygwin on Windows can use the same `./scripts/build.sh`
 command. It detects the Windows shell, converts paths with `cygpath`, and
-delegates to the native PowerShell builder. Update `scripts/build-windows.sh`
-along with both Bash entry points when updating an existing checkout. The
+delegates to the native PowerShell builder. Update the complete checkout,
+including the Bash/PowerShell entry points, `scripts/build-windows.sh`,
+`scripts/build_engine.py`, and `scripts/package_iis.py`. The
 Windows PowerShell source-build equivalent is:
 
 ```powershell
 powershell -NoProfile -File scripts/build.ps1 -RequireNode
-python scripts/package_iis.py
 ```
 
 The release build uses a JDK 17 or newer, Python 3.10 or newer, and Node 20 or
-newer for the JavaScript syntax check. Optional `-JavaCompiler` and `-Python`
-arguments accept absolute executable paths. The IIS runtime needs no Node, npm,
-bash, compiler, pip packages, or original ACGN checkout. Use a machine-wide
+newer for the JavaScript syntax check. Each command refreshes
+`build/iis/alloy-studio-iis.zip` and its `.zip.sha256` sidecar after successful
+checks. Optional `-JavaCompiler` and `-Python` arguments accept absolute
+executable paths and are forwarded through compilation and packaging.
+`-OutputDirectory` selects the compiled-class directory. `-EngineOnly`
+compiles without creating or updating a ZIP; direct `./engine/build.sh` does
+the same and defaults to the project-root `build/engine/classes` directory.
+Custom class outputs must be dedicated directories containing only compiled
+classes; protected project directories and unrelated files are refused.
+
+The portal builder validates its inputs and frontend before packaging fresh
+Java classes. The shared compiler is `scripts/build_engine.py`. A failure in
+compilation, frontend validation, or package preflight stops the command; it
+does not report that the ZIP was refreshed. An existing ZIP and checksum are
+preserved as the **older successful build**. Transfer a package only after a
+successful build.
+
+The standalone `python scripts/package_iis.py` command also compiles Java from
+source before packaging, so it now requires a JDK. It accepts `--javac` for a
+custom compiler, `--classes-output` for its class output, `--source` for an
+alternate checkout, and `--output` for a custom private ZIP path. Use `python3`
+where that names the installed Python 3.10+ interpreter. This standalone
+command does not run the Node syntax check; use the portal build command above
+for that check.
+
+These build tools stay in the source checkout and are excluded from the runtime
+ZIP. The IIS runtime still needs no Node, npm, Bash, JDK/compiler, pip packages,
+or original ACGN checkout. Use a machine-wide
 64-bit Python installation and Java 17+ runtime readable by LOCAL SERVICE; avoid
 the Microsoft Store Python alias or executables in a user's private profile.
 

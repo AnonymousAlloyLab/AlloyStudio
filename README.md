@@ -284,16 +284,54 @@ from the offline mechanical closure.
 
 Build a Windows deployment archive directly from a fresh source checkout. The
 tracked catalogue and correct-predicate pools contain all required exercise
-data; no original ACGN checkout or existing IIS archive is needed:
+data; no original ACGN checkout or existing IIS archive is needed. From the
+checkout root on Windows, one command builds and packages the portal:
+
+```powershell
+powershell -NoProfile -File scripts/build.ps1 -RequireNode
+```
+
+On Linux, macOS, or Windows Git Bash, use:
 
 ```bash
 ./scripts/build.sh
-python3 scripts/package_iis.py
 ```
 
-On Windows PowerShell, use `.\scripts\build.ps1`. If a bundled data file is
-missing or damaged, preserve any intentional local data edits, then restore
-the matching pair from Git:
+Both portal build commands refresh `build/iis/alloy-studio-iis.zip` and
+`build/iis/alloy-studio-iis.zip.sha256` after successful checks. A separate
+packaging command is no longer required. The build needs Python 3.10+, a JDK
+17+ with `javac`, and Node for the frontend syntax check (`-RequireNode` makes
+that check mandatory in PowerShell).
+
+The portal build validates its inputs and frontend, then packages freshly
+compiled Java classes. Compilation is shared through `scripts/build_engine.py`.
+If compilation, frontend validation, or package preflight fails, the command
+fails without reporting an updated package. Any existing ZIP and checksum
+remain the **older successful build**; they do not contain the failed changes.
+
+For packaging alone, `python3 scripts/package_iis.py` also compiles Java from
+source before creating the archive, so it needs a JDK and does not reuse old
+classes. Node syntax checking belongs to the portal build commands above.
+The packaging CLI accepts `--javac` for a compiler, `--classes-output` for the
+compiled-class directory, `--source` for another checkout, and `--output` for
+a different private ZIP destination. For example:
+
+```bash
+python3 scripts/package_iis.py --source /path/to/checkout \
+  --javac /path/to/jdk/bin/javac --classes-output /path/to/classes \
+  --output /private/alloy-studio-iis.zip
+```
+
+PowerShell's `-JavaCompiler` and `-Python` selections are forwarded through
+compilation and packaging; `-OutputDirectory` selects the compiled-class
+directory. Choose a dedicated directory containing only compiled classes;
+protected project directories and directories with unrelated files are refused.
+Use `-EngineOnly` to compile without updating the archive. Direct
+`./engine/build.sh` also compiles only the engine, defaulting to the same
+`build/engine/classes` directory under the project root.
+
+If a bundled data file is missing or damaged, preserve any intentional local
+data edits, then restore the matching pair from Git:
 
 ```bash
 git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
@@ -341,7 +379,9 @@ IIS serves static assets and proxies `/api` to `127.0.0.1:8080` using URL Rewrit
 and Application Request Routing. A Windows Scheduled Task runs the Python
 backend as LOCAL SERVICE at startup and restarts it after a failure. Windows
 needs Python 3.10+ and Java 17+; Node and a JDK are unnecessary for running the
-precompiled package. Rebuilding from source on Windows uses `scripts/build.ps1`.
+precompiled package. Build scripts, including `scripts/build_engine.py`, stay
+in the source checkout and are not included in the runtime ZIP. Rebuilding
+from source on Windows uses `scripts/build.ps1`.
 The frontend supports both a site root and a virtual application such as `/alloy/`.
 After installation, use `deploy/iis/Start-AlloyStudio.ps1 -PublicUrl https://alloy.example.org/`
 in an elevated Windows PowerShell session to start IIS and the backend together.
@@ -361,7 +401,7 @@ For a Windows source build, run from the checkout root:
 
 ```powershell
 python .\runtime_dependencies.py --dependencies-only
-.\scripts\build.ps1
+powershell -NoProfile -File scripts/build.ps1 -RequireNode
 python .\runtime_dependencies.py --java java
 ```
 
@@ -385,8 +425,9 @@ Both Bash build entry points detect those Windows shells and invoke
 `cygpath`, disables a second MSYS argument conversion, and lets native PowerShell
 construct Windows paths and semicolon-separated Java classpaths. The first line
 is `Windows Bash detected: building through scripts/build.ps1 with native Windows
-dependency paths.` If that line is absent on Git Bash, update **both** Bash entry
-points, `scripts/build-windows.sh`, and `scripts/build.ps1` from this checkout.
+dependency paths.` If that line is absent on Git Bash, update the complete
+checkout, including both Bash entry points, `scripts/build-windows.sh`,
+`scripts/build.ps1`, `scripts/build_engine.py`, and `scripts/package_iis.py`.
 Linux and WSL using Linux Java keep the POSIX build path. A custom output path
 remains relative to the project root for `scripts/build.sh`, and to the caller's
 directory for `engine/build.sh`.

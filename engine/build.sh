@@ -2,16 +2,15 @@
 set -euo pipefail
 ENGINE_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$ENGINE_ROOT/.." && pwd)"
-ACGN_ROOT="${ACGN_ROOT:-$PROJECT_ROOT/vendor/acgn}"
-OUTPUT_DIR="${1:-$ENGINE_ROOT/build/classes}"
+OUTPUT_DIR="${1:-$PROJECT_ROOT/build/engine/classes}"
 case "$(uname -s)" in
   MSYS*|MINGW*|CYGWIN*)
     exec "$PROJECT_ROOT/scripts/build-windows.sh" engine "$OUTPUT_DIR"
     ;;
 esac
-mkdir -p -- "$OUTPUT_DIR"
-javac -encoding UTF-8 --release 17 -Xprefer:source -cp "$ACGN_ROOT/lib/*" \
-  -sourcepath "$ENGINE_ROOT/src:$ACGN_ROOT/src" -d "$OUTPUT_DIR" \
-  "$ENGINE_ROOT/src/live/LiveFeedback.java" "$ENGINE_ROOT/src/live/EngineSelfTest.java" \
-  "$ENGINE_ROOT/src/live/BehaviorFeedback.java"
-printf 'Built engine classes in %s\n' "$OUTPUT_DIR"
+# Keep explicit relative output paths relative to the caller, as before.
+case "$OUTPUT_DIR" in
+  /*) ;;
+  *) OUTPUT_DIR="$PWD/$OUTPUT_DIR" ;;
+esac
+python3 -E -s "$PROJECT_ROOT/scripts/build_engine.py" --root "$PROJECT_ROOT" --output "$OUTPUT_DIR"

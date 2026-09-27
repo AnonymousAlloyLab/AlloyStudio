@@ -122,11 +122,12 @@ class PrivateDataImportTests(unittest.TestCase):
     def test_linux_fresh_build_imports_original_corpus_and_compiles_vendored_dependencies(self):
         self.source = Path(self.temp.name) / 'original corpus with spaces'
         self.write_corpus()
-        for directory in ('scripts', 'engine/src', 'vendor/acgn', 'web'):
+        for directory in ('scripts', 'engine/src', 'vendor/acgn', 'web', 'deploy/iis'):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__'))
         shutil.copy2(ROOT / 'engine/build.sh', self.root / 'engine/build.sh')
-        shutil.copy2(ROOT / 'server.py', self.root / 'server.py')
+        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'openai.example.json', 'LICENSE'):
+            shutil.copy2(ROOT / name, self.root / name)
         shutil.copy2(ROOT / 'package.json', self.root / 'package.json')
         allowed = ('PATH', 'SYSTEMROOT', 'WINDIR', 'TMP', 'TEMP', 'TMPDIR', 'HOME',
                    'USERPROFILE', 'LANG', 'LC_ALL', 'TZ')

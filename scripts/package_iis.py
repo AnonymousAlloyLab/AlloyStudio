@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the private, reproducible IIS distribution from an explicit allowlist.
 
-Run scripts/build.sh (or scripts/build.ps1 on Windows) first. The archive is an
+The command line rebuilds the Java engine before packaging. The archive is an
 administrator deployment artifact: only its wwwroot directory is public.
 """
 from __future__ import annotations
@@ -82,7 +82,7 @@ def parse_json(data: bytes, label: str) -> dict:
     return result
 
 
-def collect_files(root: Path) -> dict[str, bytes]:
+def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, bytes]:
     root = root.resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
     for name in DEPLOY_FILES:
@@ -150,15 +150,22 @@ def collect_files(root: Path) -> dict[str, bytes]:
         entries[f'backend/vendor/acgn/{name}'] = data
     entries['backend/vendor/acgn/snapshot.json'] = snapshot_bytes
 
-    classes_root = root / 'build/engine/classes'
+    if classes_root is None:
+        classes_root = root / 'build/engine/classes'
+        class_input_root, class_prefix = root, 'build/engine/classes/'
+    else:
+        classes_root = Path(classes_root).absolute()
+        if classes_root.is_symlink():
+            raise PackageError('Symlink class directory is not allowed.')
+        class_input_root, class_prefix = classes_root, ''
     for name in REQUIRED_CLASSES:
-        read_source(root, f'build/engine/classes/{name}')
+        read_source(class_input_root, class_prefix + name)
     for path in sorted(classes_root.rglob('*.class')):
-        relative = path.relative_to(root).as_posix()
-        data = read_source(root, relative)
+        relative = path.relative_to(classes_root).as_posix()
+        data = read_source(class_input_root, class_prefix + relative)
         if len(data) < 8 or data[:4] != b'\xca\xfe\xba\xbe' or not (45 <= struct.unpack('>H', data[6:8])[0] <= 61):
             raise PackageError(f'Expected a Java 17 compatible compiled class: {relative}')
-        entries[f'backend/{relative}'] = data
+        entries[f'backend/build/engine/classes/{relative}'] = data
 
     manifest = {
         'schemaVersion': 1,
@@ -188,8 +195,8 @@ def atomic_private_write(path: Path, data: bytes) -> None:
         temporary_path.unlink(missing_ok=True)
 
 
-def build_package(root: Path, output: Path) -> dict:
-    """Write an atomic ZIP and checksum, returning only non-secret metadata."""
+def build_package(root: Path, output: Path, *, classes_root: Path | None = None) -> dict:
+    """Package a prepared class tree atomically; the CLI compiles it first."""
     root = root.resolve(strict=True)
     output = output.absolute()
     if output.suffix.lower() != '.zip':
@@ -197,7 +204,7 @@ def build_package(root: Path, output: Path) -> dict:
     for public in (root / 'web', root / 'wwwroot'):
         if output.resolve().is_relative_to(public.resolve()):
             raise PackageError('The private deployment archive must be outside the public directory.')
-    entries = collect_files(root)
+    entries = collect_files(root, classes_root=classes_root)
     output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     descriptor, temporary = tempfile.mkstemp(prefix=f'.{output.name}.', dir=output.parent)
     temporary_path = Path(temporary)
@@ -212,8 +219,9 @@ def build_package(root: Path, output: Path) -> dict:
                     info.external_attr = (stat.S_IFREG | 0o600) << 16
                     archive.writestr(info, data)
         checksum = digest(temporary_path.read_bytes())
+        checksum_bytes = f'{checksum}  {output.name}\n'.encode('utf-8')
         os.replace(temporary_path, output)
-        atomic_private_write(output.with_suffix('.zip.sha256'), f'{checksum}  {output.name}\n'.encode('ascii'))
+        atomic_private_write(output.with_suffix('.zip.sha256'), checksum_bytes)
     finally:
         temporary_path.unlink(missing_ok=True)
     return {'archive': str(output), 'sha256': checksum, 'files': len(entries),
@@ -224,11 +232,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=ROOT, help='Project source root (defaults to this checkout).')
     parser.add_argument('--output', type=Path, help='Private ZIP destination (default: build/iis/alloy-studio-iis.zip).')
+    parser.add_argument('--javac', default='javac', help='JDK 17+ compiler executable used for the fresh engine build.')
+    parser.add_argument('--classes-output', type=Path,
+                        help='Compiled class directory; relative paths start at --source (default: build/engine/classes).')
     args = parser.parse_args()
+    from scripts.build_engine import BuildError, compile_engine
     try:
-        result = build_package(args.source, args.output or args.source / 'build/iis/alloy-studio-iis.zip')
-    except (OSError, PackageError) as exc:
-        parser.exit(1, f'Package refused: {exc}\n')
+        classes = compile_engine(args.source, output=args.classes_output, compiler=args.javac)
+        result = build_package(args.source, args.output or args.source / 'build/iis/alloy-studio-iis.zip',
+                               classes_root=classes)
+    except (OSError, PackageError, BuildError) as exc:
+        parser.exit(1, f'Package refused: {exc} The previous archive, if any, has not been refreshed.\n')
     print(json.dumps(result, sort_keys=True))
     return 0
 

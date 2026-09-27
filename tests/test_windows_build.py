@@ -1,7 +1,7 @@
 """Finite source-build portability checks; native Windows execution is separate.
 
 The offline suite uses the real JDK with the dependency-only preflight and the
-same explicit compiler inputs as build.ps1. PowerShell's wiring is checked here;
+same clean compiler helper as build.ps1. PowerShell's wiring is checked here;
 an actual PowerShell invocation is also run separately when that tool is present.
 """
 import json
@@ -31,6 +31,8 @@ class WindowsSourceBuildTests(unittest.TestCase):
         for directory in ('engine/src', 'vendor/acgn'):
             shutil.copytree(ROOT / directory, cls.source / directory)
         shutil.copy2(ROOT / 'runtime_dependencies.py', cls.source / 'runtime_dependencies.py')
+        (cls.source / 'scripts').mkdir()
+        shutil.copy2(ROOT / 'scripts/build_engine.py', cls.source / 'scripts/build_engine.py')
         cls.unrelated = cls.base / 'unrelated working directory'
         cls.unrelated.mkdir()
         cls.javac = shutil.which('javac')
@@ -68,15 +70,9 @@ class WindowsSourceBuildTests(unittest.TestCase):
         classpath = os.pathsep.join(map(str, dependency_paths))
         self.assertNotIn('*', classpath)
         self.assertTrue(all(path.is_file() for path in dependency_paths))
-        output.mkdir()
-        sourcepath = os.pathsep.join(str(self.source / directory)
-                                    for directory in ('engine/src', 'vendor/acgn/src'))
         compiled = subprocess.run(
-            [self.javac, '-encoding', 'UTF-8', '--release', '17', '-Xprefer:source',
-             '-cp', classpath, '-sourcepath', sourcepath, '-d', str(output),
-             str(self.source / 'engine/src/live/LiveFeedback.java'),
-             str(self.source / 'engine/src/live/EngineSelfTest.java'),
-             str(self.source / 'engine/src/live/BehaviorFeedback.java')],
+            [sys.executable, '-I', str(self.source / 'scripts/build_engine.py'),
+             '--root', str(self.source), '--javac', self.javac, '--output', str(output)],
             cwd=self.unrelated, env=self.environment(), capture_output=True,
             encoding='utf-8', timeout=90, check=False,
         )
@@ -106,35 +102,55 @@ class WindowsSourceBuildTests(unittest.TestCase):
                 finally:
                     displaced.rename(path)
 
-    def test_powershell_builder_wires_fail_closed_preflight_before_explicit_classpath(self):
+    def test_powershell_portal_build_validates_then_delegates_once_to_fresh_packager(self):
         source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
         preflight = source.index('--dependencies-only')
-        compilation = source.index('& $JavaCompiler @compilerArguments')
-        self.assertLess(preflight, compilation)
-        between = source[preflight:compilation]
+        package = source.index("'--classes-output'")
+        self.assertLess(preflight, package)
+        # Resolve a caller-relative JDK executable before Python compilation
+        # changes its working directory to the project root.
+        resolution = re.search(
+            r'\$JavaCompiler\s*=\s*\(Get-Command\s+\$JavaCompiler\s+'
+            r'-CommandType\s+Application\s+-ErrorAction\s+Stop\s*\|\s*'
+            r'Select-Object\s+-First\s+1\)\.Source', source)
+        self.assertIsNotNone(resolution)
+        self.assertLess(resolution.start(), source.index('scripts\\build_engine.py'))
+        self.assertLess(resolution.start(), package)
+        between = source[preflight:package]
         self.assertIn('$dependencyExit = $LASTEXITCODE', between)
         self.assertRegex(between, r'\$dependencyExit\s+-ne\s+0')
+        self.assertIn('ConvertFrom-Json', between)
         self.assertIn('throw', between)
-        self.assertIn('ConvertFrom-Json', source[:compilation])
-        self.assertRegex(source[:compilation], r'\.dependencies\b')
-        self.assertIn('[IO.Path]::PathSeparator', between)
+        self.assertLess(source.index("'--check'"), package)
+        self.assertLess(source.index('$pythonCheck'), package)
+        self.assertIn('scripts\\package_iis.py', source)
+        self.assertRegex(source, r"'--source'\s+\$projectRoot")
+        self.assertRegex(source, r"'--javac'\s+\$JavaCompiler")
+        self.assertRegex(source, r"'--classes-output'\s+\$OutputDirectory")
+        self.assertNotIn('& $JavaCompiler', source)
+        self.assertNotIn('@compilerArguments', source)
+        self.assertRegex(source[package:], r'\$LASTEXITCODE\s+-ne\s+0')
+        self.assertIn('throw', source[package:])
+
+    def test_powershell_engine_only_uses_clean_helper_and_returns_before_packaging(self):
+        source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
+        helper = source.index('scripts\\build_engine.py')
+        package = source.index('scripts\\package_iis.py')
+        self.assertLess(helper, package)
+        self.assertIn('if ($EngineOnly)', source[:helper])
+        between = source[helper:package]
+        self.assertRegex(between, r"'--root'\s+\$projectRoot")
+        self.assertRegex(between, r"'--output'\s+\$OutputDirectory")
+        self.assertRegex(between, r'\$LASTEXITCODE\s+-ne\s+0')
+        self.assertIn('return', between)
+
+    def test_powershell_corpus_parameter_is_not_overwritten_by_framework_path(self):
+        source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
         self.assertIn('[string]$ACGNRoot', source)
         self.assertIn('scripts\\prepare_private_data.py', source)
-        self.assertIn('classified-data', source)
-        self.assertIn("$env:ACGN_ROOT", source)
-        self.assertNotRegex(source, r"lib[\\/]\*")
-        self.assertRegex(source, r"'-cp'\s*,\s*\$[A-Za-z][A-Za-z0-9_]*")
-
-    def test_powershell_corpus_parameter_is_distinct_from_vendored_source_variable(self):
-        source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
-        # PowerShell variable names are case insensitive: $acgnRoot would
-        # silently overwrite the caller's -ACGNRoot before the corpus import.
-        vendored_binding = re.search(
-            r"\$(\w+)\s*=\s*Join-Path\s+\$projectRoot\s+'vendor\\acgn'", source)
-        self.assertIsNotNone(vendored_binding)
-        self.assertNotEqual(vendored_binding.group(1).casefold(), 'acgnroot')
+        self.assertIn('$env:ACGN_ROOT', source)
         self.assertRegex(source, r"'--source-root'\s+\$ACGNRoot\b")
-        self.assertRegex(source, r"Join-Path\s+\$" + vendored_binding.group(1) + r"\s+'src'")
+        self.assertNotRegex(source, r"(?i)\$acgnroot\s*=\s*Join-Path\s+\$projectRoot\s+'vendor[\\/]acgn'")
 
 
 class WindowsBashDispatchTests(unittest.TestCase):
@@ -263,7 +279,7 @@ raise SystemExit(97)
         self.assert_dispatch(self.source / 'build/engine/classes', acgn_root=original_corpus)
 
     def test_direct_engine_default_and_caller_relative_output_are_preserved(self):
-        cases = [((), self.source / 'engine/build/classes'),
+        cases = [((), self.source / 'build/engine/classes'),
                  (('caller output with spaces',), self.unrelated / 'caller output with spaces')]
         for arguments, expected in cases:
             with self.subTest(arguments=arguments):

@@ -134,6 +134,10 @@ claim-status sets, proof inventory (empty), correspondence mapping (zero objects
 and provenance metadata must agree. Times, temporary paths, ephemeral ports, and
 raw log timings are not reproducible artifacts.
 
+The portal build now creates the archive as part of its normal dependency chain.
+The separate packaging CLI is also exercised and must compile fresh source before
+writing the ZIP. Engine-only builds deliberately stop before packaging.
+
 ## Integrity
 
 `C-INTEGRITY`: hash bindings, manifest completeness within the declared project
@@ -181,7 +185,12 @@ contents and manifest hashes, public/private file isolation, rejected package
 inputs, explicit trusted origins behind a proxy, UTF-8 Java and key handling,
 the packaged runtime, and the task launcher's process, configuration, and
 sanitized failure behavior. The browser claim additionally checks real feedback
-through a virtual application prefix. These assertions run on Linux. They do
+through a virtual application prefix. Build-chain fixtures change Java source,
+seed obsolete classes and an older ZIP, and verify that the replacement ZIP
+contains the freshly compiled change without obsolete classes. Custom class
+outputs must be normalized into the packaged runtime path. Compiler and frontend
+failures must propagate without reporting a refreshed archive; compilation failure
+must preserve the previous classes, ZIP, and checksum. These assertions run on Linux. They do
 not establish that IIS, Windows PowerShell 5.1, NTFS ACLs, or Task Scheduler ran
 successfully on Windows. The supplied target acceptance script and actual
 Windows deployment remain outside this offline closure.
@@ -205,7 +214,10 @@ ambient Java classpaths/options and Python import paths excluded.
 
 The source-build witness uses a fresh relocated tree, preflights dependencies
 without requiring compiled classes, compiles with an explicit ordered JAR
-classpath, and executes the engine checks. Frozen structural assertions bind
+classpath, and executes the engine checks. Shared compiler fixtures check clean
+staging, source changes, removal of obsolete classes, protected output paths,
+Java 17 class headers, required entry classes, environment isolation, and
+preservation of previous output on compiler or publication failure. Frozen structural assertions bind
 the Windows build script to that dependency report and the platform path
 separator. Simulated MSYS, MINGW and Cygwin launchers exercise the actual Bash
 entry points and assert their native PowerShell delegation, absolute path

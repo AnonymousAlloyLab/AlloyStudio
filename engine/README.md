@@ -3,12 +3,24 @@ not substitute text, token, Levenshtein, or representative-tree distance for the
 framework's temporal + quantifier + matrix metric. This is the Fast Rewrite
 compatibility metric, not the certificate-integrated quotient metric.
 
-Build with `./engine/build.sh`. JDK 17 and `vendor/acgn/{src,lib}` are required.
-`ACGN_ROOT` can override that dependency root; an optional first argument changes
-the output class directory. Run one request per process:
+Build with `./engine/build.sh`. Python 3.10+, a JDK 17+ with `javac`, and
+`vendor/acgn/{src,lib}` are required. The entry point uses the shared
+`scripts/build_engine.py` compiler and defaults to `build/engine/classes` under
+the project root. An optional first argument changes the output class directory.
+Compilation uses the bundled `vendor/acgn` dependencies. This engine-only
+command does not create or update an IIS archive. PowerShell's equivalent is
+`powershell -NoProfile -File scripts/build.ps1 -EngineOnly`.
+
+Use `./scripts/build.sh` or
+`powershell -NoProfile -File scripts/build.ps1 -RequireNode` for the portal build,
+which also refreshes the IIS ZIP and checksum. The standalone packaging command
+`python3 scripts/package_iis.py` compiles Java afresh before packaging as well;
+it requires a JDK and accepts `--javac`, `--classes-output`, `--source`, and
+`--output`. Build tools remain in the source checkout; the precompiled IIS
+distribution needs a Java runtime, not a compiler. Run one request per process:
 
 ```sh
-java -Xmx256m -cp 'engine/build/classes:vendor/acgn/lib/*' live.LiveFeedback
+java -Xmx256m -cp 'build/engine/classes:vendor/acgn/lib/*' live.LiveFeedback
 ```
 
 The process reads one UTF-8 JSON object from stdin, then exits after writing one
@@ -123,5 +135,5 @@ reference diagnostics never leave the adapter. Historical framework console
 output is suppressed. The caller is responsible for enforcing process timeout,
 body-only editing, module/import policy, input size, and concurrency limits.
 
-Run `java -Xmx256m -cp 'engine/build/classes:vendor/acgn/lib/*' live.EngineSelfTest`
+Run `java -Xmx256m -cp 'build/engine/classes:vendor/acgn/lib/*' live.EngineSelfTest`
 after building for the focused adapter regression suite.

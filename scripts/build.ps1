@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-Build the portable Java 17 engine from the complete source checkout on Windows.
+Build the portable Java 17 engine and refresh the IIS archive on Windows.
 .DESCRIPTION
 Requires a JDK 17 or newer and Python 3.10 or newer. Node.js is optional for the
 frontend syntax check; use -RequireNode to require it in a release build. The
@@ -21,15 +21,16 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$vendoredAcgnRoot = Join-Path $projectRoot 'vendor\acgn'
-$engineRoot = Join-Path $projectRoot 'engine'
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $projectRoot 'build\engine\classes'
 } elseif (-not [IO.Path]::IsPathRooted($OutputDirectory)) {
     $OutputDirectory = Join-Path $projectRoot $OutputDirectory
 }
 
-$null = Get-Command $JavaCompiler -ErrorAction Stop
+# Resolve the executable before Python changes its compiler working directory.
+# Relative JDK paths must retain the meaning they had in the calling shell.
+$JavaCompiler = (Get-Command $JavaCompiler -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1).Source
 $null = Get-Command $Python -ErrorAction Stop
 $nodeCommand = Get-Command $Node -ErrorAction SilentlyContinue
 if ($RequireNode -and -not $EngineOnly -and -not $nodeCommand) {
@@ -74,24 +75,10 @@ if (-not $EngineOnly) {
         }
     }
 }
-# Use explicit absolute JAR paths as a single argument. No wildcard expansion,
-# current directory, machine CLASSPATH, Maven cache, or upstream checkout is needed.
-$dependencyClassPath = @($dependencies.dependencies | ForEach-Object {
-    Join-Path $projectRoot $_.path
-}) -join [IO.Path]::PathSeparator
-$null = New-Item -ItemType Directory -Path $OutputDirectory -Force
-$sourcePath = (Join-Path $engineRoot 'src') + [IO.Path]::PathSeparator + (Join-Path $vendoredAcgnRoot 'src')
-$compilerArguments = @(
-    '-encoding', 'UTF-8', '--release', '17', '-Xprefer:source',
-    '-cp', $dependencyClassPath, '-sourcepath', $sourcePath,
-    '-d', $OutputDirectory,
-    (Join-Path $engineRoot 'src\live\LiveFeedback.java'),
-    (Join-Path $engineRoot 'src\live\EngineSelfTest.java'),
-    (Join-Path $engineRoot 'src\live\BehaviorFeedback.java')
-)
-& $JavaCompiler @compilerArguments
-if ($LASTEXITCODE -ne 0) { throw "Java compilation failed with exit code $LASTEXITCODE." }
 if ($EngineOnly) {
+    & $Python '-E' '-s' (Join-Path $projectRoot 'scripts\build_engine.py') `
+        '--root' $projectRoot '--javac' $JavaCompiler '--output' $OutputDirectory
+    if ($LASTEXITCODE -ne 0) { throw 'Java compilation failed. The IIS archive was not refreshed.' }
     Write-Output "Built Java 17 compatible engine classes in $OutputDirectory"
     return
 }
@@ -102,7 +89,7 @@ from pathlib import Path
 if sys.version_info < (3, 10):
     raise SystemExit('Python 3.10 or newer is required')
 root = Path(sys.argv[1])
-for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
+for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/build_engine.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
     ast.parse((root / name).read_text(encoding='utf-8'), filename=name)
 '@
 & $Python '-c' $pythonCheck $projectRoot
@@ -113,4 +100,9 @@ if ($nodeCommand) {
 } else {
     Write-Warning 'Node.js was not found; the optional JavaScript syntax check was skipped.'
 }
-Write-Output "Built Java 17 compatible engine classes in $OutputDirectory"
+# One dependency chain: validation -> clean compilation -> ZIP -> checksum.
+# The native Python process constructs javac paths using Windows separators.
+& $Python '-E' '-s' (Join-Path $projectRoot 'scripts\package_iis.py') `
+    '--source' $projectRoot '--javac' $JavaCompiler '--classes-output' $OutputDirectory
+if ($LASTEXITCODE -ne 0) { throw 'IIS build failed. The previous archive, if any, has not been refreshed.' }
+Write-Output "Refreshed IIS package: $(Join-Path $projectRoot 'build\iis\alloy-studio-iis.zip')"

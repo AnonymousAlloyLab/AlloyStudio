@@ -14,8 +14,8 @@ fi
 if [[ ! -f exercises/catalogue.json ]]; then
   python3 -E -s scripts/prepare_private_data.py --root "$PWD"
 fi
-# ACGN_ROOT identifies the original corpus for the portal import. Compilation
-# always uses the dependency-closed framework snapshot shipped in this checkout.
-ACGN_ROOT="$PWD/vendor/acgn" ./engine/build.sh "${1:-build/engine/classes}"
 python3 -c 'import ast; from pathlib import Path; ast.parse(Path("server.py").read_text())'
 node --check web/app.js
+# Packaging compiles the vendored engine into a clean directory first. A failed
+# validation or compilation stops instead of reusing an older IIS archive.
+python3 -E -s scripts/package_iis.py --source "$PWD" --classes-output "${1:-build/engine/classes}"

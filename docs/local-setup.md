@@ -109,6 +109,15 @@ Open **http://127.0.0.1:8080**. The server stays in the terminal; Ctrl+C stops i
 Startup repeats data/dependency checks, compilation, and engine tests, so source
 updates are built before serving requests.
 
+These local launchers compile the engine without creating an IIS archive. The
+separate `./scripts/build.sh` developer/release command also checks the frontend
+with Node and refreshes `build/iis/alloy-studio-iis.zip` and its checksum after a
+successful build. Packaging on its own with `python3 scripts/package_iis.py`
+also compiles Java afresh through `scripts/build_engine.py`; it requires a JDK,
+while the Node check belongs to the portal build wrapper. A failed build leaves
+any previous ZIP as an older artifact. See [IIS build options](../README.md#iis-100-deployment)
+for compiler, output, and alternate-checkout options.
+
 If port 8080 is occupied, use:
 
 ```bash

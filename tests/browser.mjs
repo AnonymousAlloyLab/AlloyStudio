@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer, request as httpRequest } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -969,6 +969,16 @@ try {
   await check('iis-prefix-proxy-assets-navigation-feedback-and-download', async () => {
     // Model an IIS virtual application: strip /alloy and rewrite Host to the
     // loopback backend. The browser's Origin remains the public proxy origin.
+    // Serve the actual packaged HTML. An old CDN entry poisons each unversioned
+    // asset URL, so this workflow can only pass if new content URLs are used.
+    const packagedIndex = execFileSync('python3', ['-c',
+      'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("wwwroot/index.html"))',
+      path.join(root, 'build/iis/alloy-studio-iis.zip')]);
+    const assetVersions = new Map(await Promise.all(['app.js', 'styles.css'].map(async name =>
+      [name, createHash('sha256').update(await readFile(path.join(root, 'web', name))).digest('hex')])));
+    for (const [name, version] of assetVersions) {
+      assert(packagedIndex.includes(Buffer.from(`./${name}?v=${version}`)));
+    }
     let backendURL;
     let backend;
     let proxyContext;
@@ -980,6 +990,16 @@ try {
       }
       if (!backendURL) { response.writeHead(503); response.end(); return; }
       const target = new URL(request.url.slice('/alloy'.length), backendURL);
+      if (target.pathname === '/' || target.pathname === '/index.html') {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        response.end(packagedIndex); return;
+      }
+      const asset = target.pathname.slice(1);
+      if (assetVersions.has(asset) && target.searchParams.get('v') !== assetVersions.get(asset)) {
+        response.writeHead(200, { 'Content-Type': asset.endsWith('.js') ? 'application/javascript' : 'text/css' });
+        response.end(asset.endsWith('.js') ? 'throw new Error("Stale cached JavaScript loaded")' : 'body { display: none }');
+        return;
+      }
       const upstream = httpRequest(target, {
         method: request.method,
         headers: { ...request.headers, host: target.host,
@@ -1020,8 +1040,10 @@ try {
       const checked = async () => proxyPage.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Checked');
       await checked();
       assert.equal(await proxyPage.locator('#exercise-count').textContent(), '181');
-      assert(proxyRequests.includes('/alloy/app.js'));
-      assert(proxyRequests.includes('/alloy/styles.css'));
+      assert(proxyRequests.includes(`/alloy/app.js?v=${assetVersions.get('app.js')}`));
+      assert(proxyRequests.includes(`/alloy/styles.css?v=${assetVersions.get('styles.css')}`));
+      assert(!proxyRequests.includes('/alloy/app.js'));
+      assert(!proxyRequests.includes('/alloy/styles.css'));
       assert(proxyRequests.includes('/alloy/api/exercises'));
       assert(proxyRequests.includes('/alloy/api/feedback'));
       const proxyEditor = proxyPage.locator('#predicate-editor');

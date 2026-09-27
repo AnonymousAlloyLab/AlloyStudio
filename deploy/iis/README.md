@@ -88,6 +88,16 @@ where that names the installed Python 3.10+ interpreter. This standalone
 command does not run the Node syntax check; use the portal build command above
 for that check.
 
+Packaging gives the script and stylesheet URLs in `wwwroot/index.html` a
+`?v=<SHA-256>` suffix computed from each asset's bytes. The source
+`web/index.html` is unchanged. The included `web.config` configures
+`Cache-Control: no-cache, no-store` for static content, suppresses static ETags,
+and disables IIS output and kernel caching for this application. Verify the
+effective response headers on the target host. Preserve these
+settings when merging site-specific configuration. Cloudflare rules must honor
+the origin cache policy and versioned query strings; an override that caches this
+application despite `no-store` must be removed or scoped away from it.
+
 These build tools stay in the source checkout and are excluded from the runtime
 ZIP. The IIS runtime still needs no Node, npm, Bash, JDK/compiler, pip packages,
 or original ACGN checkout. Use a machine-wide
@@ -575,13 +585,88 @@ Backend startup messages go to the private `$RuntimeRoot\logs\backend.log`
 learner request bodies or oracle data. Rotate this log during maintenance if
 needed. IIS logs and Task Scheduler's Operational log remain host-managed.
 
-For an update, stop the task and the IIS site/application pool, privately back up
-the old distribution, extract the new distribution into a fresh local directory,
-and point the IIS physical path at the new `wwwroot`. Uninstall and install the
-task against the new private backend and launcher directories. Repeat the ACL
-step and acceptance tests before restoring traffic. Roll back by restoring the
-old physical path and task registration. Never copy a source checkout or the
-private `backend` contents into the public directory.
+### Updating an existing installation
+
+**An old page can be a cached asset.** Inspection of `https://as.555.is/` confirmed
+old, unversioned `app.js` and `styles.css` served as Cloudflare `HIT` entries with
+a four-hour cache lifetime. Fresh query URLs returned current asset hashes, and
+the behavioral API exposed the new score and categories. The served homepage
+HTML was still an older version missing the new panels, including on fresh-query
+requests. Update all four public files in the active IIS directory using the
+steps below; purging JavaScript alone cannot add missing HTML panels. Purge this
+website's homepage, `index.html`, `app.js`, and `styles.css` in Cloudflare, then
+hard-reload the browser. Rebuilding the ZIP or restarting IIS does not clear
+existing CDN/browser entries. This public inspection does not identify the
+server's installed filesystem paths or distinguish an old file on disk from an
+origin cache serving it.
+
+For a new release, extract the successfully built ZIP into a fresh **private
+staging directory** and back up the installed application. Building or extracting
+a ZIP does not update the files already used by IIS and its scheduled task.
+Discover the installed paths; do not assume the staging folder is the live one.
+Replace the example site/task names if yours differ. These diagnostic commands
+are each a single PowerShell line with explicit semicolons, so pasted line
+wrapping cannot join commands accidentally:
+
+```powershell
+Import-Module WebAdministration; $SiteName = 'as'; $TaskName = 'AlloyStudioBackend'; Get-Website -Name $SiteName | Select-Object Name,PhysicalPath,ApplicationPool,State; Get-ScheduledTask -TaskName $TaskName | ForEach-Object { $_.Actions } | Select-Object Execute,WorkingDirectory,Arguments
+```
+
+Use this installation's task name and `$RuntimeRoot` (the directory containing
+`backend-task.json` in the task's `--config` argument), then set the live paths:
+
+```powershell
+$Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json') -Raw -Encoding UTF8 | ConvertFrom-Json; $BackendRoot = [string]$Installed.backend_root; $WebRoot = [Environment]::ExpandEnvironmentVariables([string](Get-Website -Name $SiteName).PhysicalPath); $BackendRoot; $WebRoot
+```
+
+1. Stop the backend and only the dedicated Alloy website using the existing
+   `$Manage` path. For a virtual application, use its own physical path and
+   maintenance procedure instead of stopping a shared parent website.
+
+   ```powershell
+   & $Manage -Action Stop -RuntimeRoot $RuntimeRoot -TaskName $TaskName; Stop-Website -Name $SiteName
+   ```
+
+2. Copy the new four `wwwroot` files into the **installed** `$WebRoot`, retaining
+   intentional site settings and the new cache controls in `web.config`. Update
+   the installed private backend and deployment launchers from the same package;
+   replace its class tree and JAR directory as complete units. Preserve
+   `backend/openai.local.json`, referenced key files, runtime configuration and
+   secrets. Preserve custom `exercises/catalogue.json` and `correct-pools.json`
+   together; replace that pair only when intentionally changing datasets. Never
+   copy the backend or package root into the public IIS directory.
+
+3. Touch only these installed public files after copying. Reproducible ZIPs use
+   1980 timestamps; the inspected origin reused that `Last-Modified` and ETag
+   across changed bytes, allowing stale timestamp-based validation. Updating
+   timestamps leaves the package's content hashes unchanged:
+
+   ```powershell
+   @('index.html','app.js','styles.css','web.config') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
+   ```
+
+4. Restart the backend and start only the selected website:
+
+   ```powershell
+   & $Manage -Action Restart -RuntimeRoot $RuntimeRoot -TaskName $TaskName; Start-Website -Name $SiteName
+   ```
+
+   `Start` does not replace an already running Python process. Recycling an IIS
+   pool does not restart the scheduled backend. If a pool recycle is needed, use
+   `Restart-WebAppPool -Name $PoolName` only when that pool is dedicated to Alloy.
+   Do not restart all IIS services or recycle a shared pool.
+
+5. Purge this website's homepage, `index.html`, `app.js`, and `styles.css` URLs in
+   Cloudflare, including cached versioned variants when applicable; do not purge
+   unrelated sites in the zone. Hard-reload the browser and verify that HTML uses
+   the SHA-256 asset URLs. Cache rules or Workers must not override this site's
+   `no-store` policy or ignore query versions. Run `Test-IisDeployment.ps1` with
+   the existing runtime root before recording deployment acceptance.
+
+If backend or launcher paths change, uninstall and reinstall the task against
+those new paths and reapply the private ACLs; changing IIS's physical path alone
+does not move the backend. Retain the previous distribution and task settings for
+rollback. Build/package tests on Linux do not establish native Windows acceptance.
 
 If the portal reports an unreadable response, run this read-only check **on the
 IIS host**. It requires Python, but no administrator privileges or installed task
@@ -609,6 +694,7 @@ counts; run `Test-IisDeployment.ps1` for the full deployment acceptance checks.
 
 | Symptom | Check |
 | --- | --- |
+| Old page after a successful build | Verify the installed IIS and task paths, copy the new files there, refresh public-file timestamps, restart the backend, and purge this website's browser/CDN caches as described above. |
 | IIS 500.19 | URL Rewrite/ARR installation, locked configuration sections, parent rules, and the parsed `web.config` error in IIS logs. |
 | IIS 502.3 | Task state, private `backend.log`, the Python/Java paths, port 8080, and ARR proxy timeout. |
 | API POST returns 403 | Exact public scheme, hostname and port in `-PublicUrl`; re-register after changing bindings. |

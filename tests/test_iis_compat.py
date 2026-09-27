@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -43,6 +44,34 @@ class IISCompatibilityTests(unittest.TestCase):
             response = error
         with response:
             return response.status, json.loads(response.read())
+
+    def test_iis_frontend_cache_policy_avoids_release_timestamp_validators(self):
+        # Portable configuration contract; actual header behavior also needs
+        # deployment acceptance on Windows/IIS.
+        config = ET.parse(ROOT / 'deploy/iis/web.config').getroot()
+        cache = config.find('./system.webServer/staticContent/clientCache')
+        self.assertIsNotNone(cache)
+        self.assertEqual(cache.get('cacheControlMode'), 'DisableCache')
+        self.assertIn('no-store', cache.get('cacheControlCustom', '').split(','))
+        self.assertEqual(cache.get('setEtag'), 'false')
+        output_cache = config.find('./system.webServer/caching')
+        self.assertIsNotNone(output_cache)
+        self.assertEqual(output_cache.get('enabled'), 'false')
+        self.assertEqual(output_cache.get('enableKernelCache'), 'false')
+
+    def test_versioned_frontend_urls_serve_current_bytes_without_cache_revalidation(self):
+        # Version queries must preserve the strict asset allowlist. Old IIS
+        # validators must not turn changed local frontend content into a 304.
+        for name in ('index.html', 'app.js', 'styles.css'):
+            with self.subTest(asset=name):
+                request = Request(self.url + '/' + name + '?v=content-hash', headers={
+                    'If-None-Match': 'W/"old-release-timestamp"',
+                    'If-Modified-Since': 'Tue, 01 Jan 1980 05:00:00 GMT',
+                })
+                with urlopen(request, timeout=10) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), (ROOT / 'web' / name).read_bytes())
+                    self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
 
     def test_origin_normalization(self):
         cases = {'https://ALLOY.example:443/': 'https://alloy.example',

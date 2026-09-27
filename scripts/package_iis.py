@@ -82,9 +82,32 @@ def parse_json(data: bytes, label: str) -> dict:
     return result
 
 
+def version_public_assets(entries: dict[str, bytes]) -> dict[str, str]:
+    """Bind the packaged HTML's asset URLs to the exact JS/CSS payload bytes.
+
+    ZIP timestamps are deliberately fixed for reproducibility. They cannot
+    identify a new release to a browser, IIS, or a CDN; content hashes can.
+    Keep relative URLs so virtual IIS applications continue to work.
+    """
+    html = entries['wwwroot/index.html']
+    versions = {}
+    for attribute, name in (('src', 'app.js'), ('href', 'styles.css')):
+        version = digest(entries['wwwroot/' + name])
+        pattern = re.compile(rb'(\b' + attribute.encode() + rb'\s*=\s*)([\'\"])(\./'
+                             + re.escape(name.encode()) + rb')\2')
+        if len(pattern.findall(html)) != 1:
+            raise PackageError(f'Expected exactly one relative {name} reference in web/index.html.')
+        html = pattern.sub(lambda match: match[1] + match[2] + match[3]
+                           + b'?v=' + version.encode('ascii') + match[2], html)
+        versions[name] = version
+    entries['wwwroot/index.html'] = html
+    return versions
+
+
 def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, bytes]:
     root = root.resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
+    public_asset_versions = version_public_assets(entries)
     for name in DEPLOY_FILES:
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
@@ -173,6 +196,7 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
         'distribution': 'IIS 10',
         'privateArchive': True,
         'publicDirectory': 'wwwroot',
+        'publicAssetVersions': public_asset_versions,
         'requirements': {'python': '3.10+', 'java': '17+', 'iis': '10.0'},
         'acgnCommit': snapshot['commit'],
         'exerciseCount': len(exercises),

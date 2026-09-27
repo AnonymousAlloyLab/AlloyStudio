@@ -93,6 +93,9 @@ both clean builds. The exact assertions and logs define the finite browser surfa
 HTML error pages, malformed API JSON, and redirected guidance must show the HTTP
 status and requested endpoint without exposing response bodies. Drafts and
 canonical feedback survive those failures, with retry after recovery.
+The virtual-application fixture serves the actual packaged HTML while stale
+unversioned JS/CSS URLs return poisoned content. The browser must request the
+content-versioned assets and complete navigation, feedback, and download.
 
 ## Source and canonical locators
 
@@ -194,6 +197,14 @@ must preserve the previous classes, ZIP, and checksum. These assertions run on L
 not establish that IIS, Windows PowerShell 5.1, NTFS ACLs, or Task Scheduler ran
 successfully on Windows. The supplied target acceptance script and actual
 Windows deployment remain outside this offline closure.
+
+Package fixtures bind relative JS/CSS URLs to the exact payload SHA-256 values
+and require changed content to produce new URLs even with identical ZIP dates.
+XML assertions require static no-cache/no-store configuration, disabled
+timestamp-based ETags, and disabled IIS output caching. Python HTTP fixtures
+check versioned URLs with old conditional headers return current bytes. Actual
+IIS emitted headers, browser/CDN cache eviction, and production deployment
+acceptance remain outside this offline closure.
 
 The supplemental PowerShell path-policy fixtures use controlled filesystem
 adapters on Linux. The separate native Windows fixtures exercise actual file

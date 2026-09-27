@@ -43,6 +43,8 @@ class IisPackageTests(unittest.TestCase):
     def fixture(self):
         for name in WEB_FILES:
             self.write(f'web/{name}', 'public learner application')
+        self.write('web/index.html', '<link rel="stylesheet" href="./styles.css">'
+                   '<script type="module" src="./app.js"></script>')
         for name in DEPLOY_FILES:
             self.write(f'deploy/iis/{name}', '<configuration />' if name == 'web.config' else 'operator deployment guide')
         self.write('LICENSE', 'Portal licence')
@@ -149,6 +151,41 @@ class IisPackageTests(unittest.TestCase):
             self.assertEqual(archive.namelist(), sorted(archive.namelist()))
             self.assertTrue(all(info.date_time == ZIP_TIME for info in archive.infolist()))
             self.assertTrue(all(info.compress_type == zipfile.ZIP_STORED for info in archive.infolist()))
+
+    def test_asset_urls_follow_content_changes_even_with_identical_zip_timestamps(self):
+        source_html = (self.root / 'web/index.html').read_bytes()
+        _, first = self.archive()
+        first_manifest = json.loads(first['manifest.json'])
+        for name in ('app.js', 'styles.css'):
+            version = hashlib.sha256(first['wwwroot/' + name]).hexdigest()
+            self.assertIn(('./' + name + '?v=' + version).encode(), first['wwwroot/index.html'])
+            self.assertEqual(first_manifest['publicAssetVersions'][name], version)
+        for name in ('app.js', 'styles.css'):
+            with self.subTest(asset=name):
+                original = (self.root / 'web' / name).read_bytes()
+                self.write('web/' + name, original + b' changed feature')
+                # Extracted releases have the same mtime; only content may
+                # determine whether a browser requests a different URL.
+                os.utime(self.root / 'web' / name, (315532800, 315532800))
+                _, changed = self.archive()
+                version = hashlib.sha256(changed['wwwroot/' + name]).hexdigest()
+                self.assertIn(('./' + name + '?v=' + version).encode(), changed['wwwroot/index.html'])
+                self.assertNotEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
+                self.write('web/' + name, original)
+        _, restored = self.archive()
+        self.assertEqual(restored, first)
+        self.assertEqual((self.root / 'web/index.html').read_bytes(), source_html)
+
+    def test_missing_or_ambiguous_asset_reference_refuses_stale_browser_urls(self):
+        self.archive()
+        original_archive = self.output.read_bytes()
+        original_html = (self.root / 'web/index.html').read_bytes()
+        for html in (b'<html>No assets</html>', original_html + b'<script src="./app.js"></script>'):
+            with self.subTest(html=html):
+                self.write('web/index.html', html)
+                with self.assertRaisesRegex(PackageError, 'relative .* reference'):
+                    build_package(self.root, self.output)
+                self.assertEqual(self.output.read_bytes(), original_archive)
 
     def test_missing_input_refuses_package_and_preserves_previous_archive(self):
         self.archive()

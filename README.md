@@ -309,6 +309,19 @@ If compilation, frontend validation, or package preflight fails, the command
 fails without reporting an updated package. Any existing ZIP and checksum
 remain the **older successful build**; they do not contain the failed changes.
 
+The packaged `wwwroot/index.html` references `app.js` and `styles.css` with
+SHA-256 query versions derived from their exact bytes. This changes the asset
+URLs whenever their content changes; source `web/index.html` stays unchanged.
+The IIS settings configure `Cache-Control: no-cache, no-store`, disable
+static/output caching, and suppress static ETags; verify the effective headers
+on the target host. Existing browser or Cloudflare entries still need clearing
+during the first upgrade. ZIP entry
+timestamps are fixed for reproducibility, so an extraction date is not evidence
+that an installed file changed. Follow the [installed-site update steps](deploy/iis/README.md#updating-an-existing-installation),
+including refreshing public-file timestamps, restarting the backend, and purging
+only this website's cached URLs. Building or extracting a ZIP does not update
+the directories already used by IIS and its scheduled task.
+
 For packaging alone, `python3 scripts/package_iis.py` also compiles Java from
 source before creating the archive, so it needs a JDK and does not reuse old
 classes. Node syntax checking belongs to the portal build commands above.

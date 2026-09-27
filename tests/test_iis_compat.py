@@ -107,7 +107,18 @@ class IISCompatibilityTests(unittest.TestCase):
             with patch('server.subprocess.run', return_value=subprocess.CompletedProcess(
                     [], 0, json.dumps(raw, ensure_ascii=False), '')) as run:
                 answer = app.evaluate(app.exercises['graphs-inv1'], body)
-            self.assertEqual(answer, raw)
+            # A worker without locator metadata remains usable. The public
+            # projection adds unavailable locations without altering its UTF-8
+            # action text or claiming positions that the worker did not supply.
+            legacy = {**answer, 'operations': [dict(operation) for operation in answer['operations']]}
+            for operation in legacy['operations']:
+                for field, coordinates in (('sourceLocation', 'body'), ('canonicalLocation', 'canonical')):
+                    location = operation.pop(field)
+                    self.assertEqual(location['status'], 'unavailable')
+                    self.assertEqual(location['ranges'], [])
+                    self.assertEqual(location['coordinateSystem'], coordinates)
+                    self.assertEqual(location['offsetEncoding'], 'utf-16')
+            self.assertEqual(legacy, raw)
             command = run.call_args.args[0]
             self.assertEqual(command[0], java)
             self.assertIn('-Dfile.encoding=UTF-8', command)

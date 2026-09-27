@@ -39,12 +39,19 @@
               <div class="editor-toolbar"><div class="panel-heading"><span class="code-icon" aria-hidden="true">&lt;/&gt;</span><h2 id="editor-heading">Predicate editor</h2></div><span id="draft-status" class="draft-status">Ready when you are</span></div>
               <div class="file-tab"><span class="file-dot" aria-hidden="true"></span><span id="predicate-filename">predicate.als</span><span class="language-tag">ALLOY</span></div>
               <div id="predicate-signature" class="predicate-signature">pred … {</div>
-              <div class="code-area"><pre id="line-numbers" class="line-numbers" aria-hidden="true">1</pre><textarea id="predicate-editor" aria-label="Predicate body" aria-describedby="editor-keyboard-help" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Select an exercise to begin…" disabled></textarea></div>
+              <div class="code-area"><pre id="line-numbers" class="line-numbers" aria-hidden="true">1</pre><div class="editor-input"><pre id="source-highlight" class="source-highlight" aria-hidden="true"></pre><textarea id="predicate-editor" aria-label="Predicate body" aria-describedby="editor-keyboard-help source-location-status" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Select an exercise to begin…" disabled></textarea></div></div>
               <span id="editor-keyboard-help" class="sr-only">Tab inserts two spaces. Press Escape then Tab, or Shift+Tab, to move focus out of the editor. Control+Enter or Command+Enter checks the predicate.</span>
               <div class="closing-brace" aria-hidden="true">}</div>
+              <div id="source-location-bar" class="source-location-bar" hidden><span id="source-location-status" role="status" aria-live="polite"></span><button id="clear-source-highlight" type="button" aria-label="Clear source highlight">Clear</button></div>
               <div class="editor-status"><span id="cursor-position">Ln 1, Col 1</span><span>UTF-8<span class="small-divider">·</span>Predicate body only</span></div>
               <div class="editor-actions"><label class="live-label"><input id="live-feedback" type="checkbox" checked><span class="switch" aria-hidden="true"></span>Live feedback</label><div class="editor-action-end"><button id="reset-button" class="button text-button" type="button" disabled>Reset</button><button id="check-button" class="button primary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"></path></svg>Check predicate<span class="keyboard-hint" aria-hidden="true">⌘ ↵</span></button></div></div>
             </section>
+            <details id="canonical-panel" class="canonical-details canonical-editor" open>
+              <summary>Your canonical form<span class="chevron" aria-hidden="true">⌄</span></summary>
+              <p class="canonical-caption">The checked version of your predicate. Select an edit step to see its related fragments.</p>
+              <p id="canonical-location-status" class="canonical-location-status" role="status" aria-live="polite" hidden></p>
+              <div id="canonical-content"><p class="canonical-empty">Check your predicate to see its canonical form.</p></div>
+            </details>
             <details id="environment-panel" class="environment-card" open>
               <summary><span class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v13H4ZM4 11h16"></path></svg><span>Model environment</span></span><span class="summary-meta">READ ONLY<span class="chevron" aria-hidden="true">⌄</span></span></summary>
               <div class="environment-description">The original declarations and commands stay in place. Your predicate body is the only editable part.</div>

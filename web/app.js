@@ -4,11 +4,14 @@ const elements = {
   editor: $('#predicate-editor'), check: $('#check-button'), reset: $('#reset-button'),
   download: $('#download-button'), live: $('#live-feedback'), result: $('#feedback-result'),
   status: $('#feedback-state'), lines: $('#line-numbers'), draft: $('#draft-status'),
+  highlight: $('#source-highlight'), locationBar: $('#source-location-bar'), locationStatus: $('#source-location-status'),
+  canonical: $('#canonical-content'), canonicalStatus: $('#canonical-location-status'),
 };
 const state = {
   exercises: [], exercise: null, revision: 0, selection: 0,
   feedbackAbort: null, explainAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
+  sourceHighlight: null, canonical: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
 const APP_BASE = new URL('.', import.meta.url);
@@ -48,6 +51,7 @@ function setStatus(status, text) {
 }
 
 function invalidateFeedback() {
+  clearOperationHighlight();
   state.revision += 1;
   clearTimeout(state.timer);
   state.feedbackAbort?.abort();
@@ -57,6 +61,7 @@ function invalidateFeedback() {
 }
 
 function showWaiting(message = 'Your next edit is ready to explore.') {
+  clearCanonicalForm('Check this draft to see its canonical form.');
   setStatus('waiting', 'Not checked');
   const wrapper = node('div', 'feedback-empty');
   const illustration = node('div', 'empty-illustration');
@@ -140,8 +145,219 @@ function renderExercises() {
 function updateEditor() {
   const count = elements.editor.value.split('\n').length;
   elements.lines.textContent = Array.from({ length: count }, (_, index) => index + 1).join('\n');
-  elements.lines.scrollTop = elements.editor.scrollTop;
+  syncEditorOverlay();
   updateCursor();
+}
+
+function syncEditorOverlay() {
+  elements.highlight.style.width = `${elements.editor.clientWidth}px`;
+  elements.highlight.style.height = `${elements.editor.clientHeight}px`;
+  elements.highlight.scrollTop = elements.editor.scrollTop;
+  elements.highlight.scrollLeft = elements.editor.scrollLeft;
+  elements.lines.style.height = `${elements.editor.clientHeight}px`;
+  elements.lines.scrollTop = elements.editor.scrollTop;
+}
+
+function clearSourceHighlight() {
+  state.sourceHighlight = null;
+  elements.editor.classList.remove('has-source-highlight');
+  elements.highlight.replaceChildren();
+  elements.locationStatus.textContent = '';
+  elements.locationBar.hidden = true;
+  document.querySelectorAll('.operation-locate[aria-pressed="true"]').forEach((button) => button.setAttribute('aria-pressed', 'false'));
+}
+
+function clearOperationHighlight() {
+  clearSourceHighlight();
+  if (state.canonical) renderCanonicalForms();
+  elements.canonicalStatus.textContent = '';
+  elements.canonicalStatus.hidden = true;
+  document.querySelectorAll('.operation-item.active-operation').forEach((item) => item.classList.remove('active-operation'));
+  document.querySelectorAll('.operation-select[aria-pressed="true"]').forEach((button) => button.setAttribute('aria-pressed', 'false'));
+}
+
+function clearCanonicalForm(message) {
+  state.canonical = null;
+  elements.canonical.replaceChildren(node('p', 'canonical-empty', message));
+  elements.canonicalStatus.textContent = '';
+  elements.canonicalStatus.hidden = true;
+}
+
+function renderCanonicalForms(ranges = []) {
+  elements.canonical.replaceChildren();
+  state.canonical.forms.forEach((form, formIndex) => {
+    const pre = node('pre', 'canonical-form');
+    pre.dataset.formIndex = formIndex;
+    const candidates = ranges.filter(range => range.formIndex === formIndex).sort((a, b) => a.start - b.start || a.end - b.end);
+    // Ambiguous candidates can overlap. Their union is a visual highlight,
+    // while the status preserves the number of possible correspondences.
+    const merged = [];
+    candidates.forEach(range => {
+      const last = merged.at(-1);
+      if (last && range.start < last.end) last.end = Math.max(last.end, range.end);
+      else merged.push({ start: range.start, end: range.end });
+    });
+    let cursor = 0;
+    merged.forEach(range => {
+      pre.append(document.createTextNode(form.slice(cursor, range.start)), node('mark', 'canonical-range', form.slice(range.start, range.end)));
+      cursor = range.end;
+    });
+    pre.append(document.createTextNode(form.slice(cursor)));
+    elements.canonical.append(pre);
+  });
+}
+
+function validatedCanonicalLocation(location, context) {
+  if (!sourceContextCurrent(context) || state.canonical?.context !== context
+    || !location || !['located', 'ambiguous'].includes(location.status)
+    || !['related', 'form'].includes(location.precision) || location.coordinateSystem !== 'canonical'
+    || location.offsetEncoding !== 'utf-16' || !Array.isArray(location.ranges) || location.ranges.length > 32
+    || (location.status === 'located' ? location.ranges.length !== 1 : location.ranges.length < 2)) return null;
+  const seen = new Set();
+  for (const range of location.ranges) {
+    const form = Number.isInteger(range?.formIndex) && state.canonical.forms[range.formIndex];
+    if (typeof form !== 'string' || !Number.isInteger(range.start) || !Number.isInteger(range.end)
+      || range.start < 0 || range.end <= range.start || range.end > form.length
+      || typeof range.text !== 'string' || form.slice(range.start, range.end) !== range.text) return null;
+    const key = `${range.formIndex}:${range.start}:${range.end}`;
+    if (seen.has(key)) return null;
+    seen.add(key);
+    for (const offset of [range.start, range.end]) {
+      if (offset > 0 && offset < form.length && /[\uD800-\uDBFF]/.test(form[offset - 1]) && /[\uDC00-\uDFFF]/.test(form[offset])) return null;
+    }
+  }
+  return location;
+}
+
+function selectOperation(operation, context, item, sourceIndex = null, sourceButton = null) {
+  if (!sourceContextCurrent(context)) { clearOperationHighlight(); return; }
+  clearOperationHighlight();
+  item.classList.add('active-operation');
+  item.querySelector('.operation-select').setAttribute('aria-pressed', 'true');
+  const canonical = validatedCanonicalLocation(operation.canonicalLocation, context);
+  if (canonical) {
+    renderCanonicalForms(canonical.ranges);
+    const label = canonical.precision === 'form' ? 'Canonical form context' : 'Related canonical fragment';
+    const ambiguity = canonical.status === 'ambiguous' ? ` · ${canonical.ranges.length} possible fragments highlighted; source candidates are independent.` : '.';
+    elements.canonicalStatus.textContent = `${label}${ambiguity}${typeof canonical.reason === 'string' && canonical.reason ? ` ${canonical.reason}` : ''}`;
+    $('#canonical-panel').open = true;
+  } else {
+    elements.canonicalStatus.textContent = 'Canonical fragment location unavailable for this edit step.';
+  }
+  elements.canonicalStatus.hidden = false;
+  const source = validatedSourceLocation(operation.sourceLocation, context);
+  if (source && (source.status === 'located' || sourceIndex !== null)) {
+    locateSource(source, sourceIndex ?? 0, context, sourceButton || item.querySelector('.operation-locate'));
+  } else {
+    elements.locationStatus.textContent = source
+      ? `Related source context · ${source.ranges.length} possible locations. Choose a source candidate in the edit step.`
+      : 'Source location unavailable for this edit step.';
+    elements.locationBar.hidden = false;
+    elements.canonical.querySelector('.canonical-range')?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+  }
+}
+
+function sourceContextCurrent(context) {
+  return context && context.revision === state.revision && context.selection === state.selection
+    && context.exerciseId === state.exercise?.id && context.body === elements.editor.value && !elements.editor.disabled;
+}
+
+function bodyPosition(body, offset) {
+  const prefix = body.slice(0, offset).split('\n');
+  return { line: prefix.length, column: prefix.at(-1).length + 1 };
+}
+
+function validatedSourceLocation(location, context) {
+  if (!sourceContextCurrent(context) || !location || !['located', 'ambiguous'].includes(location.status)
+    || !['exact', 'related', 'predicate'].includes(location.precision)
+    || location.coordinateSystem !== 'body' || location.offsetEncoding !== 'utf-16'
+    || !Array.isArray(location.ranges) || location.ranges.length > 32
+    || (location.status === 'located' ? location.ranges.length !== 1 : location.ranges.length < 2)) return null;
+  const { body } = context;
+  const splitsSurrogate = (offset) => offset > 0 && offset < body.length
+    && /[\uD800-\uDBFF]/.test(body[offset - 1]) && /[\uDC00-\uDFFF]/.test(body[offset]);
+  const seen = new Set();
+  for (const range of location.ranges) {
+    if (!range || !Number.isInteger(range.start) || !Number.isInteger(range.end)
+      || range.start < 0 || range.end <= range.start || range.end > body.length
+      || typeof range.text !== 'string' || body.slice(range.start, range.end) !== range.text
+      || splitsSurrogate(range.start) || splitsSurrogate(range.end)) return null;
+    const start = bodyPosition(body, range.start);
+    const end = bodyPosition(body, range.end);
+    if (range.startLine !== start.line || range.startColumn !== start.column
+      || range.endLine !== end.line || range.endColumn !== end.column
+      || !Number.isInteger(range.moduleLine) || range.moduleLine < 1
+      || !Number.isInteger(range.moduleColumn) || range.moduleColumn < 1) return null;
+    const key = `${range.start}:${range.end}`;
+    if (seen.has(key)) return null;
+    seen.add(key);
+  }
+  return location;
+}
+
+function sourceLocationLabel(location) {
+  return location.precision === 'exact' ? 'Source expression'
+    : location.precision === 'predicate' ? 'Predicate context' : 'Related source context';
+}
+
+function locateSource(location, index, context, button) {
+  if (!validatedSourceLocation(location, context)) { clearSourceHighlight(); return; }
+  clearSourceHighlight();
+  const range = location.ranges[index];
+  const mark = node('mark', 'source-range', range.text);
+  mark.dataset.start = range.start;
+  mark.dataset.end = range.end;
+  elements.highlight.append(document.createTextNode(context.body.slice(0, range.start)), mark,
+    document.createTextNode(context.body.slice(range.end) + '\n'));
+  state.sourceHighlight = { context, range };
+  elements.editor.classList.add('has-source-highlight');
+  button.setAttribute('aria-pressed', 'true');
+  const ambiguity = location.status === 'ambiguous' ? ` · possible location ${index + 1} of ${location.ranges.length}` : '';
+  elements.locationStatus.textContent = `${sourceLocationLabel(location)}${ambiguity} · Body Ln ${range.startLine}, Col ${range.startColumn} · Model Ln ${range.moduleLine}, Col ${range.moduleColumn}`;
+  elements.locationBar.hidden = false;
+  elements.editor.focus({ preventScroll: true });
+  elements.editor.setSelectionRange(range.start, range.end);
+  syncEditorOverlay();
+  // The mirror measures tabs and proportional Unicode fallback glyphs exactly
+  // as the textarea does; character-count estimates drift on long lines.
+  const rect = mark.getClientRects()[0];
+  const viewport = elements.highlight.getBoundingClientRect();
+  const left = rect ? rect.left - viewport.left + elements.highlight.scrollLeft : 0;
+  const lineHeight = parseFloat(getComputedStyle(elements.editor).lineHeight);
+  elements.editor.scrollTop = Math.max(0, (range.startLine - 1) * lineHeight - elements.editor.clientHeight / 3);
+  elements.editor.scrollLeft = Math.max(0, left - Math.min(60, elements.editor.clientWidth / 3));
+  syncEditorOverlay();
+  elements.editor.scrollIntoView({ block: 'center', behavior: 'auto' });
+  updateCursor();
+}
+
+function renderSourceLocator(operation, context, index, item) {
+  const container = node('div', 'operation-source-location');
+  const location = validatedSourceLocation(operation.sourceLocation, context);
+  if (!location) {
+    const reason = operation.sourceLocation?.status === 'unavailable' && typeof operation.sourceLocation.reason === 'string'
+      ? ` ${operation.sourceLocation.reason}` : '';
+    container.append(node('p', 'source-location-unavailable', `Source location unavailable.${reason}`));
+    return container;
+  }
+  const note = node('p', 'operation-location-note');
+  note.id = `source-location-note-${index}`;
+  const ambiguity = location.status === 'ambiguous' ? ` · ${location.ranges.length} possible locations; choose a candidate.` : '.';
+  note.textContent = `${sourceLocationLabel(location)}${ambiguity}${typeof location.reason === 'string' && location.reason ? ` ${location.reason}` : ''}`;
+  container.append(note);
+  const choices = node('div', 'source-location-choices');
+  location.ranges.forEach((range, rangeIndex) => {
+    const button = node('button', 'button operation-locate', location.status === 'ambiguous' ? `Locate candidate ${rangeIndex + 1}` : 'Locate in model');
+    button.type = 'button';
+    button.setAttribute('aria-controls', 'predicate-editor');
+    button.setAttribute('aria-describedby', note.id);
+    button.setAttribute('aria-pressed', 'false');
+    button.title = `Body line ${range.startLine}, column ${range.startColumn}; model line ${range.moduleLine}, column ${range.moduleColumn}`;
+    button.addEventListener('click', () => selectOperation(operation, context, item, rangeIndex, button));
+    choices.append(button);
+  });
+  container.append(choices);
+  return container;
 }
 
 function updateCursor() {
@@ -241,6 +457,8 @@ function onEdit() {
 async function checkPredicate() {
   clearTimeout(state.timer);
   if (!state.exercise || elements.editor.disabled) return;
+  clearOperationHighlight();
+  clearCanonicalForm('Checking this draft…');
   state.feedbackAbort?.abort();
   state.explainAbort?.abort();
   const controller = new AbortController();
@@ -262,11 +480,14 @@ async function checkPredicate() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ exerciseId, body, revision }),
     });
-    if (revision !== state.revision || selection !== state.selection || exerciseId !== state.exercise?.id || controller.signal.aborted) return;
+    if (revision !== state.revision || selection !== state.selection || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
     if ((result.exerciseId !== undefined && result.exerciseId !== exerciseId) || (result.revision !== undefined && result.revision !== revision)) {
       throw new Error('The server returned feedback for a different draft. Check your predicate again.');
     }
-    renderFeedback(result);
+    // A locator needs the echoed request identity, even when an older server
+    // can still provide useful feedback without those fields.
+    renderFeedback(result, result.exerciseId === exerciseId && result.revision === revision
+      ? { exerciseId, revision, selection, body } : null);
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0 && state.lastHistoryBody !== body) {
       state.history.push({ distance: result.distance, at: Date.now(), basis: COMPARISON_VERSION });
       state.history = state.history.slice(-12);
@@ -289,7 +510,7 @@ function formatNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(value) : '—';
 }
 
-function renderOperation(operation, index) {
+function renderOperation(operation, index, sourceContext) {
   const kind = String(operation.kind || 'edit');
   const item = node('li', 'operation-item');
   item.dataset.kind = kind;
@@ -301,7 +522,13 @@ function renderOperation(operation, index) {
   const title = operation.action || operation.description || operation.summary
     || `${kind.charAt(0).toUpperCase() + kind.slice(1).replaceAll('_', ' ')} ${operation.component || 'structure'}`;
   const heading = node('div', 'operation-heading');
-  heading.append(node('span', 'operation-step', String(index + 1).padStart(2, '0')), node('div', 'operation-title', title), node('span', 'operation-cost', `${formatNumber(operation.cost)} cost`));
+  const select = node('button', 'operation-title operation-select', title);
+  select.type = 'button';
+  select.setAttribute('aria-controls', 'canonical-panel predicate-editor');
+  select.setAttribute('aria-pressed', 'false');
+  select.disabled = !sourceContextCurrent(sourceContext);
+  select.addEventListener('click', () => selectOperation(operation, sourceContext, item));
+  heading.append(node('span', 'operation-step', String(index + 1).padStart(2, '0')), select, node('span', 'operation-cost', `${formatNumber(operation.cost)} cost`));
   detail.append(heading);
 
   if (typeof operation.sourceTerm === 'string' && operation.sourceTerm.length) {
@@ -342,33 +569,14 @@ function renderOperation(operation, index) {
   structure.append(structureSummary, node('div', 'operation-path', [operation.component, operation.sourceNodeKind, path].filter(Boolean).join(' · ')));
   detail.append(structure);
 
-  const span = operation.sourceSpan;
-  const body = elements.editor.value;
-  if (span && span.coordinateSystem === 'body' && span.exact === true
-    && Number.isInteger(span.start) && Number.isInteger(span.end)
-    && span.start >= 0 && span.end > span.start && span.end <= body.length
-    && typeof span.text === 'string' && body.slice(span.start, span.end) === span.text) {
-    const revision = state.revision;
-    const highlight = node('button', 'button text-button operation-highlight', 'Select in editor');
-    highlight.type = 'button';
-    highlight.addEventListener('click', () => {
-      if (revision !== state.revision || elements.editor.value !== body) return;
-      elements.editor.focus();
-      elements.editor.setSelectionRange(span.start, span.end);
-      const precedingLines = body.slice(0, span.start).split('\n').length - 1;
-      const lineHeight = parseFloat(getComputedStyle(elements.editor).lineHeight) || 23;
-      elements.editor.scrollTop = Math.max(0, precedingLines * lineHeight - elements.editor.clientHeight / 3);
-      elements.editor.scrollIntoView({ block: 'center', behavior: 'auto' });
-      updateCursor();
-    });
-    detail.append(highlight);
-  }
+  detail.append(renderSourceLocator(operation, sourceContext, index, item));
   item.append(icon, detail);
   return item;
 }
 
-function renderFeedback(result) {
+function renderFeedback(result, sourceContext = null) {
   if (result.status !== 'ok') {
+    clearCanonicalForm('Canonical form unavailable for this draft. Check the feedback and try again.');
     const statuses = {
       invalid: ['invalid', 'Check syntax', 'Your model needs a small repair.'],
       unsupported: ['invalid', 'Unsupported', 'This structure is outside the supported rewrite rules.'],
@@ -397,6 +605,12 @@ function renderFeedback(result) {
     return;
   }
   setStatus('ok', 'Checked');
+  const forms = Array.isArray(result.canonicalForm) ? result.canonicalForm
+    : typeof result.canonicalForm === 'string' ? [result.canonicalForm] : [];
+  if (forms.length && forms.every(form => typeof form === 'string')) {
+    state.canonical = { context: sourceContext, forms };
+    renderCanonicalForms();
+  } else clearCanonicalForm('The checker returned no canonical form for this draft.');
   const distance = node('div', 'distance-result');
   const caption = node('div', 'distance-caption');
   caption.append(node('span', '', 'Distance to closest correct predicate'));
@@ -428,7 +642,7 @@ function renderFeedback(result) {
   if (list.length) {
     operations.append(node('p', 'operations-intro', 'Use your canonical fragments and the operator hints to guide the next edit.'));
     const operationList = node('ol', 'operation-list');
-    list.forEach((operation, index) => operationList.append(renderOperation(operation, index)));
+    list.forEach((operation, index) => operationList.append(renderOperation(operation, index, sourceContext)));
     operations.append(operationList);
   } else operations.append(node('p', 'no-operations', result.distance === 0 ? 'No structural edits are needed.' : 'No detailed operations are available for this comparison.'));
   if (result.trace) {
@@ -438,12 +652,6 @@ function renderFeedback(result) {
     const aggregate = result.trace.hasAggregates ? ' Some entries aggregate several edits.' : '';
     operations.append(node('p', 'trace-note', `${reconciliation}${aggregate} Hints are not a certified replayable minimum edit script. Reference expressions stay hidden.`));
   }
-  const canonical = node('details', 'canonical-details');
-  const summary = node('summary', '', 'Your canonical form');
-  summary.append(node('span', 'chevron', '⌄'));
-  const canonicalText = typeof result.canonicalForm === 'string' ? result.canonicalForm
-    : Array.isArray(result.canonicalForm) ? result.canonicalForm.join('\n\n') : JSON.stringify(result.canonicalForm ?? {}, null, 2);
-  canonical.append(summary, node('pre', '', canonicalText));
   const explanation = node('section', 'explanation-section');
   explanation.id = 'luna-explanation';
   explanation.setAttribute('aria-label', 'Luna repair guidance');
@@ -454,7 +662,7 @@ function renderFeedback(result) {
   explanationBody.id = 'luna-explanation-body';
   explanationBody.append(node('p', 'explanation-pending', 'Preparing guidance from the redacted edit trace…'));
   explanation.append(explanationBody);
-  elements.result.replaceChildren(distance, operations, canonical, explanation);
+  elements.result.replaceChildren(distance, operations, explanation);
 }
 
 async function requestExplanation(payload, selection) {
@@ -552,7 +760,9 @@ async function initialize() {
   elements.search.addEventListener('input', renderExercises);
   elements.group.addEventListener('change', renderExercises);
   elements.editor.addEventListener('input', onEdit);
-  elements.editor.addEventListener('scroll', () => { elements.lines.scrollTop = elements.editor.scrollTop; });
+  elements.editor.addEventListener('scroll', syncEditorOverlay);
+  new ResizeObserver(syncEditorOverlay).observe(elements.editor);
+  $('#clear-source-highlight').addEventListener('click', clearOperationHighlight);
   ['click', 'keyup', 'select'].forEach((event) => elements.editor.addEventListener(event, updateCursor));
   elements.editor.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); checkPredicate(); }

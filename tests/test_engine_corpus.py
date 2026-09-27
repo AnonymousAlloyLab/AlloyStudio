@@ -80,7 +80,7 @@ class EngineCorpusTests(unittest.TestCase):
         for operation in result['operations']:
             required = {'kind', 'component', 'path', 'cost', 'aggregate', 'description'}
             enrichment = {'sourceTerm', 'sourceOperator', 'sourceNodeKind', 'sourceRole',
-                          'replacementOperator', 'action', 'reason', 'nextStep'}
+                          'replacementOperator', 'action', 'reason', 'nextStep', 'sourceLocation', 'canonicalLocation'}
             self.assertTrue(required.issubset(operation))
             self.assertTrue(set(operation).issubset(required | enrichment))
             self.assertIn(operation['kind'], {'insert', 'delete', 'replace', 'modify', 'component-edit'})

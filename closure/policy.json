@@ -97,6 +97,11 @@
       "surface": "Semantic equivalence of natural-language exercise descriptions and Alloy predicates; mechanical checks cover source binding, coverage, preservation, and delivery only",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Exact canonical-node to raw-source occurrence provenance, proof of source defect, and correctness of executable source repairs; locator claims cover only the frozen related-context and ambiguity fixtures",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
     }
   ],
   "sequence_departures": [

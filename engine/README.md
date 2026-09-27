@@ -37,6 +37,25 @@ paths and rendered fragments identify canonical structure, not precise source
 positions. A subtree deletion can contain several unit operations and must be
 translated into a syntactically valid learner edit.
 
+Operations also carry `sourceLocation` and `canonicalLocation`. Each has a
+`status` (`located`, `ambiguous`, or `unavailable`), a `precision`, UTF-16
+end-exclusive `ranges`, and an explicit coordinate system. Source ranges refer
+to the learner module and are taken from parsed expressions inside the selected
+predicate; helper bodies and declaration positions are excluded. Canonical
+ranges include `formIndex` and refer to the corresponding `canonicalForm`
+string. Both matchers identify related context, not certified occurrence
+provenance. Multiple candidates remain ambiguous. If canonical matching fails,
+`precision: "form"` identifies whole-form context; a missing learner phase has
+no location. Neither matcher accepts the reference source or target expressions.
+
+The HTTP layer validates and rebases source ranges to the editable body, derives
+snippets and body/model coordinates itself, and rejects invalid or incomplete
+mapping sets. It compacts whitespace outside quoted literals in canonical display
+strings and remaps canonical ranges before returning them. These presentation
+transformations do not change the canonical metric. The browser binds locations
+to the checked exercise, revision, and exact draft, and clears them on edits.
+Source and canonical locator data are excluded from the Luna prompt allowlist.
+
 `LiveTrace` reconstructs the matrix metric's actual optimal alignment using
 ordered child dynamic programming and Hungarian assignment for unordered
 children. It reuses the pinned framework's coherent and local alpha mappings

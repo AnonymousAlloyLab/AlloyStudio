@@ -17,6 +17,8 @@ JAR_FILES = (
 )
 REQUIRED_CLASSES = (
     'live/LiveFeedback.class', 'live/EngineSelfTest.class',
+    'live/SourceLocator.class', 'live/SourceLocator$Range.class', 'live/SourceLocator$1.class',
+    'live/CanonicalLocator.class', 'live/CanonicalLocator$Token.class', 'live/CanonicalLocator$Group.class',
     'is/fivefivefive/CanDis/LiveTrace.class',
 )
 ENGINE_CHECKS = 372

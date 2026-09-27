@@ -89,6 +89,20 @@ HTML error pages, malformed API JSON, and redirected guidance must show the HTTP
 status and requested endpoint without exposing response bodies. Drafts and
 canonical feedback survive those failures, with retry after recovery.
 
+## Source and canonical locators
+
+`C-LOCATORS`: frozen JVM fixtures check learner AST expression spans, repeated
+matches, quantifier headers, comments, Unicode, target isolation and unavailable
+rewritten expressions. Canonical fixtures check rendered fragments and explicit
+whole-form context. HTTP-boundary fixtures check UTF-16 offsets, body containment,
+coordinate/text recomputation, invalid and partial mapping refusal, and
+literal-preserving canonical whitespace compaction with remapped ranges.
+Locator details do not enter the Luna prompt. `C-BROWSER` separately discharges
+the paired color/underline, ambiguity, scroll/resize, keyboard and stale-draft
+interaction assertions. Matching is conservative related-context identification;
+exact canonical-node/source occurrence provenance, an exact defect proof, and
+automatic source-patch correctness are outside these claims.
+
 ## Builds
 
 `C-BUILDS`: both fresh builds, IIS packaging, and test sets must pass. Class-file,

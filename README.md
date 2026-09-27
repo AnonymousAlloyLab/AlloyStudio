@@ -30,6 +30,12 @@ Choose an exercise, edit its predicate body, and pause to receive feedback.
 Ctrl/Cmd+Enter checks immediately. The complete surrounding Alloy environment
 is available beside the editor. Download exports that environment with your
 current predicate. Drafts and recent distance history stay in your browser.
+After a successful check, the panel below the editor shows your compiled
+predicate's canonical form with compact display whitespace. Click an edit step
+to color its canonical fragment and underline the related expression in your
+raw predicate. The locator reports both predicate-body and complete-model line
+and column positions. If several expressions match, choose a possible source
+location; editing the draft clears the highlights until the next check.
 All 181 exercises have natural-language requirements displayed above the editor.
 Read them together in [the exercise guide](docs/exercise-descriptions.md).
 The descriptions state the task in prose while the browser hides reference
@@ -130,6 +136,17 @@ Matrix replay checks a canonical-tree plan to the selected nearest candidate, no
 source patch or a formal semantic proof. Normalization can change the shape of
 the learner's expression, so canonical locations are not claimed as source lines.
 The interface never automatically applies an unverified textual edit.
+
+Source locators use the learner parser's expression spans and conservative token
+matching against the canonical learner fragment. They show related context,
+not a certified defect position or an executable fix. Repeated expressions remain
+ambiguous, and rewrites with no matching source expression report an unavailable
+source location. Canonical highlights likewise identify matching rendered
+fragments; a whole-form highlight is explicitly labelled as context when no
+smaller match exists. Both views use the same color for the selected edit step.
+Whitespace compaction preserves quoted literal contents and does not alter the
+metric. Location text is derived from this learner draft and canonical form;
+reference solutions and credentials are never used to construct these locators.
 
 ## GPT-6 Luna
 

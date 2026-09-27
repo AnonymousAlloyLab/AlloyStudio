@@ -87,8 +87,10 @@ public final class LiveFeedback {
         }
 
         Canonical.Prepared student;
+        CompModule learnerModule;
         try {
-            student = prepare(studentSource, predicate);
+            learnerModule = CompUtil.parseEverything_fromString(A4Reporter.NOP, studentSource);
+            student = prepare(learnerModule, predicate);
         } catch (Err error) {
             JSONObject response = failure("invalid", error instanceof ErrorSyntax ? "SYNTAX_ERROR"
                     : error instanceof ErrorType ? "TYPE_ERROR" : "ALLOY_ERROR",
@@ -170,6 +172,9 @@ public final class LiveFeedback {
                                     + " edit units; the framework does not supply a matching operation trace."));
                 }
             }
+            SourceLocator.attach(studentSource, learnerModule, predicate, operations);
+            JSONArray canonicalForm = new JSONArray(Canonical.irTemporalFol(student));
+            CanonicalLocator.attach(canonicalForm, operations);
             Map<String, Integer> summary = new LinkedHashMap<>();
             for (int i = 0; i < operations.length(); i++) {
                 String kind = operations.getJSONObject(i).getString("kind");
@@ -179,7 +184,7 @@ public final class LiveFeedback {
                     .put("metricLabel", "ACGN Fast Rewrite canonical distance")
                     .put("distance", distance.distance())
                     .put("breakdown", new JSONObject(costs))
-                    .put("canonicalForm", new JSONArray(Canonical.irTemporalFol(student)))
+                    .put("canonicalForm", canonicalForm)
                     .put("canonicalSize", Canonical.canonicalFormSize(student))
                     .put("operations", operations).put("operationSummary", new JSONObject(summary))
                     .put("trace", new JSONObject().put("cost", distance.distance())
@@ -189,7 +194,8 @@ public final class LiveFeedback {
                             .put("matrixTraceAlgorithm", "ordered-dp-unordered-assignment-v1")
                             .put("quantifierCostVerified", reconstructed.quantifierCostVerified)
                             .put("certifiedOptimalScript", false).put("components", components)
-                            .put("note", "Learner fragments and paths refer to normalized canonical structure, not exact source positions. "
+                            .put("note", "Learner fragments and paths refer to normalized canonical structure. "
+                                    + "Source locations identify related learner expressions when available, not verified source edits. "
                                     + "Matrix operations privately replay the metric view at its optimal cost. "
                                     + "Replacement operators are shown; reference expressions, names and values remain hidden. "
                                     + "These unit operations are not an executable source patch."))
@@ -205,6 +211,10 @@ public final class LiveFeedback {
 
     static Canonical.Prepared prepare(String source, String predicate) {
         CompModule module = CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
+        return prepare(module, predicate);
+    }
+
+    private static Canonical.Prepared prepare(CompModule module, String predicate) {
         MASGVisitor visitor = new MASGVisitor(new GlobalVariables(), Set.of(predicate), module);
         visitor.visit(new ModelUnit(null, module), null);
         Integer forestId = visitor.getForestId(predicate);

@@ -399,6 +399,24 @@
       },
       "public_claims": ["closure/README.md#local-linux-and-macos-launcher"],
       "witnesses": ["tests/test_local_setup.py"]
+    },
+    {
+      "id": "C-LOCATORS",
+      "statement": "Frozen JVM and HTTP projection assertions check learner-only parser spans, related and ambiguous source matches, canonical fragment/context ranges, literal-preserving canonical whitespace compaction with UTF-16 rebasing, invalid-range rejection, source/target isolation, and locations bound to the checked draft. Browser interaction is discharged separately by C-BROWSER. Exact source-defect provenance and executable repair correctness are excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": ["test_source_locations.", "test_source_projection."],
+      "scope": {
+        "inputs": [
+          "engine/src/live/SourceLocator.java", "engine/src/live/CanonicalLocator.java",
+          "engine/src/live/LiveFeedback.java", "engine/src/is/fivefivefive/CanDis/LiveTrace.java",
+          "server.py", "luna.py", "runtime_dependencies.py", "web", "vendor/acgn",
+          "tests/test_source_locations.py", "tests/test_source_projection.py", "tests/browser.mjs",
+          "tests/test_engine_corpus.py"
+        ]
+      },
+      "public_claims": ["closure/README.md#source-and-canonical-locators"],
+      "witnesses": ["tests/test_source_locations.py", "tests/test_source_projection.py"]
     }
   ]
 }

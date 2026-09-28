@@ -168,7 +168,8 @@
           "scripts/build-windows.sh",
           "scripts/build.ps1",
           "scripts/exercise_descriptions.json",
-          "scripts/build_engine.py"
+          "scripts/build_engine.py",
+          ".gitattributes"
         ]
       },
       "public_claims": [
@@ -197,7 +198,7 @@
     },
     {
       "id": "C-DELIVERY",
-      "statement": "Vendor files match the frozen delivered snapshot manifest, based on ACGN commit 1e2667351532b0c632166fa21ae5fbc7308a8fe7 plus the local parser-origin presentation metadata patch; equality to the upstream commit is not claimed. The frozen delivery-source credential filename/token-pattern checks pass, Git ignore rules admit the bundled exercise data and exclude credentials, and the bundled data retain their expected coverage and source witnesses.",
+      "statement": "Vendor files match the frozen delivered snapshot manifest, based on ACGN commit 1e2667351532b0c632166fa21ae5fbc7308a8fe7 plus the local parser-origin presentation metadata patch; equality to the upstream commit is not claimed. The frozen delivery-source credential filename/token-pattern checks pass, Git ignore rules admit the bundled exercise data and exclude credentials, and the bundled data retain their expected coverage and source witnesses. A source-only temporary Git repository cloned with core.autocrlf=true preserves Bash entrypoint/corpus bytes and every hash-bound vendor input; this Linux-executed checkout fixture is not native Windows execution.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -212,7 +213,8 @@
           "exercises/correct-pools.json",
           "scripts/prepare_private_data.py",
           "scripts/import_exercises.py",
-          "scripts/import_correct_pools.py"
+          "scripts/import_correct_pools.py",
+          ".gitattributes"
         ]
       },
       "public_claims": [
@@ -220,7 +222,8 @@
       ],
       "witnesses": [
         "vendor/acgn/snapshot.json",
-        "tests/test_repository.py"
+        "tests/test_repository.py",
+        ".gitattributes"
       ]
     },
     {
@@ -576,7 +579,7 @@
     },
     {
       "id": "C-CICD",
-      "statement": "Frozen local fixtures check safe dashboard summary allowlists, missing/malformed/symlinked reports, clean-revision binding, historical closure labeling, suppressed process-output disclosure, tag/version agreement and public artifact path constraints. Seven local Chromium scenarios check honest missing and stale states, mocked workflow/release metadata, safe links, rate-limit failure behavior, no automatic external fetch, and IIS application-prefix assets. Workflow source assertions require pinned official actions, read-only permissions, secretless tests and dashboard-only upload paths. Actual GitHub Actions execution, repository/org settings, remote artifact publication and production deployment are outside this offline closure. Loopback HTTP fixtures check the dashboard index, relative trailing-slash redirect, exact four-file serving allowlist, traversal/private-file refusal, current bytes/content types and dashboard-confined GitHub connection policy.",
+      "statement": "Frozen local fixtures check safe dashboard summary allowlists, missing/malformed/symlinked reports, clean-revision binding, historical closure labeling, suppressed process-output disclosure, tag/version agreement and public artifact path constraints. Seven local Chromium scenarios check honest missing and stale states, mocked workflow/release metadata, safe links, rate-limit failure behavior, no automatic external fetch, and IIS application-prefix assets. Workflow source assertions require pinned official actions, read-only permissions, secretless tests and dashboard-only upload paths. Actual GitHub Actions execution, repository/org settings, remote artifact publication and production deployment are outside this offline closure. Loopback HTTP fixtures check the dashboard index, relative trailing-slash redirect, exact four-file serving allowlist, traversal/private-file refusal, current bytes/content types and dashboard-confined GitHub connection policy. Windows command-selection fixtures choose Bash beside Git for standard and portable layouts and fail closed instead of selecting an unrelated System32 WSL launcher.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -599,7 +602,8 @@
           "node_modules",
           "closure/lean-obligations.json",
           "tests/test_dashboard_routes.py",
-          "server.py"
+          "server.py",
+          ".gitattributes"
         ]
       },
       "public_claims": [

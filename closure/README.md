@@ -82,6 +82,8 @@ and relative assets under an IIS application prefix. These test fixtures use no 
 GitHub API. Actual Actions jobs, native hosted Windows/macOS execution, public
 artifact/release publication and production deployment require separate evidence.
 The release workflow prepares readiness metadata; it does not claim to deploy IIS.
+Command-selection fixtures require Git-associated Bash for standard and portable
+Windows Git layouts and reject fallback to an unrelated WSL launcher.
 
 ## Lean obligation plan
 
@@ -229,6 +231,9 @@ filename and token patterns. Git ignore rules are exercised in an isolated
 repository: the bundled catalogue and pools must be eligible for inclusion,
 while credentials and generated deployment output remain excluded. Dataset
 coverage and source-witness checks bind the included exercise data.
+A source-only temporary Git repository is cloned with `core.autocrlf=true`;
+`.gitattributes` must preserve Bash/corpus bytes and every vendored snapshot hash.
+This Linux fixture reproduces checkout conversion settings, not native Windows execution.
 Local credentials in `openai.local.json` and `secrets/` are excluded from the
 source distribution and frozen snapshots.
 This finite pattern check is not a claim that arbitrary possible secrets can be detected.

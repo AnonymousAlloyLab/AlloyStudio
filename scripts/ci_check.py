@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -11,6 +12,27 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
+
+
+def build_command(environment, *, platform_name=None):
+    """Use Git for Windows' Bash, never the unrelated System32 WSL launcher."""
+    if (os.name if platform_name is None else platform_name) != 'nt':
+        return ['bash', './scripts/build.sh']
+    git = shutil.which('git', path=environment.get('PATH'))
+    if git is None:
+        raise OSError('Git for Windows is required for the Bash build entrypoint.')
+    directory = Path(git).resolve().parent
+    # Standard installers expose cmd/git.exe or bin/git.exe; portable/MSYS
+    # layouts can expose mingw64/bin/git.exe or mingw32/bin/git.exe instead.
+    roots = [directory.parent]
+    if directory.name.lower() == 'bin' and directory.parent.name.lower() in {'mingw64', 'mingw32', 'usr'}:
+        roots.insert(0, directory.parent.parent)
+    for install in roots:
+        for relative in ('bin/bash.exe', 'usr/bin/bash.exe'):
+            candidate = install / relative
+            if candidate.is_file():
+                return [str(candidate), './scripts/build.sh']
+    raise OSError('The selected Git installation does not include Git Bash.')
 
 
 def execute(name, root=ROOT):
@@ -22,13 +44,15 @@ def execute(name, root=ROOT):
               'revision': before['sha'], 'dirty': before['dirty']}
     environment = dict(os.environ, OPENAI_DISABLED='1')
     commands = {
-        'build': ['bash', './scripts/build.sh'],
+        'build': None,
         'runtime': [sys.executable, 'runtime_dependencies.py', '--java', 'java'],
         'python': [sys.executable, 'scripts/verify_closure.py', '--unittest-report', 'build/ci/unittest-private.json'],
         'browser': ['node', 'tests/browser.mjs'],
         'dashboard': ['node', 'tests/dashboard.mjs'],
     }
     try:
+        if name == 'build':
+            commands[name] = build_command(environment)
         result = subprocess.run(commands[name], cwd=root, env=environment, capture_output=True,
                                 text=True, encoding='utf-8', errors='replace', timeout=1800, check=False)
         if result.returncode == 0:

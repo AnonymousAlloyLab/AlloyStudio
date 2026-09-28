@@ -16,6 +16,11 @@ The shipped `web/dashboard/data.json` is an honest baseline: check results are n
 
 Actions use full commit pins, read-only repository permissions, and no persisted checkout credentials. All test commands run with `OPENAI_DISABLED=1`. Failure output can contain a model in an assertion, so the CI wrapper publishes only check names, status, counts, and revision. Reproduce a failed command locally to inspect its full output.
 
+Windows checkouts preserve the exact repository bytes through `.gitattributes`,
+including Bash line endings and snapshot-bound vendor licenses. The CI build
+wrapper locates Bash beside the selected Git for Windows installation; it does
+not invoke Windows' unrelated WSL `bash.exe` launcher.
+
 ## Generate a local snapshot
 
 After installing the normal developer prerequisites (`npm ci`, Playwright Chromium, Python 3.10+, JDK 17+, and Node), run from the repository root:

@@ -107,6 +107,27 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(runner.call_args.kwargs['env']['OPENAI_DISABLED'], '1')
         self.assertEqual(json.loads((self.root / 'build/ci/build.json').read_text())['status'], 'FAIL')
 
+    def test_windows_build_uses_bash_beside_git_not_system_wsl(self):
+        for layout in ('cmd', 'bin', 'mingw64/bin', 'mingw32/bin'):
+            install = self.root / ('Git ' + layout.replace('/', '-'))
+            git = install / layout / 'git.exe'
+            git.parent.mkdir(parents=True)
+            git.touch()
+            bash = install / 'bin/bash.exe'
+            bash.parent.mkdir(exist_ok=True)
+            bash.touch()
+            with patch.object(ci_check.shutil, 'which', return_value=str(git)) as which:
+                command = ci_check.build_command({'PATH': 'synthetic-windows-path'}, platform_name='nt')
+            self.assertEqual(command, [str(bash), './scripts/build.sh'])
+            which.assert_called_once_with('git', path='synthetic-windows-path')
+        with patch.object(ci_check.shutil, 'which', return_value=str(self.root / 'System32/git.exe')):
+            with self.assertRaises(OSError):
+                ci_check.build_command({'PATH': 'synthetic-windows-path'}, platform_name='nt')
+        with patch.object(ci_check.shutil, 'which', return_value=None):
+            with self.assertRaises(OSError):
+                ci_check.build_command({}, platform_name='nt')
+        self.assertEqual(ci_check.build_command({}, platform_name='posix'), ['bash', './scripts/build.sh'])
+
     def test_release_tag_must_match_both_package_versions(self):
         self.write('package-lock.json', {'version': '0.0.1-alpha', 'packages': {'': {'version': '0.0.1-alpha'}}})
         self.assertTrue(release_preflight.validate(self.root, 'refs/tags/v0.0.1-alpha'))

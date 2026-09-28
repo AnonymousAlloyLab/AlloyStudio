@@ -61,6 +61,46 @@ class RepositoryTests(unittest.TestCase):
             self.assertNotIn(path.suffix, ('.key', '.pem'), 'Credential file in source tree')
             self.assertIsNone(token.search(path.read_bytes()), 'Token-shaped credential in ' + str(relative))
 
+    def test_windows_checkout_preserves_shell_and_vendored_snapshot_bytes(self):
+        # Build a repository from ordinary source files: closure snapshots have
+        # no .git and must not depend on developer checkout configuration.
+        with tempfile.TemporaryDirectory(prefix='alloy-checkout-bytes-') as directory:
+            base = Path(directory)
+            source, checkout = base / 'source', base / 'Windows clone with spaces'
+            source.mkdir()
+            shutil.copy2(ROOT / '.gitattributes', source / '.gitattributes')
+            shutil.copytree(ROOT / 'vendor/acgn', source / 'vendor/acgn')
+            shell_paths = sorted({path.relative_to(ROOT) for folder in ('scripts', 'engine')
+                                  for path in (ROOT / folder).rglob('*.sh')})
+            tracked_inputs = [*shell_paths, Path('exercises/catalogue.json'), Path('exercises/correct-pools.json')]
+            for relative in tracked_inputs:
+                target = source / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / relative, target)
+            environment = {'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull}
+            executable = shutil.which('git')
+            self.assertIsNotNone(executable, 'The checkout byte-preservation witness requires Git.')
+
+            def git(*arguments, cwd=source):
+                completed = subprocess.run([executable, *arguments], cwd=cwd, env=environment,
+                                           capture_output=True, timeout=30, check=False)
+                self.assertEqual(completed.returncode, 0, 'Git byte-preservation fixture failed')
+
+            git('init', '--quiet', '--template=')
+            git('-c', 'core.autocrlf=true', 'add', '--', '.')
+            git('-c', 'user.name=Checkout byte witness', '-c', 'user.email=checkout@example.invalid',
+                '-c', 'commit.gpgSign=false', 'commit', '--quiet', '-m', 'Byte preservation fixture')
+            git('-c', 'core.autocrlf=true', 'clone', '--quiet', '--no-hardlinks', str(source), str(checkout), cwd=base)
+            for relative in tracked_inputs:
+                self.assertEqual((checkout / relative).read_bytes(), (ROOT / relative).read_bytes(),
+                                 'Git changed a tracked deployment input')
+            for relative in shell_paths:
+                self.assertNotIn(b'\r\n', (checkout / relative).read_bytes(), 'Bash entrypoint gained CRLF bytes')
+            snapshot = json.loads((ROOT / 'vendor/acgn/snapshot.json').read_text())
+            for entry in snapshot['files']:
+                actual = hashlib.sha256((checkout / 'vendor/acgn' / entry['path']).read_bytes()).hexdigest()
+                self.assertEqual(actual, entry['sha256'], 'Git changed a hash-bound vendor input')
+
     def test_git_admits_bundled_data_and_excludes_local_credentials(self):
         # A closure snapshot has no .git. Exercise the actual ignore rules in a
         # new repository without reading this checkout's Git config or history.

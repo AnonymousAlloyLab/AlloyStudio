@@ -9,18 +9,23 @@ formal closure remains `NOT_ESTABLISHED`.
 Constructive supporting proofs now live in `formal/`, pinned to
 `leanprover/lean4:v4.34.1`. B01 contains ordered occurrence forests, actual
 single-node edit semantics, complete finite-pool selection, and a closure-decision
-model. B02 contains browser request/response guard models and two constructed
-counterexamples to the former optional-echo behavior. The portal now requires
-exact identity echoes for successful feedback and guidance. These are supporting
-proofs, **not a Java/Python/JavaScript semantic refinement**; therefore they do not
-by themselves discharge the original end-to-end obligations below.
+model. B03 retains B02's browser request/response models and constructed legacy
+counterexamples, and adds fixed-arity guard equivalence, complete pool scans,
+positional selection certificates and four finite implementation policies. The
+browser guards and both metric selectors now consume generated policy kernels.
+Their complete Boolean domains are checked against 9,224 kernel-proved rows,
+with eight corresponding Java input cases. This is narrow policy correspondence,
+**not a complete Java/Python/JavaScript semantic refinement**; it does not by
+itself discharge the original end-to-end obligations below.
 
 See [the runnable proof package](../formal/README.md), the frozen
-[B01](../formal/blocks/B01.json) and [B02](../formal/blocks/B02.json) inventories,
+[B01](../formal/blocks/B01.json) and [B03](../formal/blocks/B03.json) inventories,
 and [the offline verifier](../scripts/verify_lean.py). The verifier separately
-reports mathematical block status and full implementation closure. The latter
-remains `BLOCKED` until a semantic correspondence checker and all required
-proofs exist.
+reports mathematical block status, finite bridge status and full implementation
+closure. The latter remains `BLOCKED` until the remaining semantic correspondence
+and all required proofs exist. B02 remains a historical frozen block. See
+[the obligation fulfillment overview](implementation-bridges.md) for the four
+bridge boundaries, supporting components and remaining work for every obligation.
 
 The immediate proof target is the raw AST Zhang–Shasha metric and its private
 trace checker. A later full-portal target also covers the canonical metric,

@@ -28,7 +28,11 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B01",
+        "offline two-build theorem/axiom gate"
+      ]
     },
     {
       "id": "L01",
@@ -49,7 +53,10 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B01 ordered occurrence forests"
+      ]
     },
     {
       "id": "L02",
@@ -69,7 +76,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L03",
@@ -90,7 +98,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L04",
@@ -110,7 +119,10 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B01 single-node edit semantics"
+      ]
     },
     {
       "id": "L05",
@@ -131,7 +143,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L06",
@@ -152,7 +165,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L07",
@@ -174,7 +188,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L08",
@@ -195,7 +210,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L09",
@@ -216,7 +232,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L10",
@@ -238,7 +255,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L11",
@@ -260,7 +278,13 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B01 complete argmin",
+        "B03 policy scan and certificate soundness",
+        "BR-POOL-CHOOSE",
+        "BR-POOL-FINISH"
+      ]
     },
     {
       "id": "L12",
@@ -282,7 +306,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L13",
@@ -302,7 +327,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L14",
@@ -323,7 +349,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L15",
@@ -347,7 +374,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L16",
@@ -368,7 +396,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L17",
@@ -393,7 +422,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L18",
@@ -414,7 +444,10 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "BR-GUIDANCE (identity boundary only)"
+      ]
     },
     {
       "id": "L19",
@@ -435,7 +468,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L20",
@@ -457,7 +491,12 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B03 session guard equivalence",
+        "BR-FEEDBACK",
+        "BR-GUIDANCE"
+      ]
     },
     {
       "id": "L21",
@@ -482,7 +521,8 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": []
     },
     {
       "id": "L22",
@@ -506,7 +546,10 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "four complete finite Boolean runtime policy bridges"
+      ]
     },
     {
       "id": "L23",
@@ -528,7 +571,11 @@
         "transitive axiom inventory",
         "implementation correspondence witness"
       ],
-      "evidence": []
+      "evidence": [],
+      "supportingComponents": [
+        "B01 closure-decision model",
+        "fail-closed formal and bridge verifier regression controls"
+      ]
     }
   ],
   "plannedProfiles": {
@@ -577,6 +624,12 @@
   },
   "supportingProofBlocks": {
     "B01": "formal/blocks/B01.json",
-    "B02": "formal/blocks/B02.json"
-  }
+    "B02": "formal/blocks/B02.json",
+    "B03": "formal/blocks/B03.json"
+  },
+  "activeProofBlocks": [
+    "B01",
+    "B03"
+  ],
+  "implementationBridgeRegistry": "formal/bridges/registry.json"
 }

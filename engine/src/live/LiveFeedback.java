@@ -33,6 +33,7 @@ public final class LiveFeedback {
     private static final Pattern OPERATION = Pattern.compile("^(.*): (insert|delete|replace|modify) .*$");
     private static final Pattern CHILD_INDEX = Pattern.compile("\\.child\\[[0-9]+\\]");
     private static final Pattern QUANTIFIER_INDEX = Pattern.compile("\\.quantifier(\\[[0-9]+\\])");
+    private record Candidate(Canonical.Prepared prepared, CanonicalDistance.DistanceBreakdown distance) { }
     private LiveFeedback() { }
 
     public static void main(String[] args) throws Exception {
@@ -114,21 +115,22 @@ public final class LiveFeedback {
         // Every reference is parsed independently in the exercise's fixed context.
         // Completeness is mandatory: even a zero-distance winner does not stop pool
         // validation and evaluation. Invalid later candidates invalidate the request.
-        Canonical.Prepared oracle = null;
-        CanonicalDistance.DistanceBreakdown distance = null;
+        Canonical.Prepared oracle;
+        CanonicalDistance.DistanceBreakdown distance;
         int referenceCount = poolMode ? referenceBodies.length() : 1;
+        int evaluatedCandidates;
         try {
+            VerifiedPoolSelection<Candidate> selection = new VerifiedPoolSelection<>(referenceCount);
             for (int i = 0; i < referenceCount; i++) {
                 String source = poolMode ? referencePrefix + referenceBodies.getString(i) + referenceSuffix : oracleSource;
                 Canonical.Prepared candidate = prepare(source, predicate);
                 CanonicalDistance.DistanceBreakdown candidateDistance = Canonical.distanceBreakdown(student, candidate);
-                // Strict improvement preserves the first reference in the private
-                // deterministic input order when several candidates have equal cost.
-                if (distance == null || candidateDistance.distance() < distance.distance()) {
-                    oracle = candidate;
-                    distance = candidateDistance;
-                }
+                selection.consider(i, new Candidate(candidate, candidateDistance), candidateDistance.distance());
             }
+            VerifiedPoolSelection.Result<Candidate> selected = selection.result();
+            oracle = selected.value().prepared();
+            distance = selected.value().distance();
+            evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
             return poolMode ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
                     "The complete reference pool could not be evaluated. No partial comparison is available.")
@@ -206,7 +208,7 @@ public final class LiveFeedback {
                     .put("diagnostics", new JSONArray());
             if (poolMode) response.put("comparison", new JSONObject()
                     .put("strategy", "nearest-known-correct").put("poolSize", referenceCount)
-                    .put("evaluatedCandidates", referenceCount).put("complete", true));
+                    .put("evaluatedCandidates", evaluatedCandidates).put("complete", true));
             return response;
         } catch (Throwable error) {
             return failure("unsupported", "COMPARISON_UNAVAILABLE", "The framework could not compare this predicate.");

@@ -9,7 +9,10 @@ including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter
 **Alpha v0.0.1** (`v0.0.1-alpha`) adds a metric selector and a
 [project CI/CD dashboard](docs/ci-cd.md) at `/dashboard/`. The
 [Lean closure plan](docs/lean-closure.md) lists 24 open formal obligations and
-their implementation requirements; it does not claim completed Lean proofs.
+their implementation requirements. Supporting Lean proofs and four finite
+runtime policy bridges are described in the
+[implementation and obligation overview](docs/implementation-bridges.md);
+full formal closure is not established.
 
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
 From a new clone, run:

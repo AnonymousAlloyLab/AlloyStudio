@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -63,6 +64,37 @@ class LeanGateTests(unittest.TestCase):
                 patch.object(lean_offline.shutil, 'which', return_value='/usr/bin/unshare'):
             self.assertEqual(lean_offline.isolated_command(['lean']),
                 ['/usr/bin/unshare', '--user', '--map-root-user', '--net', '--', 'lean'])
+
+    def test_bridge_runtime_inventory_matches_host_path_resolution(self):
+        # Construct the review witness: a different host PATH from the clean
+        # child environment must still bind the executable the bridge runs.
+        executable = 'node.exe' if os.name == 'nt' else 'node'
+        shadow = self.write('shadow/' + executable, '#!/bin/sh\nprintf SHADOW_RUNTIME_EXECUTED\n')
+        shadow.chmod(0o755)
+        with patch.dict(os.environ, {'PATH': str(shadow.parent) + os.pathsep + os.defpath}):
+            selected = gate.bridge_runtime_path('node')
+            self.assertEqual(selected, Path(shutil.which('node')).resolve())
+            self.assertEqual(selected, shadow.resolve())
+            if os.name == 'posix':
+                output = subprocess.check_output([str(selected), '--version'],
+                    env=lean_offline.clean_environment(self.root), text=True)
+                self.assertEqual(output, 'SHADOW_RUNTIME_EXECUTED')
+
+    def test_changed_bridge_runtime_path_or_binary_is_rejected(self):
+        executable = 'node.exe' if os.name == 'nt' else 'node'
+        first = self.write('first/' + executable, '#!/bin/sh\nexit 0\n')
+        second = self.write('second/' + executable, '#!/bin/sh\nexit 0\n')
+        first.chmod(0o755)
+        second.chmod(0o755)
+        bound = {'node': {'executable': str(first.resolve()), 'sha256': gate.digest(first)}}
+        with patch.dict(os.environ, {'PATH': str(first.parent)}):
+            gate.check_bridge_runtimes(bound)
+            first.write_text('#!/bin/sh\nexit 1\n')
+            with self.assertRaises(gate.Rejected):
+                gate.check_bridge_runtimes(bound)
+        with patch.dict(os.environ, {'PATH': str(second.parent)}):
+            with self.assertRaises(gate.Rejected):
+                gate.check_bridge_runtimes(bound)
 
     def test_unchecked_proof_escapes_rejected(self):
         for body in ('theorem bad : False := by sorry', 'axiom bad : False',

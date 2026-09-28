@@ -20,6 +20,7 @@ import tempfile
 import time
 
 from lean_offline import ROOT, clean_environment, installed_toolchain, isolated_command
+import bridge_policies
 
 FLAGS = ['--trust=0', '-DwarningAsError=true', '-DgenInjectivity=false', '-j1']
 TIERS = (('luna', 'gpt-6-luna'), ('sol', 'gpt-6-sol'), ('astra', 'gpt-6-astra'))
@@ -39,6 +40,22 @@ def digest(path):
 
 def json_bytes(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+
+
+def bridge_runtime_path(name):
+    # Match bridge_policies.verify_build's host PATH resolution. The child
+    # receives a clean environment but executes this absolute selected binary.
+    executable = shutil.which(name)
+    if executable is None:
+        raise RuntimeError(f'Missing bridge runtime: {name}')
+    return Path(executable).resolve()
+
+
+def check_bridge_runtimes(inventory):
+    for name, runtime in inventory.items():
+        actual = bridge_runtime_path(name)
+        if str(actual) != runtime['executable'] or digest(actual) != runtime['sha256']:
+            raise Rejected('A bridge runtime resolution or executable changed during verification')
 
 
 def inside(root, relative):
@@ -248,7 +265,7 @@ def network_witness(work, environment):
         raise RuntimeError('Network namespace witness failed') from error
 
 
-def build_once(root, work, toolchain, sources, expected):
+def build_once(root, work, toolchain, sources, expected, bridges=False):
     formal = work / 'formal'
     formal.mkdir(parents=True)
     for source in sources:
@@ -287,9 +304,13 @@ def build_once(root, work, toolchain, sources, expected):
     except (ValueError, UnicodeError) as error:
         raise Rejected('Malformed theorem audit output') from error
     checked = check_inventory(rows, expected)
+    bridge_result = bridge_policies.verify_build(root, work / 'bridges', output, toolchain, run) if bridges else None
     artifacts = {p.relative_to(output).as_posix(): digest(p) for p in sorted(output.rglob('*.olean'))}
+    if bridges:
+        artifacts.update({'bridges/' + p.relative_to(work / 'bridges').as_posix(): digest(p)
+                          for p in sorted((work / 'bridges/java-classes').rglob('*.class'))})
     return {'inventorySha256': hashlib.sha256(json_bytes(checked)).hexdigest(),
-            'theorems': len(checked), 'artifacts': artifacts, 'network': network}
+            'theorems': len(checked), 'artifacts': artifacts, 'network': network, 'bridges': bridge_result}
 
 
 def negative_controls(root, work, toolchain):
@@ -339,6 +360,28 @@ def verify(root, names, output):
     blocks, inputs = load_blocks(root, names, pin)
     check_barrel(root)
     expected = expected_inventory(blocks)
+    bridges = 'B03' in names
+    bridge_registry = None
+    if bridges:
+        bridge_registry = json.loads((root / 'formal/bridges/registry.json').read_text())
+        objects = bridge_registry['objects']
+        if (len(objects) != len(bridge_policies.SCHEMA)
+                or len({obj['id'] for obj in objects}) != len(objects)
+                or len({obj['implementation'] for obj in objects}) != len(objects)
+                or {obj['policy'] for obj in objects} != set(bridge_policies.SCHEMA)):
+            raise Rejected('Missing, duplicate or ambiguous policy correspondence')
+        for obj in objects:
+            if obj['arity'] != bridge_policies.SCHEMA[obj['policy']][0] or not obj['theorems']:
+                raise Rejected('Malformed policy correspondence')
+            if any(name not in expected for name in obj['theorems']):
+                raise Rejected('A bridge maps to a missing or unregistered theorem')
+            for source in obj['implementationFiles']:
+                inputs[source] = digest(inside(root, source))
+        for source in ('formal/bridges/registry.json', 'formal/bridges/policies.json',
+                       'formal/ExportBridges.lean', 'scripts/bridge_policies.py',
+                       'scripts/obligation_overview.py', 'tests/test_obligation_overview.py',
+                       'docs/implementation-bridges.md'):
+            inputs[source] = digest(inside(root, source))
     proof_sources = [p for block in blocks for p in block['sources']]
     for path in ('lean-toolchain', 'formal/lean-toolchain', 'formal/Audit.lean',
                  'formal/lakefile.toml', 'formal/AlloyStudio.lean', 'scripts/lean_offline.py',
@@ -358,10 +401,20 @@ def verify(root, names, output):
     (output / 'toolchain-files.json').write_text(json.dumps(tool_inventory, indent=2) + '\n')
     environment = clean_environment(toolchain)
     version = run([str(toolchain / 'bin/lean'), '--version'], output, environment, output / 'lean-version.txt').decode().strip()
+    runtime_inventory = {}
+    if bridges:
+        for name, option in (('node', '--version'), ('java', '-version'), ('javac', '-version')):
+            executable = str(bridge_runtime_path(name))
+            runtime_inventory[name] = {
+                'executable': executable, 'sha256': digest(Path(executable)),
+                'version': run([executable, option], output, environment,
+                               output / f'{name}-version.txt').decode().strip(),
+            }
     run([sys.executable, '-I', '-m', 'unittest', 'discover', '-s', str(root / 'tests'),
          '-p', 'test_lean_verifier.py'], root, environment, output / 'gate-regressions.log')
-    builds = [build_once(root, output / f'build-{number}', toolchain, proof_sources, expected) for number in (1, 2)]
-    if builds[0]['artifacts'] != builds[1]['artifacts'] or builds[0]['inventorySha256'] != builds[1]['inventorySha256']:
+    builds = [build_once(root, output / f'build-{number}', toolchain, proof_sources, expected, bridges) for number in (1, 2)]
+    if (builds[0]['artifacts'] != builds[1]['artifacts'] or builds[0]['inventorySha256'] != builds[1]['inventorySha256']
+            or builds[0]['bridges'] != builds[1]['bridges']):
         raise Rejected('The two independent proof builds differ')
     controls = negative_controls(root, output / 'negative-controls', toolchain)
     for relative, frozen in inputs.items():
@@ -369,22 +422,30 @@ def verify(root, names, output):
             raise Rejected(f'Input changed during verification: {relative}')
     if toolchain_inventory(toolchain) != tool_inventory:
         raise Rejected('Toolchain changed during verification')
+    check_bridge_runtimes(runtime_inventory)
     ledger = json.loads((root / 'closure/lean-obligations.json').read_text())
     unresolved = [o['id'] for o in ledger['obligations'] if o['status'] != 'PROVED']
-    # No semantic implementation correspondence checker is registered yet. Even
-    # editing every roadmap status to PROVED cannot manufacture that bridge.
+    # The finite policy kernels now have checked runtime correspondence. This
+    # does not close wire/host-loop/algorithm obligations by relabeling the ledger.
     return {'schemaVersion': 1, 'kind': 'offline-formal-block-verification',
             'status': 'BLOCKED', 'blockStatus': 'BLOCKED' if review_errors else 'VERIFIED',
             'scope': 'The frozen mathematical definitions and theorem types only',
             'blocks': names, 'leanVersion': version, 'flags': FLAGS, 'allowlistedAxioms': [],
+            'bridgeStatus': ('BLOCKED' if review_errors else 'VERIFIED') if bridges else 'NOT_RUN',
+            'bridgeClaims': [obj['id'] for obj in bridge_registry['objects']] if bridges else [],
+            'correspondence': {'required_objects': 4 if bridges else 0, 'mapped_objects': 4 if bridges else 0,
+                               'unmapped_objects': 0, 'ambiguous_objects': 0,
+                               'scope': 'Complete finite Boolean policy kernels only'},
             'inputs': inputs, 'inputRootSha256': hashlib.sha256(json_bytes(inputs)).hexdigest(),
             'toolchainRootSha256': hashlib.sha256(json_bytes(tool_inventory)).hexdigest(),
+            'bridgeRuntimes': runtime_inventory,
             'builds': builds, 'negativeControls': controls, 'reviewErrors': review_errors, 'openObligations': unresolved,
-            'formalClosureBlockers': ['No checked Java/Python/JavaScript semantic correspondence bridge is registered',
+            'formalClosureBlockers': ['Full wire, host-loop and algorithm semantic correspondence is not established',
                                      *[f'{identity} is not discharged' for identity in unresolved]],
             'trust': ['Installed Lean 4.34.1 kernel, elaborator, and bundled library',
                       'Registered Audit.lean, Python verifier, hashing and subprocess implementation',
                       'Model selection and review provenance recorded by the agent orchestrator',
+                      *([] if not bridges else bridge_registry['trust']),
                       'Linux namespace enforcement, filesystem, OS and hardware'],
             'notEstablished': ['Raw AST distance optimality or Java refinement', 'Canonical normalization/metric correctness',
                                'Complete portal disclosure, behavior, coordinates or delivery refinement']}
@@ -392,7 +453,7 @@ def verify(root, names, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--blocks', nargs='+', default=['B01', 'B02'])
+    parser.add_argument('--blocks', nargs='+', default=['B01', 'B03'])
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     if args.output:

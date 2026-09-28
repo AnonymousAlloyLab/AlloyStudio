@@ -1,3 +1,18 @@
+// BEGIN LEAN POLICY KERNEL
+const LEAN_POLICIES = {"feedbackSuccess":{"acceptedMasks":[1023],"arity":10},"guidanceSuccess":{"acceptedMasks":[8191],"arity":13},"poolChoose":{"acceptedMasks":[0,2,3],"arity":2},"poolFinish":{"acceptedMasks":[3],"arity":2}};
+function verifiedPolicy(name, atoms) {
+  if (!Object.hasOwn(LEAN_POLICIES, name)) return false;
+  const policy = LEAN_POLICIES[name];
+  if (!Array.isArray(atoms) || atoms.length !== policy.arity) return false;
+  let mask = 0;
+  for (let index = 0; index < atoms.length; index += 1) {
+    if (typeof atoms[index] !== 'boolean') return false;
+    if (atoms[index]) mask |= (1 << index);
+  }
+  return policy.acceptedMasks.includes(mask);
+}
+// END LEAN POLICY KERNEL
+
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   search: $('#exercise-search'), group: $('#group-filter'), list: $('#exercise-list'),
@@ -534,11 +549,23 @@ async function checkPredicate() {
       body: JSON.stringify({ exerciseId, body, revision, metric }),
     });
     if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
-    if (((result.status === 'ok' || result.exerciseId !== undefined) && result.exerciseId !== exerciseId)
-      || ((result.status === 'ok' || result.revision !== undefined) && result.revision !== revision)) {
+    // Atom order is registered by SessionBridge.feedbackAtomNames.
+    if (result.status === 'ok' && !verifiedPolicy('feedbackSuccess', [
+      revision === state.revision, selection === state.selection, metric === state.metric,
+      exerciseId === state.exercise?.id, body === elements.editor.value, !controller.signal.aborted,
+      result.exerciseId === exerciseId, result.revision === revision,
+      result.requestedMetric === metric, result.metric === METRICS[metric].id,
+    ])) {
+      if (result.exerciseId !== exerciseId || result.revision !== revision) {
+        throw new Error('The server returned feedback for a different draft. Check your predicate again.');
+      }
+      throw new Error('The server returned feedback for a different comparison method. Check your predicate again.');
+    }
+    if (result.status !== 'ok' && ((result.exerciseId !== undefined && result.exerciseId !== exerciseId)
+      || (result.revision !== undefined && result.revision !== revision))) {
       throw new Error('The server returned feedback for a different draft. Check your predicate again.');
     }
-    if (!responseMetricMatches(result, metric) || (result.status === 'ok' && result.metric !== METRICS[metric].id)) {
+    if (result.status !== 'ok' && !responseMetricMatches(result, metric)) {
       throw new Error('The server returned feedback for a different comparison method. Check your predicate again.');
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
@@ -1074,12 +1101,20 @@ async function requestExplanation(payload, selection) {
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     if (!current()) return;
-    if (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision) throw new Error('Guidance for this draft is unavailable. Please check again.');
-    if (!responseMetricMatches(explanation, payload.metric)) throw new Error('Guidance for this comparison method is unavailable. Check again or retry guidance.');
+    if (explanation.status !== 'ok' && (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision)) throw new Error('Guidance for this draft is unavailable. Please check again.');
+    if (explanation.status !== 'ok' && !responseMetricMatches(explanation, payload.metric)) throw new Error('Guidance for this comparison method is unavailable. Check again or retry guidance.');
     const container = $('#luna-explanation-body');
     if (!container) return;
     if (explanation.status === 'ok') {
-      if ((explanation.behaviorToken ?? null) !== behaviorToken
+      // Atom order is registered by SessionBridge.guidanceAtomNames.
+      const context = education.context;
+      if (!verifiedPolicy('guidanceSuccess', [
+        context.revision === state.revision, context.selection === state.selection, context.metric === state.metric,
+        context.exerciseId === state.exercise?.id, context.body === elements.editor.value, !elements.editor.disabled,
+        state.education === education, behaviorToken === (state.behaviorEvidence?.token || null), !controller.signal.aborted,
+        explanation.exerciseId === context.exerciseId, explanation.revision === context.revision,
+        explanation.requestedMetric === context.metric, (explanation.behaviorToken ?? null) === behaviorToken,
+      ])
         || !validEducation(explanation, education.operationIds, instanceIds)) throw new Error('AI explanations could not be matched to the displayed edits and examples. Check again or retry guidance.');
       education.phase = 'ready';
       education.operations = new Map(explanation.operations.map(item => [item.id, item.description]));

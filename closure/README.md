@@ -95,9 +95,9 @@ documentation/table agreement, proposed toolchain pin and dashboard counts. All
 not completed proofs. No Lean installation or proof checker runs in this gate.
 
 The regression closure still has an empty proof inventory and zero required
-implementation-to-proof mappings. A future formal closure must register its own
-proof checker, statement/axiom evidence and implementation correspondence; passing
-this consistency test does not discharge any planned Lean theorem. See
+implementation-to-proof mappings. The separate formal verifier registers its own
+proof checker, statement/axiom evidence and four finite policy correspondences;
+passing this consistency test does not discharge any planned Lean theorem. See
 [the implementation plan](../docs/lean-closure.md) and
 [obligation register](lean-obligations.json).
 
@@ -107,9 +107,23 @@ this consistency test does not discharge any planned Lean theorem. See
 launcher setup, credential exclusion, proof-source/import restrictions, exact
 theorem inventories, review ordering and source freshness. Malformed audit data
 blocks with a diagnostic; killed compiler processes report infrastructure failure.
+Shadow-PATH fixtures bind the runtime selected by the bridge runner and reject
+changed runtime resolutions or executable contents.
 These tests do not execute Lean or establish theorem validity. The independent
 [formal verifier](../scripts/verify_lean.py) builds and audits its frozen proof
 blocks; its full implementation closure remains blocked by unproved obligations.
+
+## Implementation bridge regressions
+
+`C-BRIDGE-REGRESSIONS`: finite tests check table schemas, generated JavaScript/Java
+source, 5,462 bounded Java cost pools, invalid/incomplete pool handling, first ties,
+and actual canonical/AST selection. Policy mutations must change both production
+selectors. The obligation overview rejects missing, stale, unregistered or
+incomplete evidence and always keeps the 24 end-to-end obligations OPEN. Browser
+policy-consumption mutations belong to `C-BROWSER`. These tests do not execute
+Lean or establish universal language refinement. The separate formal verifier
+checks all 9,224 Boolean policy rows with the kernel and the actual runtime
+kernels; see [implementation bridges](../docs/implementation-bridges.md).
 
 ## HTTP
 

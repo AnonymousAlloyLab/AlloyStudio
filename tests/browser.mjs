@@ -113,6 +113,35 @@ try {
   const submit = async body => { await editor.fill(body); await page.locator('#check-button').click(); await waitChecked(); };
   let record;
 
+  await check('lean-policy-kernels-control-feedback-and-guidance-publication', async () => {
+    const original = await readFile(path.join(root, 'web/app.js'), 'utf8');
+    for (const policy of ['feedbackSuccess', 'guidanceSuccess']) {
+      const isolated = await browser.newContext();
+      try {
+        await isolated.route('**/*', route => {
+          if (!route.request().url().startsWith(url)) return route.abort();
+          return route.continue();
+        });
+        await isolated.route('**/app.js*', route => route.fulfill({ contentType: 'text/javascript',
+          body: original.replace('function verifiedPolicy(name, atoms) {',
+            `function verifiedPolicy(name, atoms) { if (name === '${policy}') return false;`) }));
+        await isolated.route('**/api/feedback', route => route.fulfill({ json: someSourceResult(route.request().postDataJSON()) }));
+        await isolated.route('**/api/behavior', mockBehaviorUnavailable);
+        await isolated.route('**/api/explain', route => route.fulfill({ json: educationResult(route.request().postDataJSON()) }));
+        const probe = await isolated.newPage();
+        await probe.goto(url + '/?exercise=graphs-inv1');
+        if (policy === 'feedbackSuccess') {
+          await probe.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
+          assert.equal(await probe.locator('.distance-value, .operation-item, .education-description').count(), 0);
+        } else {
+          await probe.locator('.explanation-unavailable').waitFor();
+          assert.equal(await probe.locator('.distance-value').count(), 1);
+          assert.equal(await probe.locator('.education-description, .explanation-text').count(), 0);
+        }
+      } finally { await isolated.close(); }
+    }
+  });
+
   await check('real-engine-initial-load-and-private-projection', async () => {
     await page.goto(url + '/?exercise=graphs-inv1');
     await waitChecked();

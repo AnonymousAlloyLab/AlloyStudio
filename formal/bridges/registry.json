@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "kind": "finite-policy-correspondence",
+  "objects": [
+    {
+      "id": "BR-FEEDBACK",
+      "policy": "feedbackSuccess",
+      "arity": 10,
+      "implementation": "web/app.js#verifiedPolicy:feedbackSuccess",
+      "implementationFiles": [
+        "web/app.js"
+      ],
+      "theorems": [
+        "AlloyStudio.SessionBridge.feedbackSuccess_eq_guard",
+        "AlloyStudio.SessionBridge.feedback_atoms_arity",
+        "AlloyStudio.SessionBridge.allVectors_complete"
+      ],
+      "supports": [
+        "L20",
+        "L22"
+      ]
+    },
+    {
+      "id": "BR-GUIDANCE",
+      "policy": "guidanceSuccess",
+      "arity": 13,
+      "implementation": "web/app.js#verifiedPolicy:guidanceSuccess",
+      "implementationFiles": [
+        "web/app.js"
+      ],
+      "theorems": [
+        "AlloyStudio.SessionBridge.guidanceSuccess_eq_acceptGuidance",
+        "AlloyStudio.SessionBridge.guidance_atoms_arity",
+        "AlloyStudio.SessionBridge.allVectors_complete"
+      ],
+      "supports": [
+        "L18",
+        "L20",
+        "L22"
+      ]
+    },
+    {
+      "id": "BR-POOL-CHOOSE",
+      "policy": "poolChoose",
+      "arity": 2,
+      "implementation": "engine/src/live/BridgePolicies.java#BridgePolicies.choose",
+      "implementationFiles": [
+        "engine/src/live/BridgePolicies.java",
+        "engine/src/live/VerifiedPoolSelection.java",
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java"
+      ],
+      "theorems": [
+        "AlloyStudio.PoolBridge.choosePolicy_kernel",
+        "AlloyStudio.PoolBridge.chooseScored_incumbent",
+        "AlloyStudio.PoolBridge.scanPolicy_firstMinimum"
+      ],
+      "supports": [
+        "L11",
+        "L22"
+      ]
+    },
+    {
+      "id": "BR-POOL-FINISH",
+      "policy": "poolFinish",
+      "arity": 2,
+      "implementation": "engine/src/live/BridgePolicies.java#BridgePolicies.finish",
+      "implementationFiles": [
+        "engine/src/live/BridgePolicies.java",
+        "engine/src/live/VerifiedPoolSelection.java",
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java"
+      ],
+      "theorems": [
+        "AlloyStudio.PoolBridge.finishPolicy_kernel",
+        "AlloyStudio.PoolBridge.completePolicy_eq_argmin",
+        "AlloyStudio.PoolBridge.certificate_first_minimum"
+      ],
+      "supports": [
+        "L11",
+        "L22"
+      ]
+    }
+  ],
+  "trust": [
+    "Lean kernel and installed standard library",
+    "Lean export tool and Python generator/verifier; every exported row additionally checked by kernel",
+    "JavaScript and JVM execution plus javac; complete finite Boolean kernels executed",
+    "Boolean-vector encoding, finite enumeration and host process/filesystem/hash semantics"
+  ],
+  "excluded": [
+    "Java iteration, input decoding, cost computation and bounded arithmetic correspondence",
+    "JavaScript raw comparison extraction, async capture and rendering semantics",
+    "Alloy parsing, canonical normalization, Zhang-Shasha optimality, trace replay and disclosure"
+  ]
+}

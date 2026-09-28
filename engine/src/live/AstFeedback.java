@@ -21,6 +21,7 @@ import java.util.Objects;
 /** Learner-only JSON presentation for unit-cost raw AST node edits. */
 final class AstFeedback {
     static final String METRIC = "acgn-raw-ast-zhang-shasha-distance";
+    private record Candidate(RawAstTrace.Prepared prepared, int distance) { }
     private AstFeedback() { }
 
     static JSONObject evaluate(JSONObject request) {
@@ -58,16 +59,22 @@ final class AstFeedback {
         } catch (Throwable error) {
             return failure("unsupported", "AST_UNAVAILABLE", "This predicate could not be represented within the raw AST limits.");
         }
-        int references = pool ? bodies.length() : 1, minimum = Integer.MAX_VALUE;
-        RawAstTrace.Prepared nearest = null;
+        int references = pool ? bodies.length() : 1;
+        int minimum, evaluatedCandidates;
+        RawAstTrace.Prepared nearest;
         try {
+            VerifiedPoolSelection<Candidate> selection = new VerifiedPoolSelection<>(references);
             for (int i = 0; i < references; i++) {
                 String reference = pool ? prefix + bodies.getString(i) + suffix : oracle;
                 RawAstTrace.Prepared candidate = RawAstTrace.prepare(
                         CompUtil.parseEverything_fromString(A4Reporter.NOP, reference), predicate);
                 int distance = RawAstTrace.distance(learner, candidate);
-                if (distance < minimum) { minimum = distance; nearest = candidate; }
+                selection.consider(i, new Candidate(candidate, distance), distance);
             }
+            VerifiedPoolSelection.Result<Candidate> selected = selection.result();
+            nearest = selected.value().prepared();
+            minimum = selected.value().distance();
+            evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
             return pool ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
                     "The complete reference pool could not be evaluated within the raw AST limits. No partial comparison is available.")
@@ -97,7 +104,7 @@ final class AstFeedback {
                                     + "inserting a node may wrap consecutive children. These tree edits guide your work but are not executable source patches. "
                                     + "Only your code and replacement operator names are shown; reference expressions remain hidden."));
             if (pool) result.put("comparison", new JSONObject().put("strategy", "nearest-known-correct")
-                    .put("poolSize", references).put("evaluatedCandidates", references).put("complete", true));
+                    .put("poolSize", references).put("evaluatedCandidates", evaluatedCandidates).put("complete", true));
             return result;
         } catch (Throwable error) {
             return failure("unsupported", "AST_COMPARISON_UNAVAILABLE", "The raw AST edit trace could not be verified.");

@@ -657,7 +657,7 @@
     },
     {
       "id": "C-LEAN-GATE",
-      "statement": "Frozen Python negative-control assertions check the offline proof launcher and block verifier reject unpinned or missing toolchains, credential-bearing environments, absent namespace support, forbidden proof constructs/imports, malformed or changed theorem inventories, stale/missing/misordered reviews, changed sources, unaudited entrypoint declarations and malformed audit rows; killed verifier processes are classified as infrastructure failures. These are finite verifier regression tests, not Lean theorem or semantic implementation-refinement evidence.",
+      "statement": "Frozen Python negative-control assertions check the offline proof launcher and block verifier reject unpinned or missing toolchains, credential-bearing environments, absent namespace support, forbidden proof constructs/imports, malformed or changed theorem inventories, stale/missing/misordered reviews, changed sources, unaudited entrypoint declarations and malformed audit rows and changed bridge runtime paths or executables; shadow-PATH fixtures bind the exact runtime selected by the bridge runner; killed verifier processes are classified as infrastructure failures. These are finite verifier regression tests, not Lean theorem or semantic implementation-refinement evidence.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -676,6 +676,45 @@
       ],
       "witnesses": [
         "tests/test_lean_verifier.py"
+      ]
+    },
+    {
+      "id": "C-BRIDGE-REGRESSIONS",
+      "statement": "Frozen finite assertions check policy table schemas and generated source, Java pool accumulation over 5,462 bounded cost pools and boundary fixtures, real canonical/AST first-minimum and invalid-candidate handling, and policy mutations affecting both production selectors. Overview fixtures reject stale, missing, unregistered or incomplete evidence and keep all end-to-end obligations OPEN. Browser policy-consumption mutations are separately checked by C-BROWSER. These regressions do not compile Lean or establish universal host-language refinement; exhaustive kernel/runtime policy correspondence belongs to the separate formal verifier.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_bridge_policies.",
+        "test_pool_bridge.",
+        "test_obligation_overview."
+      ],
+      "scope": {
+        "inputs": [
+          "scripts/bridge_policies.py",
+          "scripts/obligation_overview.py",
+          "tests/test_bridge_policies.py",
+          "tests/test_pool_bridge.py",
+          "tests/test_obligation_overview.py",
+          "formal/bridges",
+          "formal/blocks",
+          "formal/ExportBridges.lean",
+          "closure/lean-obligations.json",
+          "engine/src/live",
+          "engine/test/PoolBridgeSelfTest.java",
+          "web/app.js",
+          "runtime_dependencies.py",
+          "docs/implementation-bridges.md",
+          "closure/claims.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#implementation-bridge-regressions"
+      ],
+      "witnesses": [
+        "tests/test_bridge_policies.py",
+        "tests/test_pool_bridge.py",
+        "tests/test_obligation_overview.py",
+        "engine/test/PoolBridgeSelfTest.java"
       ]
     }
   ]

@@ -1,10 +1,26 @@
-# Lean closure implementation plan
+# Lean closure work and remaining obligations
 
 This is an implementation plan, **not a completed proof package**. All 24 obligations
 in [the machine-readable register](../closure/lean-obligations.json) are `OPEN`.
 The portal's finite regression closure does not establish Lean theorem closure or
 Java-to-Lean refinement. The alpha release can pass its regression gate while
 formal closure remains `NOT_ESTABLISHED`.
+
+Constructive supporting proofs now live in `formal/`, pinned to
+`leanprover/lean4:v4.34.1`. B01 contains ordered occurrence forests, actual
+single-node edit semantics, complete finite-pool selection, and a closure-decision
+model. B02 contains browser request/response guard models and two constructed
+counterexamples to the former optional-echo behavior. The portal now requires
+exact identity echoes for successful feedback and guidance. These are supporting
+proofs, **not a Java/Python/JavaScript semantic refinement**; therefore they do not
+by themselves discharge the original end-to-end obligations below.
+
+See [the runnable proof package](../formal/README.md), the frozen
+[B01](../formal/blocks/B01.json) and [B02](../formal/blocks/B02.json) inventories,
+and [the offline verifier](../scripts/verify_lean.py). The verifier separately
+reports mathematical block status and full implementation closure. The latter
+remains `BLOCKED` until a semantic correspondence checker and all required
+proofs exist.
 
 The immediate proof target is the raw AST Zhang–Shasha metric and its private
 trace checker. A later full-portal target also covers the canonical metric,
@@ -16,7 +32,8 @@ L22–L23; `full-portal` requires all L00–L23. The first profile covers numeri
 distance, trace replay, finite-pool selection and implementation correspondence,
 not UI, confidentiality or Alloy semantic correctness. L00 must turn the chosen
 profile into actual frozen claims before executing a formal closure. Neither
-profile currently has a proof verifier or is marked VERIFIED.
+full profile is marked VERIFIED; the current verifier checks only its separately
+frozen supporting proof blocks.
 
 ## Obligations
 
@@ -53,10 +70,11 @@ API names; they are not assertions that those declarations already exist.
 
 ## Lean modules and proof sequence
 
-1. Create `formal/lean-toolchain` pinned to `leanprover/lean4:v4.33.0`, a Lake
-   package and a lockfile. This matches the inspected ACGN checkout's pin; it is
-   a reproducibility choice, not a claim that it is the latest release. Prefer
-   Lean's standard library initially. Pin any later Mathlib dependency by commit.
+1. The Lean pin and Lake package are implemented with **no external package
+   dependencies**. Lean 4.34.1 was selected before proof work on 2026-09-28.
+   Proof commands use installed binaries inside a network-isolated namespace.
+   The registered verifier hashes the installed compiler/library files; it never
+   invokes elan, installs anything, or contacts a package registry.
 2. In `RawAst.lean`, define a finite ordered tree with a tagged label and stable
    occurrence ID. Define the adapter independently of Java, constructor by
    constructor. The metric root is `Predicate.getBody()`, including ACGN's `Body`
@@ -175,17 +193,21 @@ state transitions, including caches, revision guards and aborted requests.
 
 ## Evidence and the final gate
 
-Implement a separate formal verifier; do not reinterpret the current Python test
-verifier as a proof checker. Its registered inputs must include every Lean source,
+The separate `scripts/verify_lean.py` checks frozen mathematical blocks; the current
+Python test verifier is not a proof checker. A full implementation verifier's
+registered inputs must include every Lean source,
 lockfile, theorem inventory, statement hash, axiom policy, bridge map, Java adapter
 and certificate schema. Retain zero-proof status until all required obligations
 for the selected profile have evidence.
 
-For every exported theorem, collect the exact elaborated type and its transitive
-axiom dependencies. Reject `sorryAx`, unregistered custom axioms and undeclared
-native-evaluation dependencies. A clean `lake build` is necessary but insufficient.
+For every project theorem, including private and generated declarations, collect
+the exact elaborated type and its transitive axiom dependencies. The implemented
+policy accepts **no axiom dependencies**, including `propext`, `Classical.choice`,
+`Quot.sound` or `sorryAx`. Native proof evaluation and custom axioms are forbidden.
+The strict build disables automatically generated injectivity lemmas, some of
+which otherwise depend on extensionality. A clean `lake build` is insufficient.
 Lean documents axiom dependency inspection and the extra compiler trust introduced
-by native proofs in its [axiom reference](https://lean-lang.org/doc/reference/4.33.0/Axioms/).
+by native proofs in its [axiom reference](https://lean-lang.org/doc/reference/4.34.1/Axioms/).
 
 The formal run must then:
 
@@ -203,8 +225,10 @@ The formal run must then:
    closure. Dashboard status must say whether it reports regression closure or
    formal closure.
 
-Lean's kernel, explicitly allowed standard axioms, compiler if used, operating
-system, hardware, hashes, Alloy parser and solver boundaries must be classified.
+Lean's installed kernel/library, registered audit/verifier code, operating
+system, hardware and hashes remain explicit execution trust boundaries. The
+theorem axiom set is empty; that does not eliminate those physical/tooling trust
+boundaries. Alloy parser and solver correspondence is not silently assumed.
 Actual IIS/Cloudflare behavior, GitHub availability, quota and Luna output quality
 remain deployment/runtime evidence unless separately formalized. No finite Lean
 plan or test suite establishes universal bug freedom.

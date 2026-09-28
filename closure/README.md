@@ -101,6 +101,16 @@ this consistency test does not discharge any planned Lean theorem. See
 [the implementation plan](../docs/lean-closure.md) and
 [obligation register](lean-obligations.json).
 
+## Lean verifier guard regressions
+
+`C-LEAN-GATE`: finite Python negative controls check toolchain pinning, offline
+launcher setup, credential exclusion, proof-source/import restrictions, exact
+theorem inventories, review ordering and source freshness. Malformed audit data
+blocks with a diagnostic; killed compiler processes report infrastructure failure.
+These tests do not execute Lean or establish theorem validity. The independent
+[formal verifier](../scripts/verify_lean.py) builds and audits its frozen proof
+blocks; its full implementation closure remains blocked by unproved obligations.
+
 ## HTTP
 
 `C-HTTP`: the frozen request-validation, public projection, private path, resource

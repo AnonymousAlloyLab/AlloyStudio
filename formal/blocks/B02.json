@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "id": "B02",
+  "scope": "Executable browser identity guard model and two constructed legacy counterexamples. JavaScript source is bound as a regression input, not a formal semantic refinement.",
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-j1"
+  ],
+  "allowlistedAxioms": [],
+  "sources": {
+    "formal/AlloyStudio/Session.lean": "98be569a28acf65614e57952ba8464c8255f089cc4514cb5afd6150a77ff0646"
+  },
+  "implementationInputs": {
+    "web/app.js": "310ff6d9e243d644bb8868827c4650faaf938bf1f6b5d9da1a9eee5f8a71b9ad",
+    "tests/browser.mjs": "920e7032ee9fd4c627725708316e147435002aab3be8bbab35f33446fa7021cc"
+  },
+  "theorems": [
+    {
+      "name": "AlloyStudio.Session.aborted_response_rejected",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "2d47f0a86ab713f154c1d80b615d348d454e57106ae65802c1aa3a58e950eeca"
+    },
+    {
+      "name": "AlloyStudio.Session.accepted_guidance_matches_context",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "04a2aa1bbc5e8365b85392e00cde1a7ed6d6bab0aeffc93040f3d0970dc37d3e"
+    },
+    {
+      "name": "AlloyStudio.Session.ast_has_no_canonical_context",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "2b4246e06d18637d4757c0e9745612f685d8a7db201a5b8c69aefd1dc9ddbcfc"
+    },
+    {
+      "name": "AlloyStudio.Session.currentSnapshot_identity",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "8eff5e95c5c2df7a7c20ca6c748ed733cc957490dd0b5bbea2cc9f09ebacac80"
+    },
+    {
+      "name": "AlloyStudio.Session.different_metrics_have_different_cache_keys",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "121304e7b1d3d4fdb534033c4265a6f0fe0eedf9e7107aadc1d8f86b9e55be0e"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_aborted_response_rejected",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "7f49b8c8a3fa3258d83e4f66fd9711daa223fe7dd405ea2ecbaf1f94cb96ad44"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_accepted_guidance_matches_context",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "8fd92ee891ddd9f650a50feb6575b083ce486837ac1c1bd5c0275f7f7a3acf43"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_guidance_missing_metric_counterexample",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "66b49f28a152273438baa199b5419703204b1615f62fde318598c5ab95915082"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_metric_switch_rejects_previous_response",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "f1c57b54d9bbfe831bcaedfbe67168ebbcdcc1762201c2b91ab065709f8287f5"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_missing_echo_counterexample",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "4f47d44346707ab1271cfa26af7f1583f4b898ba0a26e4ba05c282a04dd5ced0"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_rendered_ast_has_no_canonical_correspondence",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "0e180bc723c0d10a3935bf00cb45d0a0bd3be72a6a9214e28f65fce9841d5484"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_rendered_result_matches_request",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "03ed470910fef8f3a5129a30c79ff38eef5565b33e336ac88fe3a06f8cc9ace7"
+    },
+    {
+      "name": "AlloyStudio.Session.legacy_stale_response_rejected",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "32a04f18be17600359005c22c7b05b18a80e789aee93ba6ee7717ba7cb4fdee8"
+    },
+    {
+      "name": "AlloyStudio.Session.locator_requires_echoed_identity",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "8446b9c9e52b5ba26b742fd9c9243c39231d580d01da4290963e33b09046e578"
+    },
+    {
+      "name": "AlloyStudio.Session.metric_switch_rejects_previous_response",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "4741176217a76364fe4be112113f36eb7c4558227a9151231e24e3653457f514"
+    },
+    {
+      "name": "AlloyStudio.Session.missing_metric_echo_only_canonical",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "0353f295b58b0b8432caf27823e8289cd45e9784bf0361467f0c2dfc17f38135"
+    },
+    {
+      "name": "AlloyStudio.Session.rendered_ast_has_no_canonical_correspondence",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "20a177c51666a92ad43cfedf86491a10064767bd509a2c8023b8b75ca8dd84e1"
+    },
+    {
+      "name": "AlloyStudio.Session.rendered_result_matches_request",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "220836317be1a5d2ac28161f7b4990486bf0ff2f46865d4fe54df730a3b17e0c"
+    },
+    {
+      "name": "AlloyStudio.Session.stale_response_rejected",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "87d7a98ec8ba01bbd6657adc31b6aa45c20aaa01fe3cbc7a9c7738bb2c241962"
+    },
+    {
+      "name": "AlloyStudio.Session.strict_guard_rejects_legacy_missing_echo",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "19f2d43e97bee28ed74fa397793f2df747c9ead52e6327512cd9ab0f0c053351"
+    },
+    {
+      "name": "AlloyStudio.Session.strict_guidance_rejects_legacy_missing_metric",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "b71d4e96858541acbb3c150d9b3e05cbe451569dba931a361a76d3d4c9f025d2"
+    },
+    {
+      "name": "AlloyStudio.Session.Metric.ofNat_ctorIdx",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "d016f5cd0e83cea397d2dfa5a2753d7b447bb7050369f043d4dae4f04549f289"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqMetric._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "000927dca4d6dacb6b1224b23517acb1ec16ec31cd1927e9d6a09e003fea66db"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqMetric._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "c8a9bedcf70177a3d08c03896afba23ebeccb13ef3a790794a73165d4779df01"
+    },
+    {
+      "name": "AlloyStudio.Session.BrowserState.mk.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "3cf8b1f802d674c8cb622ea754d8ad68e586298d671ddbe1e3f73318c1858faa"
+    },
+    {
+      "name": "AlloyStudio.Session.FeedbackResponse.mk.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "281ef68e31fdcbf0b9b12e7d397472d503ab72ffe6c0fe5b0dd0ca500ab7391f"
+    },
+    {
+      "name": "AlloyStudio.Session.GuidanceCapture.mk.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "3687b9f504db0d39a7b42651e7ff2e9adbe658b2f1dde063b19b13802a51047a"
+    },
+    {
+      "name": "AlloyStudio.Session.Metric.ast.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "9e77648e333f69520dc7b0e32b8cfe904705ab8832aa9297d028be42dc805d0c"
+    },
+    {
+      "name": "AlloyStudio.Session.Metric.canonical.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "43bf4eeefe385b8e2bf6f494fbde3d401f50dbb1a54bfd0ac7862e34a4d6d521"
+    },
+    {
+      "name": "AlloyStudio.Session.Presentation.mk.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "23676d2ea96b82b10dda8ac84e5e889562ff5126fe45462aaf48f59496939997"
+    },
+    {
+      "name": "AlloyStudio.Session.RequestIdentity.mk.sizeOf_spec",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "380659ab3e166172eca6f534e4f0a811ff5412b9c8d1879d86dbb3ab9dfa5296"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqBrowserState.decEq._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "7f0380c190b989ebcad641b8bdfa9bf34b476bcc95ddc83e56ed5a9c2b6703b8"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqBrowserState.decEq._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "c83d648a4c7308411cb8ba77b63deda5b6a46e1379f28990efde0fa165e4eebf"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqBrowserState.decEq._proof_3",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "2c893e906586b0fd40e6e504e889a9cb28f0c4868f939f1f396953340e8e1332"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqBrowserState.decEq._proof_4",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "64d98b49267c72594a59e152e621e4bc810336c56f263d4fdf3752161bc013bb"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqBrowserState.decEq._proof_5",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "d97a8076d5828067dbac96e65db9a3dedce215ba5ca44c7a43add4f464f3c979"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "c1a897b34d8826d9543e56d0c55b4ca69bc676ee16599db27c701fe1ec8a4d58"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "6c0c6bc427718a3057290b8c9130a28cfd3bf6b5de51c764d62329c68e772ffb"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_3",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "7c2bd7d48a845a82901fd53aab5808f6e319e3b4d6e69301b6bc8b125d0dda51"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_4",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "2025af709260cea4d77734253bef2f400c36516a48191195d7a35fa7240e6485"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_5",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "d812e800ef179028c59f8232afe072cbeb7dccbeff7d9aac2900fad450bc79f6"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqFeedbackResponse.decEq._proof_6",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "4a681f2bafea572317fa43798547dcad422d3f96954acfcf2609f7ff58f0520b"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqGuidanceCapture.decEq._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "83fe7d2f370c4d8023022738e9c0004e72d66425852f33848e104254ce0692de"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqGuidanceCapture.decEq._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "edc38dc7b632327ef10534f0612e925c94c16e459356ba6fd87fc79657847a87"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqGuidanceCapture.decEq._proof_3",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "07bb5a774d2fd6c8fac562a423c30c7ecdc010faf5a1bc753debf70df497f1ec"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqGuidanceCapture.decEq._proof_4",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "814d779d2b6584dc48e7d236bbcc85c09b059fe99c80b2fd7e1bf1ff71553301"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqPresentation.decEq._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "7dd14b863ac31f86429fa8cb1896329987a85b1a2232ded59f2d7c6827e4c8f2"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqPresentation.decEq._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "a9cd002fc2d038ba3c4016ae3652ce36a8044c426dceb7e9cf0d46bfee7fcb99"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqPresentation.decEq._proof_3",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "ec1a9407045aa8f7e6614f02136bf55e30653f21322f2eae3939cfbc09d31e07"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqPresentation.decEq._proof_4",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "fc01f2607601906e1d70338d21a7597b954bd28aecf11edb7d637d4a55890283"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_1",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "cd615c1fd8864eb49a3dbecaf3782c8e1ffa2149ea7e6bd0fd25fe607f5898db"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_2",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "80a3d63529915debd05745a2ee7e4bf60ced95e1845f26de98f01cbd747dcb4b"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_3",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "7bf2f695934791483fd6c7e886bf761a6c96c801443c3c2d7705218b1d5151ba"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_4",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "630ae5da3863a12774d56fb76e218e3c4a90620d98db4a0585f25ac904376b48"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_5",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "e9d2a64a336ca8ecc727a9781b484a554b24d8fe9e4788998433a513ef790dff"
+    },
+    {
+      "name": "AlloyStudio.Session.instDecidableEqRequestIdentity.decEq._proof_6",
+      "module": "AlloyStudio.Session",
+      "levelParameters": [],
+      "typeSha256": "d86876751dbcc8759c5a1bca16873f28662e959e971e9d1e647bcc4172e2204b"
+    }
+  ],
+  "claims": [
+    "Strict successful feedback requires current captured request identity, un-aborted state and exact server exercise/revision/requested-metric/engine-metric echoes.",
+    "Strict accepted guidance is bound to current request, education generation, behavior token, exercise/revision and requested metric.",
+    "Stale or aborted feedback and old metric responses are rejected by the model; AST presentation has no canonical correspondence.",
+    "Legacy missing feedback echoes and missing guidance metric are concrete accepted counterexamples to the stronger strict contract; the strengthened model rejects both.",
+    "Logical metric-indexed cache keys separate metrics; actual serialized key correspondence is unproved."
+  ],
+  "supports": [
+    "L20"
+  ],
+  "doesNotCloseOriginalObligations": true
+}

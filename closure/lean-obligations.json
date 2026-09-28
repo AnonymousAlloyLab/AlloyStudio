@@ -2,16 +2,13 @@
   "schemaVersion": 1,
   "kind": "formal-closure-plan",
   "formalClosureStatus": "NOT_ESTABLISHED",
-  "proposedLeanToolchain": "leanprover/lean4:v4.33.0",
-  "allowlistedAxioms": [
-    "propext",
-    "Classical.choice",
-    "Quot.sound"
-  ],
+  "proposedLeanToolchain": "leanprover/lean4:v4.34.1",
+  "allowlistedAxioms": [],
   "forbiddenProofDependencies": [
     "sorryAx",
+    "any transitive axiom dependency",
     "undeclared custom axioms",
-    "native evaluation without separately declared compiler trust"
+    "native proof evaluation"
   ],
   "obligations": [
     {
@@ -25,7 +22,7 @@
         "closure/policy.json",
         "vendor/acgn/snapshot.json"
       ],
-      "implementationDetails": "Pin Lean 4.33.0, every dependency and the exact label/operator conventions. Export an axiom inventory for every public theorem; forbid sorryAx and undeclared axioms.",
+      "implementationDetails": "Pin Lean 4.34.1 and all installed toolchain inputs. Audit every project theorem, including private/generated declarations, under --trust=0, warnings as errors and disabled generated injectivity lemmas. Require an empty transitive axiom set; source hashes alone do not prove implementation correspondence.",
       "requiredEvidence": [
         "kernel-checked theorem with frozen statement",
         "transitive axiom inventory",
@@ -577,5 +574,9 @@
       "L22",
       "L23"
     ]
+  },
+  "supportingProofBlocks": {
+    "B01": "formal/blocks/B01.json",
+    "B02": "formal/blocks/B02.json"
   }
 }

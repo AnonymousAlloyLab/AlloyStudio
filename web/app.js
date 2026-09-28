@@ -80,7 +80,8 @@ function selectMetric() {
 }
 
 function responseMetricMatches(result, metric) {
-  return result.requestedMetric === metric || (metric === 'canonical' && result.requestedMetric === undefined);
+  return result.requestedMetric === metric
+    || (result.status !== 'ok' && metric === 'canonical' && result.requestedMetric === undefined);
 }
 
 function showToast(message) {
@@ -533,7 +534,8 @@ async function checkPredicate() {
       body: JSON.stringify({ exerciseId, body, revision, metric }),
     });
     if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
-    if ((result.exerciseId !== undefined && result.exerciseId !== exerciseId) || (result.revision !== undefined && result.revision !== revision)) {
+    if (((result.status === 'ok' || result.exerciseId !== undefined) && result.exerciseId !== exerciseId)
+      || ((result.status === 'ok' || result.revision !== undefined) && result.revision !== revision)) {
       throw new Error('The server returned feedback for a different draft. Check your predicate again.');
     }
     if (!responseMetricMatches(result, metric) || (result.status === 'ok' && result.metric !== METRICS[metric].id)) {
@@ -544,8 +546,8 @@ async function checkPredicate() {
         operationIds: (Array.isArray(result.operations) ? result.operations : []).map((_, index) => `operation-${index + 1}`),
         operations: new Map(), instances: new Map() };
     }
-    // A locator needs the echoed request identity, even when an older server
-    // can still provide useful feedback without those fields.
+    // Successful feedback passed the exact echo checks above. Compatible error
+    // responses may omit identity fields and do not create locator context.
     renderFeedback(result, result.exerciseId === exerciseId && result.revision === revision
       ? { exerciseId, revision, selection, body, metric } : null);
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0 && state.lastHistoryBody !== body) {

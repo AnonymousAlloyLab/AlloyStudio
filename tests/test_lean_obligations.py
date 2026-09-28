@@ -103,8 +103,8 @@ class LeanObligationPlanTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertIn(f'All {len(self.obligations)} obligations', self.document)
         self.assertIn(self.ledger['proposedLeanToolchain'], self.document)
-        self.assertEqual(self.ledger['proposedLeanToolchain'], 'leanprover/lean4:v4.33.0')
-        self.assertEqual(set(self.ledger['allowlistedAxioms']), {'propext', 'Classical.choice', 'Quot.sound'})
+        self.assertEqual(self.ledger['proposedLeanToolchain'], 'leanprover/lean4:v4.34.1')
+        self.assertEqual(self.ledger['allowlistedAxioms'], [])
         self.assertIn('sorryAx', self.ledger['forbiddenProofDependencies'])
 
     def test_dashboard_baseline_reports_open_counts_without_proof_status(self):

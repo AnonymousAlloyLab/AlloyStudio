@@ -13,3 +13,6 @@ secrets/
 exercises/.private-import-*/
 closure/runs/
 openai.local.json
+formal/.lake/
+formal/**/*.olean
+formal/**/*.ilean

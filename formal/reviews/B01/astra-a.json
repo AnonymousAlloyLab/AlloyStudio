@@ -1,0 +1,13 @@
+{
+  "reviewerModel": "gpt-6-astra",
+  "tier": 3,
+  "blockManifestSha256": "ff09b3994b359540d1fc5ffdf6df7a4c9f365a14790d3f236d2b93ad27915ca9",
+  "priorReviews": {
+    "formal/reviews/B01/luna-a.json": "97de34891f650081a4df1bb1d6665fcc98fb0848ee90d6f69576e6b7c2947c19",
+    "formal/reviews/B01/luna-b.json": "97de34891f650081a4df1bb1d6665fcc98fb0848ee90d6f69576e6b7c2947c19",
+    "formal/reviews/B01/sol-a.json": "4dee7ffb676810e00d4ca967a90190b49241311200c336b43624e1be334225c1",
+    "formal/reviews/B01/sol-b.json": "7a964107c658cac992c8b015449a0cf2f6953b99a7799a190c6145b7aac7325a"
+  },
+  "verdict": "no_constructed_breach",
+  "findings": []
+}

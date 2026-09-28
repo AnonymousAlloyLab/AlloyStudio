@@ -654,6 +654,29 @@
         "docs/lean-closure.md",
         "tests/test_lean_obligations.py"
       ]
+    },
+    {
+      "id": "C-LEAN-GATE",
+      "statement": "Frozen Python negative-control assertions check the offline proof launcher and block verifier reject unpinned or missing toolchains, credential-bearing environments, absent namespace support, forbidden proof constructs/imports, malformed or changed theorem inventories, stale/missing/misordered reviews, changed sources, unaudited entrypoint declarations and malformed audit rows; killed verifier processes are classified as infrastructure failures. These are finite verifier regression tests, not Lean theorem or semantic implementation-refinement evidence.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_lean_verifier."
+      ],
+      "scope": {
+        "inputs": [
+          "scripts/lean_offline.py",
+          "scripts/verify_lean.py",
+          "tests/test_lean_verifier.py",
+          "closure/claims.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#lean-verifier-guard-regressions"
+      ],
+      "witnesses": [
+        "tests/test_lean_verifier.py"
+      ]
     }
   ]
 }

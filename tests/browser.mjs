@@ -313,7 +313,7 @@ try {
     assert.equal(await page.locator('.operation-locate[aria-pressed="true"]').count(), 1);
     await page.unroute('**/api/feedback');
   });
-  await check('source-locator-rejects-invalid-ranges-and-response-identities', async () => {
+  await check('source-locator-rejects-invalid-ranges', async () => {
     const mutations = [
       data => { data.operations[0].sourceLocation.ranges[0].start = -1; },
       data => { data.operations[0].sourceLocation.ranges[0].end = 1000; },
@@ -325,8 +325,6 @@ try {
       data => { data.operations[0].sourceLocation.offsetEncoding = 'utf-8'; },
       data => { data.operations[0].sourceLocation.status = 'ambiguous'; },
       data => { data.operations[0].sourceLocation.status = 'unavailable'; data.operations[0].sourceLocation.reason = 'No reliable original expression.'; },
-      data => { delete data.revision; },
-      data => { delete data.exerciseId; },
     ];
     for (const mutate of mutations) {
       await page.route('**/api/feedback', route => {
@@ -336,18 +334,6 @@ try {
       assert.equal(await page.locator('.operation-locate').count(), 0);
       assert.match(await page.locator('.source-location-unavailable').textContent(), /Source location unavailable/);
       assert.equal(await page.locator('.source-range').count(), 0);
-      await page.unroute('**/api/feedback');
-    }
-    for (const mismatch of ['revision', 'exerciseId']) {
-      await page.route('**/api/feedback', route => {
-        const data = someSourceResult(route.request().postDataJSON());
-        data[mismatch] = mismatch === 'revision' ? data.revision - 1 : 'graphs-inv8';
-        return route.fulfill({ json: data });
-      });
-      await editor.fill('some Node'); await page.locator('#check-button').click();
-      await page.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
-      assert.match(await page.locator('#feedback-result').textContent(), /different draft/);
-      assert.equal(await page.locator('.operation-locate').count(), 0);
       await page.unroute('**/api/feedback');
     }
   });
@@ -584,47 +570,144 @@ try {
     await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
     await page.unroute('**/api/explain'); await page.unroute('**/api/feedback');
   });
-  await check('metric-response-identities-fail-closed-and-preserve-ast-results', async () => {
+  await check('successful-feedback-requires-every-identity-echo-in-both-metrics', async () => {
     const metric = page.locator('#distance-metric');
-    let feedbackMode = 'ok', explanationMode = 'wrong';
+    const ids = { canonical: 'acgn-fast-rewrite-canonical-distance', ast: 'acgn-raw-ast-zhang-shasha-distance' };
+    let mutate = null, behaviorCalls = 0, explanationCalls = 0;
     await page.route('**/api/feedback', route => {
       const payload = route.request().postDataJSON();
       const data = payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload);
-      if (feedbackMode === 'wrong-selector') data.requestedMetric = 'canonical';
-      if (feedbackMode === 'wrong-id') data.metric = 'acgn-fast-rewrite-canonical-distance';
-      if (feedbackMode === 'missing-selector') delete data.requestedMetric;
+      mutate?.(data);
       return route.fulfill({ json: data });
     });
+    await page.route('**/api/behavior', route => { behaviorCalls += 1; return mockBehaviorUnavailable(route); });
     await page.route('**/api/explain', route => {
+      explanationCalls += 1;
       const payload = route.request().postDataJSON();
-      const data = educationResult(payload, { operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'] });
-      if (explanationMode === 'wrong') data.requestedMetric = 'canonical';
-      if (explanationMode === 'missing') delete data.requestedMetric;
-      if (explanationMode === 'disabled') { data.status = 'unavailable'; data.message = 'Luna is disabled for this workspace.'; }
-      return route.fulfill({ json: data });
+      return route.fulfill({ json: educationResult(payload, {
+        operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'],
+      }) });
     });
-    await metric.selectOption('ast'); await waitChecked(); await page.locator('.explanation-unavailable').waitFor();
-    for (explanationMode of ['wrong', 'missing', 'disabled']) {
-      await submit('some Node // metric identity'); await page.locator('.explanation-unavailable').waitFor();
-      assert.equal(await page.locator('.distance-value').textContent(), '3');
-      assert.equal(await page.locator('.operation-item').count(), 3);
-      assert.equal(await page.locator('.education-description').count(), 0);
+    for (const selected of ['canonical', 'ast']) {
+      if (await metric.inputValue() !== selected) {
+        await metric.selectOption(selected); await waitChecked(); await page.locator('.explanation-text').waitFor();
+      }
+      await submit(`some Node // accepted ${selected} baseline`); await page.locator('.explanation-text').waitFor();
+      const historyKey = `alloy-studio:v1:history:graphs-inv1${selected === 'ast' ? ':ast' : ''}`;
+      const history = await page.evaluate(key => localStorage.getItem(key), historyKey);
+      const calls = [behaviorCalls, explanationCalls];
+      const other = selected === 'canonical' ? 'ast' : 'canonical';
+      for (const field of ['exerciseId', 'revision', 'requestedMetric', 'metric']) {
+        for (const fault of ['missing', 'mismatched']) {
+          mutate = data => {
+            if (fault === 'missing') delete data[field];
+            else data[field] = field === 'exerciseId' ? 'graphs-inv8'
+              : field === 'revision' ? data.revision - 1 : field === 'requestedMetric' ? other : ids[other];
+          };
+          await editor.fill(`some Node // rejected ${selected} ${field} ${fault}`);
+          await page.locator('#check-button').click();
+          await page.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
+          assert.match(await page.locator('#feedback-result').textContent(),
+            field === 'exerciseId' || field === 'revision' ? /different draft/ : /different comparison method/,
+            `${selected} ${field} ${fault}`);
+          assert.equal(await page.locator('.distance-value, .operation-item, .education-description, .source-range, .canonical-range').count(), 0);
+          assert.equal(await page.locator('#canonical-content pre').count(), 0);
+          assert.deepEqual([behaviorCalls, explanationCalls], calls, 'Rejected success must not start downstream analysis');
+          assert.equal(await page.evaluate(key => localStorage.getItem(key), historyKey), history,
+            'Rejected success must not enter progress history');
+        }
+      }
+      mutate = null;
+      await submit(`some Node // accepted ${selected} exact echoes`); await page.locator('.explanation-text').waitFor();
+      assert.equal(await page.locator('.distance-value').textContent(), selected === 'ast' ? '3' : '1');
       await page.locator('.operation-select').first().click();
       assert.equal(await page.locator('.source-range').textContent(), 'some Node');
     }
-    for (feedbackMode of ['wrong-selector', 'wrong-id', 'missing-selector']) {
-      await editor.fill('some Node'); await page.locator('#check-button').click();
-      await page.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
-      assert.match(await page.locator('#feedback-result').textContent(), /different comparison method/);
-      assert.equal(await page.locator('.distance-value, .operation-item, .education-description, .source-range').count(), 0);
-    }
-    feedbackMode = 'ok'; explanationMode = 'ok';
-    await submit('some Node'); await page.locator('.explanation-text').waitFor();
     await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
-    // Older canonical-only servers can still omit the selector echo.
-    feedbackMode = 'missing-selector'; explanationMode = 'missing';
-    await submit('some Node'); await page.locator('.explanation-text').waitFor();
-    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('successful-guidance-requires-every-identity-echo-in-both-metrics', async () => {
+    const metric = page.locator('#distance-metric');
+    let mutate = null;
+    await page.route('**/api/feedback', route => {
+      const payload = route.request().postDataJSON();
+      return route.fulfill({ json: payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload) });
+    });
+    await page.route('**/api/behavior', route => route.fulfill({ json: behaviorResult(route.request().postDataJSON()) }));
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON();
+      const data = educationResult(payload, {
+        operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'],
+        prefix: mutate ? 'REJECTED_RESPONSE_GUIDANCE' : 'Current checked guidance',
+        summary: mutate ? 'REJECTED_RESPONSE_GUIDANCE must never be displayed.' : 'Inspect one selected expression and compare its example.',
+      });
+      mutate?.(data);
+      return route.fulfill({ json: data });
+    });
+    for (const selected of ['canonical', 'ast']) {
+      if (await metric.inputValue() !== selected) {
+        await metric.selectOption(selected); await waitChecked(); await page.locator('.explanation-text').waitFor();
+      }
+      const other = selected === 'canonical' ? 'ast' : 'canonical';
+      for (const field of ['exerciseId', 'revision', 'requestedMetric', 'behaviorToken']) {
+        for (const fault of ['missing', 'mismatched']) {
+          mutate = data => {
+            if (fault === 'missing') delete data[field];
+            else data[field] = field === 'exerciseId' ? 'graphs-inv8'
+              : field === 'revision' ? data.revision - 1 : field === 'requestedMetric' ? other : '0'.repeat(64);
+          };
+          await submit(`some Node // guidance ${selected} ${field} ${fault}`);
+          await page.locator('.explanation-unavailable').waitFor();
+          assert.equal(await page.locator('.education-description, .explanation-text').count(), 0, `${selected} ${field} ${fault}`);
+          assert(!(await page.locator('body').textContent()).includes('REJECTED_RESPONSE_GUIDANCE'));
+          assert.equal(await page.locator('.distance-value').textContent(), selected === 'ast' ? '3' : '1');
+          assert.equal(await page.locator('.operation-item').count(), selected === 'ast' ? 3 : 1);
+          assert.equal(await page.locator('.behavior-score').textContent(), '0.667');
+          assert.equal(await page.locator('.behavior-category-choice').count(), 4);
+          await page.locator('.operation-select').first().click();
+          assert.equal(await page.locator('.source-range').textContent(), 'some Node');
+        }
+      }
+      mutate = null;
+      await submit(`some Node // accepted ${selected} guidance`); await page.locator('.explanation-text').waitFor();
+      assert.equal(await page.locator('.operation-explanation .education-description').count(), selected === 'ast' ? 3 : 1);
+      assert.equal(await page.locator('.instance-explanation .education-description').count(), 1);
+    }
+    await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('strict-success-echo-checks-preserve-compatible-error-responses', async () => {
+    const metric = page.locator('#distance-metric');
+    let failedFeedback = false;
+    await page.route('**/api/feedback', route => {
+      const payload = route.request().postDataJSON();
+      if (failedFeedback) return route.fulfill({ json: { status: 'timeout',
+        ...(payload.metric === 'ast' ? { requestedMetric: 'ast' } : {}),
+        diagnostics: [{ message: 'Legacy timeout remains visible.' }] } });
+      return route.fulfill({ json: payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload) });
+    });
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON();
+      return route.fulfill({ json: { status: 'unavailable', exerciseId: payload.exerciseId, revision: payload.revision,
+        ...(payload.metric === 'ast' ? { requestedMetric: 'ast' } : {}),
+        message: 'Legacy unavailable guidance remains visible.' } });
+    });
+    for (const selected of ['canonical', 'ast']) {
+      if (await metric.inputValue() !== selected) {
+        await metric.selectOption(selected); await waitChecked(); await page.locator('.explanation-unavailable').waitFor();
+      }
+      failedFeedback = true;
+      await editor.fill(`some Node // ${selected} legacy timeout`); await page.locator('#check-button').click();
+      await page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Timed out');
+      assert.match(await page.locator('#feedback-result').textContent(), /Legacy timeout remains visible/);
+      assert.equal(await page.locator('.operation-item, .distance-value, .education-description').count(), 0);
+      assert.equal(await editor.isEnabled(), true);
+      failedFeedback = false;
+      await submit(`some Node // ${selected} legacy guidance`); await page.locator('.explanation-unavailable').waitFor();
+      assert.match(await page.locator('.explanation-unavailable').textContent(), /Legacy unavailable guidance remains visible/);
+      assert.equal(await page.locator('.distance-value').textContent(), selected === 'ast' ? '3' : '1');
+    }
+    await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-unavailable').waitFor();
     await page.unroute('**/api/explain'); await page.unroute('**/api/feedback');
   });
   await check('real-ast-distance-shows-atomic-steps-and-source-location', async () => {

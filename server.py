@@ -21,10 +21,16 @@ PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmen
 SUMMARY_FIELDS = ('id', 'title', 'group', 'predicate', 'description')
 MAX_BODY_BYTES = 8192
 MAX_REQUEST_BYTES = 16384
+METRICS = {'canonical': 'acgn-fast-rewrite-canonical-distance',
+           'ast': 'acgn-raw-ast-zhang-shasha-distance'}
 STATIC = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/index.html': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
           '/styles.css': ('styles.css', 'text/css; charset=utf-8')}
+STATIC.update({'/dashboard/' + name: ('dashboard/' + name, mime) for name, mime in (
+    ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
+    ('styles.css', 'text/css; charset=utf-8'), ('data.json', 'application/json; charset=utf-8'))})
+STATIC['/dashboard/'] = STATIC['/dashboard/index.html']
 POOL_VALIDATION_CACHE = OrderedDict()
 POOL_VALIDATION_LOCK = threading.Lock()
 
@@ -443,8 +449,10 @@ class Portal(ThreadingHTTPServer):
         self.behavior_cache = OrderedDict()
         super().__init__(address, Handler)
 
-    def evaluate(self, record, body):
-        key = (record['id'], hashlib.sha256(body.encode()).hexdigest())
+    def evaluate(self, record, body, metric='canonical'):
+        if not isinstance(metric, str) or metric not in METRICS:
+            return {'status': 'invalid', 'diagnostics': [{'message': 'Choose Canonical form or Raw syntax tree.'}]}
+        key = (record['id'], hashlib.sha256(body.encode()).hexdigest(), metric)
         with self.cache_lock:
             if key in self.cache:
                 self.cache.move_to_end(key)
@@ -456,7 +464,7 @@ class Portal(ThreadingHTTPServer):
                        'referenceBodies': self.correct_pools[record['id']],
                        'referencePrefix': record['environmentBefore'] + record['predicateHeader'] + '{\n',
                        'referenceSuffix': '\n}' + record['environmentAfter'],
-                       'predicate': record['predicate']}
+                       'predicate': record['predicate'], 'metric': metric}
             command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
                        runtime_classpath(self.root),
                        'live.LiveFeedback']
@@ -475,9 +483,11 @@ class Portal(ThreadingHTTPServer):
                                        'complete': True}
                 if raw.get('status') == 'ok' and raw.get('comparison') != expected_comparison:
                     return {'status': 'error', 'diagnostics': [{'message': 'The complete correct-predicate pool could not be compared.'}]}
+                if raw.get('status') == 'ok' and raw.get('metric', METRICS['canonical']) != METRICS[metric]:
+                    return {'status': 'error', 'diagnostics': [{'message': 'The analysis returned a different distance metric. Please retry.'}]}
                 # The adapter emits only public data. Project again at the HTTP boundary.
                 allowed = ('status', 'metric', 'distance', 'breakdown', 'canonicalForm',
-                           'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison')
+                           'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison', 'astSize')
                 result = {k: raw[k] for k in allowed if k in raw}
                 project_canonical_locations(result)
                 project_source_locations(result.get('operations'), record, body)
@@ -563,13 +573,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'no-referrer')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
+        connect = "'self' https://api.github.com" if urlsplit(self.path).path.startswith('/dashboard/') else "'self'"
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src " + connect + "; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
         self.end_headers()
         try: self.wfile.write(data)
         except (BrokenPipeError, ConnectionResetError): pass
 
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
+        if path == '/dashboard':
+            self.send_response(308)
+            self.send_header('Location', 'dashboard/')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
         if path == '/api/health':
             return self.reply(200, {'status': 'ok', 'exercises': len(self.server.exercises),
                                     'engine': 'ACGN / CanDis Fast Rewrite IR'})
@@ -608,11 +625,14 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, OSError, RecursionError):
             return self.reply(400, {'error': 'Invalid JSON request.'})
         expected = {'exerciseId', 'body', 'revision'}
+        optional = ({'metric', 'behaviorToken'} if path == '/api/explain'
+                    else {'metric'} if path == '/api/feedback' else set())
         fields = set(data) if isinstance(data, dict) else set()
         if (not isinstance(data, dict)
-                or fields not in (expected, expected | {'behaviorToken'} if path == '/api/explain' else expected)
+                or not expected <= fields or not fields <= expected | optional
                 or not isinstance(data['exerciseId'], str)
                 or type(data['revision']) is not int or not 0 <= data['revision'] <= 2**53 - 1
+                or ('metric' in data and (not isinstance(data['metric'], str) or data['metric'] not in METRICS))
                 or ('behaviorToken' in data and (not isinstance(data['behaviorToken'], str)
                     or re.fullmatch(r'[0-9a-f]{64}', data['behaviorToken']) is None))):
             return self.reply(400, {'error': 'Expected exerciseId, body, and a nonnegative integer revision.'})
@@ -625,8 +645,9 @@ class Handler(BaseHTTPRequestHandler):
             if result.get('status') == 'ok':
                 result = dict(result, behaviorToken=behavior_token(record['id'], data['body'], result))
             return self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision']))
+        metric = data.get('metric', 'canonical')
         result = ({'status': 'invalid', 'diagnostics': [{'message': error}]} if error
-                  else self.server.evaluate(record, data['body']))
+                  else self.server.evaluate(record, data['body'], metric))
         if path == '/api/explain':
             if result.get('status') != 'ok':
                 result = {'status': 'unavailable', 'model': 'gpt-6-luna',
@@ -641,11 +662,11 @@ class Handler(BaseHTTPRequestHandler):
                     if evidence is None or behavior_token(record['id'], data['body'], evidence) != token:
                         return self.reply(200, {'status': 'unavailable', 'model': 'gpt-6-luna',
                             'message': 'These examples have expired. Check your predicate again to refresh their guidance.',
-                            'exerciseId': record['id'], 'revision': data['revision']})
+                            'exerciseId': record['id'], 'revision': data['revision'], 'requestedMetric': metric})
                 result = self.server.explainer.explain(result, student_body=data['body'], behavior=evidence)
                 if token is not None:
                     result = dict(result, behaviorToken=token)
-        self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision']))
+        self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision'], requestedMetric=metric))
 
 
 def main():

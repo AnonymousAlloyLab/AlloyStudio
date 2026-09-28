@@ -57,7 +57,7 @@ Open **http://127.0.0.1:8080**. To prepare and check the checkout without starti
 the server, run `./scripts/setup.sh` without flags instead.
 
 Both commands validate the bundled exercise data and dependency hashes, compile
-from the bundled source using Java 17 bytecode, and run all 372 engine checks.
+from the bundled source using Java 17 bytecode, and run all 378 engine checks.
 A failure stops startup. Relative JDK paths are relative to the terminal's
 current directory; you may invoke the scripts from outside the checkout.
 

@@ -76,7 +76,7 @@ try {
     $runtimeDependencies = Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
         -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe)
     Assert-Check ($runtimeDependencies.dependencies.Count -eq 7) 'all seven bundled JARs have their recorded SHA-256 hashes'
-    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 372) 'fresh JVM passes 372 engine checks with the packaged classpath'
+    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 378) 'fresh JVM passes 378 engine checks with the packaged classpath'
 
     $stage = 'task identity, configuration, and isolation'
     $publicRoots = @(Get-IisPhysicalRoots)
@@ -106,7 +106,7 @@ try {
     Assert-Check $true 'private paths are outside IIS and ACLs exclude public readers'
 
     $stage = 'IIS static assets and proxy health'
-    foreach ($asset in @('', 'index.html', 'app.js', 'styles.css')) {
+    foreach ($asset in @('', 'index.html', 'app.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"
     }

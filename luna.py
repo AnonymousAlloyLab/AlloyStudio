@@ -55,7 +55,13 @@ instance within the displayed bounds, not a universal result. If behavior is una
 examples are unavailable and make no semantic claims. The behavioral score uses bounded samples
 and is rounded to 0.001; even 1.000 can coexist with counterexamples and is not proof. Canonical
 distance zero is equality under implemented normalization, not proof of semantic correctness.
-Canonical edits target a nearest member of a finite corpus-labelled correct pool INCLUDING
+Raw AST distance uses Zhang-Shasha edits on the parsed, ordered syntax tree without canonical
+normalization. An AST deletion removes one part and keeps its children; an insertion adds one
+part around or beside existing children. These are tree operations, not ready-to-apply textual
+patches. AST mode has no canonical counterpart to highlight. Explain the supplied learner
+fragment and approved operator hint without guessing the missing expression. Use the selected
+metric in the trace; do not describe AST edits as canonical simplification. Both metrics
+target a nearest member of a finite corpus-labelled correct pool INCLUDING
 the oracle; behavioral examples compare with the oracle. Do not conflate the two. The summary
 should connect what the learner can learn from these edits and examples. Do not combine hints
 into a solution route or fill the summary with repeated caveats.'''
@@ -63,7 +69,10 @@ REPLACEMENT_OPERATORS = frozenset(('and', 'or', 'not', 'implies', 'iff', '=', '!
     'in', '<', '<=', '!>', '!>=', '!in', '!<', '!<=', 'some', 'no', 'one', 'lone', 'all', '->',
     '.', '<:', ':>', '&', '++', '+', '-', '*', '/', '%', '<<', '>>', '>>>', 'set', 'exactly',
     '~', '^', '#', 'int', 'Int', "'", 'before', 'historically', 'once', 'always', 'eventually',
-    'after', 'until', 'releases', 'since', 'triggered', 'if-then-else', 'disj', 'sum'))
+    'after', 'until', 'releases', 'since', 'triggered', 'if-then-else', 'disj', 'sum',
+    'some->some', 'some->one', 'some->lone', 'some->', 'one->some', 'one->one',
+    'one->lone', 'one->', 'lone->some', 'lone->one', 'lone->lone', 'lone->',
+    '->some', '->one', '->lone'))
 
 
 def _private_text(path):
@@ -134,7 +143,11 @@ def prompt_trace(feedback, *, _complete=False):
     def count(value):
         if type(value) is not int or value < 0: raise ValueError('Invalid trace count')
         return value
-    components = ('temporal', 'quantifier', 'matrix')
+    metric = feedback.get('metric', 'acgn-fast-rewrite-canonical-distance')
+    if metric not in ('acgn-fast-rewrite-canonical-distance', 'acgn-raw-ast-zhang-shasha-distance'):
+        raise ValueError('Invalid distance metric')
+    ast = metric == 'acgn-raw-ast-zhang-shasha-distance'
+    components = ('ast',) if ast else ('temporal', 'quantifier', 'matrix')
     operations = []
     for op in feedback['operations']:
         kind = op['kind']
@@ -157,9 +170,10 @@ def prompt_trace(feedback, *, _complete=False):
         operations.append(detail)
     total = count(feedback['distance'])
     if sum(op['cost'] for op in operations) != total: raise ValueError('Inconsistent trace costs')
+    if set(feedback['breakdown']) != set(components): raise ValueError('Invalid distance components')
     breakdown = {c: count(feedback['breakdown'][c]) for c in components}
     if sum(breakdown.values()) != total: raise ValueError('Inconsistent distance components')
-    result = {'metric': 'ACGN CanDis Fast Rewrite IR', 'distance': total,
+    result = {'metric': 'ACGN raw AST Zhang-Shasha' if ast else 'ACGN CanDis Fast Rewrite IR', 'distance': total,
             'breakdown': breakdown,
             'operations': operations if _complete else operations[:32], 'totalOperations': len(operations),
             'detailsTruncated': False if _complete else len(operations) > 32}
@@ -432,7 +446,7 @@ class Explainer:
     def explain(self, feedback, *, student_body='', behavior=None):
         base = {'model': MODEL}
         key = self.key_reader()
-        if not key: return dict(base, status='disabled', message='Luna is not configured. Canonical feedback remains available.')
+        if not key: return dict(base, status='disabled', message='Luna is not configured. Distance feedback remains available.')
         try: trace = prompt_education(feedback, student_body, behavior)
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
             return dict(base, status='unavailable', message='The complete learner evidence cannot be explained within the supported limits.')
@@ -472,11 +486,11 @@ class Explainer:
                     details = json.loads(error.read(8192)).get('error', {})
                     quota = details.get('type') == 'insufficient_quota' or details.get('code') in ('insufficient_quota', 'credit_balance_exhausted')
                 except (ValueError, OSError, AttributeError): pass
-            message = ('The OpenAI project has no available API credits. Canonical feedback remains available.' if quota
+            message = ('The OpenAI project has no available API credits. Distance feedback remains available.' if quota
                        else 'Luna credentials or model access were rejected.' if error.code in (401, 403, 404)
                        else 'Luna is temporarily unavailable. Retry shortly.')
             return dict(base, status='unavailable', message=message)
         except (URLError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
-            return dict(base, status='unavailable', message='Luna could not complete the explanation. Canonical feedback remains available.')
+            return dict(base, status='unavailable', message='Luna could not complete the explanation. Distance feedback remains available.')
         finally:
             self.slots.release()

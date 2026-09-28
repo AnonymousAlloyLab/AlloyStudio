@@ -66,7 +66,7 @@ class RuntimeDependencyTests(unittest.TestCase):
         completed, report = self.checker(java=self.java, poisoned=True)
         self.assertEqual(completed.returncode, 0, report)
         self.assertEqual(report['status'], 'PASS')
-        self.assertEqual(report['engine'], {'status': 'PASS', 'checks': 372})
+        self.assertEqual(report['engine'], {'status': 'PASS', 'checks': 378})
         dependencies = {item['name']: item for item in report['dependencies']}
         self.assertEqual(set(dependencies), set(JAR_FILES))
         for item in dependencies.values():

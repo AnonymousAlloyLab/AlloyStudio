@@ -107,6 +107,21 @@
       "surface": "Behavioral-score calibration or unbounded equivalence, exhaustive instance enumeration beyond declared bounds, all-model solver success, and equality to upstream Rewarder when omitted module facts affect its results",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Universal raw AST Zhang-Shasha optimality, arbitrary-input Java refinement, and executable source repair correctness; the finite raw AST claim checks 10,404 small-tree pairs and the declared parser/corpus fixtures only",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Actual GitHub Actions runs, hosted Windows/macOS runner execution, repository/organization access and billing state, remote artifact or release publication, and production deployment; local workflow configuration and mocked dashboard metadata fixtures do not establish these",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "Lean compilation, kernel proof checking, theorem validity, transitive axiom verification and Java-to-Lean correspondence; all 24 planned obligations remain OPEN and formal closure is NOT_ESTABLISHED",
+      "classification": "OUT_OF_SCOPE",
+      "evidence_kind": "OUT_OF_SCOPE"
     }
   ],
   "sequence_departures": [

@@ -28,7 +28,32 @@ JSON object to stdout. Input is `{studentSource, oracleSource, predicate}` where
 both sources are complete independent Alloy modules. This is a private server
 contract: a browser must never supply or receive `oracleSource`.
 
-Success returns `status: "ok"`, `metric`, `distance`, `breakdown` (temporal,
+The private request also accepts `metric: "canonical"` (default) or `metric:
+"ast"`; other values are rejected. HTTP `/api/feedback` and `/api/explain` accept
+the same selector and echo `requestedMetric`. Both modes compare the complete
+oracle-inclusive correct pool. Feedback caches and browser request identities
+include the selected metric; behavioral examples still compare to the oracle.
+
+AST mode uses the vendored `OrderedTreeEditDistance` Zhang–Shasha routine with
+`DatasetConventions.rawAstLabel/rawAstChildren`, rooted at `Predicate.getBody()`.
+It preserves `Body` and synthetic `NOOP` wrappers, variable names and ordered
+children. It does not canonicalize first. Consequently a source-level operator
+change can involve more than one tree edit when wrappers differ. This differs
+from the historical augmenter's raw-AST subtree recurrence; the portal uses
+unit node deletion with child promotion and insertion with consecutive-child
+adoption. A private independent backtrace and actual replay must agree with the
+framework's distance before any operations are returned.
+
+AST success uses `metric: "acgn-raw-ast-zhang-shasha-distance"`, `breakdown:
+{"ast": distance}`, `astSize`, and unit operations with `component: "ast"` and
+original learner postorder paths `ast[n]`. Insertions point to an existing learner
+anchor. `canonicalForm` is empty and canonical locations are unavailable in this
+mode. Raw source locations remain learner-only. `trace.astReplayVerified` records
+the runtime replay check, not a Lean certificate. Limits are 1,024 nodes per tree,
+depth 256 and 8,000,000 forest cells per pair, plus the outer worker time limit.
+Any failing candidate invalidates the entire pool result.
+
+Canonical success returns `status: "ok"`, `metric`, `distance`, `breakdown` (temporal,
 quantifier, matrix), learner-only `canonicalForm` (array of IR strings),
 `canonicalSize`, `operations`, `operationSummary`, `trace`, and `diagnostics`.
 Each operation has `kind`, `component`, `path`, `cost`, `aggregate`, and

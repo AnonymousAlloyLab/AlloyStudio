@@ -24,8 +24,18 @@ REQUIRED_CLASSES = (
     'is/fivefivefive/CanDis/core/EGraphNode$SourceOrigin.class',
     'is/fivefivefive/ACGN/visitor/MASGVisitor$1.class',
     'is/fivefivefive/ACGN/visitor/MASGVisitor$2.class',
+    'live/AstFeedback.class', 'live/AstFeedback$Locations.class',
+    'is/fivefivefive/CanDis/RawAstTrace.class', 'is/fivefivefive/CanDis/RawAstTrace$1.class',
+    'is/fivefivefive/CanDis/RawAstTrace$Edit.class', 'is/fivefivefive/CanDis/RawAstTrace$Index.class',
+    'is/fivefivefive/CanDis/RawAstTrace$Mutable.class', 'is/fivefivefive/CanDis/RawAstTrace$Prepared.class',
+    'is/fivefivefive/CanDis/RawAstTrace$PrivateEdit.class', 'is/fivefivefive/CanDis/RawAstTrace$Result.class',
+    'is/fivefivefive/CanDis/RawAstTrace$Solver.class', 'is/fivefivefive/CanDis/RawAstTrace$Tree.class',
+    'is/fivefivefive/CanDis/DatasetConventions.class',
+    'is/fivefivefive/CanDis/core/OrderedTreeEditDistance.class',
+    'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$Adapter.class',
+    'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$IndexedTree.class',
 )
-ENGINE_CHECKS = 372
+ENGINE_CHECKS = 378
 
 
 def runtime_classpath(root):

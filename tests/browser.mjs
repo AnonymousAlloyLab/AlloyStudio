@@ -20,6 +20,7 @@ const externalRequests = [];
 async function check(name, fn) { await fn(); passed.push(name); }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const result = (payload, distance) => ({ ...payload, body: undefined, status: 'ok', metric: 'acgn-fast-rewrite-canonical-distance',
+  requestedMetric: payload.metric || 'canonical',
   distance, breakdown: { temporal: 0, quantifier: 0, matrix: distance }, canonicalForm: ['some Node'],
   operations: distance ? [{ kind: 'component-edit', component: 'matrix', path: 'matrix', cost: distance, aggregate: true,
     description: 'Matrix edit units with no matching detailed trace.' }] : [],
@@ -46,6 +47,21 @@ const someSourceResult = payload => {
   const start = payload.body.indexOf('some Node');
   return sourceResult(payload, [[start, start + 'some Node'.length]]);
 };
+const astResult = payload => {
+  const first = payload.body.indexOf('some Node'), last = payload.body.lastIndexOf('Node');
+  const ranges = [[first, first + 9], [last, last + 4], [first, first + 9]];
+  return { ...payload, body: undefined, requestedMetric: 'ast', metric: 'acgn-raw-ast-zhang-shasha-distance',
+    status: 'ok', distance: 3, breakdown: { ast: 3 }, astSize: 5, canonicalForm: [],
+    comparison: { strategy: 'nearest-known-correct', poolSize: 2, evaluatedCandidates: 2, complete: true },
+    operations: ['replace', 'delete', 'insert'].map((kind, index) => ({
+      kind, component: 'ast', path: `ast.child[${index}]`, cost: 1, aggregate: false,
+      action: ['Review this operator', 'Review this syntax-tree node', 'Review this insertion context'][index],
+      sourceTerm: payload.body.slice(...ranges[index]), sourceRole: kind === 'insert' ? 'insertion-anchor' : 'source',
+      sourceLocation: { status: 'located', precision: kind === 'insert' ? 'related' : 'node', coordinateSystem: 'body', offsetEncoding: 'utf-16',
+        ranges: [sourceRange(payload.body, ...ranges[index])] },
+      canonicalLocation: { status: 'unavailable', ranges: [], reason: 'AST edits refer to the original syntax tree.' },
+    })), trace: { cost: 3, matchesDistance: true, hasAggregates: false, certifiedOptimalScript: false } };
+};
 const behaviorInstance = (identity, states = 1) => ({ traceLength: states, loopState: states > 1 ? 0 : -1,
   truncated: false, stringsAnonymized: false,
   states: Array.from({ length: states }, (_, index) => ({ index,
@@ -67,6 +83,7 @@ const educationResult = (payload, { operationIds = ['operation-1'], instanceIds 
   ? ['both', 'undercoverage', 'overcoverage', 'neither'].flatMap(id => [1, 2, 3].map(index => `${id}-${index}`)) : [],
   prefix = 'Learner explanation', summary = 'Review one edit and compare its example before changing the predicate.' } = {}) => ({
   exerciseId: payload.exerciseId, revision: payload.revision, status: 'ok', model: 'gpt-6-luna',
+  requestedMetric: payload.metric || 'canonical',
   ...(payload.behaviorToken ? { behaviorToken: payload.behaviorToken } : {}),
   operations: operationIds.map(id => ({ id, description: `${prefix}: ${id}. This edit changes which structures your predicate accepts.` })),
   instances: instanceIds.map(id => ({ id, description: `${prefix}: ${id}. Read the listed atoms and relation tuples to see the example.` })), summary,
@@ -100,6 +117,7 @@ try {
     await page.goto(url + '/?exercise=graphs-inv1');
     await waitChecked();
     assert.equal(await page.locator('#exercise-count').textContent(), '181');
+    assert.equal(await page.getByRole('link', { name: 'Project dashboard' }).getAttribute('href'), './dashboard/');
     assert.equal(await page.locator('.distance-value').count(), 1);
     await page.locator('.explanation-unavailable').waitFor();
     assert.match(await page.locator('#luna-explanation-body').textContent(), /not configured/);
@@ -457,6 +475,176 @@ try {
     assert.equal(await page.locator('.canonical-range, .source-range').count(), 0);
     assert.match(await page.locator('.canonical-empty').textContent(), /unavailable for this draft/);
     await page.unroute('**/api/feedback');
+  });
+  await check('metric-switch-keeps-ast-steps-guidance-and-history-separate', async () => {
+    const metric = page.locator('#distance-metric');
+    const requests = [], behaviorRequests = [];
+    await page.route('**/api/feedback', route => {
+      const payload = route.request().postDataJSON(); requests.push(payload);
+      return route.fulfill({ json: payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload) });
+    });
+    await page.route('**/api/behavior', route => {
+      behaviorRequests.push(route.request().postDataJSON()); return mockBehaviorUnavailable(route);
+    });
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON();
+      return route.fulfill({ json: educationResult(payload, { prefix: `${payload.metric} learning hint`,
+        operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'] }) });
+    });
+    const body = 'some Node and some Node';
+    await submit(body); await page.locator('.explanation-text').waitFor();
+    const canonicalHistory = await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1'));
+    await metric.focus(); await metric.selectOption('ast'); await waitChecked();
+    await page.locator('.operation-explanation .education-description').first().waitFor();
+    assert.equal(await metric.inputValue(), 'ast');
+    assert.equal(await editor.inputValue(), body);
+    assert.equal(await page.locator('.distance-value').textContent(), '3');
+    assert.equal(await page.locator('.distance-result').getAttribute('data-metric'), 'ast');
+    assert.equal(await page.locator('.component-name').textContent(), 'Syntax tree edits');
+    assert.equal(await page.locator('#canonical-panel').isHidden(), true);
+    assert.match(await page.locator('#metric-description').textContent(), /Zhang–Shasha.*one edit/);
+    assert.match(await page.locator('#history-heading').textContent(), /AST progress/);
+    assert.equal(await page.locator('.operation-explanation .education-description').count(), 3);
+    for (let index = 0; index < 3; index += 1) {
+      const operation = page.locator('.operation-item').nth(index);
+      assert.match(await operation.locator('.education-description').textContent(), new RegExp(`ast learning hint.*operation-${index + 1}`));
+      assert.match(await operation.locator('.operation-fragment-label').textContent(), /your code/);
+      await operation.locator('.operation-select').click();
+      const expected = astResult({ body }).operations[index].sourceLocation.ranges[0];
+      assert.deepEqual(await editor.evaluate(element => [element.selectionStart, element.selectionEnd]), [expected.start, expected.end]);
+      assert.equal(await page.locator('.source-range').textContent(), expected.text);
+      assert.equal(await page.locator('.canonical-range').count(), 0);
+    }
+    assert.equal(await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1')), canonicalHistory);
+    const astHistory = await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1:ast'));
+    assert(JSON.parse(astHistory).every(item => item.distance === 3 && item.basis === 'nearest-known-correct-raw-ast-v1'));
+    assert(behaviorRequests.every(payload => !('metric' in payload)));
+    await page.locator('.operation-select').first().click();
+    // Hide fixed overlays during Chromium's stitched element captures.
+    const hidden = await page.locator('.skip-link, #toast').evaluateAll(elements => elements.map(element => {
+      const previous = element.hidden; element.hidden = true; return previous;
+    }));
+    try {
+      await page.screenshot({ path: path.join(artifacts, 'ast-distance.png'), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      await page.locator('.feedback-card').screenshot({ path: path.join(artifacts, 'ast-distance-mobile.png') });
+    } finally {
+      await page.locator('.skip-link, #toast').evaluateAll((elements, previous) => elements.forEach((element, index) => { element.hidden = previous[index]; }), hidden);
+      await page.setViewportSize({ width: 1440, height: 1000 });
+    }
+    await page.reload(); await page.waitForFunction(() => !document.querySelector('#predicate-editor').disabled);
+    assert.equal(await metric.inputValue(), 'ast');
+    assert.equal(await editor.inputValue(), body);
+    assert.match(await page.locator('#history-list [role="img"]').getAttribute('aria-label'), /Recent ast distances: 3/);
+    await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    assert.equal(await page.locator('#canonical-panel').isVisible(), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1:ast')), astHistory);
+    assert.equal(requests.at(-1).metric, 'canonical');
+    assert.equal(await page.locator('.source-range, .canonical-range').count(), 0);
+    await page.unroute('**/api/explain'); await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('metric-switch-discards-stale-feedback-and-learning-hints', async () => {
+    const metric = page.locator('#distance-metric');
+    let enterFeedback, releaseFeedback, enterExplanation, releaseExplanation;
+    const feedbackEntered = new Promise(resolve => { enterFeedback = resolve; });
+    const feedbackGate = new Promise(resolve => { releaseFeedback = resolve; });
+    const explanationEntered = new Promise(resolve => { enterExplanation = resolve; });
+    const explanationGate = new Promise(resolve => { releaseExplanation = resolve; });
+    let holdFeedback = true, holdExplanation = false;
+    await page.route('**/api/feedback', async route => {
+      const payload = route.request().postDataJSON();
+      const data = payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload);
+      if (payload.metric === 'canonical' && holdFeedback) {
+        holdFeedback = false; enterFeedback(); await feedbackGate; data.distance = 91;
+      }
+      try { await route.fulfill({ json: data }); } catch {}
+    });
+    await page.route('**/api/explain', async route => {
+      const payload = route.request().postDataJSON();
+      if (payload.metric === 'canonical' && holdExplanation) { enterExplanation(); await explanationGate; }
+      const data = educationResult(payload, { prefix: payload.metric === 'ast' ? 'CURRENT_AST_HINT' : 'OLD_CANONICAL_HINT',
+        operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'] });
+      try { await route.fulfill({ json: data }); } catch {}
+    });
+    await editor.fill('some Node // metric race'); await page.locator('#check-button').click(); await feedbackEntered;
+    await metric.selectOption('ast'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    releaseFeedback(); await delay(100);
+    assert.equal(await page.locator('.distance-value').textContent(), '3');
+    assert.match(await page.locator('.education-description').first().textContent(), /CURRENT_AST_HINT/);
+    holdExplanation = true;
+    await metric.selectOption('canonical'); await waitChecked(); await explanationEntered;
+    await metric.selectOption('ast'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    releaseExplanation(); await delay(100);
+    assert.equal(await page.locator('.distance-value').textContent(), '3');
+    assert.equal(await page.locator('.operation-explanation .education-description').count(), 3);
+    assert(!(await page.locator('body').textContent()).includes('OLD_CANONICAL_HINT'));
+    holdExplanation = false;
+    await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    await page.unroute('**/api/explain'); await page.unroute('**/api/feedback');
+  });
+  await check('metric-response-identities-fail-closed-and-preserve-ast-results', async () => {
+    const metric = page.locator('#distance-metric');
+    let feedbackMode = 'ok', explanationMode = 'wrong';
+    await page.route('**/api/feedback', route => {
+      const payload = route.request().postDataJSON();
+      const data = payload.metric === 'ast' ? astResult(payload) : someSourceResult(payload);
+      if (feedbackMode === 'wrong-selector') data.requestedMetric = 'canonical';
+      if (feedbackMode === 'wrong-id') data.metric = 'acgn-fast-rewrite-canonical-distance';
+      if (feedbackMode === 'missing-selector') delete data.requestedMetric;
+      return route.fulfill({ json: data });
+    });
+    await page.route('**/api/explain', route => {
+      const payload = route.request().postDataJSON();
+      const data = educationResult(payload, { operationIds: payload.metric === 'ast' ? ['operation-1', 'operation-2', 'operation-3'] : ['operation-1'] });
+      if (explanationMode === 'wrong') data.requestedMetric = 'canonical';
+      if (explanationMode === 'missing') delete data.requestedMetric;
+      if (explanationMode === 'disabled') { data.status = 'unavailable'; data.message = 'Luna is disabled for this workspace.'; }
+      return route.fulfill({ json: data });
+    });
+    await metric.selectOption('ast'); await waitChecked(); await page.locator('.explanation-unavailable').waitFor();
+    for (explanationMode of ['wrong', 'missing', 'disabled']) {
+      await submit('some Node // metric identity'); await page.locator('.explanation-unavailable').waitFor();
+      assert.equal(await page.locator('.distance-value').textContent(), '3');
+      assert.equal(await page.locator('.operation-item').count(), 3);
+      assert.equal(await page.locator('.education-description').count(), 0);
+      await page.locator('.operation-select').first().click();
+      assert.equal(await page.locator('.source-range').textContent(), 'some Node');
+    }
+    for (feedbackMode of ['wrong-selector', 'wrong-id', 'missing-selector']) {
+      await editor.fill('some Node'); await page.locator('#check-button').click();
+      await page.waitForFunction(() => document.querySelector('#feedback-state').dataset.state === 'error');
+      assert.match(await page.locator('#feedback-result').textContent(), /different comparison method/);
+      assert.equal(await page.locator('.distance-value, .operation-item, .education-description, .source-range').count(), 0);
+    }
+    feedbackMode = 'ok'; explanationMode = 'ok';
+    await submit('some Node'); await page.locator('.explanation-text').waitFor();
+    await metric.selectOption('canonical'); await waitChecked(); await page.locator('.explanation-text').waitFor();
+    // Older canonical-only servers can still omit the selector echo.
+    feedbackMode = 'missing-selector'; explanationMode = 'missing';
+    await submit('some Node'); await page.locator('.explanation-text').waitFor();
+    assert.equal(await page.locator('.distance-value').textContent(), '1');
+    await page.unroute('**/api/explain'); await page.unroute('**/api/feedback');
+  });
+  await check('real-ast-distance-shows-atomic-steps-and-source-location', async () => {
+    await page.locator('[data-exercise-id="graphs-inv5"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv5'));
+    await editor.fill('some Node');
+    await page.locator('#distance-metric').selectOption('ast'); await waitChecked();
+    const distance = Number(await page.locator('.distance-value').textContent());
+    assert(Number.isInteger(distance) && distance > 0);
+    assert.equal(await page.locator('.operation-item').count(), distance);
+    assert((await page.locator('.operation-cost').allTextContents()).every(text => text === '1 edit cost'));
+    assert.equal(await page.locator('#canonical-panel').isHidden(), true);
+    await page.locator('.operation-locate').first().click();
+    assert((await page.locator('.source-range').textContent()).length > 0);
+    assert.equal(await page.locator('.canonical-range').count(), 0);
+    await page.locator('.explanation-unavailable').waitFor();
+    assert.equal(await page.locator('.distance-value').textContent(), String(distance));
+    await page.locator('#distance-metric').selectOption('canonical'); await waitChecked();
+    await page.locator('[data-exercise-id="graphs-inv1"]').click();
+    await page.waitForFunction(() => location.search.includes('graphs-inv1'));
   });
   await check('real-behavior-score-and-four-bounded-categories', async () => {
     await page.route('**/api/behavior', route => route.continue());

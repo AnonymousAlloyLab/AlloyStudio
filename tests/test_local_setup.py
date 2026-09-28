@@ -477,7 +477,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                                        text=True, encoding='utf-8', timeout=budget(45), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 181 (validated-existing)', completed.stdout)
-            self.assertIn('Engine ready: 372 checks passed', completed.stdout)
+            self.assertIn('Engine ready: 378 checks passed', completed.stdout)
             pool = next(pool for pool in pools['pools'] if pool['exerciseId'] == 'cv_v1-inv4')
             self.assert_served_portal(
                 checkout, unrelated, environment, budget, base / 'server output.log',
@@ -550,7 +550,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 text=True, encoding='utf-8', timeout=budget(45), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 1 (restored-bundle)', completed.stdout)
-            self.assertIn('Engine ready: 372 checks passed', completed.stdout)
+            self.assertIn('Engine ready: 378 checks passed', completed.stdout)
             self.assertTrue((checkout / 'build/engine/classes/live/LiveFeedback.class').is_file())
             original_pair = {name: (checkout / 'exercises' / name).read_bytes()
                              for name in prepare_private_data.PRIVATE_NAMES}

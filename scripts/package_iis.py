@@ -24,7 +24,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 
-WEB_FILES = ('index.html', 'app.js', 'styles.css')
+WEB_FILES = ('index.html', 'app.js', 'styles.css', 'dashboard/index.html',
+             'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json')
 DEPLOY_FILES = (
     'web.config', 'Common.ps1', 'Manage-AlloyStudio.ps1', 'Set-OpenAIKey.ps1',
     'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1',
@@ -82,25 +83,25 @@ def parse_json(data: bytes, label: str) -> dict:
     return result
 
 
-def version_public_assets(entries: dict[str, bytes]) -> dict[str, str]:
+def version_public_assets(entries: dict[str, bytes], directory: str = '') -> dict[str, str]:
     """Bind the packaged HTML's asset URLs to the exact JS/CSS payload bytes.
 
     ZIP timestamps are deliberately fixed for reproducibility. They cannot
     identify a new release to a browser, IIS, or a CDN; content hashes can.
     Keep relative URLs so virtual IIS applications continue to work.
     """
-    html = entries['wwwroot/index.html']
+    html = entries['wwwroot/' + directory + 'index.html']
     versions = {}
     for attribute, name in (('src', 'app.js'), ('href', 'styles.css')):
-        version = digest(entries['wwwroot/' + name])
+        version = digest(entries['wwwroot/' + directory + name])
         pattern = re.compile(rb'(\b' + attribute.encode() + rb'\s*=\s*)([\'\"])(\./'
                              + re.escape(name.encode()) + rb')\2')
         if len(pattern.findall(html)) != 1:
-            raise PackageError(f'Expected exactly one relative {name} reference in web/index.html.')
+            raise PackageError(f'Expected exactly one relative {name} reference in web/{directory}index.html.')
         html = pattern.sub(lambda match: match[1] + match[2] + match[3]
                            + b'?v=' + version.encode('ascii') + match[2], html)
-        versions[name] = version
-    entries['wwwroot/index.html'] = html
+        versions[directory + name] = version
+    entries['wwwroot/' + directory + 'index.html'] = html
     return versions
 
 
@@ -108,6 +109,7 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
     root = root.resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
     public_asset_versions = version_public_assets(entries)
+    public_asset_versions.update(version_public_assets(entries, 'dashboard/'))
     for name in DEPLOY_FILES:
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']

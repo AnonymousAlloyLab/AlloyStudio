@@ -1,10 +1,15 @@
 # Alloy Live Programming
 
 A local web portal for practicing Alloy predicates using the ACGN / CanDis
-canonical repair metric. It includes 181 exercises, live feedback, redacted edit
+canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and GPT-6 Luna guidance.
 Feedback uses the closest member of each bundled correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
+
+**Alpha v0.0.1** (`v0.0.1-alpha`) adds a metric selector and a
+[project CI/CD dashboard](docs/ci-cd.md) at `/dashboard/`. The
+[Lean closure plan](docs/lean-closure.md) lists 24 open formal obligations and
+their implementation requirements; it does not claim completed Lean proofs.
 
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
 From a new clone, run:
@@ -19,7 +24,7 @@ required. To prepare and check the checkout without starting the server, use
 `./scripts/setup.sh` without flags.
 
 Open **http://127.0.0.1:8080**. Setup and startup validate the bundled JARs, compile
-the engine, and run 372 engine checks. They need no Node, npm, pip packages, or
+the engine, and run 378 engine checks. They need no Node, npm, pip packages, or
 IIS. No frontend CDN or external font is needed. Stop with Ctrl+C. Options include
 `--port 8081`, `--timeout 12`, `--workers 4`, and `--java-home /path/to/jdk`.
 See [Linux and macOS setup](docs/local-setup.md) for installation, private config,
@@ -27,10 +32,15 @@ and troubleshooting. The separate developer/release build uses Node for its
 JavaScript syntax check.
 
 Choose an exercise, edit its predicate body, and pause to receive feedback.
+Select **Canonical form** or **Raw syntax tree (AST)** above the editor.
+Each mode independently chooses its nearest known correct predicate, including
+the oracle. Switching clears stale feedback and guidance and keeps separate
+distance histories. Luna explains each mode's individual edit operations using
+only learner context and approved operator hints.
 Ctrl/Cmd+Enter checks immediately. The complete surrounding Alloy environment
 is available beside the editor. Download exports that environment with your
 current predicate. Drafts and recent distance history stay in your browser.
-After a successful check, the panel below the editor shows your compiled
+After a successful canonical check, the panel below the editor shows your compiled
 predicate's canonical form with compact display whitespace. Click an edit step
 to color the canonical expression selected by that edit and underline its
 original source occurrence when retained. When only related context is
@@ -74,7 +84,7 @@ is recorded against its source hash. All 181 original selected files are
 preserved in the bundled catalogue for reproduction.
 
 The server reads `exercises/catalogue.json` and exposes an explicit
-public field projection. Only three named web assets are served. It parses the
+public field projection. Only the named portal assets and four dashboard files are served. It parses the
 learner and oracle in separate JVM modules so the learner cannot call the
 oracle. Reference bodies, canonical forms, target expressions, private predicate
 and variable names, raw exceptions, and credentials are not sent to the browser.
@@ -125,7 +135,7 @@ bodies, identities, sources, and the selected target are not sent to the browser
 
 The Java adapter calls the bundled framework's `Canonical.prepare`,
 `Canonical.distanceBreakdown`, `Canonical.irTemporalFol`, and `Canonical.edits`.
-The selected metric is the **Fast Rewrite IR canonical distance**, split into
+The default metric is the **Fast Rewrite IR canonical distance**, split into
 temporal, quantifier, and matrix costs. This is not the certificate-integrated
 quotient path. Zero means equality under the implemented canonical rewrite
 theory; it is not an unrestricted Alloy semantic proof.
@@ -161,10 +171,19 @@ Whitespace compaction preserves quoted literal contents and does not alter the
 metric. Location text is derived from this learner draft and canonical form;
 reference solutions and credentials are never used to construct these locators.
 
+Raw AST mode uses ACGN's ordered-tree Zhang–Shasha implementation with the
+framework's raw AST labels and child order. Each unit step inserts, deletes or
+relabels one node; deletion promotes children and insertion can wrap consecutive
+children. The engine independently backtracks and privately replays the script.
+It retains parser `Body`/`NOOP` wrappers and variable spellings, so these distances
+can differ from intuitive source-token counts and from the historical augmenter's
+subtree-based raw-AST recurrence. No canonical normalization runs in AST mode.
+Only original-code locations are shown for AST edits; the canonical panel stays
+hidden. Limits and the response contract are in [the engine guide](engine/README.md).
+
 ## Behavioral similarity and examples
 
-Behavioral comparisons always use the original oracle. Canonical distance still
-uses the closest member of the correct pool. `live.BehaviorFeedback` adapts
+Behavioral comparisons always use the original oracle. Both edit-distance modes use the closest member of the correct pool. `live.BehaviorFeedback` adapts
 ACGN's `Rewarder` formula, with **model facts enforced** for both sampling and
 category searches. This intentionally fixes the upstream Rewarder's omission of
 module-level facts. This facts fix lives in the portal's behavior worker.
@@ -457,7 +476,7 @@ python .\backend\runtime_dependencies.py --java java
 ```
 
 This prints a JSON report with a result and SHA-256 for **each** dependency and
-runs 372 compiled engine checks in a fresh JVM. IIS Install, Start, Restart and
+runs 378 compiled engine checks in a fresh JVM. IIS Install, Start, Restart and
 the target acceptance script run the same check. Missing, changed, extra, or
 linked JARs fail the check before the backend starts. `AlloyASG.jar` contains
 source files; its compiled classes come from `AlloyASG-Release.jar`. Several

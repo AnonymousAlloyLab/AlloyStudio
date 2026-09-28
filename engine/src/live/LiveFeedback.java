@@ -56,6 +56,12 @@ public final class LiveFeedback {
     }
 
     public static JSONObject evaluate(JSONObject request) {
+        if (request.has("metric")) {
+            Object selected = request.get("metric");
+            if (!(selected instanceof String) || !(selected.equals("canonical") || selected.equals("ast")))
+                return failure("invalid_request", "INVALID_METRIC", "Choose canonical or raw AST feedback.");
+            if (selected.equals("ast")) return AstFeedback.evaluate(request);
+        }
         String studentSource;
         String oracleSource = null;
         String predicate;

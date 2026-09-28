@@ -1,0 +1,581 @@
+{
+  "schemaVersion": 1,
+  "kind": "formal-closure-plan",
+  "formalClosureStatus": "NOT_ESTABLISHED",
+  "proposedLeanToolchain": "leanprover/lean4:v4.33.0",
+  "allowlistedAxioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "forbiddenProofDependencies": [
+    "sorryAx",
+    "undeclared custom axioms",
+    "native evaluation without separately declared compiler trust"
+  ],
+  "obligations": [
+    {
+      "id": "L00",
+      "title": "Freeze definitions, toolchain and trust",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Foundation",
+      "plannedTheorem": "AlloyStudio.Foundation.closed_definition_inventory",
+      "dependsOn": [],
+      "implementation": [
+        "closure/policy.json",
+        "vendor/acgn/snapshot.json"
+      ],
+      "implementationDetails": "Pin Lean 4.33.0, every dependency and the exact label/operator conventions. Export an axiom inventory for every public theorem; forbid sorryAx and undeclared axioms.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L01",
+      "title": "Extract the selected raw predicate tree",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.RawAst",
+      "plannedTheorem": "AlloyStudio.RawAst.extract_preserves_occurrences",
+      "dependsOn": [
+        "L00"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/DatasetConventions.java",
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Specify Predicate.getBody, Body/NOOP retention, ordered children and occurrence identities. Cover every admitted node constructor; reject unsupported nodes instead of silently treating them as leaves.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L02",
+      "title": "Make raw AST labels unambiguous",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.RawAst",
+      "plannedTheorem": "AlloyStudio.RawAst.label_encoding_injective",
+      "dependsOn": [
+        "L01"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/DatasetConventions.java"
+      ],
+      "implementationDetails": "Model labels as a tagged sum and prove the actual Java string encoding preserves the distinctions required by the chosen metric. State explicitly that bound-variable spelling remains significant and source offsets are not label identity.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L03",
+      "title": "Verify postorder, leftmost leaves and keyroots",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Index",
+      "plannedTheorem": "AlloyStudio.Index.index_well_formed",
+      "dependsOn": [
+        "L01"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Prove contiguous subtree intervals, parent-after-child indices, unique occurrences, leftmost bounds, keyroot coverage and strict dependency ordering. Use Fin-indexed arrays in Lean.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L04",
+      "title": "Define unit node-edit semantics",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Edits",
+      "plannedTheorem": "AlloyStudio.Edits.edit_inverse_and_cost",
+      "dependsOn": [
+        "L00"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Define deletion with ordered child promotion, insertion with adoption of a contiguous child interval, and relabeling. Include root/empty-forest cases and a sentinel whose cost is never counted.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L05",
+      "title": "Relate edit scripts to ordered mappings",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Mapping",
+      "plannedTheorem": "AlloyStudio.Mapping.mapping_script_equivalence",
+      "dependsOn": [
+        "L03",
+        "L04"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Prove injectivity and preservation/reflection of ancestor and left-to-right order; convert legal mappings to scripts and back with equal cost. Do not assume the desired optimality conclusion in a certificate field.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L06",
+      "title": "Prove the forest recurrence optimal",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.ForestDistance",
+      "plannedTheorem": "AlloyStudio.ForestDistance.forest_distance_is_minimum",
+      "dependsOn": [
+        "L04",
+        "L05"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java"
+      ],
+      "implementationDetails": "Give an independent recursive forest specification. Prove each branch sound and every valid mapping represented; use induction on combined forest size for both upper and lower bounds.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L07",
+      "title": "Refine Zhang-Shasha tables to that recurrence",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.ZhangShasha",
+      "plannedTheorem": "AlloyStudio.ZhangShasha.tables_equal_forest_spec",
+      "dependsOn": [
+        "L03",
+        "L06"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Prove nested-loop invariants for forestDistance/treeDistance and prefix-plus-subtree transitions. Establish all cells read are initialized for the intended intervals; conclude the final cell equals the semantic minimum.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L08",
+      "title": "Prove termination and bounded arithmetic",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Limits",
+      "plannedTheorem": "AlloyStudio.Limits.successful_result_has_no_overflow",
+      "dependsOn": [
+        "L07"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+        "engine/src/live/AstFeedback.java"
+      ],
+      "implementationDetails": "Refine Nat costs to Java int/long under the node and forest-work budgets. Treat timeout, resource exhaustion and malformed input as explicit failure, never distance zero or a partial pool result.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L09",
+      "title": "Verify backtracking and stable tie-breaking",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Trace",
+      "plannedTheorem": "AlloyStudio.Trace.backtrack_sound_complete_cost",
+      "dependsOn": [
+        "L07",
+        "L08"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java"
+      ],
+      "implementationDetails": "Prove backtracking decreases a well-founded measure, follows minimal cells, emits each insert/delete/replace exactly once, and has total cost equal to the distance. Fix the tie priority and original learner coordinate convention.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L10",
+      "title": "Verify private trace replay",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Replay",
+      "plannedTheorem": "AlloyStudio.Replay.replay_reconstructs_target",
+      "dependsOn": [
+        "L04",
+        "L09"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+        "engine/src/live/AstFeedback.java"
+      ],
+      "implementationDetails": "Replay actual node edits including promotion/adoption, not subtree replacement. Prove the reconstructed private labelled tree is the selected target; mutation witnesses must reject omitted edits, duplicate indices and wrong adopted intervals.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L11",
+      "title": "Select the nearest complete inclusive pool",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Pool",
+      "plannedTheorem": "AlloyStudio.Pool.argmin_complete_first_minimum",
+      "dependsOn": [
+        "L07"
+      ],
+      "implementation": [
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java",
+        "scripts/import_correct_pools.py"
+      ],
+      "implementationDetails": "Prove oracle membership, nonempty validated pool, evaluation of every member, first-minimum tie behavior and selected cost <= every candidate cost. Classification correctness is a separate trusted premise, not global nearest-correct completeness.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L12",
+      "title": "Specify the actual Fast Rewrite normalization",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Canonical",
+      "plannedTheorem": "AlloyStudio.Canonical.normalization_refines_pinned_ir",
+      "dependsOn": [
+        "L00",
+        "L01"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/NormalForm.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/EGraphNode.java"
+      ],
+      "implementationDetails": "Give the exact supported normalization relation including alpha, quantifier, temporal, Boolean and relational cases. Prove termination/determinism for this implementation before any semantic preservation theorem. Do not substitute the newer certified quotient metric for Fast Rewrite.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L13",
+      "title": "Verify canonical component costs",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.CanonicalDistance",
+      "plannedTheorem": "AlloyStudio.CanonicalDistance.components_equal_spec",
+      "dependsOn": [
+        "L12"
+      ],
+      "implementation": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/CanonicalDistance.java"
+      ],
+      "implementationDetails": "Specify temporal, binding and matrix costs; prove ordered DP and unordered assignment optimal under exactly the implemented constraints. State zero distance as equality under those conventions, not automatic Alloy equivalence.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L14",
+      "title": "Verify canonical traces and honest aggregates",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.CanonicalTrace",
+      "plannedTheorem": "AlloyStudio.CanonicalTrace.trace_cost_and_private_replay",
+      "dependsOn": [
+        "L13"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/LiveTrace.java",
+        "engine/src/live/LiveFeedback.java"
+      ],
+      "implementationDetails": "Verify chosen variable/child alignment, learner paths, unit matrix/binding costs and replay. Keep temporal aggregate evidence distinct from an atomic script or an optimality certificate.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L15",
+      "title": "Preserve structural source identity",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Origins",
+      "plannedTheorem": "AlloyStudio.Origins.located_range_has_recorded_origin",
+      "dependsOn": [
+        "L01",
+        "L09",
+        "L14"
+      ],
+      "implementation": [
+        "engine/src/live/SourceLocator.java",
+        "engine/src/live/CanonicalLocator.java",
+        "vendor/acgn/src/is/fivefivefive/ACGN/visitor/MASGVisitor.java"
+      ],
+      "implementationDetails": "Prove occurrence identity survives only the declared rewrites; merging conflicting origins clears precision. Verify path-to-render span indexing, exact renderer agreement, binder ordering, insertion anchors and exclusion of helper/declaration positions.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L16",
+      "title": "Verify UTF-16 ranges and display compaction",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Coordinates",
+      "plannedTheorem": "AlloyStudio.Coordinates.projection_preserves_selected_fragment",
+      "dependsOn": [
+        "L15"
+      ],
+      "implementation": [
+        "server.py",
+        "web/app.js"
+      ],
+      "implementationDetails": "Specify inclusive Alloy positions and end-exclusive UTF-16 wire offsets. Prove body rebasing, CRLF/tab handling, surrogate boundaries, quote-preserving whitespace compaction and rejection of stale/out-of-body spans.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L17",
+      "title": "Verify public projection under explicit disclosure",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Disclosure",
+      "plannedTheorem": "AlloyStudio.Disclosure.projection_respects_public_view",
+      "dependsOn": [
+        "L10",
+        "L11",
+        "L14",
+        "L16"
+      ],
+      "implementation": [
+        "server.py",
+        "engine/src/live/AstFeedback.java",
+        "engine/src/is/fivefivefive/CanDis/LiveTrace.java"
+      ],
+      "implementationDetails": "Define permitted disclosure: selected metric/distance, approved replacement operators, learner fragments, pool counts, bounded witness categories. Prove public serialization depends only on that public view, not hidden operands or credential bytes. Full target noninterference would be false because distances intentionally reveal information.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L18",
+      "title": "Verify Luna evidence and response boundaries",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Education",
+      "plannedTheorem": "AlloyStudio.Education.validated_guidance_ids_are_complete",
+      "dependsOn": [
+        "L17"
+      ],
+      "implementation": [
+        "luna.py",
+        "server.py"
+      ],
+      "implementationDetails": "Prove evidence contains all and only supplied operation/instance IDs, metric-specific components and bounded learner data. Verify output shape, ID coverage, stale binding and configured redaction. Model prose remains untrusted; no theorem that unrestricted natural language can never reveal an inferable solution.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L19",
+      "title": "Verify bounded behavioral score and categories",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Behavior",
+      "plannedTheorem": "AlloyStudio.Behavior.bounded_score_and_partition",
+      "dependsOn": [
+        "L00"
+      ],
+      "implementation": [
+        "engine/src/live/BehaviorFeedback.java",
+        "server.py"
+      ],
+      "implementationDetails": "Specify shared signature identity, model-fact conjunction, four Boolean truth combinations, sampling denominator correction and exact rounding to 0.001. Separate SAT witness checking from exhaustive/UNSAT claims and from unbounded semantic equivalence.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L20",
+      "title": "Verify metric-aware browser state transitions",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Session",
+      "plannedTheorem": "AlloyStudio.Session.rendered_result_matches_request",
+      "dependsOn": [
+        "L16",
+        "L18"
+      ],
+      "implementation": [
+        "web/app.js",
+        "server.py"
+      ],
+      "implementationDetails": "Model exercise, draft, revision, metric and behavior token as request identity. Prove switched/aborted/late responses cannot replace another state, caches include the metric, and AST mode never fabricates a canonical correspondence.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L21",
+      "title": "Verify delivery and dashboard disclosure",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Delivery",
+      "plannedTheorem": "AlloyStudio.Delivery.artifact_inventory_is_public_safe",
+      "dependsOn": [
+        "L17"
+      ],
+      "implementation": [
+        "scripts/package_iis.py",
+        "scripts/ci_dashboard.py",
+        "deploy/iis/web.config",
+        ".github/workflows/ci.yml",
+        ".github/workflows/release.yml",
+        "scripts/release_preflight.py"
+      ],
+      "implementationDetails": "Prove public dashboard and source-release artifact allowlists exclude credentials, hidden reference files and the private IIS ZIP. Separately verify the private IIS archive isolates its necessary oracle/correct-pool backend data from wwwroot. Treat GitHub status, IIS ACL enforcement and actual machine execution as external tested/trusted systems.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L22",
+      "title": "Bind Lean statements to implementation objects",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Correspondence",
+      "plannedTheorem": "AlloyStudio.Correspondence.accepted_certificate_refines_implementation",
+      "dependsOn": [
+        "L08",
+        "L10",
+        "L11"
+      ],
+      "implementation": [
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+        "engine/src/live/AstFeedback.java",
+        "closure/claims.json"
+      ],
+      "implementationDetails": "Choose a verified extracted implementation or an independently verified proof-certificate checker. Bind adapter, DP and trace code hashes, Java semantics, wire decoding and actual inputs. Differential tests alone do not establish all-input refinement.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "L23",
+      "title": "Make the formal closure gate fail closed",
+      "status": "OPEN",
+      "plannedModule": "AlloyStudio.Closure",
+      "plannedTheorem": "AlloyStudio.Closure.verified_iff_all_registered_obligations_pass",
+      "dependsOn": [
+        "L00",
+        "L22"
+      ],
+      "implementation": [
+        "scripts/verify_closure.py",
+        "closure/policy.json"
+      ],
+      "implementationDetails": "Register theorem existence, exact statement/type hashes, transitive axiom allowlists, code correspondence, witness checks and two frozen builds. Missing proofs, changed sources, absent mappings or undeclared trust must block; never count OPEN records as proved.",
+      "requiredEvidence": [
+        "kernel-checked theorem with frozen statement",
+        "transitive axiom inventory",
+        "implementation correspondence witness"
+      ],
+      "evidence": []
+    }
+  ],
+  "plannedProfiles": {
+    "raw-ast": [
+      "L00",
+      "L01",
+      "L02",
+      "L03",
+      "L04",
+      "L05",
+      "L06",
+      "L07",
+      "L08",
+      "L09",
+      "L10",
+      "L11",
+      "L22",
+      "L23"
+    ],
+    "full-portal": [
+      "L00",
+      "L01",
+      "L02",
+      "L03",
+      "L04",
+      "L05",
+      "L06",
+      "L07",
+      "L08",
+      "L09",
+      "L10",
+      "L11",
+      "L12",
+      "L13",
+      "L14",
+      "L15",
+      "L16",
+      "L17",
+      "L18",
+      "L19",
+      "L20",
+      "L21",
+      "L22",
+      "L23"
+    ]
+  }
+}

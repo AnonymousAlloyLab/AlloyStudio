@@ -15,7 +15,7 @@
     <header class="app-header">
       <a class="brand" href="./" aria-label="Alloy Studio home"><span class="brand-mark" aria-hidden="true">A<span>·</span></span><span>Alloy<span class="brand-light"> Studio</span></span></a>
       <span class="header-divider" aria-hidden="true"></span><span class="header-section">Live predicate lab</span>
-      <div class="header-end"><span class="engine-badge"><span class="status-dot"></span>Powered by ACGN</span><span class="local-badge">LOCAL WORKSPACE</span></div>
+      <div class="header-end"><a class="dashboard-link" href="./dashboard/">Project dashboard</a><span class="engine-badge"><span class="status-dot"></span>Powered by ACGN</span><span class="local-badge">LOCAL WORKSPACE</span></div>
     </header>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Exercise navigation">
@@ -63,11 +63,12 @@
           <div class="feedback-column">
             <section class="feedback-card" aria-labelledby="feedback-heading">
               <div class="light-panel-toolbar"><div class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 5-5 4 3 7-9M16 6h4v4"></path></svg><h2 id="feedback-heading">Structural feedback</h2></div><span id="feedback-state" class="feedback-state">Waiting</span></div>
+              <div class="metric-control"><label for="distance-metric">Compare using</label><select id="distance-metric" aria-describedby="metric-description"><option value="canonical">Canonical form</option><option value="ast">Raw syntax tree (AST)</option></select><p id="metric-description">Compares simplified forms of your predicate and the saved correct answers.</p></div>
               <div id="feedback-result" aria-live="polite" aria-atomic="false"><div class="feedback-empty"><div class="empty-illustration" aria-hidden="true"><span>{</span><span class="empty-orbit">↗</span><span>}</span></div><h3>A little feedback goes a long way.</h3><p>Write your predicate to see how closely its structure matches a correct answer and which parts to review.</p></div></div>
               <div class="oracle-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2"></path></svg><span>Correct answers, including the oracle, stay private. Feedback shows parts of your code and hints about which operators to review.</span></div>
             </section>
             <section class="history-card" aria-labelledby="history-heading"><div class="history-heading"><h2 id="history-heading">Your progress</h2><span id="history-count">0 checks</span></div><div id="history-list"><p class="history-empty">Each successful check is a new point on your path.</p></div></section>
-            <div class="method-note"><span class="method-symbol" aria-hidden="true">i</span><p>The distance uses the closest match among the saved correct answers, including the oracle. Zero means their canonical forms match. It does not prove that they behave the same in every case.</p></div>
+            <div class="method-note"><span class="method-symbol" aria-hidden="true">i</span><p id="metric-method-note">The distance uses the closest match among the saved correct answers, including the oracle. Zero means their canonical forms match. It does not prove that they behave the same in every case.</p></div>
           </div>
         </div>
         <section id="behavior-card" class="behavior-card" aria-labelledby="behavior-heading">

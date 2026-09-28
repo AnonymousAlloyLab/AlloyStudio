@@ -45,6 +45,8 @@ class IisPackageTests(unittest.TestCase):
             self.write(f'web/{name}', 'public learner application')
         self.write('web/index.html', '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
+        self.write('web/dashboard/index.html', '<link rel="stylesheet" href="./styles.css">'
+                   '<script type="module" src="./app.js"></script>')
         for name in DEPLOY_FILES:
             self.write(f'deploy/iis/{name}', '<configuration />' if name == 'web.config' else 'operator deployment guide')
         self.write('LICENSE', 'Portal licence')
@@ -175,6 +177,18 @@ class IisPackageTests(unittest.TestCase):
         _, restored = self.archive()
         self.assertEqual(restored, first)
         self.assertEqual((self.root / 'web/index.html').read_bytes(), source_html)
+
+    def test_dashboard_asset_hashes_refresh_independently_of_portal_assets(self):
+        _, first = self.archive()
+        manifest = json.loads(first['manifest.json'])
+        for name in ('app.js', 'styles.css'):
+            version = hashlib.sha256(first['wwwroot/dashboard/' + name]).hexdigest()
+            self.assertEqual(manifest['publicAssetVersions']['dashboard/' + name], version)
+            self.assertIn(('./' + name + '?v=' + version).encode(), first['wwwroot/dashboard/index.html'])
+        self.write('web/dashboard/app.js', 'updated dashboard')
+        _, changed = self.archive()
+        self.assertNotEqual(first['wwwroot/dashboard/index.html'], changed['wwwroot/dashboard/index.html'])
+        self.assertEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
 
     def test_missing_or_ambiguous_asset_reference_refuses_stale_browser_urls(self):
         self.archive()
@@ -455,12 +469,15 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(action.get('appendQueryString'), 'true')
         blocked = re.compile(boundary.find('match').get('url'))
         self.assertEqual(boundary.find('action').get('statusCode'), '404')
-        for path in ('', 'index.html', 'app.js', 'styles.css'):
+        for path in ('', 'index.html', 'app.js', 'styles.css', 'dashboard', 'dashboard/',
+                     'dashboard/index.html', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json'):
             self.assertIsNone(blocked.fullmatch(path))
         for path in ('web.config', 'manifest.json', 'backend/server.py', 'exercises/catalogue.json',
                      'exercises/correct-pools.json', 'scripts/import_correct_pools.py',
                      'openai.local.json', 'openai.example.json',
-                     '.env', 'openai.key', 'app.js.map', '../server.py', 'INDEX.HTML'):
+                     '.env', 'openai.key', 'app.js.map', '../server.py', 'INDEX.HTML',
+                     'dashboard/.env', 'dashboard/closure-report.json', 'dashboard/../server.py',
+                     'dashboard/backend/catalogue.json', 'dashboard/index.html/extra'):
             self.assertIsNotNone(blocked.fullmatch(path))
 
 

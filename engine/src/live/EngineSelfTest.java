@@ -102,7 +102,28 @@ public final class EngineSelfTest {
                 .put("oracleSource", source("some A")).put("predicate", "target;invalid"))
                 .getString("status").equals("invalid_request"), "predicate validation");
         testNearestCorrectPools();
+        testRawAstMode();
         report.println("EngineSelfTest passed (" + checks + " checks)");
+    }
+
+    private static void testRawAstMode() {
+        JSONObject ast = LiveFeedback.evaluate(new JSONObject().put("metric", "ast")
+                .put("studentSource", source("no A")).put("oracleSource", source("some A")).put("predicate", "target"));
+        check(ast.getString("metric").equals("acgn-raw-ast-zhang-shasha-distance") && ast.getInt("distance") == 1,
+                "raw AST authoritative one-node distance");
+        check(ast.getJSONObject("trace").getBoolean("astReplayVerified") && ast.getJSONArray("operations").length() == 1
+                && ast.getJSONArray("operations").getJSONObject(0).getInt("cost") == 1, "raw AST node edit replay");
+        check(ast.getJSONArray("canonicalForm").isEmpty() && ast.getInt("astSize") > 0,
+                "raw AST mode does not substitute canonical normalization");
+        JSONObject nearest = LiveFeedback.evaluate(poolRequest("some A and no r",
+                List.of("no r and some A", "some A and no r")).put("metric", "ast"));
+        check(nearest.getInt("distance") == 0 && nearest.getJSONObject("comparison").getInt("evaluatedCandidates") == 2,
+                "raw AST complete nearest correct pool");
+        JSONObject invalid = LiveFeedback.evaluate(poolRequest("some A", List.of("some A", "some PRIVATE_AST_NAME")).put("metric", "ast"));
+        check(invalid.getString("status").equals("engine_error") && !invalid.has("distance")
+                && !invalid.toString().contains("PRIVATE_AST_NAME"), "raw AST rejects incomplete private pool");
+        check(LiveFeedback.evaluate(poolRequest("some A", List.of("some A")).put("metric", "unknown"))
+                .getString("status").equals("invalid_request"), "unknown metric rejected");
     }
 
     private static void testNearestCorrectPools() {

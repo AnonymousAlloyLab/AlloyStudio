@@ -47,12 +47,21 @@ $WebRoot = Get-LocalPath -Path ([Environment]::ExpandEnvironmentVariables([strin
 if ([IO.Path]::GetFileName($WebRoot) -ne 'wwwroot') {
     throw 'The IIS application must point to the distribution public wwwroot directory.'
 }
-$expectedAssets = @('index.html', 'app.js', 'styles.css', 'web.config')
+$expectedAssets = @('index.html', 'app.js', 'styles.css', 'web.config', 'dashboard')
 $assets = @(Get-ChildItem -LiteralPath $WebRoot -Force)
-if (@(Compare-Object $expectedAssets @($assets.Name)).Count -or @($assets | Where-Object PSIsContainer).Count) {
-    throw 'The public directory must contain only the four packaged public files.'
+if (@(Compare-Object $expectedAssets @($assets.Name)).Count -or
+    @($assets | Where-Object { $_.PSIsContainer -and $_.Name -ne 'dashboard' }).Count) {
+    throw 'The public directory must contain only the packaged portal files and dashboard directory.'
 }
 foreach ($asset in $assets) { Get-LocalPath -Path $asset.FullName | Out-Null }
+$dashboardRoot = Get-LocalPath -Path (Join-Path $WebRoot 'dashboard')
+if (-not (Test-Path -LiteralPath $dashboardRoot -PathType Container)) { throw 'The public dashboard directory is missing.' }
+$dashboardAssets = @(Get-ChildItem -LiteralPath $dashboardRoot -Force)
+if (@(Compare-Object @('index.html', 'app.js', 'styles.css', 'data.json') @($dashboardAssets.Name)).Count -or
+    @($dashboardAssets | Where-Object PSIsContainer).Count) {
+    throw 'The dashboard must contain only its four packaged public files.'
+}
+foreach ($asset in $dashboardAssets) { Get-LocalPath -Path $asset.FullName | Out-Null }
 if ((Get-FileHash -LiteralPath (Join-Path $WebRoot 'web.config') -Algorithm SHA256).Hash -ne
     (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'web.config') -Algorithm SHA256).Hash) {
     throw 'The public web.config does not match this installed distribution.'

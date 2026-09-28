@@ -7,16 +7,20 @@ const elements = {
   highlight: $('#source-highlight'), locationBar: $('#source-location-bar'), locationStatus: $('#source-location-status'),
   canonical: $('#canonical-content'), canonicalStatus: $('#canonical-location-status'),
   behavior: $('#behavior-result'), behaviorStatus: $('#behavior-state'),
+  metric: $('#distance-metric'),
 };
 const state = {
-  exercises: [], exercise: null, revision: 0, selection: 0,
+  exercises: [], exercise: null, revision: 0, selection: 0, metric: 'canonical',
   feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
 const APP_BASE = new URL('.', import.meta.url);
-const COMPARISON_VERSION = 'nearest-known-correct-v1';
+const METRICS = {
+  canonical: { id: 'acgn-fast-rewrite-canonical-distance', basis: 'nearest-known-correct-v1', label: 'Canonical' },
+  ast: { id: 'acgn-raw-ast-zhang-shasha-distance', basis: 'nearest-known-correct-raw-ast-v1', label: 'AST' },
+};
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -35,6 +39,48 @@ function readStorage(key, fallback) {
 function writeStorage(key, value) {
   try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); }
   catch { state.storageAvailable = false; }
+}
+
+function historyStorageKey() {
+  return `history:${state.exercise.id}${state.metric === 'canonical' ? '' : ':ast'}`;
+}
+
+function loadHistory() {
+  const saved = state.exercise ? readStorage(historyStorageKey(), []) : [];
+  state.history = (Array.isArray(saved) ? saved : []).filter(item => item
+    && item.basis === METRICS[state.metric].basis && typeof item.distance === 'number'
+    && Number.isFinite(item.distance) && item.distance >= 0 && typeof item.at === 'number').slice(-12);
+  state.lastHistoryBody = null;
+}
+
+function renderMetric() {
+  const ast = state.metric === 'ast';
+  elements.metric.value = state.metric;
+  $('#canonical-panel').hidden = ast;
+  $('#metric-description').textContent = ast
+    ? 'Zhang–Shasha compares the original syntax trees. Each inserted, deleted, or changed node costs one edit.'
+    : 'Compares simplified forms of your predicate and the saved correct answers.';
+  $('#metric-method-note').textContent = ast
+    ? 'The AST distance uses the closest original syntax tree among the saved correct answers, including the oracle. Zero means the compared tree labels and child order match. This score does not measure behavior.'
+    : 'The distance uses the closest match among the saved correct answers, including the oracle. Zero means their canonical forms match. It does not prove that they behave the same in every case.';
+  $('#history-heading').textContent = `${METRICS[state.metric].label} progress`;
+}
+
+function selectMetric() {
+  const metric = elements.metric.value;
+  if (!Object.hasOwn(METRICS, metric) || metric === state.metric) return;
+  invalidateFeedback();
+  state.metric = metric;
+  writeStorage('metric', metric);
+  renderMetric();
+  loadHistory();
+  renderHistory();
+  showWaiting('Comparison method changed.');
+  if (state.exercise && !elements.editor.disabled) scheduleFeedback(0);
+}
+
+function responseMetricMatches(result, metric) {
+  return result.requestedMetric === metric || (metric === 'canonical' && result.requestedMetric === undefined);
 }
 
 function showToast(message) {
@@ -210,7 +256,7 @@ function renderCanonicalForms(ranges = []) {
 }
 
 function validatedCanonicalLocation(location, context) {
-  if (!sourceContextCurrent(context) || state.canonical?.context !== context
+  if (!sourceContextCurrent(context) || context.metric !== 'canonical' || state.canonical?.context !== context
     || !location || !['located', 'ambiguous'].includes(location.status)
     || !['node', 'related', 'form'].includes(location.precision) || location.coordinateSystem !== 'canonical'
     || (location.precision === 'node' && location.status !== 'located')
@@ -263,6 +309,7 @@ function selectOperation(operation, context, item, sourceIndex = null, sourceBut
 
 function sourceContextCurrent(context) {
   return context && context.revision === state.revision && context.selection === state.selection
+    && context.metric === state.metric
     && context.exerciseId === state.exercise?.id && context.body === elements.editor.value && !elements.editor.disabled;
 }
 
@@ -411,10 +458,7 @@ async function selectExercise(id) {
     if (!exercise || typeof exercise.id !== 'string' || typeof exercise.starter !== 'string') throw new Error('This exercise could not be loaded.');
     state.exercise = exercise;
     state.context = 'before';
-    state.history = readStorage(`history:${id}`, []);
-    if (!Array.isArray(state.history)) state.history = [];
-    state.history = state.history.filter((item) => item && item.basis === COMPARISON_VERSION && typeof item.distance === 'number' && Number.isFinite(item.distance) && item.distance >= 0 && typeof item.at === 'number').slice(-12);
-    state.lastHistoryBody = null;
+    loadHistory();
     const draft = readStorage(`draft:${id}`, null);
     elements.editor.value = draft && typeof draft.body === 'string' && draft.source === exercise.source?.sha256 ? draft.body : exercise.starter;
     elements.editor.disabled = false;
@@ -474,6 +518,7 @@ async function checkPredicate() {
   const revision = ++state.revision;
   const selection = state.selection;
   const body = elements.editor.value;
+  const metric = state.metric;
   saveDraft();
   setStatus('pending', 'Checking…');
   const pending = node('div', 'pending-message');
@@ -485,35 +530,38 @@ async function checkPredicate() {
     const result = await fetchJSON('api/feedback', {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ exerciseId, body, revision }),
+      body: JSON.stringify({ exerciseId, body, revision, metric }),
     });
-    if (revision !== state.revision || selection !== state.selection || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
+    if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
     if ((result.exerciseId !== undefined && result.exerciseId !== exerciseId) || (result.revision !== undefined && result.revision !== revision)) {
       throw new Error('The server returned feedback for a different draft. Check your predicate again.');
     }
+    if (!responseMetricMatches(result, metric) || (result.status === 'ok' && result.metric !== METRICS[metric].id)) {
+      throw new Error('The server returned feedback for a different comparison method. Check your predicate again.');
+    }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
-      state.education = { context: { exerciseId, revision, selection, body }, phase: 'waiting',
+      state.education = { context: { exerciseId, revision, selection, body, metric }, phase: 'waiting',
         operationIds: (Array.isArray(result.operations) ? result.operations : []).map((_, index) => `operation-${index + 1}`),
         operations: new Map(), instances: new Map() };
     }
     // A locator needs the echoed request identity, even when an older server
     // can still provide useful feedback without those fields.
     renderFeedback(result, result.exerciseId === exerciseId && result.revision === revision
-      ? { exerciseId, revision, selection, body } : null);
+      ? { exerciseId, revision, selection, body, metric } : null);
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0 && state.lastHistoryBody !== body) {
-      state.history.push({ distance: result.distance, at: Date.now(), basis: COMPARISON_VERSION });
+      state.history.push({ distance: result.distance, at: Date.now(), basis: METRICS[metric].basis });
       state.history = state.history.slice(-12);
       state.lastHistoryBody = body;
-      writeStorage(`history:${exerciseId}`, state.history);
+      writeStorage(historyStorageKey(), state.history);
       renderHistory();
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
-      requestBehavior({ exerciseId, body, revision }, selection, true);
+      requestBehavior({ exerciseId, body, revision }, selection, true, metric);
     } else if (result.status === 'unsupported') {
-      requestBehavior({ exerciseId, body, revision }, selection);
+      requestBehavior({ exerciseId, body, revision }, selection, false, metric);
     }
   } catch (error) {
-    if (error.name === 'AbortError' || revision !== state.revision || selection !== state.selection) return;
+    if (error.name === 'AbortError' || revision !== state.revision || selection !== state.selection || metric !== state.metric) return;
     renderFeedback({ status: 'error', diagnostics: [{ message: error.message }] });
   } finally {
     if (state.feedbackAbort === controller) state.feedbackAbort = null;
@@ -548,7 +596,8 @@ function renderOperation(operation, index, sourceContext) {
 
   if (typeof operation.sourceTerm === 'string' && operation.sourceTerm.length) {
     const fragment = node('div', 'operation-fragment');
-    const label = operation.sourceRole === 'insertion-anchor' ? 'Where to look · canonical form' : 'Part to review · canonical form';
+    const view = state.metric === 'ast' ? 'your code' : 'canonical form';
+    const label = operation.sourceRole === 'insertion-anchor' ? `Where to look · ${view}` : `Part to review · ${view}`;
     fragment.append(node('span', 'operation-fragment-label', label), node('code', '', operation.sourceTerm));
     detail.append(fragment);
   }
@@ -624,27 +673,32 @@ function renderFeedback(result, sourceContext = null) {
   setStatus('ok', 'Checked');
   const forms = Array.isArray(result.canonicalForm) ? result.canonicalForm
     : typeof result.canonicalForm === 'string' ? [result.canonicalForm] : [];
-  if (forms.length && forms.every(form => typeof form === 'string')) {
+  if (state.metric === 'canonical' && forms.length && forms.every(form => typeof form === 'string')) {
     state.canonical = { context: sourceContext, forms };
     renderCanonicalForms();
   } else clearCanonicalForm('The checker returned no canonical form for this draft.');
   const distance = node('div', 'distance-result');
+  const ast = state.metric === 'ast';
+  distance.dataset.metric = state.metric;
   const caption = node('div', 'distance-caption');
-  caption.append(node('span', '', 'Distance to closest correct predicate'));
-  if (result.distance === 0) caption.append(node('span', 'match-badge', 'Canonical match'));
+  caption.append(node('span', '', `${ast ? 'AST distance' : 'Distance'} to closest correct predicate`));
+  if (result.distance === 0) caption.append(node('span', 'match-badge', ast ? 'Syntax-tree match' : 'Canonical match'));
   const value = node('div', 'distance-value-row');
-  value.append(node('span', `distance-value${result.distance === 0 ? ' zero' : ''}`, formatNumber(result.distance)), node('span', 'distance-unit', 'edit cost'));
+  value.append(node('span', `distance-value${result.distance === 0 ? ' zero' : ''}`, formatNumber(result.distance)),
+    node('span', 'distance-unit', ast ? `node edit${result.distance === 1 ? '' : 's'}` : 'edit cost'));
   distance.append(caption, value, node('p', 'distance-description', result.distance === 0
-    ? 'After rewriting both predicates into canonical form, yours matches one of the known-correct answers.'
-    : 'The lowest total edit cost among the saved correct answers, including the oracle. Different edits can have different costs.'));
+    ? ast ? 'Your original syntax tree matches one of the known-correct answers.'
+      : 'After rewriting both predicates into canonical form, yours matches one of the known-correct answers.'
+    : ast ? 'The fewest syntax-tree node edits to a saved correct answer, including the oracle. Each insertion, deletion, or label change costs one edit.'
+      : 'The lowest total edit cost among the saved correct answers, including the oracle. Different edits can have different costs.'));
   if (result.comparison?.complete === true && Number.isInteger(result.comparison.poolSize) && result.comparison.poolSize > 0) {
     const count = result.comparison.poolSize;
     distance.append(node('p', 'distance-description', count === 1
       ? 'Compared with the oracle. No other saved correct answers are available for this exercise.'
       : `Compared with all ${formatNumber(count)} saved correct answers, including the oracle. These hints use one of the closest matches.`));
   }
-  const components = node('div', 'component-grid');
-  const labels = { temporal: 'Time rules', quantifier: 'Variable rules', matrix: 'Expressions' };
+  const components = node('div', `component-grid${ast ? ' ast-components' : ''}`);
+  const labels = ast ? { ast: 'Syntax tree edits' } : { temporal: 'Time rules', quantifier: 'Variable rules', matrix: 'Expressions' };
   Object.entries(labels).forEach(([key, label]) => {
     const component = node('div', 'component');
     component.append(node('span', 'component-value', formatNumber(result.breakdown?.[key])), node('span', 'component-name', label));
@@ -657,7 +711,9 @@ function renderFeedback(result, sourceContext = null) {
   heading.append(node('span', '', 'Edit operations'), node('span', 'section-count', `${list.length} operation${list.length === 1 ? '' : 's'}`));
   operations.append(heading);
   if (list.length) {
-    operations.append(node('p', 'operations-intro', 'Select an edit to highlight the related expression. Use the operator hint to decide what to try next.'));
+    operations.append(node('p', 'operations-intro', ast
+      ? 'Each step changes one syntax-tree node. Select a step to find its expression or insertion context in your code.'
+      : 'Select an edit to highlight the related expression. Use the operator hint to decide what to try next.'));
     const operationList = node('ol', 'operation-list');
     list.forEach((operation, index) => operationList.append(renderOperation(operation, index, sourceContext)));
     operations.append(operationList);
@@ -667,7 +723,10 @@ function renderFeedback(result, sourceContext = null) {
       ? `These hints have a total edit cost of ${formatNumber(result.trace.cost)}.`
       : 'Hint costs are shown separately from the distance.';
     const aggregate = result.trace.hasAggregates ? ' Some hints group several edits.' : '';
-    operations.append(node('p', 'trace-note', `${reconciliation}${aggregate} Use these hints to decide what to try next. They may not form a complete or shortest repair. Correct expressions stay hidden.`));
+    const limitation = ast
+      ? 'Use these tree edits to decide what to try next. Editing valid Alloy code may require several steps together. Correct expressions stay hidden.'
+      : 'Use these hints to decide what to try next. They may not form a complete or shortest repair. Correct expressions stay hidden.';
+    operations.append(node('p', 'trace-note', `${reconciliation}${aggregate} ${limitation}`));
   }
   const explanation = node('section', 'explanation-section');
   explanation.id = 'luna-explanation';
@@ -901,12 +960,13 @@ function renderBehavior(result) {
   elements.behavior.replaceChildren(summary, bounds, samples, note, navigation, content);
 }
 
-async function requestBehavior(payload, selection, explain = false) {
+async function requestBehavior(payload, selection, explain = false, metric = state.metric) {
   state.behaviorAbort?.abort();
   state.behaviorEvidence = null;
   const controller = new AbortController();
   state.behaviorAbort = controller;
   const current = () => payload.revision === state.revision && selection === state.selection
+    && metric === state.metric
     && payload.exerciseId === state.exercise?.id && payload.body === elements.editor.value && !controller.signal.aborted;
   behaviorMessage('pending', 'Analyzing…', 'Comparing behavior with the oracle and finding examples within the model bounds…');
   try {
@@ -937,7 +997,7 @@ async function requestBehavior(payload, selection, explain = false) {
     if (state.behaviorAbort === controller) state.behaviorAbort = null;
     if (current() && explain) {
       const token = state.behaviorEvidence?.token;
-      requestExplanation({ ...payload, ...(token ? { behaviorToken: token } : {}) }, selection);
+      requestExplanation({ ...payload, metric, ...(token ? { behaviorToken: token } : {}) }, selection);
     }
   }
 }
@@ -992,7 +1052,7 @@ async function requestExplanation(payload, selection) {
   const education = state.education;
   if (!education || !sourceContextCurrent(education.context) || payload.body !== education.context.body
     || payload.revision !== education.context.revision || selection !== education.context.selection
-    || payload.exerciseId !== education.context.exerciseId) return;
+    || payload.exerciseId !== education.context.exerciseId || payload.metric !== education.context.metric) return;
   const behaviorToken = payload.behaviorToken || null;
   if (behaviorToken !== (state.behaviorEvidence?.token || null)) return;
   state.explainAbort?.abort();
@@ -1013,6 +1073,7 @@ async function requestExplanation(payload, selection) {
     });
     if (!current()) return;
     if (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision) throw new Error('Guidance for this draft is unavailable. Please check again.');
+    if (!responseMetricMatches(explanation, payload.metric)) throw new Error('Guidance for this comparison method is unavailable. Check again or retry guidance.');
     const container = $('#luna-explanation-body');
     if (!container) return;
     if (explanation.status === 'ok') {
@@ -1023,7 +1084,7 @@ async function requestExplanation(payload, selection) {
       education.instances = new Map(explanation.instances.map(item => [item.id, item.description]));
       refreshEducationSlots();
       container.replaceChildren(node('p', 'explanation-text', explanation.summary));
-    } else renderExplanationUnavailable(container, explanation.message || 'AI guidance is currently unavailable. Canonical feedback remains available.', payload, selection);
+    } else renderExplanationUnavailable(container, explanation.message || 'AI guidance is currently unavailable. Structural feedback remains available.', payload, selection);
   } catch (error) {
     if (error.name === 'AbortError' || !current()) return;
     const container = $('#luna-explanation-body');
@@ -1056,7 +1117,7 @@ function renderHistory() {
   }
   const chart = node('div', 'history-chart');
   chart.setAttribute('role', 'img');
-  chart.setAttribute('aria-label', `Recent canonical distances: ${state.history.map((item) => formatNumber(item.distance)).join(', ')}`);
+  chart.setAttribute('aria-label', `Recent ${METRICS[state.metric].label.toLowerCase()} distances: ${state.history.map((item) => formatNumber(item.distance)).join(', ')}`);
   const max = Math.max(1, ...state.history.map((item) => item.distance));
   state.history.forEach((item, index) => {
     const bar = node('span', 'history-bar');
@@ -1102,9 +1163,13 @@ function downloadModel() {
 async function initialize() {
   const preference = readStorage('live', true);
   elements.live.checked = typeof preference === 'boolean' ? preference : true;
+  const metric = readStorage('metric', 'canonical');
+  state.metric = Object.hasOwn(METRICS, metric) ? metric : 'canonical';
+  renderMetric();
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) $('.keyboard-hint').textContent = 'Ctrl ↵';
   elements.search.addEventListener('input', renderExercises);
   elements.group.addEventListener('change', renderExercises);
+  elements.metric.addEventListener('change', selectMetric);
   elements.editor.addEventListener('input', onEdit);
   elements.editor.addEventListener('scroll', syncEditorOverlay);
   new ResizeObserver(syncEditorOverlay).observe(elements.editor);

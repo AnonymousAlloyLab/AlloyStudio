@@ -1,8 +1,8 @@
 {
   "name": "alloy-live-programming",
-  "version": "1.0.0",
+  "version": "0.0.1-alpha",
   "type": "module",
-  "description": "ACGN canonical repair feedback portal",
+  "description": "Alloy live programming with canonical and Zhang-Shasha AST repair feedback",
   "scripts": {
     "build": "./scripts/build.sh",
     "start": "./scripts/run.sh",

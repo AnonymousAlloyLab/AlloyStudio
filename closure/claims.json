@@ -30,8 +30,8 @@
     },
     {
       "id": "C-ENGINE",
-      "statement": "The frozen Java regressions, all 181 starter comparisons plus 181 oracle self-comparisons, and expanded-trace witnesses satisfy their assertions; matrix unit edits replay privately against the target under the selected variable and child alignments, while public context remains learner-derived.",
-      "required_engine_checks": 372,
+      "statement": "The 378 frozen Java regression assertions, all 181 canonical starter comparisons plus 181 oracle self-comparisons, and expanded-trace witnesses satisfy their assertions; matrix unit edits replay privately against the target under the selected variable and child alignments, while public context remains learner-derived. Raw AST enumeration and parser/corpus coverage are separately bound by C-AST.",
+      "required_engine_checks": 378,
       "claim_class": "test",
       "verifier": "V-ENGINE",
       "test_prefixes": [
@@ -121,7 +121,7 @@
     },
     {
       "id": "C-BROWSER",
-      "statement": "The exact frozen Playwright browser workflow assertions pass in desktop and mobile Chromium sessions, including paired highlights at the selected repeated source/canonical occurrence and rejection of ambiguous single-node claims. The virtual-application fixture serves the actual packaged HTML and poisons stale unversioned asset URLs; the UI must load content-versioned assets and complete its feedback/navigation/download workflow.",
+      "statement": "The exact frozen Playwright browser workflow assertions pass in desktop and mobile Chromium sessions, including paired highlights at the selected repeated source/canonical occurrence and rejection of ambiguous single-node claims. The virtual-application fixture serves the actual packaged HTML and poisons stale unversioned asset URLs; the UI must load content-versioned assets and complete its feedback/navigation/download workflow. Metric-switch, stale-response, request-identity and real AST fixtures check distinct distance modes and source-only AST edit locations; dashboard behavior is separately tested under C-CICD.",
       "claim_class": "test",
       "verifier": "V-BROWSER",
       "scope": {
@@ -362,7 +362,7 @@
     },
     {
       "id": "C-RUNTIME",
-      "statement": "Frozen relocated-package and fresh-source assertions verify all seven pinned dependency JARs, reject each missing or corrupted JAR including redundant AlloyASG archives, reject missing compiled entry classes and unavailable Java, and run 372 engine checks using explicit bundled classpaths with poisoned ambient paths excluded. Windows build structural assertions require dependency preflight and explicit platform-separated JAR paths; actual Windows execution is outside this Linux test surface. Simulated Windows Bash launchers exercise both real shell entry points and check delegation to native PowerShell, absolute path conversion, output semantics, and propagated failures. The shared compiler fixtures check clean staging, stale-class removal, safe output promotion, explicit compiler arguments, and failure preservation.",
+      "statement": "Frozen relocated-package and fresh-source assertions verify all seven pinned dependency JARs, reject each missing or corrupted JAR including redundant AlloyASG archives, reject missing compiled entry classes and unavailable Java, and run 378 engine checks using explicit bundled classpaths with poisoned ambient paths excluded. Windows build structural assertions require dependency preflight and explicit platform-separated JAR paths; actual Windows execution is outside this Linux test surface. Simulated Windows Bash launchers exercise both real shell entry points and check delegation to native PowerShell, absolute path conversion, output semantics, and propagated failures. The shared compiler fixtures check clean staging, stale-class removal, safe output promotion, explicit compiler arguments, and failure preservation.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [
@@ -511,6 +511,144 @@
       "witnesses": [
         "tests/test_behavior_engine.py",
         "tests/test_behavior_portal.py"
+      ]
+    },
+    {
+      "id": "C-AST",
+      "statement": "Frozen JVM tests compare unit node distances and private trace replay against an independent exhaustive ordered-mapping oracle for all 10,404 pairs of two-label ordered trees with one through four nodes. Parser fixtures check retained Body/NOOP structure, operand order, identifier spelling, repeated-node source positions, promotion/adoption, target redaction, limits and fail-closed pool errors. Every shipped exercise has starter/oracle and oracle-identity AST comparisons; a largest real pool and bounded synthetic inclusive pools check complete nearest-candidate evaluation and ties. These finite assertions are not a Lean proof, universal optimality proof, semantic Alloy equivalence claim, or executable textual repair guarantee.",
+      "claim_class": "test",
+      "verifier": "V-ENGINE",
+      "test_prefixes": [
+        "test_ast_engine."
+      ],
+      "scope": {
+        "inputs": [
+          "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+          "engine/src/live/AstFeedback.java",
+          "engine/src/live/LiveFeedback.java",
+          "engine/test/RawAstTraceSelfTest.java",
+          "vendor/acgn/src/is/fivefivefive/CanDis/DatasetConventions.java",
+          "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
+          "vendor/acgn/lib",
+          "server.py",
+          "tests/test_ast_engine.py",
+          "exercises/catalogue.json",
+          "exercises/correct-pools.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#raw-ast-distance"
+      ],
+      "witnesses": [
+        "tests/test_ast_engine.py",
+        "engine/test/RawAstTraceSelfTest.java",
+        "exercises/catalogue.json",
+        "exercises/correct-pools.json"
+      ]
+    },
+    {
+      "id": "C-METRICS",
+      "statement": "Frozen worker, HTTP, cache and mocked Luna fixtures require explicit canonical/AST routing, canonical default behavior, rejection of unknown or mismatched worker metrics, per-metric cache identity, selected-trace educational evidence and complete operation IDs without hidden target fields. Browser mode-switch races and rendering are covered separately by C-BROWSER. Live model availability, prose truth and universal solution prevention remain excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_metric_modes."
+      ],
+      "scope": {
+        "inputs": [
+          "server.py",
+          "luna.py",
+          "engine/src/live/LiveFeedback.java",
+          "engine/src/live/AstFeedback.java",
+          "web/app.js",
+          "web/index.html",
+          "tests/test_metric_modes.py",
+          "tests/test_education.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#metric-selection-and-education"
+      ],
+      "witnesses": [
+        "tests/test_metric_modes.py",
+        "tests/test_education.py"
+      ]
+    },
+    {
+      "id": "C-CICD",
+      "statement": "Frozen local fixtures check safe dashboard summary allowlists, missing/malformed/symlinked reports, clean-revision binding, historical closure labeling, suppressed process-output disclosure, tag/version agreement and public artifact path constraints. Seven local Chromium scenarios check honest missing and stale states, mocked workflow/release metadata, safe links, rate-limit failure behavior, no automatic external fetch, and IIS application-prefix assets. Workflow source assertions require pinned official actions, read-only permissions, secretless tests and dashboard-only upload paths. Actual GitHub Actions execution, repository/org settings, remote artifact publication and production deployment are outside this offline closure. Loopback HTTP fixtures check the dashboard index, relative trailing-slash redirect, exact four-file serving allowlist, traversal/private-file refusal, current bytes/content types and dashboard-confined GitHub connection policy.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_cicd.",
+        "test_dashboard_routes."
+      ],
+      "scope": {
+        "inputs": [
+          "web/dashboard",
+          "scripts/ci_dashboard.py",
+          "scripts/ci_check.py",
+          "scripts/release_preflight.py",
+          ".github/workflows/ci.yml",
+          ".github/workflows/release.yml",
+          "tests/test_cicd.py",
+          "tests/dashboard.mjs",
+          "docs/ci-cd.md",
+          "package.json",
+          "package-lock.json",
+          "node_modules",
+          "closure/lean-obligations.json",
+          "tests/test_dashboard_routes.py",
+          "server.py"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#cicd-dashboard"
+      ],
+      "witnesses": [
+        "tests/test_cicd.py",
+        "tests/dashboard.mjs",
+        ".github/workflows/ci.yml",
+        ".github/workflows/release.yml",
+        "tests/test_dashboard_routes.py"
+      ]
+    },
+    {
+      "id": "C-LEAN-PLAN",
+      "statement": "Frozen metadata assertions check the 24-entry Lean obligation register has unique IDs and planned theorem names, acyclic existing references, repository-local implementation paths, dependency-closed raw-AST and full-portal profiles, exact documentation/table/toolchain-pin agreement and honest dashboard counts. Every obligation must remain OPEN with empty evidence and formalClosureStatus NOT_ESTABLISHED. The finite regression proof inventory and required correspondence count remain empty/zero. No Lean compiler, kernel check, theorem validity or implementation-to-proof refinement is discharged by these tests.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_lean_obligations."
+      ],
+      "scope": {
+        "inputs": [
+          "closure/lean-obligations.json",
+          "docs/lean-closure.md",
+          "tests/test_lean_obligations.py",
+          "closure/policy.json",
+          "web/dashboard/data.json",
+          "engine/src",
+          "vendor/acgn/src",
+          "server.py",
+          "luna.py",
+          "web/app.js",
+          "scripts/ci_dashboard.py",
+          "scripts/release_preflight.py",
+          "scripts/package_iis.py",
+          "scripts/verify_closure.py",
+          ".github/workflows",
+          "deploy/iis/web.config",
+          "closure/claims.json"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#lean-obligation-plan"
+      ],
+      "witnesses": [
+        "closure/lean-obligations.json",
+        "docs/lean-closure.md",
+        "tests/test_lean_obligations.py"
       ]
     }
   ]

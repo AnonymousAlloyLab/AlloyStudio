@@ -1,6 +1,6 @@
 # Deploy Alloy Studio on IIS 10.0
 
-IIS serves the three public assets and proxies this application's `api/*` requests
+IIS serves the portal and dashboard assets and proxies this application's `api/*` requests
 to Python at `127.0.0.1:8080`. Python runs the bundled Java canonical engine and
 keeps reference solutions and Luna credentials out of browser responses. The
 backend runs as a Windows **scheduled task**, under LOCAL SERVICE, independently
@@ -150,7 +150,7 @@ The extracted layout is:
 
 ```text
 AlloyStudio\
-  wwwroot\              index.html, app.js, styles.css, web.config ONLY
+  wwwroot\              index.html, app.js, styles.css, web.config, dashboard/ ONLY
   backend\              Python code, classes, JARs, catalogue and correct pools
   deploy\iis\           administrator scripts and the task launcher
   manifest.json         packaged file hashes
@@ -190,7 +190,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Restore the missing or changed runtime files i
 
 This target-side check requires the complete bundled dependency set, verifies
 each JAR's SHA-256 against `backend/vendor/acgn/snapshot.json`, checks the
-compiled entry classes, and runs 372 engine checks in a fresh JVM. The engine
+compiled entry classes, and runs 378 engine checks in a fresh JVM. The engine
 uses an explicit classpath built from these files and ignores ambient Java
 classpath/option settings. The check needs no compiler, download, network
 connection, credential, or original ACGN checkout. Retain all seven files under
@@ -247,7 +247,7 @@ sites. The 60-second timeout exceeds the default 12-second canonical calculation
 plus the 40-second Luna request; retain at least 60 seconds. The behavioral check
 uses a separate request before educational guidance is requested. The included
 `web.config` has only a fixed loopback upstream. Its second rule allows only the
-three known public assets. No wildcard filesystem handler exposes the backend.
+known portal and dashboard public assets. No wildcard filesystem handler exposes the backend.
 Application-relative rewrite matching also supports `/alloy/api/...`; see the
 [URL Rewrite configuration reference](https://learn.microsoft.com/en-us/iis/extensions/url-rewrite-module/url-rewrite-module-configuration-reference).
 
@@ -505,7 +505,7 @@ path generated from `-RuntimeRoot`. It does not select another user's config.
 ```
 
 The script first records all seven dependency filenames, expected/actual SHA-256
-hashes, compiled-class results, and the fresh JVM's 372-check result. Those
+hashes, compiled-class results, and the fresh JVM's 378-check result. Those
 details remain in `runtime_dependencies` even when a dependency failure prevents
 HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
 binding, configured origin, private ACLs and paths, all 181 public exercise
@@ -592,7 +592,7 @@ old, unversioned `app.js` and `styles.css` served as Cloudflare `HIT` entries wi
 a four-hour cache lifetime. Fresh query URLs returned current asset hashes, and
 the behavioral API exposed the new score and categories. The served homepage
 HTML was still an older version missing the new panels, including on fresh-query
-requests. Update all four public files in the active IIS directory using the
+requests. Update all packaged public files, including the `dashboard` directory, in the active IIS directory using the
 steps below; purging JavaScript alone cannot add missing HTML panels. Purge this
 website's homepage, `index.html`, `app.js`, and `styles.css` in Cloudflare, then
 hard-reload the browser. Rebuilding the ZIP or restarting IIS does not clear
@@ -627,7 +627,7 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    & $Manage -Action Stop -RuntimeRoot $RuntimeRoot -TaskName $TaskName; Stop-Website -Name $SiteName
    ```
 
-2. Copy the new four `wwwroot` files into the **installed** `$WebRoot`, retaining
+2. Copy all new `wwwroot` files, including the `dashboard` directory, into the **installed** `$WebRoot`, retaining
    intentional site settings and the new cache controls in `web.config`. Update
    the installed private backend and deployment launchers from the same package;
    replace its class tree and JAR directory as complete units. Preserve
@@ -642,7 +642,7 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    timestamps leaves the package's content hashes unchanged:
 
    ```powershell
-   @('index.html','app.js','styles.css','web.config') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
+   @('index.html','app.js','styles.css','web.config','dashboard/index.html','dashboard/app.js','dashboard/styles.css','dashboard/data.json') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
    ```
 
 4. Restart the backend and start only the selected website:

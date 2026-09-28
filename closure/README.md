@@ -29,12 +29,75 @@ equivalence between English prose and Alloy is outside this mechanical claim.
 
 ## Engine
 
-`C-ENGINE`: the frozen Java regression cases and 181 starter/reference pairs plus 181
+`C-ENGINE`: the 378 frozen Java regression assertions and 181 starter/reference pairs plus 181
 reference self-comparisons are tested. Expanded matrix-trace witnesses cover actual
 node edits, private replay under the selected variable/child alignments, and public
 learner-context privacy. This is finite regression evidence; it is not a proof of
 Alloy semantics or of canonicalization soundness. Any remaining temporal aggregates
 remain explicitly marked; no formally certified optimal edit-script claim is made.
+
+## Raw AST distance
+
+`C-AST`: a separate finite oracle enumerates all ancestry/order-preserving mappings
+for all 10,404 pairs of two-label ordered trees with one through four nodes. Its
+preorder/parent-walk enumeration is independent of the production postorder forest
+dynamic program. Assertions compare the distance and atomic trace cost and require
+private replay with single-node deletion/promotion and insertion/adoption. Explicit
+negative witnesses reject invalid mappings, cost mismatches and resource limits.
+This finite enumeration is not a proof of Zhang-Shasha optimality for arbitrary trees.
+
+Parser fixtures retain the actual raw AST wrappers, operand order and variable
+spelling; they check quantifiers, calls, repeated source occurrences, Unicode,
+learner-only insertion anchors and hidden reference names/literals. Every one of
+the 181 bundled exercises has starter/oracle and oracle-identity comparisons.
+Synthetic pools and a largest real pool check complete evaluation including the
+oracle, deterministic ties and failures after an early zero match. This claim does
+not promote raw AST distance to Alloy semantic equivalence or textual-patch correctness.
+
+## Metric selection and education
+
+`C-METRICS`: frozen HTTP/worker fixtures bind requests, response identities and cache
+entries to the selected canonical or AST metric. Canonical remains the default;
+unknown choices and mismatched worker results must fail closed. Mocked Luna tests
+require the selected trace, complete atomic-operation IDs, metric-specific components
+and learner-only evidence. Live model behavior remains outside this claim.
+`C-BROWSER` separately checks mode-switch races, stale feedback/guidance rejection,
+real AST edit rendering and source-only AST highlights.
+
+## CI/CD dashboard
+
+`C-CICD`: local tests check summary serialization allowlists, missing/malformed and
+symlinked inputs, clean-revision binding, historical closure labeling, captured
+process-output suppression, release tag/version agreement and the exact four-file
+public artifact allowlist. Loopback HTTP fixtures check the directory index, relative
+trailing-slash redirect, exact static-file allowlist, traversal/private-file refusal,
+current content types/bytes and a GitHub connection policy confined to dashboard
+responses. Workflow fixtures require full official-action pins,
+read-only permissions, no secret expressions and disabled OpenAI calls.
+
+Seven dashboard Chromium scenarios run through the Python verifier in each frozen
+build. They cover missing and stale results, mocked workflow and prerelease data,
+safe links, inaccessible/rate-limited GitHub responses, no automatic external fetch
+and relative assets under an IIS application prefix. These test fixtures use no live
+GitHub API. Actual Actions jobs, native hosted Windows/macOS execution, public
+artifact/release publication and production deployment require separate evidence.
+The release workflow prepares readiness metadata; it does not claim to deploy IIS.
+
+## Lean obligation plan
+
+`C-LEAN-PLAN`: metadata tests check the 24 planned obligations, unique IDs and theorem
+names, dependency DAG, existing implementation paths, dependency-closed profiles,
+documentation/table agreement, proposed toolchain pin and dashboard counts. All
+24 obligations must remain `OPEN` with empty evidence; formal closure remains
+`NOT_ESTABLISHED`. The `raw-ast` profile and complete `full-portal` profile are plans,
+not completed proofs. No Lean installation or proof checker runs in this gate.
+
+The regression closure still has an empty proof inventory and zero required
+implementation-to-proof mappings. A future formal closure must register its own
+proof checker, statement/axiom evidence and implementation correspondence; passing
+this consistency test does not discharge any planned Lean theorem. See
+[the implementation plan](../docs/lean-closure.md) and
+[obligation register](lean-obligations.json).
 
 ## HTTP
 
@@ -228,7 +291,7 @@ at its snapshot SHA-256, including both AlloyASG archives. Tests remove and
 corrupt every JAR individually and require failure even when overlapping
 classes in another JAR could let an ordinary feedback request succeed. Missing
 compiled entry classes and an unavailable Java executable also fail. A relocated
-package under a path with spaces runs all 372 compiled engine checks with
+package under a path with spaces runs all 378 compiled engine checks with
 ambient Java classpaths/options and Python import paths excluded.
 
 The source-build witness uses a fresh relocated tree, preflights dependencies

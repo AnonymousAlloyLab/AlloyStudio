@@ -399,7 +399,9 @@ def execute():
             commands = {
                 "network": [sys.executable, "scripts/verify_closure.py", "--network-check"],
                 "build": ["bash", "scripts/build.sh"],
-                "package": [sys.executable, "scripts/package_iis.py"],
+                # A fixed explicit destination is a reproducibility/browser
+                # fixture. Normal deployment builds keep timestamped names.
+                "package": [sys.executable, "scripts/package_iis.py", "--output", "build/iis/alloy-studio-iis.zip"],
                 "engine": ["java", "-Xmx256m", "-XX:ActiveProcessorCount=2", "-cp", "build/engine/classes:vendor/acgn/lib/*", "live.EngineSelfTest"],
                 "python": [sys.executable, "-X", "faulthandler", "scripts/verify_closure.py", "--unittest-report", str(run / "logs" / f"{name}-python.json")],
                 "browser": ["node", "tests/browser.mjs"],

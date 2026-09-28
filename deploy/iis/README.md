@@ -63,9 +63,11 @@ powershell -NoProfile -File scripts/build.ps1 -RequireNode
 ```
 
 The release build uses a JDK 17 or newer, Python 3.10 or newer, and Node 20 or
-newer for the JavaScript syntax check. Each command refreshes
-`build/iis/alloy-studio-iis.zip` and its `.zip.sha256` sidecar after successful
-checks. Optional `-JavaCompiler` and `-Python` arguments accept absolute
+newer for the JavaScript syntax check. Each command creates
+`build/iis/alloy-studio-iis-<UTC timestamp>.zip` and its matching `.zip.sha256`
+sidecar after successful checks. The timestamp includes microseconds, and the
+command prints the exact filename. Earlier archives remain untouched, so a
+locked older ZIP does not need to be replaced. Optional `-JavaCompiler` and `-Python` arguments accept absolute
 executable paths and are forwarded through compilation and packaging.
 `-OutputDirectory` selects the compiled-class directory. `-EngineOnly`
 compiles without creating or updating a ZIP; direct `./engine/build.sh` does
@@ -127,14 +129,15 @@ and move both files first when intentionally importing a different corpus.
 Incomplete pairs and invalid inputs receive specific diagnostic codes and are
 left untouched. The restored files belong outside the public IIS directory.
 
-Transfer `build/iis/alloy-studio-iis.zip` and its `.sha256` sidecar through a private
+Transfer the timestamped ZIP printed by the build and its `.sha256` sidecar through a private
 channel and compare the archive's SHA-256 with the sidecar after transfer. In an elevated
-**64-bit Windows PowerShell 5.1** session on the Windows server:
+**64-bit Windows PowerShell 5.1** session on the Windows server, substitute your
+actual package filename below:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
 $Bundle = 'C:\Program Files\AlloyStudio'
-Expand-Archive -LiteralPath 'C:\Staging\alloy-studio-iis.zip' -DestinationPath $Bundle
+Expand-Archive -LiteralPath 'C:\Staging\alloy-studio-iis-20260928-231500-123456Z.zip' -DestinationPath $Bundle
 Get-ChildItem -LiteralPath "$Bundle\deploy\iis" -Filter '*.ps1' | Unblock-File
 $WebRoot = "$Bundle\wwwroot"
 $BackendRoot = "$Bundle\backend"

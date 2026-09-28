@@ -12,6 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
+from scripts.package_iis import build_package
 
 
 def build_command(environment, *, platform_name=None):
@@ -53,6 +54,11 @@ def execute(name, root=ROOT):
     try:
         if name == 'build':
             commands[name] = build_command(environment)
+        elif name == 'browser':
+            # The frozen browser fixture uses a stable filename. Deployment
+            # builds use timestamped names; assemble this private test input
+            # explicitly from the classes prepared by the preceding build.
+            build_package(root, root / 'build/iis/alloy-studio-iis.zip')
         result = subprocess.run(commands[name], cwd=root, env=environment, capture_output=True,
                                 text=True, encoding='utf-8', errors='replace', timeout=1800, check=False)
         if result.returncode == 0:

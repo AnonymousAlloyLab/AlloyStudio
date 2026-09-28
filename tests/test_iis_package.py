@@ -1,5 +1,8 @@
 """Finite IIS archive checks; actual Windows/IIS acceptance runs on the host."""
+from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timezone
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -12,11 +15,13 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 import zipfile
 
+from scripts import package_iis as package_module
 from scripts.package_iis import (
     DEPLOY_FILES, JAR_FILES, REQUIRED_CLASSES, RUNTIME_HELPERS, WEB_FILES, ZIP_TIME,
     PackageError, build_package,
@@ -24,6 +29,51 @@ from scripts.package_iis import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class TimestampedArchiveNameTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='alloy-dated-archive-')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.clock = patch.object(package_module, 'datetime', wraps=datetime)
+        clock = self.clock.start()
+        self.addCleanup(self.clock.stop)
+        clock.now.return_value = datetime(2026, 9, 29, 1, 2, 3, 456789, tzinfo=timezone.utc)
+        self.now = clock.now
+
+    def test_default_name_uses_utc_and_microseconds(self):
+        output = package_module.default_archive_path(self.root)
+        self.assertEqual(output, self.root / 'build/iis/alloy-studio-iis-20260929-010203-456789Z.zip')
+        self.now.assert_called_once_with(timezone.utc)
+        self.assertFalse(output.exists())
+
+    def test_existing_archive_or_checksum_reserves_a_name_without_changing_either(self):
+        first = package_module.default_archive_path(self.root)
+        first.parent.mkdir(parents=True)
+        first.write_bytes(b'previous archive')
+        second = first.with_name(first.stem + '-2.zip')
+        second_checksum = second.with_suffix('.zip.sha256')
+        second_checksum.write_bytes(b'previous checksum without archive')
+        selected = package_module.default_archive_path(self.root)
+        self.assertEqual(selected, first.with_name(first.stem + '-3.zip'))
+        self.assertEqual(first.read_bytes(), b'previous archive')
+        self.assertEqual(second_checksum.read_bytes(), b'previous checksum without archive')
+        self.assertFalse(second.exists())
+        self.assertFalse(selected.exists())
+
+    @unittest.skipIf(os.name == 'nt', 'Windows symlink creation requires additional local privilege.')
+    def test_dangling_archive_and_checksum_links_reserve_their_names(self):
+        first = package_module.default_archive_path(self.root)
+        first.parent.mkdir(parents=True)
+        first.symlink_to(self.root / 'absent archive target')
+        second = first.with_name(first.stem + '-2.zip')
+        second_checksum = second.with_suffix('.zip.sha256')
+        second_checksum.symlink_to(self.root / 'absent checksum target')
+        self.assertEqual(package_module.default_archive_path(self.root),
+                         first.with_name(first.stem + '-3.zip'))
+        self.assertTrue(first.is_symlink())
+        self.assertTrue(second_checksum.is_symlink())
 
 
 class IisPackageTests(unittest.TestCase):
@@ -219,6 +269,48 @@ class IisPackageTests(unittest.TestCase):
                     build_package(self.root, self.output)
                 self.assertEqual(self.output.read_bytes(), original)
                 self.write(name, payload)
+
+    def test_default_cli_does_not_attempt_to_replace_locked_legacy_archive_or_checksum(self):
+        self.output = self.root / 'build/iis/alloy-studio-iis.zip'
+        self.archive()
+        checksum = self.output.with_suffix('.zip.sha256')
+        originals = {path: path.read_bytes() for path in (self.output, checksum)}
+        original_replace = os.replace
+        output = io.StringIO()
+        denied_attempts = []
+
+        def deny_legacy_replace(source, destination):
+            if Path(destination) in originals:
+                denied_attempts.append(destination)
+                error = PermissionError(13, 'simulated legacy archive lock')
+                error.winerror = 5
+                raise error
+            return original_replace(source, destination)
+
+        with patch('scripts.build_engine.compile_engine', return_value=self.root / 'build/engine/classes'), \
+                patch.object(package_module.os, 'replace', side_effect=deny_legacy_replace), \
+                patch.object(sys, 'argv', ['package_iis.py', '--source', str(self.root)]), \
+                redirect_stdout(output):
+            self.assertEqual(package_module.main(), 0)
+        selected = Path(json.loads(output.getvalue())['archive'])
+        self.assertEqual(selected.parent, self.output.parent)
+        self.assertNotEqual(selected, self.output)
+        self.assertTrue(selected.is_file())
+        self.assertEqual(denied_attempts, [])
+        for path, contents in originals.items():
+            self.assertEqual(path.read_bytes(), contents)
+
+    def test_failed_compilation_does_not_allocate_a_default_archive_name(self):
+        from scripts.build_engine import BuildError
+        with patch('scripts.build_engine.compile_engine', side_effect=BuildError('fixture compile failure')), \
+                patch.object(package_module, 'default_archive_path') as choose_name, \
+                patch.object(sys, 'argv', ['package_iis.py', '--source', str(self.root)]), \
+                redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                package_module.main()
+        self.assertEqual(raised.exception.code, 1)
+        choose_name.assert_not_called()
+        self.assertFalse((self.root / 'build/iis').exists())
 
     def test_malformed_catalogue_is_rejected(self):
         incomplete = {'schemaVersion': 1, 'exercises': [{'id': 'incomplete'}]}

@@ -144,7 +144,7 @@
     },
     {
       "id": "C-BUILDS",
-      "statement": "Two isolated fresh copies of the frozen inputs build and package successfully and produce identical class files, web assets, IIS ZIP/checksum files, inventories, provenance, correspondence metadata, and claim-status sets.",
+      "statement": "Two isolated fresh copies of the frozen inputs build and package successfully and produce identical class files, web assets, explicitly named IIS reproducibility-fixture ZIP/checksum files, inventories, provenance, correspondence metadata, and claim-status sets.",
       "claim_class": "determinism",
       "verifier": "V-BUILD",
       "scope": {
@@ -228,7 +228,7 @@
     },
     {
       "id": "C-IIS",
-      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, private corpus import and validated ZIP restoration with source-independent existing-data checks and actionable sanitized failures, bounded HTTP diagnosis without response-body disclosure, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded. The source build chain automatically refreshes the archive from fresh compiled classes, forwards custom output paths, and preserves the previous archive on failed builds. Packaged HTML references JS/CSS by exact content SHA-256 query versions, changes those URLs when payloads change despite fixed ZIP timestamps, and binds them in the manifest; XML fixtures require static no-cache/no-store, disabled timestamp ETags and disabled IIS output caches. Actual IIS and Cloudflare cache behavior is excluded.",
+      "statement": "The frozen Linux-executed IIS package and proxy-compatibility assertions pass for deterministic archives, manifest hashes, public/private file isolation, rejected inputs, explicit proxy origins, UTF-8 runtime/key handling, packaged runtime feedback, private corpus import and validated ZIP restoration with source-independent existing-data checks and actionable sanitized failures, bounded HTTP diagnosis without response-body disclosure, and the same-process task launcher configuration and sanitized failure behavior; actual Windows/IIS execution is excluded. The source build chain creates UTC-timestamped ZIP/checksum pairs from fresh compiled classes, skips existing names, forwards explicit custom output paths, and preserves earlier archives on default builds. Packaged HTML references JS/CSS by exact content SHA-256 query versions, changes those URLs when payloads change despite fixed ZIP timestamps, and binds them in the manifest; XML fixtures require static no-cache/no-store, disabled timestamp ETags and disabled IIS output caches. Actual IIS and Cloudflare cache behavior is excluded.",
       "claim_class": "test",
       "verifier": "V-PYTHON",
       "test_prefixes": [

@@ -323,8 +323,11 @@ On Linux, macOS, or Windows Git Bash, use:
 ./scripts/build.sh
 ```
 
-Both portal build commands refresh `build/iis/alloy-studio-iis.zip` and
-`build/iis/alloy-studio-iis.zip.sha256` after successful checks. A separate
+Both portal build commands create a new timestamped archive, for example
+`build/iis/alloy-studio-iis-20260928-231500-123456Z.zip`, and its matching
+`.zip.sha256` file after successful checks. The timestamp is UTC, with
+microseconds; the command prints the exact output path. Earlier packages are
+left untouched, including the old `alloy-studio-iis.zip`. A separate
 packaging command is no longer required. The build needs Python 3.10+, a JDK
 17+ with `javac`, and Node for the frontend syntax check (`-RequireNode` makes
 that check mandatory in PowerShell).
@@ -404,7 +407,8 @@ predicate contents. `vendor/acgn` supplies framework dependencies, not the
 original exercise corpus; the tracked exercise pair supplies the data needed
 for this portal.
 
-The output is `build/iis/alloy-studio-iis.zip` with a SHA-256 checksum. Follow
+The output is a new `build/iis/alloy-studio-iis-<UTC timestamp>.zip` with a
+matching SHA-256 checksum. Follow
 [the IIS deployment guide](deploy/iis/README.md) for prerequisites, site or virtual
 application setup, HTTPS, startup task installation, and target-side acceptance.
 Only the archive's `wwwroot` directory becomes an IIS physical directory. The
@@ -499,7 +503,7 @@ requires the supplied acceptance script on the target host.
 OPENAI_DISABLED=1 python3 -m unittest discover -s tests -v
 npm ci
 npx playwright install chromium   # only if Chromium is not already installed
-node tests/browser.mjs
+npm run test:browser
 python3 scripts/verify_closure.py --help
 ```
 
@@ -512,6 +516,13 @@ on Windows/IIS or macOS, and unrestricted semantic equivalence are outside its c
 boundary. Local tests cover the packaged runtime, proxy paths, configuration,
 and Windows compatibility branches. The Windows acceptance script checks the
 installed target separately.
+
+The browser CI wrapper prepares its fixed-name private test ZIP from the current
+compiled classes before running the frozen browser scenarios. For a direct
+`node tests/browser.mjs` invocation, prepare that fixture first with
+`python3 scripts/package_iis.py --output build/iis/alloy-studio-iis.zip`.
+Reproducibility checks also use this explicit filename; normal deployment builds
+use the timestamped default.
 
 The portal defaults to loopback and has bounded worker count, heap, request size,
 and execution time. For shared hosting, use a separately configured authenticated

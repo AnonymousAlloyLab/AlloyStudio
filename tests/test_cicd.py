@@ -128,6 +128,33 @@ class DashboardTests(unittest.TestCase):
                 ci_check.build_command({}, platform_name='nt')
         self.assertEqual(ci_check.build_command({}, platform_name='posix'), ['bash', './scripts/build.sh'])
 
+    def test_browser_wrapper_refreshes_explicit_fixture_before_launch(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        events = []
+        def package(root, output):
+            events.append(('package', root, output))
+        def browser(command, **kwargs):
+            events.append(('browser', command))
+            return subprocess.CompletedProcess(command, 0, '{"status":"PASS","checks":46}', '')
+        with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+                patch.object(ci_check, 'build_package', side_effect=package), \
+                patch.object(ci_check.subprocess, 'run', side_effect=browser), redirect_stdout(StringIO()):
+            self.assertEqual(ci_check.execute('browser', self.root), 0)
+        self.assertEqual(events, [('package', self.root, self.root / 'build/iis/alloy-studio-iis.zip'),
+                                  ('browser', ['node', 'tests/browser.mjs'])])
+
+    def test_browser_wrapper_does_not_use_old_fixture_after_packaging_failure(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        stream = StringIO()
+        with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+                patch.object(ci_check, 'build_package', side_effect=OSError('PRIVATE_SENTINEL')), \
+                patch.object(ci_check.subprocess, 'run') as runner, redirect_stdout(stream):
+            self.assertEqual(ci_check.execute('browser', self.root), 1)
+            runner.assert_not_called()
+        self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue())
+
     def test_release_tag_must_match_both_package_versions(self):
         self.write('package-lock.json', {'version': '0.0.1-alpha', 'packages': {'': {'version': '0.0.1-alpha'}}})
         self.assertTrue(release_preflight.validate(self.root, 'refs/tags/v0.0.1-alpha'))

@@ -7,6 +7,7 @@ administrator deployment artifact: only its wwwroot directory is public.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -221,6 +222,20 @@ def atomic_private_write(path: Path, data: bytes) -> None:
         temporary_path.unlink(missing_ok=True)
 
 
+def default_archive_path(root: Path) -> Path:
+    """Give each successful build a UTC-stamped name, retaining older packages."""
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%fZ')
+    directory = Path(root) / 'build/iis'
+    stem = f'alloy-studio-iis-{stamp}'
+    candidate = directory / (stem + '.zip')
+    serial = 1
+    while any(path.exists() or path.is_symlink()
+              for path in (candidate, candidate.with_suffix('.zip.sha256'))):
+        serial += 1
+        candidate = directory / f'{stem}-{serial}.zip'
+    return candidate
+
+
 def build_package(root: Path, output: Path, *, classes_root: Path | None = None) -> dict:
     """Package a prepared class tree atomically; the CLI compiles it first."""
     root = root.resolve(strict=True)
@@ -257,7 +272,8 @@ def build_package(root: Path, output: Path, *, classes_root: Path | None = None)
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=ROOT, help='Project source root (defaults to this checkout).')
-    parser.add_argument('--output', type=Path, help='Private ZIP destination (default: build/iis/alloy-studio-iis.zip).')
+    parser.add_argument('--output', type=Path,
+                        help='Explicit private ZIP destination (default: a new UTC-timestamped ZIP in build/iis).')
     parser.add_argument('--javac', default='javac', help='JDK 17+ compiler executable used for the fresh engine build.')
     parser.add_argument('--classes-output', type=Path,
                         help='Compiled class directory; relative paths start at --source (default: build/engine/classes).')
@@ -265,7 +281,7 @@ def main() -> int:
     from scripts.build_engine import BuildError, compile_engine
     try:
         classes = compile_engine(args.source, output=args.classes_output, compiler=args.javac)
-        result = build_package(args.source, args.output or args.source / 'build/iis/alloy-studio-iis.zip',
+        result = build_package(args.source, args.output or default_archive_path(args.source),
                                classes_root=classes)
     except (OSError, PackageError, BuildError) as exc:
         parser.exit(1, f'Package refused: {exc} The previous archive, if any, has not been refreshed.\n')

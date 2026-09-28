@@ -70,7 +70,7 @@ class IisPackageBuildChainTests(unittest.TestCase):
         build_package(self.root, self.output)
         old_archive = self.output.read_bytes()
         self.modify_source()
-        result = self.invoke()
+        result = self.invoke('--output', self.output)
         self.assertEqual(result.returncode, 0, result.stderr)
         metadata = json.loads(result.stdout)
         self.assertEqual(Path(metadata['archive']), self.output)
@@ -115,13 +115,46 @@ class IisPackageBuildChainTests(unittest.TestCase):
         path = self.root / 'engine/src/live/LiveFeedback.java'
         with path.open('a', encoding='utf-8') as source:
             source.write('\nTHIS_IS_AN_INTENTIONAL_JAVA_SYNTAX_FAILURE\n')
-        result = self.invoke()
+        result = self.invoke('--output', self.output)
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn('"archive"', result.stdout)
         self.assertNotIn('"sha256"', result.stdout)
         self.assertEqual(self.output.read_bytes(), old_archive)
         self.assertEqual(self.output.with_suffix('.zip.sha256').read_bytes(), old_checksum)
         self.assertEqual(class_hashes(self.classes), old_classes)
+
+    def test_default_cli_builds_distinct_timestamped_archives_and_preserves_readonly_legacy_pair(self):
+        build_package(self.root, self.output)
+        legacy_checksum = self.output.with_suffix('.zip.sha256')
+        legacy_contents = {path: path.read_bytes() for path in (self.output, legacy_checksum)}
+        legacy_modes = {}
+        for path in legacy_contents:
+            original_mode = path.stat().st_mode
+            self.addCleanup(lambda item=path, mode=original_mode: item.chmod(mode) if item.exists() else None)
+            path.chmod(0o400)
+            legacy_modes[path] = path.stat().st_mode
+        self.modify_source()
+        archives = []
+        for _ in range(2):
+            result = self.invoke()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            metadata = json.loads(result.stdout)
+            archive_path = Path(metadata['archive'])
+            self.assertEqual(archive_path.parent, self.output.parent)
+            self.assertRegex(archive_path.name, r'^alloy-studio-iis-\d{8}-\d{6}-\d{6}Z(?:-\d+)?\.zip$')
+            self.assertNotIn(archive_path, archives)
+            self.assertNotEqual(archive_path, self.output)
+            self.assertEqual(metadata['sha256'], hashlib.sha256(archive_path.read_bytes()).hexdigest())
+            self.assertEqual(archive_path.with_suffix('.zip.sha256').read_text(encoding='utf-8'),
+                             metadata['sha256'] + '  ' + archive_path.name + '\n')
+            with zipfile.ZipFile(archive_path) as archive:
+                self.assertIn(MARKER.encode(), archive.read('backend/build/engine/classes/live/LiveFeedback.class'))
+                self.assertEqual(archive.read('wwwroot/app.js'), (self.root / 'web/app.js').read_bytes())
+            archives.append(archive_path)
+        self.assertEqual(archives[0].read_bytes(), archives[1].read_bytes())
+        for path, contents in legacy_contents.items():
+            self.assertEqual(path.read_bytes(), contents)
+            self.assertEqual(path.stat().st_mode, legacy_modes[path])
 
 
 class PortalBuildPackagingDispatchTests(unittest.TestCase):

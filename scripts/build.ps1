@@ -102,7 +102,10 @@ if ($nodeCommand) {
 }
 # One dependency chain: validation -> clean compilation -> ZIP -> checksum.
 # The native Python process constructs javac paths using Windows separators.
-& $Python '-E' '-s' (Join-Path $projectRoot 'scripts\package_iis.py') `
+$packageJson = & $Python '-E' '-s' (Join-Path $projectRoot 'scripts\package_iis.py') `
     '--source' $projectRoot '--javac' $JavaCompiler '--classes-output' $OutputDirectory
-if ($LASTEXITCODE -ne 0) { throw 'IIS build failed. The previous archive, if any, has not been refreshed.' }
-Write-Output "Refreshed IIS package: $(Join-Path $projectRoot 'build\iis\alloy-studio-iis.zip')"
+if ($LASTEXITCODE -ne 0) { throw 'IIS build failed. Use the diagnostic above; previous timestamped archives remain unchanged.' }
+try { $package = ($packageJson -join "`n") | ConvertFrom-Json }
+catch { throw 'Packaging did not return valid archive metadata. Check the output in build\iis before deploying.' }
+Write-Output "Created IIS package: $($package.archive)"
+Write-Output "SHA-256: $($package.sha256)"

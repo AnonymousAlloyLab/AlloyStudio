@@ -289,8 +289,12 @@ inputs, explicit trusted origins behind a proxy, UTF-8 Java and key handling,
 the packaged runtime, and the task launcher's process, configuration, and
 sanitized failure behavior. The browser claim additionally checks real feedback
 through a virtual application prefix. Build-chain fixtures change Java source,
-seed obsolete classes and an older ZIP, and verify that the replacement ZIP
-contains the freshly compiled change without obsolete classes. Custom class
+seed obsolete classes and an older ZIP, and verify that an explicitly named replacement ZIP
+contains the freshly compiled change without obsolete classes. Default builds
+create UTC-timestamped ZIP/checksum pairs and preserve earlier packages, including
+the legacy fixed name. Fixed-clock collisions skip existing ZIPs and checksums.
+The two-build comparison uses an explicit fixed-name fixture so filename timestamps
+do not change checksum-file bytes. Custom class
 outputs must be normalized into the packaged runtime path. Compiler and frontend
 failures must propagate without reporting a refreshed archive; compilation failure
 must preserve the previous classes, ZIP, and checksum. These assertions run on Linux. They do

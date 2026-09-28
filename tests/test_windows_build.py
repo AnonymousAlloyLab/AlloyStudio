@@ -131,6 +131,9 @@ class WindowsSourceBuildTests(unittest.TestCase):
         self.assertNotIn('@compilerArguments', source)
         self.assertRegex(source[package:], r'\$LASTEXITCODE\s+-ne\s+0')
         self.assertIn('throw', source[package:])
+        self.assertIn('$packageJson = & $Python', source)
+        self.assertIn('$package.archive', source[package:])
+        self.assertNotIn('Write-Output "Refreshed IIS package:', source[package:])
 
     def test_powershell_engine_only_uses_clean_helper_and_returns_before_packaging(self):
         source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')

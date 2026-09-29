@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a named CI check, publishing only status/counts, never captured model data."""
+"""Run a named CI check, publishing safe summaries, never captured model data."""
 from __future__ import annotations
 import argparse
 import json
@@ -13,6 +13,19 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
 from scripts.package_iis import build_package
+
+
+def build_failure_code(stdout, stderr):
+    """Classify known build failures without copying any subprocess text."""
+    lines = (stdout + '\n' + stderr).splitlines()
+    if any(line.startswith('Package refused: Exercise database validation or consistent backup failed;')
+           for line in lines):
+        return 'BUILD_DATABASE_BACKUP_FAILED'
+    if any(line.startswith('Package refused:') for line in lines):
+        return 'BUILD_PACKAGE_REFUSED'
+    if any(line.startswith('Private data preparation failed [') for line in lines):
+        return 'BUILD_PRIVATE_DATA_FAILED'
+    return 'BUILD_FAILED'
 
 
 def build_command(environment, *, platform_name=None):
@@ -73,8 +86,10 @@ def execute(name, root=ROOT):
                 if raw.get('status') != 'PASS':
                     report['status'] = 'FAIL'
                 report['count'] = count(raw.get('engine', {}).get('checks') if name == 'runtime' else raw.get('checks'))
+        elif name == 'build':
+            report['failure_code'] = build_failure_code(result.stdout, result.stderr)
         # Captured stdout/stderr are intentionally not logged or uploaded: assertion
-        # failures can contain private models. Reproduce the failed check locally.
+        # failures can contain private models. Only fixed failure codes are public.
     except (OSError, ValueError, KeyError, AttributeError, TypeError, subprocess.SubprocessError):
         report['status'] = 'UNAVAILABLE'
     if revision(root) != before:

@@ -107,6 +107,33 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(runner.call_args.kwargs['env']['OPENAI_DISABLED'], '1')
         self.assertEqual(json.loads((self.root / 'build/ci/build.json').read_text())['status'], 'FAIL')
 
+    def test_build_failures_publish_only_fixed_diagnostic_codes(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        cases = (
+            ('Package refused: Exercise database validation or consistent backup failed; '
+             'PRIVATE_SENTINEL', 'BUILD_DATABASE_BACKUP_FAILED'),
+            ('Package refused: PRIVATE_SENTINEL', 'BUILD_PACKAGE_REFUSED'),
+            ('Private data preparation failed [INVALID_INPUT]: PRIVATE_SENTINEL', 'BUILD_PRIVATE_DATA_FAILED'),
+            ('PRIVATE_SENTINEL', 'BUILD_FAILED'),
+        )
+        for message, expected in cases:
+            for channel in ('stdout', 'stderr'):
+                with self.subTest(expected=expected, channel=channel):
+                    stream = StringIO()
+                    result = subprocess.CompletedProcess([], 1,
+                        message if channel == 'stdout' else 'PRIVATE_SENTINEL',
+                        message if channel == 'stderr' else 'PRIVATE_SENTINEL')
+                    with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+                         patch.object(ci_check.subprocess, 'run', return_value=result), \
+                         redirect_stdout(stream):
+                        self.assertEqual(ci_check.execute('build', self.root), 1)
+                    self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue())
+                    report = json.loads((self.root / 'build/ci/build.json').read_text())
+                    self.assertNotIn('PRIVATE_SENTINEL', json.dumps(report))
+                    self.assertEqual(report['status'], 'FAIL')
+                    self.assertEqual(report['failure_code'], expected)
+
     def test_windows_build_uses_bash_beside_git_not_system_wsl(self):
         for layout in ('cmd', 'bin', 'mingw64/bin', 'mingw32/bin'):
             install = self.root / ('Git ' + layout.replace('/', '-'))

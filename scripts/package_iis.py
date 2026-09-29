@@ -149,7 +149,11 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
     from exercise_store import backup_store, ensure_store
     try:
         ensure_store(root)
-        with tempfile.TemporaryDirectory(prefix='alloy-package-snapshot-') as directory:
+        # macOS exposes its system temp directory through /var -> /private/var.
+        # Resolve that OS-selected parent before allocating our own snapshot;
+        # caller-supplied database and deployment paths still reject all links.
+        temporary_parent = Path(tempfile.gettempdir()).resolve(strict=True)
+        with tempfile.TemporaryDirectory(prefix='alloy-package-snapshot-', dir=temporary_parent) as directory:
             snapshot_path = Path(directory) / 'exercises.sqlite3'
             store = backup_store(root, snapshot_path)
             database_bytes = snapshot_path.read_bytes()

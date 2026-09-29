@@ -81,7 +81,7 @@ class IisPackageTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.base = Path(self.temporary.name)
+        self.base = Path(self.temporary.name).resolve()
         self.root = self.base / 'source'
         self.output = self.base / 'private/alloy-studio-iis.zip'
         self.fixture()
@@ -212,6 +212,43 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertNotIn('backend/exercises/catalogue.json', second)
         self.assertNotIn('backend/exercises/correct-pools.json', second)
+
+    @unittest.skipIf(os.name == 'nt', 'Windows symlink creation requires additional local privilege.')
+    def test_package_snapshot_supports_symlinked_system_temporary_directory(self):
+        from exercise_store import ensure_store, load_store
+        expected = ensure_store(self.root)
+        physical = self.base / 'private' / 'var' / 'folders'
+        physical.mkdir(parents=True)
+        alias = self.base / 'var'
+        alias.symlink_to(self.base / 'private' / 'var', target_is_directory=True)
+        # macOS normally selects /var/folders/... as its temporary directory,
+        # while /var itself is a system alias for /private/var. Exercise the
+        # real database backup and packaging code through the same shape.
+        with patch.object(tempfile, 'tempdir', str(alias / 'folders')):
+            entries = package_module.collect_files(self.root)
+        snapshot = self.base / 'packaged-snapshot.sqlite3'
+        snapshot.write_bytes(entries['backend/exercises/exercises.sqlite3'])
+        actual = load_store(self.root, snapshot)
+        self.assertEqual(actual.exercises, expected.exercises)
+        self.assertEqual(actual.correct_pools, expected.correct_pools)
+        self.assertEqual(list(physical.iterdir()), [])
+
+    @unittest.skipIf(os.name == 'nt', 'Windows symlink creation requires additional local privilege.')
+    def test_caller_supplied_database_paths_still_reject_symlink_ancestors(self):
+        from exercise_store import StoreError, backup_store, ensure_store
+        ensure_store(self.root)
+        database = self.root / 'exercises' / 'exercises.sqlite3'
+        original = database.read_bytes()
+        alias = self.base / 'linked-exercises'
+        alias.symlink_to(database.parent, target_is_directory=True)
+        with self.assertRaisesRegex(StoreError, 'links or junctions'):
+            backup_store(self.root, alias / 'caller-snapshot.sqlite3')
+        self.assertFalse((database.parent / 'caller-snapshot.sqlite3').exists())
+        destination = self.base / 'safe-snapshot.sqlite3'
+        with self.assertRaisesRegex(StoreError, 'links or junctions'):
+            backup_store(self.root, destination, database_path=alias / database.name)
+        self.assertFalse(destination.exists())
+        self.assertEqual(database.read_bytes(), original)
 
     def test_consistent_wal_snapshot_preserves_admin_additions_and_excludes_uncommitted_writes(self):
         from exercise_store import add_exercise, ensure_store, load_store

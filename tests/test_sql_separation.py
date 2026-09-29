@@ -42,6 +42,28 @@ class StableAstTests(unittest.TestCase):
         identities = {bridge.syntax(ast.parse(source)) for source in sources}
         self.assertEqual(len(identities), len(sources))
 
+    def test_astral_character_and_surrogate_pair_have_distinct_identities(self):
+        scalar = ast.parse(r"x = '\U00010000'")
+        surrogates = ast.parse(r"x = '\ud800\udc00'")
+        self.assertNotEqual(scalar.body[0].value.value, surrogates.body[0].value.value)
+        self.assertNotEqual(bridge.syntax(scalar), bridge.syntax(surrogates))
+
+    def test_string_identity_preserves_code_points_and_type(self):
+        values = ('', '\0', 'ASCII', '\ud800', '\udc00', '\U00010000',
+                  '\ud800\udc00', '\u00e9', 'e\u0301')
+        self.assertEqual(len({bridge.syntax(ast.Constant(value=value)) for value in values}),
+                         len(values))
+        for value in values:
+            with self.subTest(value=ascii(value)):
+                # Non-Constant string fields use the same lossless identity.
+                encoded = json.loads(bridge.syntax(ast.Name(id=value, ctx=ast.Load())))
+                code_points = encoded['fields']['id']['str']
+                self.assertEqual(''.join(chr(point) for point in code_points), value)
+                self.assertNotEqual(bridge.syntax(value), bridge.syntax(code_points))
+        self.assertNotEqual(bridge.syntax('ASCII'), bridge.syntax(b'ASCII'))
+        with self.assertRaises(bridge.BridgeError):
+            bridge.syntax({'str': [65]})
+
 
 class SqlSeparationMutationTests(unittest.TestCase):
     @classmethod

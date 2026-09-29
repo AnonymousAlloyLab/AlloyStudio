@@ -3,8 +3,8 @@
   "classification": "TRUSTED_REVIEWED_INTEGRITY_ROUTINES",
   "schemaVersion": 1,
   "trustedIntegrityFunctions": {
-    "_read_artifact": "eb880acf61476251e80ed8d3e95fbd9211455ca3abc7cded6f013f4ad927c5f0",
-    "_registry": "8b44853562d1a4a230b6cce34cdab166ad3e37cf920cead60a2c73d67ddee82b",
-    "_strict_json": "5add974b1753b646a1cd5f30179f516d8ac8721d9e9f7f1a97b888f1a4073c5f"
+    "_read_artifact": "3f4a049c8a5b5b1feee1503bdc69fa54b4de0d0f7650c75d1868bbfdb71e2089",
+    "_registry": "c202a4286838c29e8d536e44955ef05bff03fb741f5387ce18ecf109f6109a63",
+    "_strict_json": "5966a9bc32a97a93e1877ea4c9fe09209603c3f876bb3379efe4738f842cbd01"
   }
 }

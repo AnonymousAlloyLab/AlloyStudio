@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "reviewerModel": "gpt-6-sol",
   "tier": 2,
-  "blockManifestSha256": "45da86ef21a72ae5a016308bbcef3272607ae64d71225ef4cecb4d5c7e1f1230",
+  "blockManifestSha256": "e8cdff342aeba6687f88e3e52faa32c98a8a8b5acfdf435f28baa3eac6ddb2e6",
   "priorReviews": {
-    "formal/reviews/SQL01/luna-a.json": "2237a24704c2bedcdf498cc6db0cbf6f712770063c9a3d2d128e73ed97617d57",
-    "formal/reviews/SQL01/luna-b.json": "2237a24704c2bedcdf498cc6db0cbf6f712770063c9a3d2d128e73ed97617d57"
+    "formal/reviews/SQL01/luna-a.json": "8515d0362bb6f3c4c80a68be6c4bda13b38c61d9bbc29cee41db8993054277e3",
+    "formal/reviews/SQL01/luna-b.json": "8515d0362bb6f3c4c80a68be6c4bda13b38c61d9bbc29cee41db8993054277e3"
   },
   "verdict": "no_constructed_breach",
   "findings": []

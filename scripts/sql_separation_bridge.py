@@ -90,7 +90,12 @@ def syntax(node):
             return {'node': type(value).__name__, 'fields': fields}
         if isinstance(value, list):
             return [encode(item) for item in value]
-        if value is None or type(value) in (str, int, bool):
+        if type(value) is str:
+            # JSON escaping merges astral characters with explicit surrogate
+            # pairs. Tag code points to preserve every Python str distinctly
+            # from both other strings and AST lists of integers.
+            return {'str': [ord(character) for character in value]}
+        if value is None or type(value) in (int, bool):
             return value
         if type(value) is bytes:
             return {'bytes': value.hex()}

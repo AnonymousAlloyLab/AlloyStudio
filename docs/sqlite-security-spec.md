@@ -1,6 +1,9 @@
 # SQLite exercise storage: security specification
 
-Specification version: 1. Implementation must follow this specification and its
+Specification version: 1. The later [authenticated import contract](admin-security-spec.md)
+supersedes the CLI-only and no-hot-reload scope restrictions below for its
+explicitly authenticated routes; all learner projection and SQL boundaries remain.
+ Implementation must follow this specification and its
 acceptance register in `closure/sqlite-spec.json`. This document is a design and
 test contract, not a claim of completed security verification. Persistence work
 starts only after the specification has received an independent adversarial

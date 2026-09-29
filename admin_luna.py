@@ -5,10 +5,10 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 from exercise_store import StoreError, parse_json, text
-from luna import ENDPOINT, MODEL, read_key
+from luna import ENDPOINT, MODEL, read_key, urlopen
 
 MAX_RESPONSE = 1048576
 INSTRUCTIONS = '''Help an Alloy exercise administrator prepare an upload for teaching.

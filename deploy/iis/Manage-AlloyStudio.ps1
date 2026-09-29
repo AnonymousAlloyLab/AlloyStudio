@@ -2,7 +2,7 @@
 #Requires -RunAsAdministrator
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Start', 'Stop', 'Restart', 'Status', 'Uninstall')][string]$Action,
+    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Start', 'Stop', 'Restart', 'Status', 'UpdateDataPermissions', 'Uninstall')][string]$Action,
     [string]$BackendRoot,
     [string]$WebRoot,
     [string]$PythonExe,
@@ -147,6 +147,28 @@ if (-not $existing) { throw "Scheduled backend task '$TaskName' is not installed
 switch ($Action) {
     'Start' { Start-BackendTask }
     'Stop' { Stop-BackendTask; Write-Output 'Backend task stopped and disabled until Start.' }
+    'UpdateDataPermissions' {
+        # Older installations deliberately made the whole backend read-only.
+        # Upgrade only the private data ACL; preserve all file/config contents.
+        if ($existing.State -eq 'Running' -or
+            @(Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue).Count) {
+            throw 'Stop the backend and all database writers before updating data permissions.'
+        }
+        $permissionConfigPath = Get-LocalPath -Path $configPath -Purpose 'Installed backend configuration'
+        $permissionConfig = Get-Content -LiteralPath $permissionConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $permissionBackend = Get-LocalPath -Path ([string]$permissionConfig.backend_root) -Purpose 'Installed BackendRoot'
+        $exerciseDirectory = Get-LocalPath -Path (Join-Path $permissionBackend 'exercises') -Purpose 'Private exercise directory'
+        $databasePath = Get-LocalPath -Path (Join-Path $exerciseDirectory 'exercises.sqlite3') -Purpose 'Private exercise database'
+        $publicRoots = @(Get-IisPhysicalRoots)
+        Assert-PrivatePath -Path $permissionBackend -PublicRoots $publicRoots
+        Assert-PrivatePath -Path $exerciseDirectory -PublicRoots $publicRoots
+        if (-not (Test-Path -LiteralPath $exerciseDirectory -PathType Container) -or
+            -not (Test-Path -LiteralPath $databasePath -PathType Leaf)) {
+            throw 'The installed private exercise database is missing.'
+        }
+        Set-RestrictedAcl -Path $exerciseDirectory -LocalServiceAccess Modify -Recurse
+        Write-Output 'Private exercise data permissions updated. Database, code, credentials and task settings are retained.'
+    }
     'Restart' {
         Invoke-InstalledRuntimeDependencyCheck | Out-Null
         Stop-BackendTask

@@ -34,7 +34,7 @@ class IisPackageBuildChainTests(unittest.TestCase):
         for directory in ('web', 'deploy/iis', 'engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'scripts', 'exercises', 'docs', 'examples'):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'LICENSE', 'openai.example.json'):
+        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'LICENSE', 'openai.example.json'):
             shutil.copy2(ROOT / name, self.root / name)
         self.classes = self.root / 'build/engine/classes'
         shutil.copytree(ROOT / 'build/engine/classes', self.classes)

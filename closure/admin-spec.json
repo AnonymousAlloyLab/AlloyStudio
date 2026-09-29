@@ -10,6 +10,11 @@
       "requirement": "Password hashing, configuration isolation, disabled-by-default setup",
       "tests": [
         "authentication"
+      ],
+      "testPrefixes": [
+        "test_admin_auth.AdminConfigurationTests",
+        "test_admin_auth.AdminAuthTests",
+        "test_credentials.CredentialDeliveryTests"
       ]
     },
     {
@@ -17,6 +22,10 @@
       "requirement": "Origin, CSRF, framing, bounded sessions/rate limits, expiry and rotation",
       "tests": [
         "http_authority"
+      ],
+      "testPrefixes": [
+        "test_admin_auth.",
+        "test_admin_http."
       ]
     },
     {
@@ -24,6 +33,10 @@
       "requirement": "Actual Alloy grouping, complete variant equivalence and fail-closed dependencies",
       "tests": [
         "upload_validation"
+      ],
+      "testPrefixes": [
+        "test_admin_upload.",
+        "test_admin_http."
       ]
     },
     {
@@ -31,6 +44,10 @@
       "requirement": "Exact original/source-body preservation and protected quotient names",
       "tests": [
         "source_preservation"
+      ],
+      "testPrefixes": [
+        "test_admin_upload.",
+        "test_admin_store."
       ]
     },
     {
@@ -38,6 +55,10 @@
       "requirement": "Metadata-only Luna, manual fallback and public question review",
       "tests": [
         "luna_metadata"
+      ],
+      "testPrefixes": [
+        "test_admin_luna.",
+        "test_admin_browser."
       ]
     },
     {
@@ -45,6 +66,11 @@
       "requirement": "Owner-bound bounded jobs and atomic authorized batch publication",
       "tests": [
         "publication"
+      ],
+      "testPrefixes": [
+        "test_admin_service.",
+        "test_admin_store.",
+        "test_admin_http."
       ]
     },
     {
@@ -52,6 +78,10 @@
       "requirement": "Public oracle/credential redaction and immediate consistent catalogue visibility",
       "tests": [
         "public_projection"
+      ],
+      "testPrefixes": [
+        "test_admin_http.",
+        "test_admin_store."
       ]
     },
     {
@@ -59,6 +89,12 @@
       "requirement": "Portable admin assets, private config, narrow IIS database permissions",
       "tests": [
         "deployment"
+      ],
+      "testPrefixes": [
+        "test_iis_package.",
+        "test_repository.",
+        "test_local_setup.",
+        "test_iis_launcher."
       ]
     }
   ],

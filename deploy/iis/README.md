@@ -1,6 +1,6 @@
 # Deploy Alloy Studio on IIS 10.0
 
-IIS serves the portal and dashboard assets and proxies this application's `api/*` requests
+IIS serves the portal, dashboard and administration assets and proxies this application's `api/*` requests
 to Python at `127.0.0.1:8080`. Python runs the bundled Java canonical engine and
 keeps reference solutions and Luna credentials out of browser responses. The
 backend runs as a Windows **scheduled task**, under LOCAL SERVICE, independently
@@ -19,7 +19,8 @@ distribution.
 Every bundled invariant has a natural-language requirement displayed above the
 editor. The private SQLite database stores those descriptions, predicate bodies,
 ordered correct pools and primary oracle identities. A running backend reads one
-consistent snapshot; restart the backend task after private administration.
+consistent snapshot. Host-side CLI additions require a restart; authenticated
+browser publication refreshes the live snapshot atomically.
 
 To add an exercise, run the host-only command from `backend` with a validated
 exercise import file (see [the storage security specification](../../docs/sqlite-security-spec.md)):
@@ -32,14 +33,44 @@ python .\scripts\manage_exercises.py add C:\Private\exercise.json
 One or more oracle bodies are required. The first is the behavioral reference;
 all oracles participate in nearest-correct selection. The importer checks the
 starter and solutions with Alloy and requires bounded equivalence to the first
-oracle. There is no administration HTTP route. Keep import files outside every
-IIS public directory, and preserve the installed database when updating code.
+oracle. The authenticated `/admin/` interface also accepts complete `.als` uploads.
+It is disabled until a host administrator configures a password; see
+[administration setup](../../docs/admin-setup.md) in the source checkout, or
+`backend/docs/admin-setup.md` in the extracted package. Keep import files outside
+every IIS public directory, and preserve the installed database when updating code.
 
 This deployment support was developed on Linux. Cross-platform tests and
 PowerShell syntax checks do not establish that a particular Windows server is
 configured correctly. Run the Windows acceptance script below and the lifecycle
 checks on the actual target before recording deployment acceptance. No Windows
 host was changed or claimed as verified during development.
+
+## Administration boundary
+
+The `/admin/` login shell contains no credentials or private data. Run
+`python scripts/configure_admin.py --origin https://as.555.is --base-path /`
+from the private backend to set its password interactively; adjust the exact
+origin and application path for the deployment. For an application at
+`https://example.org/alloy/`, use origin `https://example.org` and base path
+`/alloy/`. Do not put the password in a command-line argument. Only its salted
+scrypt hash is stored in the private `admin.local.json`, which is excluded from
+Git and deployment archives. Missing configuration leaves administration disabled.
+
+The installer gives LOCAL SERVICE Modify access only to `backend/exercises`
+for SQLite publication and journals. Code, password configuration and provider
+credentials retain read-only access. Existing installs must apply these updated
+ACLs as part of their upgrade; do not grant write access to the entire backend.
+An operator who configures the password after installation should retain the
+private backend's inherited ACLs. The Windows acceptance script checks the
+intended scope, including the new admin configuration when present.
+
+Configure Cloudflare to bypass caching `/api/admin/*` (including any application
+prefix). Preserve `Cache-Control: no-store, private` and `Set-Cookie`; no admin
+API response should enter a shared cache. Production requires HTTPS, and no
+forwarded Host/protocol header chooses authentication authority. Same-origin
+applications are trusted; a URL path cannot isolate an untrusted sibling app.
+Preparation and suggestions use bounded jobs so their API requests do not stay
+open through a full solver/provider run. No global ARR timeout change is needed.
 
 ## 1. Build and transfer the package
 
@@ -160,7 +191,7 @@ The extracted layout is:
 
 ```text
 AlloyStudio\
-  wwwroot\              index.html, app.js, styles.css, web.config, dashboard/ ONLY
+  wwwroot\              portal files, web.config, dashboard/ and admin/ ONLY
   backend\              Python code, classes, JARs, catalogue and correct pools
   deploy\iis\           administrator scripts and the task launcher
   manifest.json         packaged file hashes
@@ -257,7 +288,7 @@ sites. The 60-second timeout exceeds the default 12-second canonical calculation
 plus the 40-second Luna request; retain at least 60 seconds. The behavioral check
 uses a separate request before educational guidance is requested. The included
 `web.config` has only a fixed loopback upstream. Its second rule allows only the
-known portal and dashboard public assets. No wildcard filesystem handler exposes the backend.
+known portal, dashboard and admin public assets. No wildcard filesystem handler exposes the backend.
 Application-relative rewrite matching also supports `/alloy/api/...`; see the
 [URL Rewrite configuration reference](https://learn.microsoft.com/en-us/iis/extensions/url-rewrite-module/url-rewrite-module-configuration-reference).
 
@@ -376,8 +407,8 @@ JSON file so the launcher selects the intended source.
 
 The backend, config, key directory, and key file permit Administrators/SYSTEM
 full control and LOCAL SERVICE read access. Backends and task scripts get
-read/execute access for LOCAL SERVICE, while only the separate logs directory
-gets modify access. ACLs do not protect secrets from an administrator or another
+read/execute access for LOCAL SERVICE. The private exercises directory and
+separate logs directory receive Modify access; code and credentials do not. ACLs do not protect secrets from an administrator or another
 process already running as LOCAL SERVICE.
 
 The installer writes `backend-task.json` with executable paths and explicit
@@ -518,7 +549,7 @@ The script first records all seven dependency filenames, expected/actual SHA-256
 hashes, compiled-class results, and the fresh JVM's 378-check result. Those
 details remain in `runtime_dependencies` even when a dependency failure prevents
 HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
-binding, configured origin, private ACLs and paths, all 181 public exercise
+binding, configured origin, private ACLs and paths, all public exercise
 projections, UTF-8 processing, and a real operator repair that reduces canonical
 distance from 1 to 0. It checks that denied cross-origin and malformed requests
 remain JSON errors and that private routes cannot be downloaded. IIS preserves
@@ -572,7 +603,7 @@ application URL:
 The starter validates the installed public directory, private backend configuration,
 allowed origin, and scheduled task before starting anything. It starts the IIS
 prerequisite services WAS/W3SVC when needed, the specified existing app pool and
-website, and the installed backend task; success requires all 181 exercises at the
+website, and the installed backend task; success requires a positive exercise count matching the listing at the
 public IIS health endpoint. It performs no installation or binding, certificate,
 firewall, ACL, or service startup-policy changes. Optional `-RuntimeRoot` and
 `-TaskName` match custom installations; `-UseDefaultCredentials` supports existing
@@ -602,7 +633,7 @@ old, unversioned `app.js` and `styles.css` served as Cloudflare `HIT` entries wi
 a four-hour cache lifetime. Fresh query URLs returned current asset hashes, and
 the behavioral API exposed the new score and categories. The served homepage
 HTML was still an older version missing the new panels, including on fresh-query
-requests. Update all packaged public files, including the `dashboard` directory, in the active IIS directory using the
+requests. Update all packaged public files, including the `dashboard` and `admin` directories, in the active IIS directory using the
 steps below; purging JavaScript alone cannot add missing HTML panels. Purge this
 website's homepage, `index.html`, `app.js`, and `styles.css` in Cloudflare, then
 hard-reload the browser. Rebuilding the ZIP or restarting IIS does not clear
@@ -637,16 +668,29 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    & $Manage -Action Stop -RuntimeRoot $RuntimeRoot -TaskName $TaskName; Stop-Website -Name $SiteName
    ```
 
-2. Copy all new `wwwroot` files, including the `dashboard` directory, into the **installed** `$WebRoot`, retaining
+2. Copy all new `wwwroot` files, including the `dashboard` and `admin` directories, into the **installed** `$WebRoot`, retaining
    intentional site settings and the new cache controls in `web.config`. Update
    the installed private backend and deployment launchers from the same package;
    replace its class tree and JAR directory as complete units. Preserve
-   `backend/openai.local.json`, referenced key files, runtime configuration and
-   secrets. Preserve the installed `exercises/exercises.sqlite3` and all committed
+   `backend/openai.local.json`, `backend/admin.local.json`, referenced key files,
+   runtime configuration and secrets. Preserve the installed `exercises/exercises.sqlite3` and all committed
    administrator additions. With the backend and writers stopped, back up the
    database before updating. Replace it only when intentionally changing datasets;
    do not overwrite it with the bundled seed during a routine code upgrade. Never
    copy the backend or package root into the public IIS directory.
+
+   With all database writers still stopped, apply the current data permission
+   policy using the updated manager script. Older installations made this
+   directory read-only, which prevents publication from the new admin page:
+
+   ```powershell
+   & $Manage -Action UpdateDataPermissions -RuntimeRoot $RuntimeRoot -TaskName $TaskName
+   ```
+
+   This updates only the private `exercises` directory ACL to LOCAL SERVICE
+   Modify. It checks the installed paths against every IIS physical directory
+   and refuses links. It does not replace the database, rewrite task settings,
+   or grant writes to backend code, `admin.local.json` or OpenAI credentials.
 
 3. Touch only these installed public files after copying. Reproducible ZIPs use
    1980 timestamps; the inspected origin reused that `Last-Modified` and ETag
@@ -654,7 +698,7 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    timestamps leaves the package's content hashes unchanged:
 
    ```powershell
-   @('index.html','app.js','styles.css','web.config','dashboard/index.html','dashboard/app.js','dashboard/styles.css','dashboard/data.json') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
+   @('index.html','app.js','styles.css','web.config','dashboard/index.html','dashboard/app.js','dashboard/styles.css','dashboard/data.json','admin/index.html','admin/app.js','admin/styles.css') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
    ```
 
 4. Restart the backend and start only the selected website:

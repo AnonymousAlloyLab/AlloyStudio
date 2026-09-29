@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Model administration · Alloy Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="../">Alloy Studio <span>/ Administration</span></a><button id="logout" type="button" hidden>Sign out</button></header>
+  <main>
+    <p class="eyebrow">EXERCISE LIBRARY</p>
+    <h1>Add an Alloy model</h1>
+    <p class="lead">Keep your model intact. Check its solutions, then review the questions learners will see.</p>
+    <p id="notice" role="status" aria-live="polite">Checking administration availability…</p>
+    <section id="disabled" hidden><h2>Administration is not configured</h2><p>Run <code>python scripts/configure_admin.py --origin http://127.0.0.1:8080</code> on the backend host to set a password. For a deployed site, supply its HTTPS origin instead. No password belongs in this page's source or a public configuration file.</p><button id="retry" type="button">Check again</button></section>
+    <form id="login-form" hidden>
+      <h2>Administrator sign-in</h2>
+      <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required maxlength="1024">
+      <button type="submit">Sign in</button>
+    </form>
+    <div id="workspace" hidden>
+      <section class="guide">
+        <details><summary>Upload format guide</summary>
+          <p>Upload one UTF-8 <code>.als</code> file, up to 256 KiB. Keep signatures, fields, facts and helpers in the same model. All exercise predicates must have no parameters.</p>
+          <ul>
+            <li><code>inv1C0</code>, <code>inv1C1</code>, … are alternative solutions for one <code>inv1</code> exercise. Capitalization of the base name is preserved. Every variant must agree within the selected Alloy scope.</li>
+            <li>An optional bare <code>inv1</code> is the learner's starter. Otherwise, a blank practice body is provided. C numbers need not be consecutive; the lowest is the primary behavioral reference.</li>
+            <li>A standalone predicate such as <code>acyclic</code> keeps its name and becomes a single-solution exercise. A file with just one predicate uses the same workflow.</li>
+            <li>Parameterized predicates and functions remain helpers. Do not call private solution variants from another predicate, fact, helper or command. Module macros, duplicate names, recursive exercises and local-file imports are unsupported.</li>
+          </ul>
+          <pre>module graph
+sig Node { edge: set Node }
+pred inv1C0 { some Node }
+pred inv1C1 { not no Node }</pre>
+          <p>The original upload is retained privately. Solution declarations are removed from the learner view; every retained environment fragment and every solution body is preserved. Luna formats the exercise metadata, not the Alloy code.</p>
+          <p>Up to eight exercises and 64 solution declarations per file. Each body may use up to 8 KiB. Alloy checks equivalence with facts enforced, bitwidth 5 and the selected scope (1–8); this is bounded agreement, not an unbounded proof.</p>
+        </details>
+      </section>
+      <form id="upload-form">
+        <h2><span class="step">1</span> Choose a model</h2>
+        <label for="model-file">Alloy model</label><input id="model-file" type="file" accept=".als" required>
+        <div class="fields"><div><label for="model-id">Model identifier</label><input id="model-id" type="text" required maxlength="100" pattern="[A-Za-z0-9][A-Za-z0-9_.-]*" placeholder="graph-basics"><small>Used to keep exercise IDs distinct. Existing exercises are never overwritten.</small></div>
+        <div><label for="scope">Equivalence scope</label><input id="scope" type="number" min="1" max="8" value="5" required></div></div>
+        <label for="question-seed">Question or teaching goal <span class="optional">(optional)</span></label><textarea id="question-seed" rows="3" maxlength="8192" placeholder="For example: Ask students to constrain which nodes can reach one another."></textarea>
+        <p class="disclosure">After validation, Luna will receive this model and your teaching goal to suggest question wording, using the backend's OpenAI configuration. If Luna is unavailable, you can enter the questions yourself.</p>
+        <button id="prepare" type="submit">Check model and suggest questions</button>
+      </form>
+      <section id="preview" hidden>
+        <div class="section-heading"><h2><span class="step">2</span> Review the exercises</h2><button id="discard" class="secondary" type="button">Discard draft</button></div>
+        <p id="validation" class="muted"></p>
+        <details><summary>Original upload · unchanged</summary><pre id="source-preview" tabindex="0"></pre><p class="hash" id="source-hash"></p></details>
+        <p class="public-note">Titles and questions below will be public. Check that they describe the task without revealing its solution.</p>
+        <form id="publish-form">
+          <div id="exercise-cards"></div>
+          <div class="actions"><button id="suggest" class="secondary" type="button">Suggest wording again</button></div>
+          <label class="review"><input id="reviewed" type="checkbox" required> I reviewed the public questions for correctness and removed any solution text.</label>
+          <button id="publish" type="submit">Publish exercises</button>
+        </form>
+      </section>
+      <section id="success" hidden><h2>Exercises published</h2><p id="published-count"></p><a class="button" href="../" target="_blank" rel="noopener">Open the exercise library</a></section>
+    </div>
+  </main>
+</body>
+</html>

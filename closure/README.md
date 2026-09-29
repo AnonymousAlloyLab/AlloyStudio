@@ -383,3 +383,15 @@ certify these new persistence or navigation implementations.
 C-NAVIGATION requires every registered scenario in `tests/navigation.mjs` to
 pass in both clean offline builds. CI also runs these scenarios through
 `tests/browser-suite.mjs` alongside the original editor workflows.
+
+## Authenticated model import
+
+The admin specification is written and reviewed before implementation. Frozen
+regressions cover authentication, source preservation, complete bounded Alloy
+variant checks, metadata-only Luna, atomic publication and the upload/review UI.
+Live credentials and configuration staging files are excluded from snapshots.
+Only a completed fresh closure report verifies these finite fixtures; earlier
+reports do not certify the newly added administration code. Actual IIS/NTFS,
+Cloudflare/TLS policy, generated-prose semantics and unbounded Alloy equivalence
+remain outside local verification. See `docs/admin-security-spec.md` and its
+review for the exact trust and authorization boundaries.

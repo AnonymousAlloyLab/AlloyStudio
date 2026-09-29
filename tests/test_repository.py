@@ -55,7 +55,8 @@ class RepositoryTests(unittest.TestCase):
             if set(relative.parts) & excluded or not path.is_file(): continue
             # Local credentials are outside delivery source. Never open them;
             # the separate Git witness checks their exclusion from a commit.
-            if (path.name == 'openai.local.json' or path.name == '.env'
+            if (path.name in ('openai.local.json', 'admin.local.json', '.env')
+                    or path.name.startswith('.admin-config-') and path.name.endswith('.tmp')
                     or path.name.startswith('.env.') and path.name != '.env.example'):
                 continue
             self.assertNotIn(path.suffix, ('.key', '.pem'), 'Credential file in source tree')
@@ -119,7 +120,8 @@ class RepositoryTests(unittest.TestCase):
             admitted = {'exercises/catalogue.json', 'exercises/correct-pools.json',
                         'exercises/exercises.sqlite3', 'sql/schema.json', 'sql/queries.json',
                         'sql/compiled-queries.json', 'vendor/sqlean/provenance.json', '.env.example'}
-            excluded = {'.env', '.env.local', 'openai.local.json', 'secrets/openai.key',
+            excluded = {'.env', '.env.local', 'openai.local.json', 'admin.local.json',
+                        'nested/admin.local.json', '.admin-config-fixture.tmp', 'secrets/openai.key',
                         'nested/token.key', 'nested/certificate.pem', 'closure/runs/result.json',
                         'exercises/exercises.sqlite3-wal', 'exercises/exercises.sqlite3-shm',
                         'exercises/exercises.sqlite3-journal', 'exercises/.exercise-migration-fixture',

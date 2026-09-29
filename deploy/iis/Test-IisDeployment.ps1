@@ -131,7 +131,7 @@ try {
     }
     Assert-BackendWriteScope -Path (Join-Path $config.backend_root 'exercises') -DatabaseWrite
     Assert-BackendWriteScope -Path (Join-Path $config.backend_root 'exercises\exercises.sqlite3') -DatabaseWrite
-    Assert-Check $true 'backend writes only to private SQLite data; code and configuration remain read-only'
+    Assert-Check $true 'private SQLite data are writable; backend code and configuration remain read-only'
     $principal = $task.Principal.UserId
     if ($principal -notmatch '^S-1-') {
         $account = New-Object Security.Principal.NTAccount($principal)

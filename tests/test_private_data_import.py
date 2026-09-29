@@ -220,7 +220,7 @@ class PrivateDataImportTests(unittest.TestCase):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__'))
         shutil.copy2(ROOT / 'engine/build.sh', self.root / 'engine/build.sh')
-        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'openai.example.json', 'LICENSE'):
+        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'openai.example.json', 'LICENSE'):
             shutil.copy2(ROOT / name, self.root / name)
         shutil.copy2(ROOT / 'package.json', self.root / 'package.json')
         allowed = ('PATH', 'SYSTEMROOT', 'WINDIR', 'TMP', 'TEMP', 'TMPDIR', 'HOME',

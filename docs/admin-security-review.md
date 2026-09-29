@@ -63,3 +63,8 @@ no-store handling; local tests do not prove actual CDN or NTFS enforcement.
 constructed design blocker was found. This review is not implementation or
 unrestricted security verification. The registered executable tests, frozen
 source and two clean offline builds remain required for finite closure.
+
+After implementation, the register gained concrete test-prefix bindings without
+changing the reviewed requirements. See `admin-implementation-review.md` for
+constructed implementation findings and their regression tests. The review
+hashes above identify the original preimplementation contract.

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import secrets
 import sys
+import warnings
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -46,14 +47,16 @@ def main():
     parser.add_argument('--replace', action='store_true', help='Rotate existing credentials and revoke prior sessions')
     args = parser.parse_args()
     try:
-        password = getpass.getpass('Administrator password (12–1024 UTF-8 bytes): ')
-        confirmation = getpass.getpass('Confirm administrator password: ')
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', getpass.GetPassWarning)
+            password = getpass.getpass('Administrator password (12–1024 UTF-8 bytes): ')
+            confirmation = getpass.getpass('Confirm administrator password: ')
         if password != confirmation:
             raise ValueError('Password confirmation does not match.')
         write_configuration(args.root, args.origin, args.base_path, password, replace=args.replace)
         print('Administrator configuration saved privately. Existing sessions are revoked on their next check.')
         return 0
-    except (OSError, ValueError, EOFError, KeyboardInterrupt):
+    except (OSError, ValueError, EOFError, KeyboardInterrupt, getpass.GetPassWarning):
         print('Administrator setup failed. Check the backend path, origin and matching password; use --replace only to rotate an existing configuration.', file=sys.stderr)
         return 1
 

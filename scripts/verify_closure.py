@@ -71,6 +71,7 @@ def inventory(root, exclude=True):
             relative = str(path.relative_to(root))
             if exclude and (name in {".env", "openai.key", "openai.local.json", "admin.local.json"} or
                             name.startswith(".env.") and name != ".env.example" or
+                            (name.startswith(".admin-config-") and name.endswith(".tmp")) or
                             name.endswith(".pyc")):
                 continue
             mode = path.lstat().st_mode
@@ -127,6 +128,7 @@ def tcb_record():
     browser_inventory = inventory(browser_cache, exclude=False)
     playwright = json.loads((ROOT / "node_modules/playwright/package.json").read_text())["version"]
     records = [
+        ('TCB-ADMIN-CRYPTO', ssl.OPENSSL_VERSION, 'Python hashlib scrypt/HMAC, secrets randomness and browser same-origin isolation; deployed TLS/CDN policy remains external trust'),
         ('TCB-SQLITE', sqlite3.sqlite_version, 'SQLite execution, snapshots, Python sqlite3 and fixed DDL/connection controls'),
         ('TCB-SQLEAN', provenance['upstreamCommit'] + '; ' + provenance['leanToolchain'],
          'Pinned SQLeanParser binary/static schema checker, standard upstream Lean axioms, template slot compiler and runtime binding'),
@@ -353,7 +355,12 @@ def execute():
                               'tests/test_sqlite_store.py','tests/test_sqlite_http.py',
                               'tests/test_sqlite_adversarial.py','tests/test_sql_queries.py','tests/test_exercise_validation.py',
                               'tests/test_sqlite_closure.py',
-                              'scripts/compile_sql_queries.py','engine/src/live/ExerciseValidator.java'])
+                              'scripts/compile_sql_queries.py','engine/src/live/ExerciseValidator.java',
+                              'admin_auth.py','admin_upload.py','admin_luna.py','admin_service.py',
+                              'scripts/configure_admin.py','engine/src/live/UploadInspector.java',
+                              'tests/test_admin_auth.py','tests/test_admin_upload.py','tests/test_admin_luna.py',
+                              'tests/test_admin_store.py','tests/test_admin_http.py','tests/test_admin_service.py',
+                              'tests/test_admin_browser.py','tests/admin.mjs'])
             if identifier == 'V-BROWSER':
                 paths.extend(['tests/navigation.mjs','tests/browser-suite.mjs'])
             implementation = [{"path": path, "sha256": input_paths[path]["sha256"]} for path in paths]
@@ -382,7 +389,7 @@ def execute():
         config = {"schema_version": SCHEMA, "closure_id": closure_id, **policy,
                   "claim_file": "claims.json", "tcb_file": "tcb.json", "manifest_file": "manifest.json",
                   "provenance_file": "provenance.json", "verifier_registry": "verifier-registry.json",
-                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json", "admin.local.json"],
+                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json", "admin.local.json", ".admin-config-*.tmp"],
                                         "generated_files": ["*.pyc"]}}
         for name, value in {"closure-config.json": config, "tcb.json": tcb,
                             "provenance.json": provenance, "verifier-registry.json": registry,

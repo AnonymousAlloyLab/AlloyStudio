@@ -452,7 +452,7 @@ def validate_import(root, document, *, java='java', timeout=60):
     request = json.dumps(payload)
     if len(request.encode('utf-8')) > MAX_ENGINE:
         raise StoreError('Validation request exceeds the engine limit.')
-    environment = {k:v for k,v in os.environ.items() if k not in (
+    environment = {k:v for k,v in os.environ.items() if k.upper() not in (
         'CLASSPATH','JAVA_TOOL_OPTIONS','_JAVA_OPTIONS','JDK_JAVA_OPTIONS','JDK_JAVAC_OPTIONS')}
     classpath = runtime_classpath(Path(root))
     try:
@@ -485,6 +485,14 @@ def validate_import(root, document, *, java='java', timeout=60):
 
 
 def _validate_authored(record, entries, certificate):
+    provenance = record['descriptionProvenance']
+    preservation = record['preservation']
+    if (record['sourceClassification'] != 'author-validated'
+            or provenance not in ('Administrator supplied', 'Administrator reviewed')
+            or (provenance == 'Administrator supplied' and preservation != {})
+            or (provenance == 'Administrator reviewed' and (type(preservation) is not dict
+                or set(preservation) != {'adminUploadSha256', 'modelId'}))):
+        raise StoreError('Invalid authored source provenance.')
     if set(certificate) != {'kind','version','result','environmentSha256','bodySha256','starterSha256','engineSha256','dependencySha256'}:
         raise StoreError('Missing equivalence provenance.')
     if certificate['kind'] != 'alloy-bounded-equivalence' or type(certificate['version']) is not int or certificate['version'] != 1:

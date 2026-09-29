@@ -791,6 +791,67 @@
       "witnesses": [
         "tests/navigation.mjs"
       ]
+    },
+    {
+      "id": "C-ADMIN",
+      "statement": "Frozen authenticated-upload fixtures check private password configuration, bounded revocable sessions, strict origin/CSRF/framing and body deadlines, owner-bound jobs, immutable source and quotient names, actual Alloy bounded equivalence of every variant, metadata-only Luna suggestions, atomic authorized SQLite publication, public redaction and immediate catalogue visibility, plus offline browser review workflows and portable deployment boundaries. This is finite executable evidence; TLS/CDN/NTFS enforcement, unbounded equivalence, provider prose truth and end-to-end Lean refinement are excluded.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_admin_"
+      ],
+      "scope": {
+        "inputs": [
+          "admin_auth.py",
+          "admin_upload.py",
+          "admin_luna.py",
+          "admin_service.py",
+          "server.py",
+          "exercise_store.py",
+          "scripts/configure_admin.py",
+          "engine/src/live/UploadInspector.java",
+          "engine/src/live/ExerciseValidator.java",
+          "engine/src/live/BehaviorFeedback.java",
+          "web/admin",
+          "deploy/iis",
+          "scripts/package_iis.py",
+          "runtime_dependencies.py",
+          "docs/admin-security-spec.md",
+          "docs/admin-security-review.md",
+          "docs/admin-setup.md",
+          "closure/admin-spec.json",
+          "tests/test_admin_auth.py",
+          "tests/test_admin_upload.py",
+          "tests/test_admin_luna.py",
+          "tests/test_admin_store.py",
+          "tests/test_admin_http.py",
+          "tests/test_admin_service.py",
+          "tests/test_admin_browser.py",
+          "tests/admin.mjs",
+          "scripts/verify_closure.py",
+          "luna.py",
+          "tests/test_credentials.py",
+          "docs/admin-implementation-review.md"
+        ]
+      },
+      "public_claims": [
+        "docs/admin-setup.md",
+        "closure/README.md#authenticated-model-import"
+      ],
+      "witnesses": [
+        "tests/test_admin_auth.py",
+        "tests/test_admin_upload.py",
+        "tests/test_admin_luna.py",
+        "tests/test_admin_store.py",
+        "tests/test_admin_http.py",
+        "tests/test_admin_service.py",
+        "tests/test_admin_browser.py",
+        "tests/admin.mjs",
+        "docs/admin-security-spec.md",
+        "docs/admin-security-review.md",
+        "closure/admin-spec.json",
+        "docs/admin-implementation-review.md"
+      ]
     }
   ]
 }

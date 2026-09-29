@@ -48,8 +48,11 @@ code, `admin.local.json` or OpenAI credentials. Keep the backend outside every
 IIS website's physical directory. Only the package's `wwwroot` is public.
 
 For an existing installation, stop the backend, install the complete updated
-package while preserving its database and private configuration, then apply the
-updated install procedure. Do not merely add writable permissions to the whole
+package while preserving its database and private configuration, then run the
+updated manager's `-Action UpdateDataPermissions` before restarting. Include the
+installation's `-RuntimeRoot` and `-TaskName` if they differ from the defaults.
+This migrates only the private exercise directory's ACL; restarting alone does
+not update an older read-only ACL. Do not add writable permissions to the whole
 backend. `Test-IisDeployment.ps1` checks the intended ACL scope on Windows;
 the Linux test suite cannot establish actual NTFS permissions.
 

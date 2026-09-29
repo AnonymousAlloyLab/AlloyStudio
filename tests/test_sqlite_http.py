@@ -1,4 +1,4 @@
-"""The new private store must not widen the HTTP projection or administration surface."""
+"""The learner projection and unsupported import aliases remain private."""
 from http.client import HTTPConnection
 import json
 from pathlib import Path
@@ -54,7 +54,7 @@ class SQLiteHTTPTests(unittest.TestCase):
             self.assertNotIn(field,value)
         self.assertEqual(len(self.request('GET','/api/exercises')[1]['exercises']),2)
 
-    def test_no_administration_routes(self):
+    def test_no_unauthenticated_import_aliases(self):
         for route in ('/api/admin','/admin/','/api/exercises','/api/exercises/private-one','/api/import'):
             self.assertEqual(self.request('POST',route,authored())[0],404)
 

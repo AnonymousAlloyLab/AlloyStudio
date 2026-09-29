@@ -319,6 +319,8 @@ class CredentialDeliveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             directory = Path(raw)
             (directory / "openai.local.json").write_text(json.dumps({"api_key": KEY_A}))
+            (directory / "admin.local.json").write_text("PRIVATE_PASSWORD_HASH_SENTINEL")
+            (directory / ".admin-config-test.tmp").write_text("PRIVATE_TEMP_HASH_SENTINEL")
             (directory / "secrets").mkdir()
             (directory / "secrets/private-data.txt").write_text(KEY_B)
             (directory / "openai.example.json").write_text('{"api_key":""}')

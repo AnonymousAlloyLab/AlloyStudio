@@ -10,7 +10,19 @@ import re
 import sys
 import threading
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+
+class _NoCredentialRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        # Authorization must never follow a provider/proxy redirect to another
+        # recipient. Refuse even same-origin redirects to keep endpoint authority
+        # exact and independent of urllib's header-forwarding behavior.
+        raise HTTPError(request.full_url, code, 'Provider redirect refused', headers, None)
+
+
+def urlopen(request, *, timeout):
+    return build_opener(_NoCredentialRedirect()).open(request, timeout=timeout)
+
 
 MODEL = 'gpt-6-luna'
 BACKEND_ROOT = Path(__file__).resolve().parent

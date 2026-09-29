@@ -59,8 +59,6 @@ class _Session:
 
 
 def _loopback(host):
-    if host == 'localhost':
-        return True
     try:
         return ipaddress.ip_address(host).is_loopback
     except ValueError:

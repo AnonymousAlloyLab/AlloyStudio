@@ -4,7 +4,7 @@
   "version": 1,
   "status": "SPECIFIED_NOT_VERIFIED",
   "specification": "docs/sqlite-security-spec.md",
-  "privateAdministration": "CLI now; authenticated HTTP administration deferred",
+  "privateAdministration": "Private CLI plus authenticated batch upload under closure/admin-spec.json",
   "parserBoundary": "SQLeanParser parses and schema-checks finite templates before generation; only registered parameterized statements execute at runtime. Fixed DDL and connection controls are separately trusted.",
   "claims": [
     {
@@ -73,10 +73,10 @@
     },
     {
       "id": "SDB-06",
-      "requirement": "Web reads only; no public admin route; existing public projection excludes all private predicates and DB/parser/config artifacts.",
+      "requirement": "Learner routes read only; authenticated admin writes follow the separate admin specification. Existing public projection excludes private predicates and DB/parser/config artifacts.",
       "tests": [
         "readonly_web_store",
-        "no_admin_http",
+        "no_unauthenticated_import_aliases",
         "public_projection",
         "private_routes",
         "no_credentials"
@@ -127,12 +127,11 @@
     "OS, filesystem permissions and hardware"
   ],
   "excluded": [
-    "Authenticated administration page",
-    "Hot reload of live administrative changes",
     "Arbitrary SQL support",
     "Universal SQL/parser/SQLite semantic equivalence",
     "Empty-axiom proof for SQLeanParser",
     "Unbounded equivalence and agreement of primary oracle with natural-language specification",
     "Native Windows/IIS execution in the Linux verification environment"
-  ]
+  ],
+  "supersededBy": "closure/admin-spec.json for authenticated HTTP administration and add-only snapshot publication"
 }

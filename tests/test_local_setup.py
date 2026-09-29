@@ -40,6 +40,8 @@ run under
 '''
 RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
 RUNTIME_FILES = ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
+                 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
+                 'scripts/configure_admin.py', 'docs/admin-setup.md', 'docs/admin-security-spec.md',
                  'scripts/manage_exercises.py', 'docs/private-exercises.md',
                  'docs/sqlite-security-spec.md', 'examples/private-exercise.json',
                  'scripts/local.sh', 'scripts/local_portal.py', 'scripts/setup.sh',
@@ -393,6 +395,9 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                              '/exercises/exercises.sqlite3', '/exercises/exercises.sqlite3-wal',
                              '/exercises/exercises.sqlite3-shm', '/sql/compiled-queries.json',
                              '/exercise_sql.py', '/scripts/manage_exercises.py',
+                             '/admin.local.json', '/admin/admin.local.json', '/admin/upload.als',
+                             '/admin_auth.py', '/admin_upload.py', '/admin_luna.py', '/admin_service.py',
+                             '/scripts/configure_admin.py',
                              '/secrets/openai.key', '/openai.local.json', '/.env',
                              '/vendor/acgn/lib/alloy.jar', '/server.py',
                              '/%2e%2e/exercises/catalogue.json'):
@@ -429,7 +434,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(ROOT / name, target)
             # These are synthetic traps, never copied from the user's checkout.
-            credentials = ('.env', 'openai.local.json', 'secrets/openai.key')
+            credentials = ('.env', 'openai.local.json', 'admin.local.json', '.admin-config-fixture.tmp', 'secrets/openai.key')
             for name in credentials:
                 target = source / name
                 target.parent.mkdir(parents=True, exist_ok=True)

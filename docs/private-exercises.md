@@ -28,8 +28,10 @@ validation and commits the exercise with its entire solution pool in one
 transaction. Duplicate IDs are rejected without overwrite. Restart the backend
 after adding exercises; each server process holds one consistent startup snapshot.
 The Python service entry point is `exercise_store.add_exercise(root, document,
-java='java')`. There is no administration HTTP endpoint. An authenticated page
-can call this service later after its own authorization is implemented.
+java='java')`. The authenticated [model upload page](admin-setup.md) provides
+a separate, password-protected batch import workflow at `/admin/`, including
+source preservation, variant equivalence checks and live snapshot publication.
+Host-side CLI additions still require a restart.
 
 `oracleSolutions` must contain at least one distinct body. Every oracle and every
 optional `correctSolutions` body joins the nearest-correct pool for both Canonical

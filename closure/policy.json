@@ -129,6 +129,11 @@
       "surface": "SQLeanParser standard axioms, static SQL schema checking, template slot compiler, Python sqlite3 and SQLite semantics; fixed DDL/PRAGMA/transaction controls are outside parser grammar",
       "classification": "SPECIFIED_BUT_TRUSTED",
       "evidence_kind": "TRUSTED"
+    },
+    {
+      "surface": "Administrator intent, same-origin applications, deployment TLS/Cloudflare cache policy, Python scrypt/HMAC/randomness; admin fixtures do not establish remote edge configuration or semantic absence of solutions in prose.",
+      "classification": "SPECIFIED_BUT_TRUSTED",
+      "evidence_kind": "TRUSTED"
     }
   ],
   "sequence_departures": [
@@ -150,7 +155,8 @@
     "TCB-TEST-INTERPRETATION",
     "TCB-CORPUS-LABELS",
     "TCB-SQLITE",
-    "TCB-SQLEAN"
+    "TCB-SQLEAN",
+    "TCB-ADMIN-CRYPTO"
   ],
   "exit_code_mapping": {
     "0": "PASS",

@@ -1,4 +1,5 @@
 """Bounded, owner-bound upload jobs and atomic administrative publication."""
+from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
 import secrets
@@ -7,12 +8,13 @@ import time
 
 from admin_auth import AuthError
 from admin_luna import suggest
-from admin_upload import prepare_upload
+from admin_upload import prepare_upload, UploadError
 from exercise_store import StoreError, commit_upload, text
 
 DRAFT_SECONDS = 900
 MAX_DRAFTS = 8
 MAX_OWNER_DRAFTS = 2
+NO_REVISION = object()
 
 
 class AdminError(Exception):
@@ -55,13 +57,14 @@ class AdminService:
             if expired:
                 del self.drafts[identifier]
 
-    def _owned(self, principal, identifier, revision=None):
+    def _owned(self, principal, identifier, revision=NO_REVISION):
+        self.auth.validate(principal)
         self._cleanup()
         draft = self.drafts.get(identifier) if type(identifier) is str else None
         if (draft is None or draft.principal.owner != principal.owner
                 or draft.principal.generation != principal.generation):
             raise AdminError(404,'Draft not found or expired.')
-        if revision is not None and (type(revision) is not int or revision != draft.revision):
+        if revision is not NO_REVISION and (type(revision) is not int or revision != draft.revision):
             raise AdminError(409,'This preview changed. Refresh it before continuing.')
         return draft
 
@@ -91,6 +94,7 @@ class AdminService:
         text(envelope['modelId'],128,empty=False)
         envelope = deepcopy(envelope)
         with self.lock:
+            self.auth.validate(principal)
             self._cleanup()
             if (len(self.drafts) >= MAX_DRAFTS
                     or sum(item.principal.owner == principal.owner for item in self.drafts.values()) >= MAX_OWNER_DRAFTS):
@@ -109,6 +113,9 @@ class AdminService:
 
     def _prepare(self, draft, envelope):
         try:
+            with self.lock:
+                if self._owned(draft.principal,draft.identifier) is not draft:
+                    return
             prepared = prepare_upload(self.portal.root,envelope,java=self.portal.java,timeout=60)
             with self.lock:
                 self._cleanup()
@@ -126,9 +133,10 @@ class AdminService:
                 draft.revision += 1
         except Exception as error:
             with self.lock:
+                self._cleanup()
                 if self.drafts.get(draft.identifier) is draft:
                     draft.state, draft.revision = 'rejected',draft.revision+1
-                    draft.message = (str(error)[:300] if isinstance(error,StoreError)
+                    draft.message = (str(error)[:300] if isinstance(error,(StoreError,UploadError))
                                      else 'The upload could not be validated. Check the format guide and try again.')
         finally:
             self.slot.release()
@@ -153,6 +161,9 @@ class AdminService:
 
     def _suggest(self, draft, seed):
         try:
+            with self.lock:
+                if self._owned(draft.principal,draft.identifier) is not draft:
+                    return
             result = suggest(self.portal.root,draft.prepared['witness'],seed)
             with self.lock:
                 self._cleanup()
@@ -170,6 +181,7 @@ class AdminService:
                 draft.state, draft.revision = 'ready',draft.revision+1
         except Exception:
             with self.lock:
+                self._cleanup()
                 if self.drafts.get(draft.identifier) is draft:
                     draft.suggestion_status = 'unavailable'
                     draft.state, draft.revision = 'ready',draft.revision+1
@@ -177,13 +189,24 @@ class AdminService:
         finally:
             self.slot.release()
 
+    @contextmanager
+    def _publication_guard(self, principal, draft, revision):
+        # Snapshot construction/SQLite lock waits may cross the draft deadline.
+        # Recheck draft identity, revision and lifetime at the commit point too.
+        with self.lock:
+            current = self._owned(principal,draft.identifier,revision)
+            if current is not draft or current.state != 'ready' or current.prepared is None:
+                raise AdminError(409,'This draft is no longer ready to publish.')
+            with self.auth.guard(principal):
+                yield
+
     def commit(self, principal, identifier, revision, metadata):
         with self.lock:
             draft = self._owned(principal,identifier,revision)
             if draft.state != 'ready' or draft.prepared is None:
                 raise AdminError(409,'This draft is not ready to publish or has already been published.')
             snapshot = commit_upload(self.portal.root,draft.prepared,metadata,
-                                     guard=lambda:self.auth.guard(principal))
+                                     guard=lambda:self._publication_guard(principal,draft,revision))
             # A single pointer publishes a fully validated, committed generation.
             self.portal.snapshot = snapshot
             identifiers = [item['id'] for item in draft.prepared['documents']]

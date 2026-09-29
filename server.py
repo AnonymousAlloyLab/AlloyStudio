@@ -10,10 +10,13 @@ from pathlib import Path
 import re
 import subprocess
 import threading
+import time
 from urllib.parse import unquote, urlsplit
 from luna import Explainer
 from runtime_dependencies import check_runtime, runtime_classpath
-from exercise_store import load_store, StoreError
+from exercise_store import load_store, StoreError, parse_json
+from admin_auth import AuthManager, AuthError
+from admin_service import AdminService, AdminError
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmentBefore',
@@ -31,6 +34,10 @@ STATIC.update({'/dashboard/' + name: ('dashboard/' + name, mime) for name, mime 
     ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
     ('styles.css', 'text/css; charset=utf-8'), ('data.json', 'application/json; charset=utf-8'))})
 STATIC['/dashboard/'] = STATIC['/dashboard/index.html']
+STATIC.update({'/admin/' + name: ('admin/' + name, mime) for name, mime in (
+    ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
+    ('styles.css', 'text/css; charset=utf-8'))})
+STATIC['/admin/'] = STATIC['/admin/index.html']
 
 def project(record, fields):
     return {key: record[key] for key in fields}
@@ -414,8 +421,9 @@ class Portal(ThreadingHTTPServer):
     def __init__(self, address, *, root=ROOT, timeout=12, workers=4, java='java', public_origins=()):
         self.root = Path(root)
         snapshot = load_store(self.root)
-        self.exercises = snapshot.exercises
-        self.correct_pools = snapshot.correct_pools
+        self.snapshot = snapshot
+        self.admin_auth = AuthManager(self.root)
+        self.admin = AdminService(self, self.admin_auth)
         self.timeout = timeout
         self.java = str(java)
         self.public_origins = frozenset(normalize_origin(origin) for origin in public_origins)
@@ -427,6 +435,14 @@ class Portal(ThreadingHTTPServer):
         self.behavior_slots = threading.BoundedSemaphore(1)
         self.behavior_cache = OrderedDict()
         super().__init__(address, Handler)
+
+    @property
+    def exercises(self):
+        return self.snapshot.exercises
+
+    @property
+    def correct_pools(self):
+        return self.snapshot.correct_pools
 
     def evaluate(self, record, body, metric='canonical'):
         if not isinstance(metric, str) or metric not in METRICS:
@@ -544,25 +560,165 @@ class Handler(BaseHTTPRequestHandler):
         # No learner input, oracle, model paths, or query strings in access logs.
         pass
 
-    def reply(self, status, data, content_type='application/json; charset=utf-8'):
+    def send_error(self, code, message=None, explain=None):
+        try:
+            admin = unquote(urlsplit(getattr(self,'path','')).path).startswith('/api/admin/')
+        except ValueError:
+            admin = False
+        if admin:
+            self.close_connection = True
+            status = 405 if code == 501 else code
+            return self.reply(status,{'error': 'Method not allowed.' if status == 405 else 'Invalid administrator request.'})
+        return super().send_error(code,message,explain)
+
+    def reply(self, status, data, content_type='application/json; charset=utf-8', *, cookies=()):
         if not isinstance(data, bytes): data = json.dumps(data, ensure_ascii=False).encode()
         self.send_response(status)
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(data)))
-        self.send_header('Cache-Control', 'no-store')
+        if status == 405:
+            self.send_header('Allow', 'GET, POST')
+        admin = unquote(urlsplit(self.path).path).startswith('/api/admin/')
+        self.send_header('Cache-Control', 'no-store, private' if admin else 'no-store')
+        for cookie in cookies:
+            self.send_header('Set-Cookie', cookie)
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'no-referrer')
         connect = "'self' https://api.github.com" if urlsplit(self.path).path.startswith('/dashboard/') else "'self'"
         self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src " + connect + "; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
         self.end_headers()
-        try: self.wfile.write(data)
-        except (BrokenPipeError, ConnectionResetError): pass
+        try:
+            if self.command != 'HEAD':
+                self.wfile.write(data)
+        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+            pass
+
+    def admin_headers(self, *, mutation=False):
+        self.connection.settimeout(5)
+        # Reject ambiguous framing before authentication or a body read.
+        for name in ('Origin','Host','Content-Length','Content-Type','X-CSRF-Token','Sec-Fetch-Site'):
+            if len(self.headers.get_all(name, [])) > 1:
+                raise AdminError(400, 'Duplicate administrator request header.')
+        if self.headers.get_all('Transfer-Encoding', []):
+            raise AdminError(400, 'Transfer encoding is not supported.')
+        if mutation and self.headers.get_content_type() != 'application/json':
+            raise AdminError(415, 'Send application/json.')
+        length = self.headers.get('Content-Length', '0')
+        if re.fullmatch(r'0|[1-9][0-9]{0,7}', length) is None:
+            raise AdminError(400, 'Invalid content length.')
+        if not mutation and int(length):
+            raise AdminError(400, 'This request must not have a body.')
+        return int(length)
+
+    def admin_body(self, length, limit):
+        if not 0 < length <= limit:
+            raise AdminError(413, 'Administrator request exceeds its byte limit.')
+        deadline = time.monotonic() + 5
+        remaining, chunks = length, []
+        try:
+            while remaining:
+                budget = deadline - time.monotonic()
+                if budget <= 0:
+                    raise TimeoutError()
+                self.connection.settimeout(budget)
+                chunk = self.rfile.read1(min(65536, remaining))
+                if not chunk:
+                    raise ValueError()
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            if time.monotonic() >= deadline:
+                raise TimeoutError()
+            data = parse_json(b''.join(chunks))
+            if type(data) is not dict:
+                raise ValueError()
+            return data
+        except (OSError, ValueError, RecursionError):
+            raise AdminError(400, 'Invalid, incomplete or timed-out JSON request.') from None
+
+    def admin_failure(self, error):
+        self.close_connection = True  # a rejected, unread body is never reused
+        if isinstance(error, (AuthError, AdminError)):
+            return self.reply(error.status, {'error': error.message})
+        if isinstance(error, StoreError):
+            return self.reply(400, {'error': str(error)[:300]})
+        return self.reply(503, {'error': 'Administration could not complete this request.'})
+
+    def admin_GET(self, path):
+        try:
+            self.admin_headers()
+            auth = self.server.admin_auth
+            if path == '/api/admin/session':
+                state, cookies = auth.bootstrap(self.headers,self.client_address)
+                return self.reply(200,state,cookies=cookies)
+            principal = auth.authorize(self.headers,self.client_address,mutation=False)
+            match = re.fullmatch(r'/api/admin/drafts/([A-Za-z0-9_-]{43})',path)
+            if not match:
+                raise AdminError(404,'Not found.')
+            result = self.server.admin.view(principal,match.group(1))
+            with auth.guard(principal):
+                auth.touch(principal)
+            return self.reply(200,result)
+        except Exception as error:
+            return self.admin_failure(error)
+
+    def admin_POST(self, path):
+        try:
+            length = self.admin_headers(mutation=True)
+            auth = self.server.admin_auth
+            login = path == '/api/admin/login'
+            principal = auth.authorize(self.headers,self.client_address,preauth=login)
+            limit = 2 * 1048576 if path == '/api/admin/prepare' else 131072
+            if login:
+                limit = 8192
+            data = self.admin_body(length,limit)
+            if login:
+                if set(data) != {'password'}:
+                    raise AdminError(400,'Provide only the password.')
+                result, cookies = auth.login(principal,data['password'])
+                return self.reply(200,result,cookies=cookies)
+            if path == '/api/admin/logout':
+                if data:
+                    raise AdminError(400,'Unexpected sign-out fields.')
+                cookies = auth.logout(principal)
+                return self.reply(200,{'status':'signed_out'},cookies=cookies)
+            if path == '/api/admin/prepare':
+                result = self.server.admin.prepare(principal,data)
+                status = 202
+            elif path == '/api/admin/suggest':
+                if set(data) != {'id','revision','questionSeed'}:
+                    raise AdminError(400,'Provide draft ID, revision and questionSeed.')
+                result = self.server.admin.request_suggestion(principal,data['id'],data['revision'],data['questionSeed'])
+                status = 202
+            elif path == '/api/admin/discard':
+                if set(data) != {'id'}:
+                    raise AdminError(400,'Provide a draft ID.')
+                result = self.server.admin.discard(principal,data['id'])
+                status = 200
+            elif path == '/api/admin/commit':
+                if set(data) != {'id','revision','exercises'}:
+                    raise AdminError(400,'Provide draft ID, revision and reviewed exercises.')
+                result = self.server.admin.commit(principal,data['id'],data['revision'],data['exercises'])
+                # The final transaction guard is the commit authorization point.
+                # A later logout must not turn a successful commit into a failure.
+                return self.reply(200,result)
+            else:
+                raise AdminError(404,'Not found.')
+            with auth.guard(principal):
+                auth.touch(principal)
+            return self.reply(status,result)
+        except Exception as error:
+            return self.admin_failure(error)
 
     def do_GET(self):
-        path = unquote(urlsplit(self.path).path)
-        if path == '/dashboard':
+        raw_path = urlsplit(self.path).path
+        path = unquote(raw_path)
+        if path.startswith('/api/admin/') and path != raw_path:
+            return self.reply(404, {'error': 'Not found.'})
+        if path.startswith('/api/admin/'):
+            return self.admin_GET(path)
+        if path in ('/dashboard', '/admin'):
             self.send_response(308)
-            self.send_header('Location', 'dashboard/')
+            self.send_header('Location', path[1:] + '/')
             self.send_header('Content-Length', '0')
             self.end_headers()
             return
@@ -582,6 +738,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
+        if path.startswith('/api/admin/'):
+            return self.admin_POST(path)
         if path not in ('/api/feedback', '/api/explain', '/api/behavior'):
             return self.reply(404, {'error': 'Not found.'})
         origin = self.headers.get('Origin')

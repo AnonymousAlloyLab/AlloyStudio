@@ -77,6 +77,24 @@ Restart the backend after refreshing. This command changes only description
 metadata; it preserves the Alloy environment, starter, reference, and correct
 candidate pools. The IIS ZIP includes the updated descriptions and helper data.
 
+
+## Upload administration
+
+Open `/admin/` to upload models and review public questions. Enable it once per
+deployment with an interactive backend command:
+
+```bash
+python3 scripts/configure_admin.py --origin http://127.0.0.1:8080
+```
+
+Use the site's exact HTTPS origin in production. The password is stored only as
+a private salted hash; no password or OpenAI key belongs in the public web root.
+`inv1C0`, `inv1C1`, … become one `inv1` exercise after every variant passes the
+Alloy bounded-equivalence check. Other predicates keep their names. Luna suggests
+metadata and question wording while original source stays unchanged. Review the
+questions before publishing the complete batch. See [admin setup](docs/admin-setup.md)
+and the [security contract](docs/admin-security-spec.md).
+
 ## Environment and reference isolation
 
 The catalogue importer preserves the original UTF-8 bytes of signatures, fields,

@@ -25,7 +25,7 @@ import zipfile
 from scripts import package_iis as package_module
 from scripts.package_iis import (
     DEPLOY_FILES, JAR_FILES, REQUIRED_CLASSES, RUNTIME_HELPERS, WEB_FILES, ZIP_TIME,
-    PackageError, STORE_FILES, ADMIN_FILES, build_package,
+    PackageError, STORE_FILES, ADMIN_FILES, ADMIN_MODULES, build_package,
 )
 
 
@@ -98,6 +98,8 @@ class IisPackageTests(unittest.TestCase):
                    '<script type="module" src="./app.js"></script>')
         self.write('web/dashboard/index.html', '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
+        self.write('web/admin/index.html', '<link rel="stylesheet" href="./styles.css">'
+                   '<script type="module" src="./app.js"></script>')
         for name in DEPLOY_FILES:
             self.write(f'deploy/iis/{name}', '<configuration />' if name == 'web.config' else 'operator deployment guide')
         self.write('LICENSE', 'Portal licence')
@@ -105,7 +107,7 @@ class IisPackageTests(unittest.TestCase):
         self.write('luna.py', '"""Private explanation client."""\n')
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
-        for name in (*STORE_FILES, *ADMIN_FILES):
+        for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):
             self.write(name, (ROOT / name).read_bytes())
         for name in RUNTIME_HELPERS:
             self.write(f'scripts/{name}', (ROOT / 'scripts' / name).read_bytes())
@@ -154,7 +156,9 @@ class IisPackageTests(unittest.TestCase):
     def test_only_allowlisted_payloads_and_public_files_are_packaged(self):
         for name in ('web/catalogue.json', 'web/correct-pools.json', 'web/.env', 'web/leaked.key', 'server.log',
                      'build/engine/classes/credentials.txt', 'deploy/iis/local-secrets.ps1',
-                     'vendor/acgn/lib/untracked.jar', 'secrets/openai.key', 'config/openai.json'):
+                     'vendor/acgn/lib/untracked.jar', 'secrets/openai.key', 'config/openai.json',
+                     'admin.local.json', '.admin-config-fixture.tmp', 'web/admin/admin.local.json',
+                     'web/admin/upload.als', 'web/admin/drafts.json'):
             self.write(name, 'PRIVATE_UNLISTED_SENTINEL')
         self.write('openai.local.json', json.dumps({'api_key': 'PRIVATE_UNLISTED_SENTINEL'}))
         _, entries = self.archive()
@@ -173,6 +177,8 @@ class IisPackageTests(unittest.TestCase):
         self.assertIn('backend/runtime_dependencies.py', entries)
         self.assertEqual(json.loads(entries['backend/openai.example.json']), {'api_key': ''})
         self.assertNotIn('backend/openai.local.json', entries)
+        self.assertNotIn('backend/admin.local.json', entries)
+        self.assertTrue(all(f'backend/{name}' in entries for name in ADMIN_MODULES))
         self.assertEqual({name for name in entries if name.startswith('backend/scripts/')},
                          {f'backend/scripts/{name}' for name in RUNTIME_HELPERS})
         self.assertNotIn('backend/web/index.html', entries)
@@ -297,6 +303,53 @@ class IisPackageTests(unittest.TestCase):
         _, changed = self.archive()
         self.assertNotEqual(first['wwwroot/dashboard/index.html'], changed['wwwroot/dashboard/index.html'])
         self.assertEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
+
+    def test_admin_asset_hashes_refresh_without_exposing_private_configuration(self):
+        self.write('admin.local.json', '{"hash":"PRIVATE_ADMIN_HASH_SENTINEL"}')
+        self.write('.admin-config-fixture.tmp', 'PRIVATE_ADMIN_HASH_SENTINEL')
+        _, first = self.archive()
+        manifest = json.loads(first['manifest.json'])
+        for name in ('app.js', 'styles.css'):
+            version = hashlib.sha256(first['wwwroot/admin/' + name]).hexdigest()
+            self.assertEqual(manifest['publicAssetVersions']['admin/' + name], version)
+            self.assertIn(('./' + name + '?v=' + version).encode(), first['wwwroot/admin/index.html'])
+        self.assertFalse(any(b'PRIVATE_ADMIN_HASH_SENTINEL' in data for data in first.values()))
+        self.write('web/admin/app.js', 'updated administration shell')
+        _, changed = self.archive()
+        self.assertNotEqual(first['wwwroot/admin/index.html'], changed['wwwroot/admin/index.html'])
+        self.assertEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
+        self.assertEqual(first['wwwroot/dashboard/index.html'], changed['wwwroot/dashboard/index.html'])
+
+    def test_iis_admin_permissions_and_startup_contract(self):
+        manager = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text()
+        readonly = manager.index('Set-RestrictedAcl -Path $BackendRoot -Recurse')
+        writable = "Set-RestrictedAcl -Path (Join-Path $BackendRoot 'exercises') -LocalServiceAccess Modify -Recurse"
+        self.assertGreater(manager.index(writable), readonly)
+        self.assertNotRegex(manager, r'Set-RestrictedAcl -Path \$BackendRoot[^\n]*-LocalServiceAccess Modify')
+        startup = (ROOT / 'deploy/iis/Start-AlloyStudio.ps1').read_text()
+        self.assertNotRegex(startup, r'\$health\.exercises\s+-eq\s+181')
+        self.assertIn('$health.exercises -gt 0', startup)
+        self.assertIn('@($listing.exercises).Count -ne $health.exercises', startup)
+        self.assertIn("Compare-Object @('index.html', 'app.js', 'styles.css') @($adminAssets.Name)", startup)
+
+    def test_upgrade_permission_migration_changes_only_stopped_private_data_acl(self):
+        manager = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text()
+        block = manager.split("    'UpdateDataPermissions' {", 1)[1].split("    'Restart' {", 1)[0]
+        mutation = 'Set-RestrictedAcl -Path $exerciseDirectory -LocalServiceAccess Modify -Recurse'
+        self.assertEqual(block.count('Set-RestrictedAcl'), 1)
+        self.assertIn(mutation, block)
+        for preflight in ("$existing.State -eq 'Running'", 'Get-NetTCPConnection -State Listen',
+                          'Get-LocalPath -Path $configPath', 'Get-IisPhysicalRoots',
+                          'Assert-PrivatePath -Path $permissionBackend',
+                          'Assert-PrivatePath -Path $exerciseDirectory',
+                          'Test-Path -LiteralPath $databasePath -PathType Leaf'):
+            self.assertLess(block.index(preflight), block.index(mutation))
+        self.assertNotRegex(block, r'Copy-Item|Remove-Item|WriteAllText|Register-ScheduledTask|Start-BackendTask')
+        guide = (ROOT / 'deploy/iis/README.md').read_text()
+        upgrade = guide[guide.index('1. Stop the backend and only the dedicated Alloy website'):]
+        self.assertLess(upgrade.index('-Action UpdateDataPermissions'), upgrade.index('-Action Restart'))
+        for preserved in ('backend/admin.local.json', 'backend/openai.local.json', 'exercises/exercises.sqlite3'):
+            self.assertIn(preserved, upgrade)
 
     def test_missing_or_ambiguous_asset_reference_refuses_stale_browser_urls(self):
         self.archive()
@@ -589,6 +642,9 @@ class IisPackageTests(unittest.TestCase):
                          '/exercises/exercises.sqlite3-shm', '/exercises/exercises.sqlite3-journal',
                          '/sql/schema.json', '/sql/compiled-queries.json', '/exercise_store.py',
                          '/scripts/manage_exercises.py', '/vendor/sqlean/provenance.json',
+                         '/admin.local.json', '/admin/admin.local.json', '/admin/upload.als',
+                         '/admin_auth.py', '/admin_upload.py', '/admin_luna.py', '/admin_service.py',
+                         '/scripts/configure_admin.py',
                          '/scripts/import_correct_pools.py', '/vendor/acgn/lib/alloy.jar',
                          '/openai.local.json', '/openai.example.json',
                          '/manifest.json', '/deploy/iis/Common.ps1', '/.env', '/openai.key', '/index.html'):
@@ -614,7 +670,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(proxy.get('stopProcessing'), 'true')
         self.assertEqual(proxy.find('match').get('ignoreCase'), 'false')
         expression = re.compile(proxy.find('match').get('url'))
-        for path in ('api', 'api/health', 'api/exercises/graphs-inv1', 'api/feedback', 'api/explain'):
+        for path in ('api', 'api/health', 'api/exercises/graphs-inv1', 'api/feedback', 'api/explain', 'api/admin/session', 'api/admin/prepare'):
             self.assertIsNotNone(expression.fullmatch(path))
         for path in ('other-api/health', 'apiX/health', 'alloy/api/health', '/api/health', 'server.py'):
             self.assertIsNone(expression.fullmatch(path))
@@ -625,14 +681,18 @@ class IisPackageTests(unittest.TestCase):
         blocked = re.compile(boundary.find('match').get('url'))
         self.assertEqual(boundary.find('action').get('statusCode'), '404')
         for path in ('', 'index.html', 'app.js', 'styles.css', 'dashboard', 'dashboard/',
-                     'dashboard/index.html', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json'):
+                     'dashboard/index.html', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+                     'admin', 'admin/', 'admin/index.html', 'admin/app.js', 'admin/styles.css'):
             self.assertIsNone(blocked.fullmatch(path))
         for path in ('web.config', 'manifest.json', 'backend/server.py', 'exercises/catalogue.json',
                      'exercises/correct-pools.json', 'scripts/import_correct_pools.py',
                      'openai.local.json', 'openai.example.json',
                      '.env', 'openai.key', 'app.js.map', '../server.py', 'INDEX.HTML',
                      'dashboard/.env', 'dashboard/closure-report.json', 'dashboard/../server.py',
-                     'dashboard/backend/catalogue.json', 'dashboard/index.html/extra'):
+                     'dashboard/backend/catalogue.json', 'dashboard/index.html/extra',
+                     'admin.local.json', 'admin/admin.local.json', 'admin/upload.als', 'admin/drafts.json',
+                     'admin/.admin-config-fixture.tmp', 'admin/index.html/extra', 'admin_auth.py',
+                     'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py'):
             self.assertIsNotNone(blocked.fullmatch(path))
 
 

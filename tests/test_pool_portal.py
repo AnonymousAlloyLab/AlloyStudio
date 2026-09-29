@@ -73,24 +73,21 @@ class PoolPortalTests(unittest.TestCase):
         self.assertEqual(result['operations'], [])
         self.assertEqual(result['comparison'], self.comparison())
 
-    def test_validation_cache_does_not_trust_paths_or_preserved_timestamps(self):
+    def test_database_validation_does_not_trust_paths_or_preserved_timestamps(self):
+        import sqlite3
+        from exercise_store import load_store, StoreError
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / 'exercises').mkdir()
-            for name in ('catalogue.json', 'correct-pools.json'):
-                shutil.copy2(ROOT / 'exercises' / name, root / 'exercises' / name)
-            encoded = (root / 'exercises/catalogue.json').read_bytes()
-            catalogue = json.loads(encoded)
-            valid = server.load_correct_pools(root, encoded, catalogue)
-            self.assertEqual(len(valid), 181)
-            path = root / 'exercises/correct-pools.json'
+            path = root / 'exercises/exercises.sqlite3'
+            shutil.copy2(ROOT / 'exercises/exercises.sqlite3', path)
+            self.assertEqual(load_store(root).exercise_count, 181)
             timestamp = path.stat()
-            document = json.loads(path.read_bytes())
-            document['pools'][0]['candidates'][-1]['body'] += ' // PRIVATE_MUTATION'
-            path.write_text(json.dumps(document), encoding='utf-8')
+            with sqlite3.connect(path) as connection:
+                connection.execute("UPDATE solutions SET body = body || ' // PRIVATE_MUTATION' WHERE ordinal=0")
             os.utime(path, ns=(timestamp.st_atime_ns, timestamp.st_mtime_ns))
-            with self.assertRaises(ValueError):
-                server.load_correct_pools(root, encoded, catalogue)
+            with self.assertRaises(StoreError):
+                load_store(root)
 
     def test_server_instances_cannot_mutate_each_others_pool_registry(self):
         other = server.Portal(('127.0.0.1', 0))

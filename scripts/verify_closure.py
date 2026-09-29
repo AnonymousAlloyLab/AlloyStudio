@@ -69,7 +69,7 @@ def inventory(root, exclude=True):
         for name in sorted(names + [n for n in folders if (base / n).is_symlink()]):
             path = base / name
             relative = str(path.relative_to(root))
-            if exclude and (name in {".env", "openai.key", "openai.local.json"} or
+            if exclude and (name in {".env", "openai.key", "openai.local.json", "admin.local.json"} or
                             name.startswith(".env.") and name != ".env.example" or
                             name.endswith(".pyc")):
                 continue
@@ -105,6 +105,13 @@ def version(command):
 
 
 def tcb_record():
+    import sqlite3
+    parser_path = Path(os.environ.get('SQLEAN_PARSER', ''))
+    provenance = json.loads((ROOT / 'vendor/sqlean/provenance.json').read_text())
+    if not parser_path.is_file() or file_sha(parser_path) != provenance['parserBinary']['sha256']:
+        raise OSError('Set SQLEAN_PARSER to the pinned executable for offline SQL generation verification')
+    parser_record = {'path': str(parser_path.resolve()), 'sha256': file_sha(parser_path),
+                     'bytes': parser_path.stat().st_size}
     commands = {"python": [sys.executable, "--version"], "java": ["java", "-version"],
                 "javac": ["javac", "-version"], "node": ["node", "--version"],
                 "bash": ["bash", "--version"], "git": ["git", "--version"], "unshare": ["unshare", "--version"],
@@ -120,6 +127,9 @@ def tcb_record():
     browser_inventory = inventory(browser_cache, exclude=False)
     playwright = json.loads((ROOT / "node_modules/playwright/package.json").read_text())["version"]
     records = [
+        ('TCB-SQLITE', sqlite3.sqlite_version, 'SQLite execution, snapshots, Python sqlite3 and fixed DDL/connection controls'),
+        ('TCB-SQLEAN', provenance['upstreamCommit'] + '; ' + provenance['leanToolchain'],
+         'Pinned SQLeanParser binary/static schema checker, standard upstream Lean axioms, template slot compiler and runtime binding'),
         ("TCB-PYTHON", versions["python"], "Python runtime, standard library, unittest and runner execution"),
         ("TCB-JAVA", versions["java"] + "; " + versions["javac"], "Java VM and compiler correctness"),
         ("TCB-NODE", versions["node"], "Node runtime and browser test execution"),
@@ -138,7 +148,7 @@ def tcb_record():
     return {"schema_version": SCHEMA, "trusted_components": [
         {"id": identifier, "classification": "TRUSTED", "version": value, "justification": reason}
         for identifier, value, reason in records], "verified_dependencies": [],
-        "runtime_versions": versions, "executables": executables,
+        "runtime_versions": versions, "executables": executables, 'sqlean_parser': parser_record,
         "external_browser_cache": {"path": str(browser_cache), "files": browser_inventory,
                                    "root_hash": sha(canonical(browser_inventory))}}
 
@@ -257,7 +267,7 @@ def check_network():
     return 0 if result["passed"] else 1
 
 
-def run_command(command, cwd, log, timeout=240):
+def run_command(command, cwd, log, timeout=900):
     environment = {key: value for key, value in os.environ.items()
                    if key in {"PATH", "HOME", "LANG", "LC_ALL", "DISPLAY", "PLAYWRIGHT_BROWSERS_PATH"}}
     environment.update(OPENAI_DISABLED="1", PYTHONDONTWRITEBYTECODE="1", PYTHONHASHSEED="0", TZ="UTC")
@@ -301,8 +311,9 @@ def execute():
                          pass_condition={"type": "predicate", "expression": "all_registered_checks_pass_in_both_builds"},
                          block_conditions=["any registered assertion fails", "any required test is absent or skipped", "evidence is stale or unbound"])
             state["claims"][claim["id"]] = "UNRESOLVED"
-            if claim["id"] == "C-BROWSER":
-                claim["required_browser_scenarios"] = re.findall(r"await check\('([^']+)'", (ROOT / "tests/browser.mjs").read_text())
+            if claim["id"] in ("C-BROWSER", "C-NAVIGATION"):
+                browser_file = 'tests/navigation.mjs' if claim['id'] == 'C-NAVIGATION' else 'tests/browser.mjs'
+                claim["required_browser_scenarios"] = re.findall(r"await check\('([^']+)'", (ROOT / browser_file).read_text())
                 if not claim["required_browser_scenarios"]:
                     block("VERIFIER_NOT_RUN", claim["id"], "No browser scenarios declared")
         if len({c["id"] for c in claims}) != len(claims) or declared_ids != set(ids):
@@ -337,6 +348,14 @@ def execute():
             "V-INTEGRITY": ["scripts/verify_closure.py", "closure/policy.json"],
         }
         for identifier, paths in implementations.items():
+            if identifier == 'V-PYTHON':
+                paths.extend(['exercise_store.py','exercise_sql.py','scripts/manage_exercises.py',
+                              'tests/test_sqlite_store.py','tests/test_sqlite_http.py',
+                              'tests/test_sqlite_adversarial.py','tests/test_sql_queries.py','tests/test_exercise_validation.py',
+                              'tests/test_sqlite_closure.py',
+                              'scripts/compile_sql_queries.py','engine/src/live/ExerciseValidator.java'])
+            if identifier == 'V-BROWSER':
+                paths.extend(['tests/navigation.mjs','tests/browser-suite.mjs'])
             implementation = [{"path": path, "sha256": input_paths[path]["sha256"]} for path in paths]
             registry[identifier] = {"id": identifier, "implementation": implementation,
                                     "version_hash": sha(canonical(implementation)),
@@ -363,7 +382,7 @@ def execute():
         config = {"schema_version": SCHEMA, "closure_id": closure_id, **policy,
                   "claim_file": "claims.json", "tcb_file": "tcb.json", "manifest_file": "manifest.json",
                   "provenance_file": "provenance.json", "verifier_registry": "verifier-registry.json",
-                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json"],
+                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json", "admin.local.json"],
                                         "generated_files": ["*.pyc"]}}
         for name, value in {"closure-config.json": config, "tcb.json": tcb,
                             "provenance.json": provenance, "verifier-registry.json": registry,
@@ -373,7 +392,8 @@ def execute():
         manifest = {"schema_version": SCHEMA, "files": entries,
                     "frozen_metadata": [{"path": name, "sha256": digest} for name, digest in metadata.items()],
                     "external_trusted_inputs": [{"path": tcb["external_browser_cache"]["path"],
-                                                 "tree_sha256": tcb["external_browser_cache"]["root_hash"]}]}
+                                                 "tree_sha256": tcb["external_browser_cache"]["root_hash"]},
+                                                tcb['sqlean_parser']]}
         write_json(run / "manifest.json", manifest)
         root_hash = file_sha(run / "manifest.json")
         copy_inputs(ROOT, run / "inputs", entries)
@@ -398,6 +418,7 @@ def execute():
             record = {"id": name, "input_root_hash": root_hash, "checks": {}}
             commands = {
                 "network": [sys.executable, "scripts/verify_closure.py", "--network-check"],
+                'sqlean': [sys.executable, 'scripts/compile_sql_queries.py', '--parser', tcb['sqlean_parser']['path'], '--check'],
                 "build": ["bash", "scripts/build.sh"],
                 # A fixed explicit destination is a reproducibility/browser
                 # fixture. Normal deployment builds keep timestamped names.
@@ -405,6 +426,7 @@ def execute():
                 "engine": ["java", "-Xmx256m", "-XX:ActiveProcessorCount=2", "-cp", "build/engine/classes:vendor/acgn/lib/*", "live.EngineSelfTest"],
                 "python": [sys.executable, "-X", "faulthandler", "scripts/verify_closure.py", "--unittest-report", str(run / "logs" / f"{name}-python.json")],
                 "browser": ["node", "tests/browser.mjs"],
+                'navigation': ['node', 'tests/navigation.mjs'],
             }
             for check, command in commands.items():
                 print(f"{closure_id}: {name}: {check}", flush=True)
@@ -431,10 +453,21 @@ def execute():
                         if isinstance(candidate, dict) and "passed" in candidate: record["browser"] = candidate
                     except ValueError:
                         pass
+            record['navigation'] = {}
+            navigation_log = run / 'logs' / f'{name}-navigation.log'
+            if navigation_log.is_file():
+                for line in navigation_log.read_text().splitlines():
+                    try:
+                        candidate = json.loads(line)
+                        if isinstance(candidate, dict) and 'passed' in candidate:
+                            record['navigation'] = candidate
+                    except ValueError:
+                        pass
             record["artifacts"] = [{"path": str(path.relative_to(work)), "sha256": file_sha(path)}
                 for folder in (work / "build/engine/classes", work / "web")
                 for path in sorted(folder.rglob("*")) if path.is_file() and (folder.name == "web" or path.suffix == ".class")]
-            for relative in ("build/iis/alloy-studio-iis.zip", "build/iis/alloy-studio-iis.zip.sha256"):
+            for relative in ("build/iis/alloy-studio-iis.zip", "build/iis/alloy-studio-iis.zip.sha256",
+                             'exercises/exercises.sqlite3','sql/compiled-queries.json'):
                 artifact = work / relative
                 if artifact.is_file():
                     record["artifacts"].append({"path": relative, "sha256": file_sha(artifact)})
@@ -456,12 +489,15 @@ def execute():
                         passed &= engine_log.is_file() and marker in engine_log.read_text()
                     if identifier == "C-IIS":
                         passed &= record["checks"].get("package", {}).get("exit_code") == 0
+                    if identifier == 'C-SQLITE':
+                        passed &= record['checks'].get('sqlean', {}).get('exit_code') == 0
                     record["claim_statuses"][identifier] = "PASS" if passed else "BLOCK"
-                elif identifier == "C-BROWSER":
-                    passed = record["checks"].get("browser", {}).get("exit_code") == 0
-                    passed &= record["browser"].get("status") == "PASS"
-                    passed &= record["browser"].get("passed") == claim["required_browser_scenarios"]
-                    passed &= record["browser"].get("checks") == len(claim["required_browser_scenarios"])
+                elif identifier in ("C-BROWSER", 'C-NAVIGATION'):
+                    check = 'navigation' if identifier == 'C-NAVIGATION' else 'browser'
+                    passed = record["checks"].get(check, {}).get("exit_code") == 0
+                    passed &= record[check].get("status") == "PASS"
+                    passed &= record[check].get("passed") == claim["required_browser_scenarios"]
+                    passed &= record[check].get("checks") == len(claim["required_browser_scenarios"])
                     record["claim_statuses"][identifier] = "PASS" if passed else "BLOCK"
                 elif identifier == "C-BUILDS":
                     record["claim_statuses"][identifier] = "PASS" if all(record["checks"].get(check, {}).get("exit_code") == 0 for check in ("build", "package")) else "BLOCK"
@@ -493,6 +529,8 @@ def execute():
         external = tcb["external_browser_cache"]
         if inventory(Path(external["path"]), exclude=False) != external["files"]:
             block("INPUT_MUTATION", detail="External browser cache changed")
+        if file_sha(tcb['sqlean_parser']['path']) != tcb['sqlean_parser']['sha256']:
+            block('INPUT_MUTATION', 'C-SQLITE', 'Pinned external parser changed')
         state["provenance_complete"] = len(provenance) == sum(len(c["public_claims"]) for c in claims) and all(
             item["inputs"] and item["verifier"] in registry and item["trusted_dependencies"] for item in provenance)
         if not state["provenance_complete"]: block("ORPHAN_CLAIM")

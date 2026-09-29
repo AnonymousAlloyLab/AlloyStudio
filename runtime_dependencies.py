@@ -16,6 +16,8 @@ JAR_FILES = (
     'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
 )
 REQUIRED_CLASSES = (
+    'live/UploadInspector.class', 'live/UploadInspector$Declaration.class',
+    'live/ExerciseValidator.class', 'live/ExerciseValidator$Rejected.class',
     'live/BridgePolicies.class', 'live/VerifiedPoolSelection.class', 'live/VerifiedPoolSelection$Result.class',
     'live/LiveFeedback$Candidate.class', 'live/AstFeedback$Candidate.class',
     'live/LiveFeedback.class', 'live/EngineSelfTest.class', 'live/BehaviorFeedback.class',

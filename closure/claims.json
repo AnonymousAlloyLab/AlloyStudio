@@ -716,6 +716,81 @@
         "tests/test_obligation_overview.py",
         "engine/test/PoolBridgeSelfTest.java"
       ]
+    },
+    {
+      "id": "C-SQLITE",
+      "statement": "Frozen SQLite specification-first regression fixtures check normalized authoritative storage, exact legacy migration, private multi-oracle Alloy bounded equivalence with satisfiable unchanged context, atomic rejection, typed SQLeanParser-generated queries, explicit schema and transaction controls, consistent packaging snapshots, private HTTP projection and portable deployment. Actual pinned SQLeanParser regeneration and seven negative controls run offline in both builds. This is finite executable evidence, not an unbounded semantic/security theorem or an empty-axiom SQLean proof.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_sqlite_store.",
+        "test_sqlite_http.",
+        "test_sqlite_adversarial.",
+        "test_sql_queries.",
+        "test_exercise_validation.",
+        "test_sqlite_closure."
+      ],
+      "scope": {
+        "inputs": [
+          "exercise_store.py",
+          "exercise_sql.py",
+          "sql",
+          "vendor/sqlean",
+          "scripts/compile_sql_queries.py",
+          "scripts/manage_exercises.py",
+          "engine/src/live/ExerciseValidator.java",
+          "engine/src/live/BehaviorFeedback.java",
+          "exercises",
+          "server.py",
+          "tests/test_sqlite_store.py",
+          "tests/test_sqlite_http.py",
+          "tests/test_sqlite_adversarial.py",
+          "tests/test_sql_queries.py",
+          "tests/test_exercise_validation.py",
+          "docs/sqlite-security-spec.md",
+          "closure/sqlite-spec.json",
+          "tests/test_sqlite_closure.py"
+        ]
+      },
+      "public_claims": [
+        "docs/private-exercises.md",
+        "closure/README.md#sqlite-storage"
+      ],
+      "witnesses": [
+        "docs/sqlite-security-spec.md",
+        "docs/sqlite-security-review.md",
+        "closure/sqlite-spec.json",
+        "exercises/exercises.sqlite3",
+        "sql/compiled-queries.json",
+        "vendor/sqlean/provenance.json",
+        "tests/test_sqlite_store.py",
+        "tests/test_sqlite_http.py",
+        "tests/test_sqlite_adversarial.py",
+        "tests/test_sql_queries.py",
+        "tests/test_exercise_validation.py",
+        "tests/test_sqlite_closure.py"
+      ]
+    },
+    {
+      "id": "C-NAVIGATION",
+      "statement": "Eight frozen Chromium scenarios check Previous/Next filtered ordering, boundaries, disabled loading states, selection races and failed requests, draft preservation, keyboard access and mobile layout. Canonical stays the initial mode.",
+      "claim_class": "test",
+      "verifier": "V-BROWSER",
+      "scope": {
+        "inputs": [
+          "web/app.js",
+          "web/index.html",
+          "web/styles.css",
+          "tests/navigation.mjs",
+          "tests/browser-suite.mjs"
+        ]
+      },
+      "public_claims": [
+        "closure/README.md#exercise-navigation"
+      ],
+      "witnesses": [
+        "tests/navigation.mjs"
+      ]
     }
   ]
 }

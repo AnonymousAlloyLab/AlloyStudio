@@ -51,7 +51,9 @@ function Invoke-PortalRequest {
     try {
         $reader = New-Object IO.StreamReader($response.GetResponseStream(), [Text.Encoding]::UTF8)
         try { $content = $reader.ReadToEnd() } finally { $reader.Dispose() }
-        return @{Status = [int]$response.StatusCode; ContentType = $response.ContentType; Body = $content}
+        return @{Status = [int]$response.StatusCode; ContentType = $response.ContentType; Body = $content;
+            CacheControl = [string]$response.Headers['Cache-Control'];
+            AllowOrigin = [string]$response.Headers['Access-Control-Allow-Origin']}
     } finally { $response.Dispose() }
 }
 
@@ -63,6 +65,30 @@ function Assert-PrivateAcl {
         if ($rule.AccessControlType -eq 'Allow' -and $sid -notin @('S-1-5-18', 'S-1-5-19', 'S-1-5-32-544')) {
             throw 'Private ACL permits an unexpected account.'
         }
+    }
+}
+
+function Assert-BackendWriteScope {
+    param([string]$Path, [switch]$DatabaseWrite)
+    Assert-PrivateAcl -Path $Path
+    $rights = [Security.AccessControl.FileSystemRights]0
+    foreach ($rule in (Get-Acl -LiteralPath $Path).Access) {
+        $sid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
+        if ($sid -ne 'S-1-5-19') { continue }
+        if ($rule.AccessControlType -ne 'Allow') { throw 'Unexpected backend deny ACL; inspect effective permissions.' }
+        $rights = $rights -bor $rule.FileSystemRights
+    }
+    $administrative = [Security.AccessControl.FileSystemRights]::ChangePermissions -bor
+        [Security.AccessControl.FileSystemRights]::TakeOwnership
+    if ($rights -band $administrative) { throw 'Backend must not change ACLs or own deployment files.' }
+    if ($DatabaseWrite) {
+        $modify = [Security.AccessControl.FileSystemRights]::Modify
+        if (($rights -band $modify) -ne $modify) { throw 'Backend requires Modify access on private SQLite data only.' }
+    } else {
+        $write = [Security.AccessControl.FileSystemRights]::Write -bor
+            [Security.AccessControl.FileSystemRights]::Delete -bor
+            [Security.AccessControl.FileSystemRights]::DeleteSubdirectoriesAndFiles
+        if ($rights -band $write) { throw 'Backend has write access outside the allowed SQLite directory.' }
     }
 }
 
@@ -92,6 +118,20 @@ try {
         Assert-PrivatePath -Path (Get-LocalPath $localOpenAIConfig) -PublicRoots $publicRoots
         Assert-PrivateAcl -Path $localOpenAIConfig
     }
+    foreach ($name in @('server.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py')) {
+        Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)
+    }
+    Assert-BackendWriteScope -Path $config.backend_root
+    foreach ($name in @('admin.local.json', 'openai.local.json')) {
+        $privateConfig = Join-Path $config.backend_root $name
+        if (Test-Path -LiteralPath $privateConfig) {
+            Assert-PrivatePath -Path (Get-LocalPath $privateConfig) -PublicRoots $publicRoots
+            Assert-BackendWriteScope -Path $privateConfig
+        }
+    }
+    Assert-BackendWriteScope -Path (Join-Path $config.backend_root 'exercises') -DatabaseWrite
+    Assert-BackendWriteScope -Path (Join-Path $config.backend_root 'exercises\exercises.sqlite3') -DatabaseWrite
+    Assert-Check $true 'backend writes only to private SQLite data; code and configuration remain read-only'
     $principal = $task.Principal.UserId
     if ($principal -notmatch '^S-1-') {
         $account = New-Object Security.Principal.NTAccount($principal)
@@ -106,17 +146,18 @@ try {
     Assert-Check $true 'private paths are outside IIS and ACLs exclude public readers'
 
     $stage = 'IIS static assets and proxy health'
-    foreach ($asset in @('', 'index.html', 'app.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json')) {
+    foreach ($asset in @('', 'index.html', 'app.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+        'admin/', 'admin/app.js', 'admin/styles.css')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"
     }
     $response = Invoke-PortalRequest 'api/health'
     $health = $response.Body | ConvertFrom-Json
-    Assert-Check ($response.Status -eq 200 -and $health.status -eq 'ok' -and $health.exercises -eq 181) 'IIS proxy reaches all 181 exercises'
+    Assert-Check ($response.Status -eq 200 -and $health.status -eq 'ok' -and $health.exercises -gt 0) 'IIS proxy reaches the exercise database'
 
     $stage = 'entire catalogue public projection'
     $listing = (Invoke-PortalRequest 'api/exercises').Body | ConvertFrom-Json
-    Assert-Check ($listing.exercises.Count -eq 181) 'catalogue has 181 exercises'
+    Assert-Check ($listing.exercises.Count -eq $health.exercises) 'exercise listing matches backend health'
     $expected = @('id', 'title', 'group', 'predicate', 'description', 'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter', 'source')
     foreach ($exercise in $listing.exercises) {
         $response = Invoke-PortalRequest ('api/exercises/' + [Uri]::EscapeDataString($exercise.id))
@@ -124,7 +165,7 @@ try {
         $record = $response.Body | ConvertFrom-Json
         if (@(Compare-Object $expected @($record.PSObject.Properties.Name)).Count) { throw 'Exercise field projection changed.' }
     }
-    Assert-Check $true 'all 181 records contain only approved public fields'
+    Assert-Check $true 'all exercise records contain only approved public fields'
 
     $stage = 'real canonical repair with UTF-8 input'
     $payload = @{exerciseId = 'graphs-inv5'; body = ('some (iden & adj) // caf' + [char]0x00E9); revision = 1}
@@ -145,6 +186,10 @@ try {
     Assert-Check ($response.Status -eq 200 -and $after.status -eq 'ok' -and $after.distance -eq 0) 'applying the shown operator reduces distance one to zero'
 
     $stage = 'request boundaries and private routes'
+    $anonymousAdmin = Invoke-PortalRequest 'api/admin/prepare' @{}
+    Assert-Check ($anonymousAdmin.Status -in @(401, 403, 404, 503)) 'anonymous administration is rejected'
+    Assert-Check ($anonymousAdmin.CacheControl -match 'no-store' -and $anonymousAdmin.CacheControl -match 'private' -and
+        -not $anonymousAdmin.AllowOrigin) 'admin rejection cannot be cached or read through CORS'
     $response = Invoke-PortalRequest 'api/feedback' $payload 'https://attacker.invalid'
     Assert-Check ($response.Status -eq 403 -and $response.ContentType -match 'application/json') 'cross-origin rejection survives IIS as JSON'
     $payload.revision = $true
@@ -152,6 +197,13 @@ try {
     Assert-Check ($response.Status -eq 400 -and $response.ContentType -match 'application/json') 'invalid request rejection survives IIS as JSON'
     foreach ($privateRoute in @('server.py', 'luna.py', 'web.config', 'exercises/catalogue.json',
         'backend/exercises/catalogue.json', 'exercises/correct-pools.json', 'backend/exercises/correct-pools.json',
+        'exercises/exercises.sqlite3', 'backend/exercises/exercises.sqlite3',
+        'exercises/exercises.sqlite3-wal', 'exercises/exercises.sqlite3-shm', 'exercises/exercises.sqlite3-journal',
+        'exercise_store.py', 'exercise_sql.py', 'sql/schema.json', 'sql/queries.json',
+        'sql/compiled-queries.json', 'vendor/sqlean/provenance.json', 'scripts/manage_exercises.py',
+        'admin.local.json', 'backend/admin.local.json', 'admin/admin.local.json',
+        'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py',
+        'admin/upload.als', 'admin/source.als', 'admin/.admin-config-fixture.tmp',
         'vendor/acgn/lib/alloy.jar', 'openai.key', 'openai.local.json', 'backend/openai.local.json', '.env',
         'deploy/iis/run_backend.py', 'backend-task.json', 'api/exercises/../../catalogue.json')) {
         $response = Invoke-PortalRequest $privateRoute

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "kind": "specification-first-security-contract",
+  "version": 1,
+  "status": "SPECIFIED_NOT_VERIFIED",
+  "specification": "docs/admin-security-spec.md",
+  "claims": [
+    {
+      "id": "ADM-01",
+      "requirement": "Password hashing, configuration isolation, disabled-by-default setup",
+      "tests": [
+        "authentication"
+      ]
+    },
+    {
+      "id": "ADM-02",
+      "requirement": "Origin, CSRF, framing, bounded sessions/rate limits, expiry and rotation",
+      "tests": [
+        "http_authority"
+      ]
+    },
+    {
+      "id": "ADM-03",
+      "requirement": "Actual Alloy grouping, complete variant equivalence and fail-closed dependencies",
+      "tests": [
+        "upload_validation"
+      ]
+    },
+    {
+      "id": "ADM-04",
+      "requirement": "Exact original/source-body preservation and protected quotient names",
+      "tests": [
+        "source_preservation"
+      ]
+    },
+    {
+      "id": "ADM-05",
+      "requirement": "Metadata-only Luna, manual fallback and public question review",
+      "tests": [
+        "luna_metadata"
+      ]
+    },
+    {
+      "id": "ADM-06",
+      "requirement": "Owner-bound bounded jobs and atomic authorized batch publication",
+      "tests": [
+        "publication"
+      ]
+    },
+    {
+      "id": "ADM-07",
+      "requirement": "Public oracle/credential redaction and immediate consistent catalogue visibility",
+      "tests": [
+        "public_projection"
+      ]
+    },
+    {
+      "id": "ADM-08",
+      "requirement": "Portable admin assets, private config, narrow IIS database permissions",
+      "tests": [
+        "deployment"
+      ]
+    }
+  ],
+  "excluded": [
+    "Unbounded Alloy equivalence",
+    "Native IIS/NTFS or Cloudflare execution in Linux tests",
+    "Semantic correctness/non-disclosure of generated question prose without administrator review",
+    "End-to-end Lean proof for new application code"
+  ]
+}

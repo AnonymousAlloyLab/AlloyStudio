@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sqlite3
 import stat
 import sys
 import tempfile
@@ -23,6 +24,7 @@ from scripts.import_exercises import PUBLIC_FIELDS, build_catalogue, verify_reco
 
 
 PRIVATE_NAMES = ('catalogue.json', 'correct-pools.json')
+DATABASE_NAME = 'exercises.sqlite3'
 MAX_JSON_BYTES = 128 * 1024 * 1024
 
 
@@ -70,9 +72,32 @@ def read_bounded(path: Path) -> bytes:
     return data
 
 
+def checked_path(path: Path) -> Path:
+    """Check lexical components before resolution, including NTFS junctions."""
+    path = Path(path).expanduser().absolute()
+    for component in (path, *path.parents):
+        try:
+            info = component.lstat()
+        except FileNotFoundError:
+            continue
+        if (stat.S_ISLNK(info.st_mode)
+                or getattr(info, 'st_file_attributes', 0) & 0x400):
+            raise PreparationError('UNSAFE_PRIVATE_PATH',
+                                   'Private input and output paths must not contain links or reparse points.')
+    return path
+
+
+def database_metadata(action, snapshot):
+    return {'action': action, 'exercises': snapshot.exercise_count,
+            'correctCandidates': snapshot.candidate_count - sum(
+                1 for pool in snapshot.pools_document['pools']
+                for candidate in pool['candidates'] if candidate['kind'] == 'oracle'),
+            'totalCandidates': snapshot.candidate_count, 'storage': 'sqlite'}
+
+
 def read_bundle(bundle: Path):
     """Restore only two data members; never extract paths or copy credentials."""
-    bundle = Path(bundle).expanduser().absolute()
+    bundle = checked_path(bundle)
     if not bundle.is_file():
         raise PreparationError('BUNDLE_MISSING', f'Trusted IIS ZIP not found: {bundle}. Pass the ZIP file itself with --from-bundle.')
     try:
@@ -106,6 +131,19 @@ def read_bundle(bundle: Path):
                         or not re.fullmatch(r'[0-9a-f]{64}', entry['sha256'])):
                     raise ValueError('Invalid bundle inventory.')
                 inventory[entry['path']] = entry
+            database_member = 'backend/exercises/' + DATABASE_NAME
+            if database_member in names:
+                raw = member(database_member, MAX_JSON_BYTES)
+                entry = inventory[database_member]
+                if len(raw) != entry['bytes'] or hashlib.sha256(raw).hexdigest() != entry['sha256']:
+                    raise ValueError('Bundle data does not match its manifest.')
+                if (type(manifest['exerciseCount']) is not int
+                        or type(manifest['knownCorrectPoolCount']) is not int
+                        or type(manifest['correctCandidateCount']) is not int):
+                    raise ValueError('Invalid database manifest counts.')
+                return {'database': raw, 'exerciseCount': manifest['exerciseCount'],
+                        'knownCorrectPoolCount': manifest['knownCorrectPoolCount'],
+                        'correctCandidateCount': manifest['correctCandidateCount']}
             data = []
             for name in PRIVATE_NAMES:
                 path = 'backend/exercises/' + name
@@ -136,11 +174,18 @@ def result_metadata(action, catalogue, pools, catalogue_bytes, pools_bytes):
 
 
 def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None = None) -> dict:
-    root = Path(root).expanduser().resolve(strict=True)
+    from exercise_store import load_store, migrate_legacy, restore_store
+    root = checked_path(root).resolve(strict=True)
     target = root / 'exercises'
-    if target.is_symlink():
-        raise PreparationError('UNSAFE_PRIVATE_PATH', 'The private exercises directory cannot be a symlink.')
-    catalogue_path, pools_path = (target / name for name in PRIVATE_NAMES)
+    database_path = checked_path(target / DATABASE_NAME)
+    if database_path.exists():
+        try:
+            return database_metadata('validated-existing', load_store(root))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError) as error:
+            raise PreparationError('PRIVATE_DATA_INVALID',
+                'The existing SQLite exercise database is invalid or unreadable. '
+                'Restore a verified backup explicitly; existing data were preserved and legacy JSON was not used.') from error
+    catalogue_path, pools_path = (checked_path(target / name) for name in PRIVATE_NAMES)
     paths = (catalogue_path, pools_path)
     if any(path.is_symlink() for path in paths):
         raise PreparationError('UNSAFE_PRIVATE_PATH', 'Private exercise files must be regular files, not symbolic links.')
@@ -159,13 +204,32 @@ def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None 
             raise PreparationError('PRIVATE_DATA_INVALID',
                 'The existing catalogue.json/correct-pools.json pair is unreadable or failed source/witness validation. '
                 'Restore both matching bundled files from Git, or your custom files from a trusted bundle. Existing files were preserved.') from error
-        return result_metadata('validated-existing', catalogue, pools, catalogue_bytes, pool_bytes)
+        migrate_legacy(root)
+        return database_metadata('migrated-legacy', load_store(root))
 
     if bundle is not None:
-        catalogue, pools, catalogue_bytes, pool_bytes = read_bundle(bundle)
+        restored = read_bundle(bundle)
+        if isinstance(restored, dict):
+            target.mkdir(parents=True, exist_ok=True, mode=0o700)
+            with tempfile.TemporaryDirectory(prefix='.private-import-', dir=target) as directory:
+                staged = Path(directory) / DATABASE_NAME
+                staged.write_bytes(restored['database'])
+                if os.name != 'nt':
+                    staged.chmod(0o600)
+                try:
+                    snapshot = restore_store(root, staged,
+                        expected_exercises=restored['exerciseCount'],
+                        expected_pools=restored['knownCorrectPoolCount'],
+                        expected_candidates=restored['correctCandidateCount'])
+                except (OSError, ValueError, sqlite3.Error) as error:
+                    raise PreparationError('BUNDLE_INVALID',
+                        'The bundled database is invalid or its counts differ from the manifest. '
+                        'No database was restored.') from error
+            return database_metadata('restored-bundle', snapshot)
+        catalogue, pools, catalogue_bytes, pool_bytes = restored
         action = 'restored-bundle'
     else:
-        source_root = Path(source_root or os.environ.get('ACGN_ROOT') or ROOT.parent / 'ACGN').expanduser().absolute()
+        source_root = checked_path(source_root or os.environ.get('ACGN_ROOT') or ROOT.parent / 'ACGN')
         corpus = source_root / 'classified-data'
         if not corpus.is_dir():
             raise PreparationError('SOURCE_CORPUS_MISSING',
@@ -219,7 +283,8 @@ def prepare(root: Path, source_root: Path | None = None, *, bundle: Path | None 
         os.replace(staged_pools, pools_path)
     finally:
         shutil.rmtree(stage, ignore_errors=True)
-    return result_metadata(action, catalogue, pools, catalogue_bytes, pool_bytes)
+    migrate_legacy(root)
+    return database_metadata(action, load_store(root))
 
 
 def main() -> int:

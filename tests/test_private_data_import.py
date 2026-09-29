@@ -94,7 +94,7 @@ class PrivateDataImportTests(unittest.TestCase):
             encoding='utf-8', timeout=30, check=False)
 
     def assert_no_private_pair(self):
-        for name in ('catalogue.json', 'correct-pools.json'):
+        for name in ('catalogue.json', 'correct-pools.json', 'exercises.sqlite3'):
             self.assertFalse((self.root / 'exercises' / name).exists())
         self.assertFalse(list(self.root.rglob('.private-import-*')))
 
@@ -109,6 +109,100 @@ class PrivateDataImportTests(unittest.TestCase):
                          'classified-data/graphs/under/fixture_inv1.als')
         self.assertEqual([item['kind'] for item in pools['pools'][0]['candidates']],
                          ['correct-student', 'oracle'])
+        from exercise_store import load_store
+        snapshot = load_store(self.root)
+        self.assertEqual(snapshot.exercises, {record['id']: record for record in catalogue['exercises']})
+        self.assertEqual(snapshot.correct_pools['graphs-inv1'],
+                         tuple(candidate['body'] for candidate in pools['pools'][0]['candidates']))
+
+    def test_existing_database_is_authoritative_over_broken_or_missing_legacy_files(self):
+        self.write_corpus()
+        first = prepare_private_data.prepare(self.root, self.source)
+        database = self.root / 'exercises/exercises.sqlite3'
+        before = database.read_bytes()
+        (self.root / 'exercises/catalogue.json').write_bytes(b'not JSON')
+        (self.root / 'exercises/correct-pools.json').unlink()
+        shutil.rmtree(self.source)
+        second = prepare_private_data.prepare(self.root, self.source)
+        self.assertEqual(second['action'], 'validated-existing')
+        self.assertEqual(second['totalCandidates'], first['totalCandidates'])
+        self.assertEqual(database.read_bytes(), before)
+
+    def test_invalid_existing_database_cannot_fall_back_to_valid_legacy_inputs(self):
+        entries = self.private_pair_bytes()
+        target = self.root / 'exercises'
+        target.mkdir()
+        for name, data in entries.items():
+            (target / Path(name).name).write_bytes(data)
+        database = target / 'exercises.sqlite3'
+        database.write_bytes(PRIVATE_SENTINEL.encode())
+        with self.assertRaises(prepare_private_data.PreparationError) as raised:
+            prepare_private_data.prepare(self.root, self.source)
+        self.assertEqual(raised.exception.code, 'PRIVATE_DATA_INVALID')
+        self.assertNotIn(PRIVATE_SENTINEL, str(raised.exception))
+        self.assertEqual(database.read_bytes(), PRIVATE_SENTINEL.encode())
+
+    def sqlite_bundle(self, *, count=1, candidate_count=2, corrupt=False):
+        self.write_corpus()
+        prepare_private_data.prepare(self.root, self.source)
+        raw = (self.root / 'exercises/exercises.sqlite3').read_bytes()
+        if corrupt:
+            raw = PRIVATE_SENTINEL.encode()
+        name = 'backend/exercises/exercises.sqlite3'
+        manifest = {'schemaVersion': 1, 'application': 'Alloy Studio',
+                    'distribution': 'IIS 10', 'privateArchive': True,
+                    'exerciseCount': count, 'knownCorrectPoolCount': 1,
+                    'correctCandidateCount': candidate_count,
+                    'files': [{'path': name, 'bytes': len(raw),
+                               'sha256': hashlib.sha256(raw).hexdigest()}]}
+        bundle = Path(self.temp.name) / 'sqlite bundle.zip'
+        with zipfile.ZipFile(bundle, 'w') as archive:
+            archive.writestr('manifest.json', json.dumps(manifest))
+            archive.writestr(name, raw)
+            archive.writestr('backend/server.py', PRIVATE_SENTINEL)
+        shutil.rmtree(self.root / 'exercises')
+        shutil.rmtree(self.source)
+        return bundle
+
+    def test_sqlite_bundle_restores_only_database_without_json_or_original_corpus(self):
+        bundle = self.sqlite_bundle()
+        result = prepare_private_data.prepare(self.root, bundle=bundle)
+        self.assertEqual(result['action'], 'restored-bundle')
+        self.assertEqual(result['exercises'], 1)
+        self.assertEqual(result['totalCandidates'], 2)
+        self.assertEqual([path.name for path in (self.root / 'exercises').iterdir()],
+                         ['exercises.sqlite3'])
+        self.assertFalse((self.root / 'server.py').exists())
+        second = prepare_private_data.prepare(self.root, bundle=bundle)
+        self.assertEqual(second['action'], 'validated-existing')
+
+    def test_sqlite_bundle_wrong_count_is_rejected_before_database_publication(self):
+        bundle = self.sqlite_bundle(count=2)
+        with self.assertRaises((ValueError, prepare_private_data.PreparationError)):
+            prepare_private_data.prepare(self.root, bundle=bundle)
+        self.assert_no_private_pair()
+
+    def test_sqlite_bundle_wrong_candidate_count_is_rejected_before_database_publication(self):
+        bundle = self.sqlite_bundle(candidate_count=3)
+        with self.assertRaises(prepare_private_data.PreparationError):
+            prepare_private_data.prepare(self.root, bundle=bundle)
+        self.assert_no_private_pair()
+
+    def test_sqlite_bundle_corrupt_database_with_valid_hash_is_rejected_before_publication(self):
+        bundle = self.sqlite_bundle(corrupt=True)
+        with self.assertRaises((ValueError, prepare_private_data.PreparationError)) as raised:
+            prepare_private_data.prepare(self.root, bundle=bundle)
+        self.assertNotIn(PRIVATE_SENTINEL, str(raised.exception))
+        self.assert_no_private_pair()
+
+    @unittest.skipIf(os.name == 'nt', 'Windows junction cases require native NTFS validation.')
+    def test_database_ancestor_link_is_rejected_before_resolution(self):
+        alias = Path(self.temp.name) / 'linked-parent'
+        alias.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(prepare_private_data.PreparationError) as raised:
+            prepare_private_data.prepare(alias, self.source)
+        self.assertEqual(raised.exception.code, 'UNSAFE_PRIVATE_PATH')
+        self.assert_no_private_pair()
 
     def test_real_corpus_import_preserves_correct_candidate_and_explicit_oracle(self):
         self.write_corpus()
@@ -122,11 +216,11 @@ class PrivateDataImportTests(unittest.TestCase):
     def test_linux_fresh_build_imports_original_corpus_and_compiles_vendored_dependencies(self):
         self.source = Path(self.temp.name) / 'original corpus with spaces'
         self.write_corpus()
-        for directory in ('scripts', 'engine/src', 'vendor/acgn', 'web', 'deploy/iis'):
+        for directory in ('scripts', 'engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web', 'deploy/iis', 'docs', 'examples'):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__'))
         shutil.copy2(ROOT / 'engine/build.sh', self.root / 'engine/build.sh')
-        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'openai.example.json', 'LICENSE'):
+        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'openai.example.json', 'LICENSE'):
             shutil.copy2(ROOT / name, self.root / name)
         shutil.copy2(ROOT / 'package.json', self.root / 'package.json')
         allowed = ('PATH', 'SYSTEMROOT', 'WINDIR', 'TMP', 'TEMP', 'TMPDIR', 'HOME',
@@ -167,7 +261,7 @@ class PrivateDataImportTests(unittest.TestCase):
         shutil.rmtree(self.source)
         second = prepare_private_data.prepare(self.root, self.source)
         self.assertEqual(second['action'], 'validated-existing')
-        self.assertEqual(second['sha256'], first['sha256'])
+        self.assertEqual(second['totalCandidates'], first['totalCandidates'])
         self.assertEqual({path.name: path.read_bytes()
                           for path in (self.root / 'exercises').iterdir()}, before)
         self.assert_real_private_pair()
@@ -240,7 +334,7 @@ class PrivateDataImportTests(unittest.TestCase):
         self.assertNotIn(PRIVATE_SENTINEL, completed.stdout + completed.stderr)
         self.assertEqual(sorted(path.relative_to(self.root).as_posix()
                                 for path in self.root.rglob('*') if path.is_file()),
-                         ['exercises/catalogue.json', 'exercises/correct-pools.json'])
+                         ['exercises/catalogue.json', 'exercises/correct-pools.json', 'exercises/exercises.sqlite3'])
         self.assertFalse((Path(self.temp.name) / 'restore-escaped.txt').exists())
         self.assert_real_private_pair()
 

@@ -13,7 +13,7 @@ import threading
 from urllib.parse import unquote, urlsplit
 from luna import Explainer
 from runtime_dependencies import check_runtime, runtime_classpath
-from scripts.import_correct_pools import verify_document
+from exercise_store import load_store, StoreError
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmentBefore',
@@ -31,26 +31,6 @@ STATIC.update({'/dashboard/' + name: ('dashboard/' + name, mime) for name, mime 
     ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
     ('styles.css', 'text/css; charset=utf-8'), ('data.json', 'application/json; charset=utf-8'))})
 STATIC['/dashboard/'] = STATIC['/dashboard/index.html']
-POOL_VALIDATION_CACHE = OrderedDict()
-POOL_VALIDATION_LOCK = threading.Lock()
-
-
-def load_correct_pools(root, catalogue_bytes, catalogue):
-    """Validate private witnesses once per content pair, never by path or mtime."""
-    encoded = (root / 'exercises/correct-pools.json').read_bytes()
-    key = (hashlib.sha256(catalogue_bytes).digest(), hashlib.sha256(encoded).digest())
-    with POOL_VALIDATION_LOCK:
-        if key not in POOL_VALIDATION_CACHE:
-            document = json.loads(encoded)
-            verify_document(catalogue, document)
-            POOL_VALIDATION_CACHE[key] = tuple((pool['exerciseId'], tuple(candidate['body']
-                for candidate in pool['candidates'])) for pool in document['pools'])
-            if len(POOL_VALIDATION_CACHE) > 4:
-                POOL_VALIDATION_CACHE.popitem(last=False)
-        POOL_VALIDATION_CACHE.move_to_end(key)
-        # Do not share a mutable dictionary between server instances.
-        return dict(POOL_VALIDATION_CACHE[key])
-
 
 def project(record, fields):
     return {key: record[key] for key in fields}
@@ -433,10 +413,9 @@ class Portal(ThreadingHTTPServer):
 
     def __init__(self, address, *, root=ROOT, timeout=12, workers=4, java='java', public_origins=()):
         self.root = Path(root)
-        catalogue_bytes = (self.root / 'exercises/catalogue.json').read_bytes()
-        data = json.loads(catalogue_bytes)
-        self.exercises = {e['id']: e for e in data['exercises']}
-        self.correct_pools = load_correct_pools(self.root, catalogue_bytes, data)
+        snapshot = load_store(self.root)
+        self.exercises = snapshot.exercises
+        self.correct_pools = snapshot.correct_pools
         self.timeout = timeout
         self.java = str(java)
         self.public_origins = frozenset(normalize_origin(origin) for origin in public_origins)
@@ -687,10 +666,11 @@ def main():
         paths = sorted({error['path'] for error in runtime['errors']})
         parser.error('Bundled Java runtime is incomplete or changed: ' + ', '.join(paths)
                      + '. Restore the complete deployment archive and run runtime_dependencies.py.')
-    if not (ROOT / 'exercises/correct-pools.json').is_file():
-        parser.error('Import the private correct pools first: python scripts/import_correct_pools.py')
-    server = Portal((args.host, args.port), timeout=args.timeout, workers=args.workers,
-                    java=args.java, public_origins=args.public_origin)
+    try:
+        server = Portal((args.host, args.port), timeout=args.timeout, workers=args.workers,
+                        java=args.java, public_origins=args.public_origin)
+    except StoreError:
+        parser.error('Private exercise database validation failed. Run python scripts/manage_exercises.py info.')
     print(f'Alloy practice: http://{args.host}:{server.server_port}', flush=True)
     try: server.serve_forever()
     except KeyboardInterrupt: pass

@@ -79,9 +79,15 @@ if ($Action -eq 'Install') {
         Assert-PrivatePath -Path $private -PublicRoots $publicRoots
     }
     foreach ($file in @($PythonExe, $JavaExe, (Join-Path $BackendRoot 'server.py'),
-        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'exercises\catalogue.json'),
-        (Join-Path $BackendRoot 'exercises\correct-pools.json'),
+        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'exercises\exercises.sqlite3'),
+        (Join-Path $BackendRoot 'exercise_store.py'), (Join-Path $BackendRoot 'exercise_sql.py'),
+        (Join-Path $BackendRoot 'admin_auth.py'), (Join-Path $BackendRoot 'admin_upload.py'),
+        (Join-Path $BackendRoot 'admin_luna.py'), (Join-Path $BackendRoot 'admin_service.py'),
+        (Join-Path $BackendRoot 'sql\schema.json'), (Join-Path $BackendRoot 'sql\queries.json'),
+        (Join-Path $BackendRoot 'sql\compiled-queries.json'),
+        (Join-Path $BackendRoot 'vendor\sqlean\provenance.json'),
         (Join-Path $BackendRoot 'build\engine\classes\live\LiveFeedback.class'),
+        (Join-Path $BackendRoot 'build\engine\classes\live\UploadInspector.class'),
         (Join-Path $WebRoot 'web.config'))) {
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Required deployment file is missing: $file" }
     }
@@ -101,6 +107,9 @@ if ($Action -eq 'Install') {
         Set-RestrictedAcl -Path $directory
     }
     Set-RestrictedAcl -Path $BackendRoot -Recurse
+    # Authenticated publication needs SQLite data/journal writes, never changes
+    # to Python/Java code, administrator configuration or provider credentials.
+    Set-RestrictedAcl -Path (Join-Path $BackendRoot 'exercises') -LocalServiceAccess Modify -Recurse
     Set-RestrictedAcl -Path $scriptRoot -Recurse
     Set-RestrictedAcl -Path (Join-Path $RuntimeRoot 'logs') -LocalServiceAccess Modify -Recurse
     Set-RestrictedAcl -Path (Join-Path $RuntimeRoot 'secrets') -Recurse
@@ -125,7 +134,7 @@ if ($Action -eq 'Install') {
         -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
     Register-ScheduledTask -TaskName $TaskName -TaskPath '\' -Action $taskAction -Principal $principal `
         -Trigger (New-ScheduledTaskTrigger -AtStartup) -Settings $settings `
-        -Description 'Alloy Studio loopback backend. Private oracle catalogue; static files are served separately by IIS.' | Out-Null
+        -Description 'Alloy Studio loopback backend. Private exercise database; static files are served separately by IIS.' | Out-Null
     Start-BackendTask -RuntimeChecked
     if ($EnableLuna -and -not (Test-Path -LiteralPath $config.key_file -PathType Leaf) -and
         -not (Test-Path -LiteralPath (Join-Path $BackendRoot 'openai.local.json') -PathType Leaf)) {

@@ -152,7 +152,7 @@ class WindowsSourceBuildTests(unittest.TestCase):
         self.assertIn('[string]$ACGNRoot', source)
         self.assertIn('scripts\\prepare_private_data.py', source)
         self.assertIn('$env:ACGN_ROOT', source)
-        self.assertRegex(source, r"'--source-root'\s+\$ACGNRoot\b")
+        self.assertRegex(source, r"'--source-root',?\s+\$ACGNRoot\b")
         self.assertNotRegex(source, r"(?i)\$acgnroot\s*=\s*Join-Path\s+\$projectRoot\s+'vendor[\\/]acgn'")
 
 

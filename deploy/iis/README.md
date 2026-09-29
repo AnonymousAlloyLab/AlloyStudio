@@ -17,20 +17,23 @@ directory. Only `wwwroot` is served publicly. No API key is included in the
 distribution.
 
 Every bundled invariant has a natural-language requirement displayed above the
-editor. The text is stored in the bundled catalogue and exposed through the
-existing public exercise projection. To refresh descriptions in an existing
-bundle, update `backend/scripts/import_exercises.py` and
-`backend/scripts/exercise_descriptions.json` from the new ZIP, then run from
-`backend` and restart the backend task:
+editor. The private SQLite database stores those descriptions, predicate bodies,
+ordered correct pools and primary oracle identities. A running backend reads one
+consistent snapshot; restart the backend task after private administration.
+
+To add an exercise, run the host-only command from `backend` with a validated
+exercise import file (see [the storage security specification](../../docs/sqlite-security-spec.md)):
 
 ```powershell
-python .\scripts\import_exercises.py --refresh-descriptions
+python .\scripts\manage_exercises.py validate C:\Private\exercise.json
+python .\scripts\manage_exercises.py add C:\Private\exercise.json
 ```
 
-This needs no original ACGN checkout and changes only description metadata.
-Alternatively, copy the updated `backend/exercises/catalogue.json` from the ZIP
-when using the same bundled exercises. The correct pools and credential files
-do not need changing for this description update.
+One or more oracle bodies are required. The first is the behavioral reference;
+all oracles participate in nearest-correct selection. The importer checks the
+starter and solutions with Alloy and requires bounded equivalence to the first
+oracle. There is no administration HTTP route. Keep import files outside every
+IIS public directory, and preserve the installed database when updating code.
 
 This deployment support was developed on Linux. Cross-platform tests and
 PowerShell syntax checks do not establish that a particular Windows server is
@@ -42,9 +45,11 @@ host was changed or claimed as verified during development.
 
 From a fresh source checkout, build the Java engine and create the distribution
 with one command from the checkout root.
-The repository includes `exercises/catalogue.json` and
-`exercises/correct-pools.json`, so no original ACGN checkout or existing IIS ZIP
-is required. Packaging validates the correct-pool source witnesses. See
+The repository includes `exercises/exercises.sqlite3`, so no original ACGN or
+SQLeanParser checkout, Lean installation, or existing IIS ZIP is required.
+Packaging validates the database and uses SQLite backup to capture a consistent
+committed snapshot, including administrator additions. Only the database ships
+as exercise storage; legacy JSON files remain migration inputs and witnesses. See
 [exercise data and provenance](../../exercises/README.md) for their contents.
 
 ```bash
@@ -102,15 +107,15 @@ application despite `no-store` must be removed or scoped away from it.
 
 These build tools stay in the source checkout and are excluded from the runtime
 ZIP. The IIS runtime still needs no Node, npm, Bash, JDK/compiler, pip packages,
-or original ACGN checkout. Use a machine-wide
+or original ACGN/SQLeanParser checkout or Lean installation. Use a machine-wide
 64-bit Python installation and Java 17+ runtime readable by LOCAL SERVICE; avoid
 the Microsoft Store Python alias or executables in a user's private profile.
 
 If the bundled data are missing or damaged, preserve intentional local data
-edits and restore both files from Git before rebuilding:
+edits and explicitly restore the seed database from Git before rebuilding:
 
 ```powershell
-git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
+git restore --source=HEAD -- exercises/exercises.sqlite3
 ```
 
 For optional custom imports or legacy checkouts without tracked data, the build
@@ -123,11 +128,13 @@ python .\scripts\prepare_private_data.py --from-bundle 'C:\Staging\alloy-studio-
 ```
 
 The same helper works on Linux/macOS with the appropriate ZIP path and Python
-command. It verifies manifest hashes and source witnesses, then restores only
-the catalogue and correct pools. Existing valid data are preserved, so back up
-and move both files first when intentionally importing a different corpus.
-Incomplete pairs and invalid inputs receive specific diagnostic codes and are
-left untouched. The restored files belong outside the public IIS directory.
+command. It verifies manifest hashes and the database before restoring only
+exercise data. Older JSON-pair bundles are supported through validated migration.
+An existing database is authoritative, even when legacy JSON differs; an invalid
+existing database fails rather than falling back to JSON. Back up and move the
+database explicitly before intentionally replacing a dataset. Incomplete legacy
+pairs and invalid inputs are left untouched. Database, journal/WAL/SHM files and
+query artifacts belong outside the public IIS directory.
 
 Transfer the timestamped ZIP printed by the build and its `.sha256` sidecar through a private
 channel and compare the archive's SHA-256 with the sidecar after transfer. In an elevated
@@ -635,8 +642,10 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    the installed private backend and deployment launchers from the same package;
    replace its class tree and JAR directory as complete units. Preserve
    `backend/openai.local.json`, referenced key files, runtime configuration and
-   secrets. Preserve custom `exercises/catalogue.json` and `correct-pools.json`
-   together; replace that pair only when intentionally changing datasets. Never
+   secrets. Preserve the installed `exercises/exercises.sqlite3` and all committed
+   administrator additions. With the backend and writers stopped, back up the
+   database before updating. Replace it only when intentionally changing datasets;
+   do not overwrite it with the bundled seed during a routine code upgrade. Never
    copy the backend or package root into the public IIS directory.
 
 3. Touch only these installed public files after copying. Reproducible ZIPs use

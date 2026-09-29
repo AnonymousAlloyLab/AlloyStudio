@@ -31,10 +31,10 @@ class IisPackageBuildChainTests(unittest.TestCase):
         self.base = Path(self.temporary.name)
         self.root = self.base / 'relocated source with spaces'
         self.root.mkdir()
-        for directory in ('web', 'deploy/iis', 'engine/src', 'vendor/acgn', 'scripts', 'exercises'):
+        for directory in ('web', 'deploy/iis', 'engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'scripts', 'exercises', 'docs', 'examples'):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'LICENSE', 'openai.example.json'):
+        for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'LICENSE', 'openai.example.json'):
             shutil.copy2(ROOT / name, self.root / name)
         self.classes = self.root / 'build/engine/classes'
         shutil.copytree(ROOT / 'build/engine/classes', self.classes)

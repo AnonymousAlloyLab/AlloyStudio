@@ -1,6 +1,7 @@
 # Bundled exercise data
 
-`catalogue.json` and `correct-pools.json` are tracked in this public repository.
+`exercises.sqlite3` is the authoritative live datastore, tracked in this public
+repository. The JSON files are retained migration/regression witnesses.
 A fresh clone includes the complete data needed to run the portal: no original
 ACGN checkout, `classified-data/` directory, or IIS archive is required. From
 the repository root, run `./scripts/run.sh`, or `./scripts/setup.sh` to validate
@@ -9,6 +10,7 @@ JDK 17+, with no Node runtime.
 
 | File | Contents |
 | --- | --- |
+| `exercises.sqlite3` | Normalized exercise/model/predicate columns, ordered correct pools, primary oracle identity, provenance and validation records; the live database. |
 | `catalogue.json` | 181 exercises, natural-language descriptions, preserved Alloy environments, starters, oracle bodies, original selected sources, source hashes, and preservation records. |
 | `correct-pools.json` | 181 pools containing 7,550 deduplicated corpus candidates and 181 explicit oracles, for 7,731 candidates total, with source witnesses and provenance. |
 
@@ -39,13 +41,13 @@ public HTTP directories. Exercise data must also remain outside an IIS
 `wwwroot` even though the repository publishes it; the server controls its
 browser-facing projection.
 
-If the bundled pair is missing or damaged, preserve intentional local data
-edits and restore the matching files from the current Git revision:
+Validate the database with `python3 scripts/manage_exercises.py info`. Existing
+invalid data fails without JSON fallback. Keep administrator backups and preserve
+the database during code upgrades. New exercises and all oracle solutions are
+added atomically through the [private interface](../docs/private-exercises.md),
+which requires real Alloy parsing and bounded equivalence. Legacy labels retain
+their historical provenance; they are not relabeled as newly solver-verified.
 
-```bash
-git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
-./scripts/setup.sh
-```
-
-Original-corpus imports and trusted IIS archive restoration remain optional for
-custom datasets or legacy checkouts. See [local setup](../docs/local-setup.md#restore-or-import-exercise-data).
+Original-corpus imports, JSON migration and trusted IIS archive restoration remain
+optional for legacy checkouts with no SQLite database. Normal clones need neither
+ACGN nor a Lean/parser runtime. See [local setup](../docs/local-setup.md).

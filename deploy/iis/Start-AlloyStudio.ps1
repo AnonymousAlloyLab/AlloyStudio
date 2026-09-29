@@ -47,11 +47,11 @@ $WebRoot = Get-LocalPath -Path ([Environment]::ExpandEnvironmentVariables([strin
 if ([IO.Path]::GetFileName($WebRoot) -ne 'wwwroot') {
     throw 'The IIS application must point to the distribution public wwwroot directory.'
 }
-$expectedAssets = @('index.html', 'app.js', 'styles.css', 'web.config', 'dashboard')
+$expectedAssets = @('index.html', 'app.js', 'styles.css', 'web.config', 'dashboard', 'admin')
 $assets = @(Get-ChildItem -LiteralPath $WebRoot -Force)
 if (@(Compare-Object $expectedAssets @($assets.Name)).Count -or
-    @($assets | Where-Object { $_.PSIsContainer -and $_.Name -ne 'dashboard' }).Count) {
-    throw 'The public directory must contain only the packaged portal files and dashboard directory.'
+    @($assets | Where-Object { $_.PSIsContainer -and $_.Name -notin @('dashboard', 'admin') }).Count) {
+    throw 'The public directory must contain only the packaged portal files, dashboard and admin directories.'
 }
 foreach ($asset in $assets) { Get-LocalPath -Path $asset.FullName | Out-Null }
 $dashboardRoot = Get-LocalPath -Path (Join-Path $WebRoot 'dashboard')
@@ -62,6 +62,14 @@ if (@(Compare-Object @('index.html', 'app.js', 'styles.css', 'data.json') @($das
     throw 'The dashboard must contain only its four packaged public files.'
 }
 foreach ($asset in $dashboardAssets) { Get-LocalPath -Path $asset.FullName | Out-Null }
+$adminRoot = Get-LocalPath -Path (Join-Path $WebRoot 'admin')
+if (-not (Test-Path -LiteralPath $adminRoot -PathType Container)) { throw 'The public admin directory is missing.' }
+$adminAssets = @(Get-ChildItem -LiteralPath $adminRoot -Force)
+if (@(Compare-Object @('index.html', 'app.js', 'styles.css') @($adminAssets.Name)).Count -or
+    @($adminAssets | Where-Object PSIsContainer).Count) {
+    throw 'The admin directory must contain only its three packaged public files.'
+}
+foreach ($asset in $adminAssets) { Get-LocalPath -Path $asset.FullName | Out-Null }
 if ((Get-FileHash -LiteralPath (Join-Path $WebRoot 'web.config') -Algorithm SHA256).Hash -ne
     (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'web.config') -Algorithm SHA256).Hash) {
     throw 'The public web.config does not match this installed distribution.'
@@ -111,8 +119,12 @@ do {
     try {
         $health = Invoke-RestMethod -Uri ($baseUrl + 'api/health') -TimeoutSec 5 -MaximumRedirection 0 `
             -UseDefaultCredentials:$UseDefaultCredentials
-        if ($health.status -eq 'ok' -and $health.exercises -eq 181) {
-            Write-Output "Alloy Studio is ready at $baseUrl (181 exercises)."
+        if ($health.status -eq 'ok' -and ($health.exercises -is [int] -or $health.exercises -is [long]) -and
+            $health.exercises -gt 0) {
+            $listing = Invoke-RestMethod -Uri ($baseUrl + 'api/exercises') -TimeoutSec 5 -MaximumRedirection 0 `
+                -UseDefaultCredentials:$UseDefaultCredentials
+            if (@($listing.exercises).Count -ne $health.exercises) { continue }
+            Write-Output "Alloy Studio is ready at $baseUrl ($($health.exercises) exercises)."
             return
         }
     } catch { }

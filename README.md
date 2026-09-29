@@ -86,7 +86,7 @@ top-level declarations or replace the context. Every retained and removed span
 is recorded against its source hash. All 181 original selected files are
 preserved in the bundled catalogue for reproduction.
 
-The server reads `exercises/catalogue.json` and exposes an explicit
+The server reads a validated, read-only snapshot of `exercises/exercises.sqlite3` and exposes an explicit
 public field projection. Only the named portal assets and four dashboard files are served. It parses the
 learner and oracle in separate JVM modules so the learner cannot call the
 oracle. Reference bodies, canonical forms, target expressions, private predicate
@@ -98,10 +98,10 @@ and redacted operation categories deliberately reveal repair information; repeat
 can help infer a solution. This is a learning interface, not a secrecy guarantee
 against someone reading this public repository or the original corpus.
 
-`exercises/catalogue.json` and `exercises/correct-pools.json` are tracked public
-source data. Anyone reading or cloning this repository can inspect their oracle
+`exercises/exercises.sqlite3` and the legacy JSON migration witnesses are tracked
+public source data. Anyone reading or cloning this repository can inspect their oracle
 and candidate bodies. Browser redaction keeps solutions out of the learning
-interface; it does not make the repository data secret. The bundled pair contains
+interface; it does not make the repository data secret. The bundled database contains
 181 exercises and 7,731 candidates: 7,550 deduplicated corpus candidates plus 181
 oracles. See [exercise data and provenance](exercises/README.md) for the source
 witnesses and validation boundary. Credentials remain private, ignored by Git,
@@ -186,7 +186,7 @@ hidden. Limits and the response contract are in [the engine guide](engine/README
 
 ## Behavioral similarity and examples
 
-Behavioral comparisons always use the original oracle. Both edit-distance modes use the closest member of the correct pool. `live.BehaviorFeedback` adapts
+Behavioral comparisons use the designated primary oracle (the first oracle for newly imported exercises). Both edit-distance modes use the closest member of the correct pool. `live.BehaviorFeedback` adapts
 ACGN's `Rewarder` formula, with **model facts enforced** for both sampling and
 category searches. This intentionally fixes the upstream Rewarder's omission of
 module-level facts. This facts fix lives in the portal's behavior worker.
@@ -372,31 +372,28 @@ Use `-EngineOnly` to compile without updating the archive. Direct
 `./engine/build.sh` also compiles only the engine, defaulting to the same
 `build/engine/classes` directory under the project root.
 
-If a bundled data file is missing or damaged, preserve any intentional local
-data edits, then restore the matching pair from Git:
+The SQLite database is authoritative and preserves administrator additions. Use
+`python3 scripts/manage_exercises.py info` to validate it. Do not replace a
+customized database with the seed during an upgrade. For new exercises with one
+or more oracles, use the [private import interface](docs/private-exercises.md);
+it applies real Alloy bounded-equivalence checks and rejects malformed solutions
+before committing any rows.
 
-```bash
-git restore --source=HEAD -- exercises/catalogue.json exercises/correct-pools.json
-```
-
-For a custom import or a legacy checkout without tracked exercise data, the
-original corpus must contain `classified-data/`. Pass its location with
-`.\scripts\build.ps1 -ACGNRoot C:\path\to\ACGN` on PowerShell, or set `ACGN_ROOT`
-before `./scripts/build.sh` on Bash. A trusted IIS ZIP is also an optional
-recovery source:
+A valid existing database is left unchanged. An invalid database stops preparation
+without falling back to JSON. Preserve a backup before restoring from a trusted
+private backup or deployment ZIP. With no existing database, the preparation
+helper can restore a verified SQLite snapshot from a trusted archive:
 
 ```bash
 python scripts/prepare_private_data.py --from-bundle /path/to/alloy-studio-iis.zip
 ```
 
-Use `python3` if that is the Python 3.10+ command on the machine, then rerun the
-normal build command. This legacy-named helper verifies the manifest hashes,
-catalogue source records, and correct-pool witnesses before restoring exactly
-`exercises/catalogue.json` and `exercises/correct-pools.json`. It copies no API
-keys or application files. Once that pair exists, validation needs neither the
-original ACGN checkout nor the ZIP. A valid existing pair is left unchanged;
-back up and move both files first when intentionally importing a different
-corpus. Partial or invalid pairs are reported and preserved for recovery.
+Legacy JSON-only archives and the tracked JSON witness pair can also be migrated
+when SQLite is absent. The helper validates complete source/pool witnesses before
+publication; it copies no API keys or application files. Original-corpus import
+remains available for legacy checkouts using `ACGN_ROOT` or PowerShell's
+`-ACGNRoot`. Normal clones and SQLite-only deployments need neither that corpus
+nor an SQLeanParser checkout.
 
 Preparation failures now have specific codes: `SOURCE_CORPUS_MISSING` names the
 searched `classified-data` path; `EMPTY_CORPUS` identifies a directory with no
@@ -535,3 +532,5 @@ origins through canonicalization for the locators. `vendor/acgn/snapshot.json`
 records the delivered file hashes; this copy is not byte-identical to the base
 snapshot. The upstream checkout remains unchanged. See `vendor/acgn/LICENSE` for
 its license.
+
+New exercise navigation and private storage are described in [private exercise administration](docs/private-exercises.md). Canonical remains the default distance mode.

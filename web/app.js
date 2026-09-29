@@ -16,6 +16,7 @@ function verifiedPolicy(name, atoms) {
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   search: $('#exercise-search'), group: $('#group-filter'), list: $('#exercise-list'),
+  previousExercise: $('#previous-exercise'), nextExercise: $('#next-exercise'), exercisePosition: $('#exercise-position'),
   editor: $('#predicate-editor'), check: $('#check-button'), reset: $('#reset-button'),
   download: $('#download-button'), live: $('#live-feedback'), result: $('#feedback-result'),
   status: $('#feedback-state'), lines: $('#line-numbers'), draft: $('#draft-status'),
@@ -25,7 +26,7 @@ const elements = {
   metric: $('#distance-metric'),
 };
 const state = {
-  exercises: [], exercise: null, revision: 0, selection: 0, metric: 'canonical',
+  exercises: [], exercise: null, loadingExercise: false, revision: 0, selection: 0, metric: 'canonical',
   feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
@@ -169,11 +170,40 @@ async function fetchJSON(url, options = {}) {
   return data;
 }
 
-function renderExercises() {
+function visibleExercises() {
   const query = elements.search.value.trim().toLowerCase();
   const group = elements.group.value;
-  const visible = state.exercises.filter((exercise) => (!group || exercise.group === group)
+  return state.exercises.filter((exercise) => (!group || exercise.group === group)
     && [exercise.title, exercise.predicate, exercise.group, exercise.description].join(' ').toLowerCase().includes(query));
+}
+
+function renderExerciseNavigation(visible = visibleExercises()) {
+  const index = visible.findIndex(exercise => exercise.id === state.exercise?.id);
+  const ready = index >= 0 && !elements.editor.disabled;
+  elements.previousExercise.disabled = !ready || index === 0;
+  elements.nextExercise.disabled = !ready || index === visible.length - 1;
+  const filtered = Boolean(elements.search.value.trim() || elements.group.value);
+  elements.exercisePosition.textContent = !visible.length ? 'No matching exercises'
+    : state.loadingExercise ? 'Loading exercise…'
+      : index < 0 ? (state.exercise ? 'Select a matching exercise' : 'Choose an exercise')
+        : elements.editor.disabled ? 'Choose an exercise to continue'
+        : `${index + 1} of ${visible.length}${filtered ? ' matching exercises' : ' exercises'}`;
+  elements.previousExercise.title = ready && index > 0 ? `Previous: ${visible[index - 1].title}` : 'Previous exercise';
+  elements.nextExercise.title = ready && index < visible.length - 1 ? `Next: ${visible[index + 1].title}` : 'Next exercise';
+}
+
+function navigateExercise(offset) {
+  if (elements.editor.disabled) return;
+  const visible = visibleExercises();
+  const index = visible.findIndex(exercise => exercise.id === state.exercise?.id);
+  if (index < 0) return;
+  const exercise = visible[index + offset];
+  if (exercise) selectExercise(exercise.id);
+}
+
+function renderExercises() {
+  const visible = visibleExercises();
+  renderExerciseNavigation(visible);
   elements.list.replaceChildren();
   let currentGroup;
   visible.forEach((exercise) => {
@@ -461,10 +491,12 @@ async function selectExercise(id) {
   state.detailAbort?.abort();
   const controller = new AbortController();
   state.detailAbort = controller;
+  state.loadingExercise = true;
   elements.editor.disabled = true;
   elements.check.disabled = true;
   elements.reset.disabled = true;
   elements.download.disabled = true;
+  renderExerciseNavigation();
   elements.draft.textContent = 'Loading model…';
   showWaiting('Loading your model…');
   $('#startup-error').hidden = true;
@@ -473,6 +505,7 @@ async function selectExercise(id) {
     if (selection !== state.selection) return;
     if (!exercise || typeof exercise.id !== 'string' || typeof exercise.starter !== 'string') throw new Error('This exercise could not be loaded.');
     state.exercise = exercise;
+    state.loadingExercise = false;
     state.context = 'before';
     loadHistory();
     const draft = readStorage(`draft:${id}`, null);
@@ -502,6 +535,8 @@ async function selectExercise(id) {
     if (elements.live.checked) scheduleFeedback(200);
   } catch (error) {
     if (error.name === 'AbortError' || selection !== state.selection) return;
+    state.loadingExercise = false;
+    renderExerciseNavigation();
     elements.draft.textContent = 'Could not load';
     showError(error.message, () => selectExercise(id));
   }
@@ -1206,6 +1241,8 @@ async function initialize() {
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) $('.keyboard-hint').textContent = 'Ctrl ↵';
   elements.search.addEventListener('input', renderExercises);
   elements.group.addEventListener('change', renderExercises);
+  elements.previousExercise.addEventListener('click', () => navigateExercise(-1));
+  elements.nextExercise.addEventListener('click', () => navigateExercise(1));
   elements.metric.addEventListener('change', selectMetric);
   elements.editor.addEventListener('input', onEdit);
   elements.editor.addEventListener('scroll', syncEditorOverlay);

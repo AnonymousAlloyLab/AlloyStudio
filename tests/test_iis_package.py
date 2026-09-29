@@ -9,6 +9,7 @@ from pathlib import Path
 import queue
 import re
 import shutil
+import sqlite3
 import stat
 import subprocess
 import sys
@@ -24,7 +25,7 @@ import zipfile
 from scripts import package_iis as package_module
 from scripts.package_iis import (
     DEPLOY_FILES, JAR_FILES, REQUIRED_CLASSES, RUNTIME_HELPERS, WEB_FILES, ZIP_TIME,
-    PackageError, build_package,
+    PackageError, STORE_FILES, ADMIN_FILES, build_package,
 )
 
 
@@ -104,6 +105,8 @@ class IisPackageTests(unittest.TestCase):
         self.write('luna.py', '"""Private explanation client."""\n')
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
+        for name in (*STORE_FILES, *ADMIN_FILES):
+            self.write(name, (ROOT / name).read_bytes())
         for name in RUNTIME_HELPERS:
             self.write(f'scripts/{name}', (ROOT / 'scripts' / name).read_bytes())
         from scripts.import_exercises import extract_model
@@ -120,6 +123,7 @@ class IisPackageTests(unittest.TestCase):
         original = source('some Node')
         record = {'id': 'fixture-inv1', 'title': 'Fixture', 'group': 'fixture',
                   'predicate': 'inv1', 'description': 'Fixture source', 'sourceClassification': 'under',
+                  'descriptionProvenance': 'Test fixture',
                   'source': {'path': 'classified-data/fixture/under/example_inv1.als',
                              'sha256': hashlib.sha256(original.encode()).hexdigest()},
                   **extract_model(original.encode(), 'inv1')}
@@ -161,8 +165,8 @@ class IisPackageTests(unittest.TestCase):
         self.assertTrue(all(b'PRIVATE_UNLISTED_SENTINEL' not in data for data in entries.values()))
         self.assertTrue(all(b'PRIVATE_ORACLE_EXPRESSION' not in data for name, data in entries.items()
                             if name.startswith('wwwroot/')))
-        self.assertIn(b'PRIVATE_ORACLE_EXPRESSION', entries['backend/exercises/catalogue.json'])
-        self.assertIn(b'PRIVATE_CORRECT_EXPRESSION', entries['backend/exercises/correct-pools.json'])
+        self.assertIn(b'PRIVATE_ORACLE_EXPRESSION', entries['backend/exercises/exercises.sqlite3'])
+        self.assertIn(b'PRIVATE_CORRECT_EXPRESSION', entries['backend/exercises/exercises.sqlite3'])
         self.assertTrue(all(b'PRIVATE_CORRECT_EXPRESSION' not in data for name, data in entries.items()
                             if name.startswith('wwwroot/')))
         self.assertIn('backend/server.py', entries)
@@ -187,6 +191,60 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(result['sha256'], hashlib.sha256(self.output.read_bytes()).hexdigest())
         self.assertEqual(self.output.with_suffix('.zip.sha256').read_text(),
                          result['sha256'] + '  alloy-studio-iis.zip\n')
+
+    def test_changed_query_artifact_is_rejected_before_archive_publication(self):
+        self.write('sql/compiled-queries.json', '{}')
+        with self.assertRaisesRegex(PackageError, 'query artifacts'):
+            build_package(self.root, self.output)
+        self.assertFalse(self.output.exists())
+
+    def test_database_remains_authoritative_when_legacy_json_is_removed(self):
+        _, first = self.archive()
+        (self.root / 'exercises/catalogue.json').unlink()
+        (self.root / 'exercises/correct-pools.json').unlink()
+        _, second = self.archive()
+        self.assertEqual(first, second)
+        self.assertNotIn('backend/exercises/catalogue.json', second)
+        self.assertNotIn('backend/exercises/correct-pools.json', second)
+
+    def test_consistent_wal_snapshot_preserves_admin_additions_and_excludes_uncommitted_writes(self):
+        from exercise_store import add_exercise, ensure_store, load_store
+        for name in ('LICENSE', 'snapshot.json', *(f'lib/{jar}' for jar in JAR_FILES)):
+            self.write('vendor/acgn/' + name, (ROOT / 'vendor/acgn' / name).read_bytes())
+        shutil.copytree(ROOT / 'build/engine/classes', self.root / 'build/engine/classes', dirs_exist_ok=True)
+        ensure_store(self.root)
+        document = {'id': 'private-added', 'title': 'Private addition', 'group': 'fixture',
+                    'description': 'Committed description', 'predicate': 'inv1',
+                    'predicateHeader': 'pred inv1 ', 'environmentBefore': 'sig Node {}\n',
+                    'environmentAfter': '\n', 'starter': 'some Node',
+                    'oracleSolutions': ['no Node', 'not some Node']}
+        connection = sqlite3.connect(self.root / 'exercises/exercises.sqlite3')
+        writer = None
+        try:
+            self.assertEqual(connection.execute('PRAGMA journal_mode=WAL').fetchone()[0], 'wal')
+            connection.execute('BEGIN')
+            connection.execute('SELECT COUNT(*) FROM exercises').fetchone()
+            add_exercise(self.root, document)
+            self.assertTrue((self.root / 'exercises/exercises.sqlite3-wal').is_file())
+            writer = sqlite3.connect(self.root / 'exercises/exercises.sqlite3')
+            writer.execute('UPDATE exercises SET description=? WHERE id=?',
+                           ('UNCOMMITTED_PRIVATE_CHANGE', document['id']))
+            _, entries = self.archive()
+            manifest = json.loads(entries['manifest.json'])
+            self.assertEqual(manifest['exerciseCount'], 2)
+            self.assertEqual(manifest['correctCandidateCount'], 4)
+            packaged_path = self.base / 'committed-backup.sqlite3'
+            packaged_path.write_bytes(entries['backend/exercises/exercises.sqlite3'])
+            packaged = load_store(self.root, database_path=packaged_path)
+            self.assertEqual(packaged.exercises['private-added']['description'], 'Committed description')
+            self.assertEqual(packaged.correct_pools['private-added'], ('no Node', 'not some Node'))
+            self.assertFalse(any(name.endswith(('-wal', '-shm', '-journal')) for name in entries))
+        finally:
+            if writer is not None:
+                writer.rollback()
+                writer.close()
+            connection.rollback()
+            connection.close()
 
     def test_archive_bytes_ignore_source_permissions_mtime_and_destination(self):
         first, _ = self.archive()
@@ -255,16 +313,14 @@ class IisPackageTests(unittest.TestCase):
         self.archive()
         original = self.output.read_bytes()
         for name in ('web/app.js', 'deploy/iis/web.config', 'deploy/iis/Start-AlloyStudio.ps1',
-                     'openai.example.json', 'exercises/catalogue.json', 'exercises/correct-pools.json',
+                     'openai.example.json', 'exercise_store.py', 'exercise_sql.py', 'sql/compiled-queries.json',
                      'scripts/import_correct_pools.py', 'scripts/import_exercises.py',
                      'build/engine/classes/live/LiveFeedback.class'):
             with self.subTest(name=name):
                 path = self.root / name
                 payload = path.read_bytes()
                 path.unlink()
-                expected = ('Bundled exercise data are missing' if name in
-                            ('exercises/catalogue.json', 'exercises/correct-pools.json')
-                            else 'Missing deployment input')
+                expected = 'Missing deployment input'
                 with self.assertRaisesRegex(PackageError, expected):
                     build_package(self.root, self.output)
                 self.assertEqual(self.output.read_bytes(), original)
@@ -377,7 +433,7 @@ class IisPackageTests(unittest.TestCase):
                 elif variant == 'malformed-candidate':
                     pool['candidates'][0] = None
                 self.write('exercises/correct-pools.json', json.dumps(document))
-                with self.assertRaisesRegex(PackageError, 'pool validation failed'):
+                with self.assertRaisesRegex(PackageError, 'database validation'):
                     build_package(self.root, self.output)
         self.assertFalse(self.output.exists())
 
@@ -440,19 +496,21 @@ class IisPackageTests(unittest.TestCase):
         result = build_package(ROOT, self.output)
         with zipfile.ZipFile(self.output) as archive:
             manifest = json.loads(archive.read('manifest.json'))
-            catalogue = json.loads(archive.read('backend/exercises/catalogue.json'))
-            self.assertEqual(manifest['exerciseCount'], len(catalogue['exercises']))
-            self.assertEqual(len(catalogue['exercises']), 181)
+            from exercise_store import load_store
+            original = load_store(ROOT)
+            self.assertEqual(manifest['exerciseCount'], original.exercise_count)
+            self.assertEqual(original.exercise_count, 181)
             self.assertEqual(manifest['knownCorrectPoolCount'], 181)
+            self.assertEqual(manifest['correctCandidateCount'], 7731)
             self.assertEqual(json.loads(archive.read('backend/openai.example.json')), {'api_key': ''})
             self.assertNotIn('backend/openai.local.json', archive.namelist())
-            self.assertEqual(archive.read('backend/exercises/catalogue.json'),
-                             (ROOT / 'exercises/catalogue.json').read_bytes())
-            self.assertEqual(archive.read('backend/exercises/correct-pools.json'),
-                             (ROOT / 'exercises/correct-pools.json').read_bytes())
-            pools = json.loads(archive.read('backend/exercises/correct-pools.json'))['pools']
-            self.assertEqual({pool['exerciseId'] for pool in pools},
-                             {record['id'] for record in catalogue['exercises']})
+            self.assertNotIn('backend/exercises/catalogue.json', archive.namelist())
+            self.assertNotIn('backend/exercises/correct-pools.json', archive.namelist())
+            database = self.base / 'packaged.sqlite3'
+            database.write_bytes(archive.read('backend/exercises/exercises.sqlite3'))
+            packaged = load_store(ROOT, database_path=database)
+            self.assertEqual(packaged.exercises, original.exercises)
+            self.assertEqual(packaged.correct_pools, original.correct_pools)
             self.assertTrue(all(f'backend/vendor/acgn/lib/{name}' in archive.namelist() for name in JAR_FILES))
             self.assertGreater(result['files'], len(REQUIRED_CLASSES) + len(JAR_FILES))
         # Reproduce a clone with no corpus using the real package, not just a
@@ -464,9 +522,10 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(restoration['action'], 'restored-bundle')
         self.assertEqual(restoration['exercises'], 181)
         self.assertEqual(restoration['correctCandidates'], 7550)
-        for name in ('catalogue.json', 'correct-pools.json'):
-            self.assertEqual((restored / 'exercises' / name).read_bytes(),
-                             (ROOT / 'exercises' / name).read_bytes())
+        self.assertEqual(load_store(restored).exercises, original.exercises)
+        self.assertEqual(load_store(restored).correct_pools, original.correct_pools)
+        self.assertFalse((restored / 'exercises/catalogue.json').exists())
+        self.assertFalse((restored / 'exercises/correct-pools.json').exists())
 
     def test_packaged_backend_runs_from_unrelated_directory_and_keeps_private_paths_closed(self):
         build_package(ROOT, self.output)
@@ -518,14 +577,18 @@ class IisPackageTests(unittest.TestCase):
             status, feedback = request('/api/feedback', payload, 'https://alloy.example.invalid')
             self.assertEqual(status, 200)
             self.assertEqual(feedback['status'], 'ok', feedback)
-            pools = json.loads((extracted / 'backend/exercises/correct-pools.json').read_text(encoding='utf-8'))['pools']
-            expected_size = next(len(pool['candidates']) for pool in pools if pool['exerciseId'] == 'graphs-inv1')
+            from exercise_store import load_store
+            expected_size = len(load_store(extracted / 'backend').correct_pools['graphs-inv1'])
             self.assertGreater(expected_size, 1, 'The runtime smoke exercise must include correct student references.')
             self.assertEqual(feedback['comparison'], {'strategy': 'nearest-known-correct',
                              'poolSize': expected_size, 'evaluatedCandidates': expected_size, 'complete': True})
             self.assertEqual(sum(operation['cost'] for operation in feedback['operations']), feedback['distance'])
             self.assertEqual(request('/api/feedback', payload, 'https://other.example.invalid')[0], 403)
             for path in ('/server.py', '/luna.py', '/exercises/catalogue.json', '/exercises/correct-pools.json',
+                         '/exercises/exercises.sqlite3', '/exercises/exercises.sqlite3-wal',
+                         '/exercises/exercises.sqlite3-shm', '/exercises/exercises.sqlite3-journal',
+                         '/sql/schema.json', '/sql/compiled-queries.json', '/exercise_store.py',
+                         '/scripts/manage_exercises.py', '/vendor/sqlean/provenance.json',
                          '/scripts/import_correct_pools.py', '/vendor/acgn/lib/alloy.jar',
                          '/openai.local.json', '/openai.example.json',
                          '/manifest.json', '/deploy/iis/Common.ps1', '/.env', '/openai.key', '/index.html'):

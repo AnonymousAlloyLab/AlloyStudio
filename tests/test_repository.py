@@ -72,7 +72,10 @@ class RepositoryTests(unittest.TestCase):
             shutil.copytree(ROOT / 'vendor/acgn', source / 'vendor/acgn')
             shell_paths = sorted({path.relative_to(ROOT) for folder in ('scripts', 'engine')
                                   for path in (ROOT / folder).rglob('*.sh')})
-            tracked_inputs = [*shell_paths, Path('exercises/catalogue.json'), Path('exercises/correct-pools.json')]
+            tracked_inputs = [*shell_paths, Path('exercises/catalogue.json'),
+                              Path('exercises/correct-pools.json'), Path('exercises/exercises.sqlite3'),
+                              Path('sql/schema.json'), Path('sql/queries.json'),
+                              Path('sql/compiled-queries.json'), Path('vendor/sqlean/provenance.json')]
             for relative in tracked_inputs:
                 target = source / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -113,9 +116,14 @@ class RepositoryTests(unittest.TestCase):
             self.assertIsNotNone(git, 'The source-distribution witness requires Git.')
             subprocess.run([git, 'init', '--quiet', '--template=', directory],
                            env=environment, capture_output=True, check=True, timeout=10)
-            admitted = {'exercises/catalogue.json', 'exercises/correct-pools.json', '.env.example'}
+            admitted = {'exercises/catalogue.json', 'exercises/correct-pools.json',
+                        'exercises/exercises.sqlite3', 'sql/schema.json', 'sql/queries.json',
+                        'sql/compiled-queries.json', 'vendor/sqlean/provenance.json', '.env.example'}
             excluded = {'.env', '.env.local', 'openai.local.json', 'secrets/openai.key',
-                        'nested/token.key', 'nested/certificate.pem', 'closure/runs/result.json'}
+                        'nested/token.key', 'nested/certificate.pem', 'closure/runs/result.json',
+                        'exercises/exercises.sqlite3-wal', 'exercises/exercises.sqlite3-shm',
+                        'exercises/exercises.sqlite3-journal', 'exercises/.exercise-migration-fixture',
+                        'exercises/.exercise-restore-fixture/backup.sqlite3'}
             result = subprocess.run([git, 'check-ignore', '--no-index', '--stdin'],
                                     cwd=root, env=environment, input='\n'.join(sorted(admitted | excluded)) + '\n',
                                     text=True, capture_output=True, check=False, timeout=10)

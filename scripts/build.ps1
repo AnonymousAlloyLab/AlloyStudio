@@ -48,31 +48,19 @@ if ($dependencyExit -ne 0 -or $dependencies.status -ne 'PASS') {
     $missing = @($dependencies.errors | ForEach-Object { $_.path }) -join ', '
     throw "Bundled Java dependencies are missing or changed: $missing. Restore vendor\acgn\lib from the complete distribution before building."
 }
-# The default catalogue and pools are bundled in source control. Missing data
-# can also be recovered by importing an explicitly supplied custom ACGN corpus.
+# SQLite is authoritative. The helper validates it, or migrates legacy inputs
+# only when no database exists. Existing administrator additions are preserved.
 if (-not $EngineOnly) {
-    $privateExercises = Join-Path $projectRoot 'exercises'
-    $catalogue = Join-Path $privateExercises 'catalogue.json'
-    $correctPools = Join-Path $privateExercises 'correct-pools.json'
-    $hasCatalogue = Test-Path -LiteralPath $catalogue -PathType Leaf
-    $hasPools = Test-Path -LiteralPath $correctPools -PathType Leaf
-    if ($hasCatalogue -xor $hasPools) {
-        throw 'The catalogue and correct pools must both exist. Restore the matching bundled exercises/ files from Git. For a custom corpus, restore your matching pair or rebuild with -ACGNRoot after backing up and moving both files.'
+    $prepareData = Join-Path $projectRoot 'scripts\prepare_private_data.py'
+    if (-not (Test-Path -LiteralPath $prepareData -PathType Leaf)) {
+        throw 'Exercise preparation helper is missing. Restore the complete source checkout.'
     }
-    if (-not $hasCatalogue) {
-        if (-not $ACGNRoot) { $ACGNRoot = $env:ACGN_ROOT }
-        if (-not $ACGNRoot) { $ACGNRoot = Join-Path (Split-Path -Parent $projectRoot) 'ACGN' }
-        $ACGNRoot = [IO.Path]::GetFullPath($ACGNRoot)
-        # A complete clone includes the data. The helper also supports legacy
-        # or custom classified-data imports and --from-bundle recovery.
-        $prepareData = Join-Path $projectRoot 'scripts\prepare_private_data.py'
-        if (-not (Test-Path -LiteralPath $prepareData -PathType Leaf)) {
-            throw 'Bundled exercise data and scripts\prepare_private_data.py are missing. Restore the complete source checkout from Git.'
-        }
-        & $Python '-E' '-s' $prepareData '--root' $projectRoot '--source-root' $ACGNRoot
-        if ($LASTEXITCODE -ne 0) {
-            throw 'Exercise data preparation failed; use the diagnostic code above. Restore the bundled exercises/ files from Git. Optional custom data recovery: python scripts/prepare_private_data.py --from-bundle PATH_TO_ZIP'
-        }
+    $prepareArguments = @('-E', '-s', $prepareData, '--root', $projectRoot)
+    if (-not $ACGNRoot) { $ACGNRoot = $env:ACGN_ROOT }
+    if ($ACGNRoot) { $prepareArguments += @('--source-root', $ACGNRoot) }
+    & $Python @prepareArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Exercise database preparation failed; use the diagnostic above. Existing data and previous archives were preserved.'
     }
 }
 if ($EngineOnly) {
@@ -89,7 +77,7 @@ from pathlib import Path
 if sys.version_info < (3, 10):
     raise SystemExit('Python 3.10 or newer is required')
 root = Path(sys.argv[1])
-for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'scripts/build_engine.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
+for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py', 'scripts/manage_exercises.py', 'scripts/build_engine.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
     ast.parse((root / name).read_text(encoding='utf-8'), filename=name)
 '@
 & $Python '-c' $pythonCheck $projectRoot
@@ -97,6 +85,8 @@ if ($LASTEXITCODE -ne 0) { throw "Python validation failed with exit code $LASTE
 if ($nodeCommand) {
     & $Node '--check' (Join-Path $projectRoot 'web\app.js')
     if ($LASTEXITCODE -ne 0) { throw "JavaScript validation failed with exit code $LASTEXITCODE." }
+    & $Node '--check' (Join-Path $projectRoot 'web\admin\app.js')
+    if ($LASTEXITCODE -ne 0) { throw "Admin JavaScript validation failed with exit code $LASTEXITCODE." }
 } else {
     Write-Warning 'Node.js was not found; the optional JavaScript syntax check was skipped.'
 }

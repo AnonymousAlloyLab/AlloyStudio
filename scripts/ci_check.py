@@ -48,7 +48,7 @@ def execute(name, root=ROOT):
         'build': None,
         'runtime': [sys.executable, 'runtime_dependencies.py', '--java', 'java'],
         'python': [sys.executable, 'scripts/verify_closure.py', '--unittest-report', 'build/ci/unittest-private.json'],
-        'browser': ['node', 'tests/browser.mjs'],
+        'browser': ['node', 'tests/browser-suite.mjs'],
         'dashboard': ['node', 'tests/dashboard.mjs'],
     }
     try:

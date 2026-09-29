@@ -123,7 +123,9 @@ def setup(root, *, source_root=None, bundle=None, java_home=None, java=None):
                '-sourcepath', os.pathsep.join(str(root / name) for name in ('engine/src', 'vendor/acgn/src')),
                '-d', str(output), str(root / 'engine/src/live/LiveFeedback.java'),
                str(root / 'engine/src/live/EngineSelfTest.java'),
-               str(root / 'engine/src/live/BehaviorFeedback.java')]
+               str(root / 'engine/src/live/BehaviorFeedback.java'),
+               str(root / 'engine/src/live/ExerciseValidator.java'),
+               str(root / 'engine/src/live/UploadInspector.java')]
     print('Building the Java engine...', flush=True)
     try:
         completed = subprocess.run(command, cwd=root, env=clean_environment(),

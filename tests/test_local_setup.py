@@ -38,8 +38,10 @@ pred over { !inv1 and inv1c }
 run over
 run under
 '''
-RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'web')
-RUNTIME_FILES = ('server.py', 'luna.py', 'runtime_dependencies.py',
+RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
+RUNTIME_FILES = ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
+                 'scripts/manage_exercises.py', 'docs/private-exercises.md',
+                 'docs/sqlite-security-spec.md', 'examples/private-exercise.json',
                  'scripts/local.sh', 'scripts/local_portal.py', 'scripts/setup.sh',
                  'scripts/run.sh', 'scripts/prepare_private_data.py',
                  'scripts/import_exercises.py', 'scripts/import_correct_pools.py',
@@ -388,6 +390,9 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 self.assertEqual(status, 200)
                 self.assertEqual(json.loads(raw)['status'], 'disabled')
                 for path in ('/exercises/catalogue.json', '/exercises/correct-pools.json',
+                             '/exercises/exercises.sqlite3', '/exercises/exercises.sqlite3-wal',
+                             '/exercises/exercises.sqlite3-shm', '/sql/compiled-queries.json',
+                             '/exercise_sql.py', '/scripts/manage_exercises.py',
                              '/secrets/openai.key', '/openai.local.json', '/.env',
                              '/vendor/acgn/lib/alloy.jar', '/server.py',
                              '/%2e%2e/exercises/catalogue.json'):
@@ -419,7 +424,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             base = Path(directory)
             source = base / 'temporary source repository'
             copy_runtime(source)
-            for name in ('.gitignore', 'exercises/catalogue.json', 'exercises/correct-pools.json'):
+            for name in ('.gitignore', 'exercises/exercises.sqlite3'):
                 target = source / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(ROOT / name, target)
@@ -453,7 +458,9 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             checkout = base / 'fresh Git clone with spaces'
             git('clone', '--quiet', '--no-hardlinks', str(source), str(checkout), cwd=base)
             tracked = set(git('ls-files', cwd=checkout).splitlines())
-            self.assertTrue({'exercises/catalogue.json', 'exercises/correct-pools.json'} <= tracked)
+            self.assertIn('exercises/exercises.sqlite3', tracked)
+            self.assertNotIn('exercises/catalogue.json', tracked)
+            self.assertNotIn('exercises/correct-pools.json', tracked)
             self.assertTrue(set(credentials).isdisjoint(tracked))
             for name in credentials:
                 self.assertFalse((checkout / name).exists(), 'A local credential entered the clone.')
@@ -463,13 +470,12 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             self.assertFalse(Path(environment['ACGN_ROOT']).exists())
             self.assertFalse(list(base.rglob('*.zip')))
             self.assertIsNone(shutil.which('node', path=environment['PATH']))
-            original_pair = {name: (checkout / 'exercises' / name).read_bytes()
-                             for name in prepare_private_data.PRIVATE_NAMES}
-            catalogue, pools = (json.loads(original_pair[name])
-                                for name in prepare_private_data.PRIVATE_NAMES)
-            self.assertEqual((len(catalogue['exercises']), len(pools['pools']),
-                              sum(len(pool['candidates']) for pool in pools['pools'])),
-                             (181, 181, 7731))
+            original_database = (checkout / 'exercises/exercises.sqlite3').read_bytes()
+            from exercise_store import load_store
+            snapshot = load_store(checkout)
+            catalogue, pools = snapshot.catalogue, snapshot.pools_document
+            self.assertEqual((snapshot.exercise_count, len(snapshot.correct_pools),
+                              snapshot.candidate_count), (181, 181, 7731))
             unrelated = base / 'unrelated working directory'
             unrelated.mkdir()
             completed = subprocess.run([str(checkout / 'scripts/setup.sh')],
@@ -483,9 +489,9 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 checkout, unrelated, environment, budget, base / 'server output.log',
                 exercises=181, exercise_id=pool['exerciseId'],
                 body=pool['candidates'][0]['body'], pool_size=len(pool['candidates']))
-            self.assertEqual(original_pair,
-                             {name: (checkout / 'exercises' / name).read_bytes()
-                              for name in original_pair})
+            self.assertEqual(original_database, (checkout / 'exercises/exercises.sqlite3').read_bytes())
+            self.assertFalse((checkout / 'exercises/catalogue.json').exists())
+            self.assertFalse((checkout / 'exercises/correct-pools.json').exists())
 
     def write_private_bundle(self, base):
         # Adapted from test_private_data_import: preserve and validate actual

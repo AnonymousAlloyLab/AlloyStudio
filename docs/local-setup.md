@@ -3,7 +3,7 @@
 The portal runs locally with Python 3.10+, a JDK 17+ containing both `java` and
 `javac`, and Bash. Its Python server uses only the standard library. All seven
 Java dependency JARs, including AlloyASG, AlloyParser, Alloy, and JSON, are in
-`vendor/acgn/lib`. The exercise catalogue and correct pools are also included.
+`vendor/acgn/lib`. The private SQLite exercise database and query artifacts are also included.
 Node, npm, pip packages, IIS, an IIS ZIP, and a separate ACGN checkout are
 unnecessary for local setup and use.
 
@@ -61,12 +61,12 @@ from the bundled source using Java 17 bytecode, and run all 378 engine checks.
 A failure stops startup. Relative JDK paths are relative to the terminal's
 current directory; you may invoke the scripts from outside the checkout.
 
-The tracked `exercises/catalogue.json` and `exercises/correct-pools.json` contain
-181 exercises, 7,550 corpus candidates, and 181 oracle candidates. Their source
-witnesses support validation without the original corpus. The browser hides
-reference solutions, but anyone reading or cloning this public repository can
-inspect them in these files. See [exercise data and provenance](../exercises/README.md).
-API keys and local credential files remain private.
+The tracked `exercises/exercises.sqlite3` contains 181 exercises and 7,731
+references, including all 181 oracles. It is authoritative; legacy JSON files
+remain migration/regression witnesses. Add your own exercises with the
+[private administrator command](private-exercises.md). A database already on
+this deployment is validated and preserved; invalid data never falls back to the
+legacy files.
 
 ## Restore or import exercise data
 

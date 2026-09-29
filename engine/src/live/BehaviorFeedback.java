@@ -259,7 +259,7 @@ public final class BehaviorFeedback {
         return label.startsWith("this/") ? label.substring(5) : label;
     }
 
-    private static Func selected(CompModule module, String name) {
+    static Func selected(CompModule module, String name) {
         Func result = null;
         for (Func function : module.getAllFunc()) {
             if (function.label.equals(name) || function.label.equals("this/" + name)) {
@@ -271,7 +271,7 @@ public final class BehaviorFeedback {
         return result;
     }
 
-    private static int[] bodyRange(Func function, String source) {
+    static int[] bodyRange(Func function, String source) {
         int[] range = function.getBody().span().toStartEnd(source);
         if (range == null || range.length != 2 || range[0] < 0 || range[1] > source.length()
                 || source.charAt(range[0]) != '{' || source.charAt(range[1] - 1) != '}')
@@ -283,11 +283,11 @@ public final class BehaviorFeedback {
         return source.substring(0, range[0]) + "{}" + source.substring(range[1]);
     }
 
-    private static boolean hasUnsafeDependencies(CompModule module, Func target) {
+    static boolean hasUnsafeDependencies(CompModule module, Func target) {
         if (cyclic(target, new IdentityHashMap<>())) return true;
         for (CompModule reachable : module.getAllReachableModules()) {
             for (Func helper : reachable.getAllFunc()) {
-                if (helper != target && dependsOn(helper, target, identitySet())) return true;
+                if (helper != target && !isSyntheticCommand(helper) && dependsOn(helper, target, identitySet())) return true;
             }
             for (edu.mit.csail.sdg.alloy4.Pair<String, Expr> fact : reachable.getAllFacts()) {
                 if (dependsOn(fact.b, target, identitySet())) return true;
@@ -306,7 +306,13 @@ public final class BehaviorFeedback {
         return Collections.newSetFromMap(new IdentityHashMap<>());
     }
 
-    private static boolean cyclic(Func function, IdentityHashMap<Func, Integer> marks) {
+    static boolean isSyntheticCommand(Func function) {
+        String name = function.label.substring(function.label.lastIndexOf('/') + 1);
+        return function.isPrivate != null && function.isPrivate.equals(edu.mit.csail.sdg.alloy4.Pos.UNKNOWN)
+                && (name.equals("$$Default") || name.matches("(?:run|check)\\$[0-9]+"));
+    }
+
+    static boolean cyclic(Func function, IdentityHashMap<Func, Integer> marks) {
         Integer mark = marks.get(function);
         if (mark != null) return mark == 1;
         marks.put(function, 1);
@@ -331,7 +337,7 @@ public final class BehaviorFeedback {
         return false;
     }
 
-    private static List<Func> calls(Func function) {
+    static List<Func> calls(Func function) {
         List<Func> functions = calls(function.getBody());
         for (Decl decl : function.decls) collectCalls(decl.expr, functions);
         if (function.returnDecl != null) collectCalls(function.returnDecl, functions);
@@ -339,7 +345,7 @@ public final class BehaviorFeedback {
     }
 
     /** Traverse expression children, never declaration-owned Sig/Field objects. */
-    private static List<Func> calls(Expr expression) {
+    static List<Func> calls(Expr expression) {
         List<Func> functions = new ArrayList<>();
         collectCalls(expression, functions);
         return functions;
@@ -349,7 +355,7 @@ public final class BehaviorFeedback {
         walk(expression, node -> { if (node instanceof ExprCall call) functions.add(call.fun); });
     }
 
-    private static Set<String> stringConstants(Expr expression) {
+    static Set<String> stringConstants(Expr expression) {
         Set<String> strings = new java.util.HashSet<>();
         collectStrings(expression, strings, identitySet());
         return strings;

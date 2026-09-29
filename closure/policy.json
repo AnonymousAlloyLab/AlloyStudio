@@ -22,7 +22,9 @@
       "build/engine/classes/**/*.class",
       "web/**",
       "build/iis/alloy-studio-iis.zip",
-      "build/iis/alloy-studio-iis.zip.sha256"
+      "build/iis/alloy-studio-iis.zip.sha256",
+      "exercises/exercises.sqlite3",
+      "sql/compiled-queries.json"
     ],
     "compare": [
       "proof inventory",
@@ -122,6 +124,11 @@
       "surface": "Lean compilation, kernel proof checking, theorem validity, transitive axiom verification and Java-to-Lean correspondence; all 24 planned obligations remain OPEN and formal closure is NOT_ESTABLISHED",
       "classification": "OUT_OF_SCOPE",
       "evidence_kind": "OUT_OF_SCOPE"
+    },
+    {
+      "surface": "SQLeanParser standard axioms, static SQL schema checking, template slot compiler, Python sqlite3 and SQLite semantics; fixed DDL/PRAGMA/transaction controls are outside parser grammar",
+      "classification": "SPECIFIED_BUT_TRUSTED",
+      "evidence_kind": "TRUSTED"
     }
   ],
   "sequence_departures": [
@@ -141,7 +148,9 @@
     "TCB-OS",
     "TCB-HARDWARE",
     "TCB-TEST-INTERPRETATION",
-    "TCB-CORPUS-LABELS"
+    "TCB-CORPUS-LABELS",
+    "TCB-SQLITE",
+    "TCB-SQLEAN"
   ],
   "exit_code_mapping": {
     "0": "PASS",

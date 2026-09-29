@@ -142,7 +142,7 @@ class DashboardTests(unittest.TestCase):
                 patch.object(ci_check.subprocess, 'run', side_effect=browser), redirect_stdout(StringIO()):
             self.assertEqual(ci_check.execute('browser', self.root), 0)
         self.assertEqual(events, [('package', self.root, self.root / 'build/iis/alloy-studio-iis.zip'),
-                                  ('browser', ['node', 'tests/browser.mjs'])])
+                                  ('browser', ['node', 'tests/browser-suite.mjs'])])
 
     def test_browser_wrapper_does_not_use_old_fixture_after_packaging_failure(self):
         from contextlib import redirect_stdout

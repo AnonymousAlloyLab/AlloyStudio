@@ -365,3 +365,21 @@ declared generated outputs and private credentials.
 VERIFIED means only that all frozen finite obligations passed under the declared
 TCB. No proofs are compiled, no implementation objects are mapped to proofs, and
 no universal correctness, absence of bugs, or future deployment claim is made.
+
+## SQLite storage
+
+C-SQLITE registers the finite storage/import/query regression fixtures and actual
+pinned SQLeanParser regeneration in both offline builds. Set `SQLEAN_PARSER` to
+the executable bound by `vendor/sqlean/provenance.json` before invoking the closure
+runner. The runner records and checks that external executable hash. Ordinary
+portal deployment needs no parser binary. The specification/review preceded
+persistence implementation; [private administration](../docs/private-exercises.md)
+describes the bounded Alloy gate and explicit trust boundary. Database, generated
+query artifacts and all tests are frozen inputs. Existing Lean reports do not
+certify these new persistence or navigation implementations.
+
+## Exercise navigation
+
+C-NAVIGATION requires every registered scenario in `tests/navigation.mjs` to
+pass in both clean offline builds. CI also runs these scenarios through
+`tests/browser-suite.mjs` alongside the original editor workflows.

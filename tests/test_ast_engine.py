@@ -259,10 +259,11 @@ class AstEngineTests(unittest.TestCase):
         self.assertNotIn('PRIVATE_LATE_REFERENCE', json.dumps(failed))
 
     def test_largest_real_correct_pool_is_complete_including_oracle(self):
-        from server import load_correct_pools, model
+        from server import model
+        from exercise_store import load_store
         encoded = (ROOT / 'exercises/catalogue.json').read_bytes()
         catalogue = json.loads(encoded)
-        pools = load_correct_pools(ROOT, encoded, catalogue)
+        pools = load_store(ROOT).correct_pools
         exercise_id = max(pools, key=lambda key: len(pools[key]))
         record = next(record for record in catalogue['exercises'] if record['id'] == exercise_id)
         self.assertEqual(pools[exercise_id][-1], record['oracleBody'])

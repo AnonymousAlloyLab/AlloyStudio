@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import sqlite3
 import stat
 import struct
 import sys
@@ -26,14 +27,20 @@ if str(ROOT) not in sys.path:
 from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 
 WEB_FILES = ('index.html', 'app.js', 'styles.css', 'dashboard/index.html',
-             'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json')
+             'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+             'admin/index.html', 'admin/app.js', 'admin/styles.css')
 DEPLOY_FILES = (
     'web.config', 'Common.ps1', 'Manage-AlloyStudio.ps1', 'Set-OpenAIKey.ps1',
     'Start-AlloyStudio.ps1', 'run_backend.py', 'Test-IisDeployment.ps1',
     'Test-ApiConnection.ps1', 'test_api_connection.py', 'README.md',
 )
 RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_descriptions.json',
-                   'prepare_private_data.py')
+                   'prepare_private_data.py', 'manage_exercises.py', 'configure_admin.py')
+ADMIN_MODULES = ('admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py')
+STORE_FILES = ('exercise_store.py', 'exercise_sql.py', 'sql/schema.json',
+               'sql/queries.json', 'sql/compiled-queries.json', 'vendor/sqlean/provenance.json')
+ADMIN_FILES = ('docs/private-exercises.md', 'docs/sqlite-security-spec.md',
+               'docs/admin-security-spec.md', 'docs/admin-setup.md', 'examples/private-exercise.json')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
@@ -46,6 +53,14 @@ def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def checked_deployment_path(path: Path) -> Path:
+    from scripts.prepare_private_data import checked_path
+    try:
+        return checked_path(path)
+    except ValueError as error:
+        raise PackageError('Linked deployment input or output paths are not allowed.') from error
+
+
 def read_source(root: Path, relative: str) -> bytes:
     """Read a regular source file, refusing links and path escapes."""
     parts = PurePosixPath(relative).parts
@@ -54,11 +69,11 @@ def read_source(root: Path, relative: str) -> bytes:
     path = root
     for part in parts:
         path = path / part
-        if path.is_symlink():
+        if path.is_symlink() or (path.exists() and getattr(path.lstat(), 'st_file_attributes', 0) & 0x400):
             raise PackageError(f'Symlink deployment input is not allowed: {relative}')
     if not path.is_file():
-        if relative in ('exercises/catalogue.json', 'exercises/correct-pools.json'):
-            raise PackageError('Bundled exercise data are missing. Restore exercises/catalogue.json and exercises/correct-pools.json from Git. For a custom corpus, run scripts/prepare_private_data.py --source-root <ACGN checkout containing classified-data>, or restore both matching files from a trusted bundle.')
+        if relative == 'exercises/exercises.sqlite3':
+            raise PackageError('Bundled exercise database is missing. Restore exercises/exercises.sqlite3 from Git, or explicitly prepare a legacy corpus with scripts/prepare_private_data.py.')
         raise PackageError(f'Missing deployment input: {relative}; build the engine and import the catalogue first.')
     data = path.read_bytes()
     if TOKEN_PATTERN.search(data):
@@ -107,16 +122,23 @@ def version_public_assets(entries: dict[str, bytes], directory: str = '') -> dic
 
 
 def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, bytes]:
-    root = root.resolve(strict=True)
+    root = checked_deployment_path(root).resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
     public_asset_versions = version_public_assets(entries)
     public_asset_versions.update(version_public_assets(entries, 'dashboard/'))
+    public_asset_versions.update(version_public_assets(entries, 'admin/'))
     for name in DEPLOY_FILES:
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
     entries['LICENSE'] = read_source(root, 'LICENSE')
     for name in ('server.py', 'luna.py', 'runtime_dependencies.py'):
         entries[f'backend/{name}'] = read_source(root, name)
+    for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):
+        entries[f'backend/{name}'] = read_source(root, name)
+    from exercise_sql import ARTIFACT_HASHES
+    for name, expected in ARTIFACT_HASHES.items():
+        if digest(entries['backend/' + name]) != expected:
+            raise PackageError('Exercise query artifacts differ from the registered parser output.')
     example_bytes = read_source(root, 'openai.example.json')
     if parse_json(example_bytes, 'OpenAI configuration template') != {'api_key': ''}:
         raise PackageError('The OpenAI configuration template must contain only an empty api_key.')
@@ -124,31 +146,18 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
     for name in RUNTIME_HELPERS:
         entries[f'backend/scripts/{name}'] = read_source(root, f'scripts/{name}')
 
-    catalogue_bytes = read_source(root, 'exercises/catalogue.json')
-    catalogue = parse_json(catalogue_bytes, 'catalogue')
-    exercises = catalogue.get('exercises')
-    if catalogue.get('schemaVersion') != 1 or not isinstance(exercises, list) or not exercises:
-        raise PackageError('Catalogue must contain schemaVersion 1 and a nonempty exercise list.')
-    ids = set()
-    required = ('id', 'title', 'group', 'predicate', 'description',
-                'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter', 'oracleBody')
-    for record in exercises:
-        if (not isinstance(record, dict)
-                or any(not isinstance(record.get(key), str) for key in required)
-                or not isinstance(record.get('source'), dict)
-                or not record['id'] or record['id'] in ids):
-            raise PackageError('Catalogue has an incomplete exercise or duplicate exercise identifier.')
-        ids.add(record['id'])
-    entries['backend/exercises/catalogue.json'] = catalogue_bytes
-
-    pools_bytes = read_source(root, 'exercises/correct-pools.json')
-    pools_document = parse_json(pools_bytes, 'correct-solution pools')
-    from scripts.import_correct_pools import verify_document
+    from exercise_store import backup_store, ensure_store
     try:
-        verify_document(catalogue, pools_document)
-    except (ValueError, KeyError, TypeError, AttributeError, RecursionError) as exc:
-        raise PackageError('Correct-solution pool validation failed; regenerate the private pools.') from exc
-    entries['backend/exercises/correct-pools.json'] = pools_bytes
+        ensure_store(root)
+        with tempfile.TemporaryDirectory(prefix='alloy-package-snapshot-') as directory:
+            snapshot_path = Path(directory) / 'exercises.sqlite3'
+            store = backup_store(root, snapshot_path)
+            database_bytes = snapshot_path.read_bytes()
+        if TOKEN_PATTERN.search(database_bytes):
+            raise PackageError('Credential-shaped value in deployment database.')
+    except (OSError, ValueError, sqlite3.Error, KeyError, TypeError, AttributeError, RecursionError) as exc:
+        raise PackageError('Exercise database validation or consistent backup failed; existing data and previous archives were preserved.') from exc
+    entries['backend/exercises/exercises.sqlite3'] = database_bytes
 
     snapshot_bytes = read_source(root, 'vendor/acgn/snapshot.json')
     snapshot = parse_json(snapshot_bytes, 'ACGN snapshot')
@@ -202,8 +211,10 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
         'publicAssetVersions': public_asset_versions,
         'requirements': {'python': '3.10+', 'java': '17+', 'iis': '10.0'},
         'acgnCommit': snapshot['commit'],
-        'exerciseCount': len(exercises),
-        'knownCorrectPoolCount': len(pools_document['pools']),
+        'exerciseCount': store.exercise_count,
+        'knownCorrectPoolCount': len(store.correct_pools),
+        'correctCandidateCount': store.candidate_count,
+        'exerciseStorage': 'sqlite',
         'files': [{'path': name, 'bytes': len(data), 'sha256': digest(data)}
                   for name, data in sorted(entries.items())],
     }
@@ -238,8 +249,9 @@ def default_archive_path(root: Path) -> Path:
 
 def build_package(root: Path, output: Path, *, classes_root: Path | None = None) -> dict:
     """Package a prepared class tree atomically; the CLI compiles it first."""
-    root = root.resolve(strict=True)
-    output = output.absolute()
+    root = checked_deployment_path(root).resolve(strict=True)
+    output = checked_deployment_path(output)
+    checked_deployment_path(output.with_suffix('.zip.sha256'))
     if output.suffix.lower() != '.zip':
         raise PackageError('Deployment archive output must end in .zip.')
     for public in (root / 'web', root / 'wwwroot'):

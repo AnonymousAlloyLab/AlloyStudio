@@ -397,6 +397,12 @@ or more oracles, use the [private import interface](docs/private-exercises.md);
 it applies real Alloy bounded-equivalence checks and rejects malformed solutions
 before committing any rows.
 
+SQL query templates are parsed and type-checked with
+[SQLeanParser](https://github.com/University-of-Wild-Chicken/SQLeanParser).
+The repository includes pinned parser sources and generated query artifacts;
+deployments need no Lean installation. See the
+[integration details](docs/private-exercises.md#sqleanparser-integration).
+
 A valid existing database is left unchanged. An invalid database stops preparation
 without falling back to JSON. Preserve a backup before restoring from a trusted
 private backup or deployment ZIP. With no existing database, the preparation

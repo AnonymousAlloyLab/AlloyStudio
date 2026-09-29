@@ -1,5 +1,9 @@
 # Registered exercise queries
 
+[SQLeanParser](https://github.com/University-of-Wild-Chicken/SQLeanParser)
+provides SQL parsing and static schema checks.
+The pinned source snapshot and its provenance are in `vendor/sqlean`.
+
 `queries.json` is the finite source registry; `schema.json` is SQLeanParser's
 external typing schema. `compiled-queries.json` contains the actual parser's
 canonical SQL, public Lean AST, schema-check result, round-trip result and the

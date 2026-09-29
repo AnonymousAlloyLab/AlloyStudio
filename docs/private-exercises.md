@@ -82,7 +82,11 @@ administrator additions. Keep database, journal, WAL and SHM files private.
 
 ## SQLeanParser integration
 
-Every data query comes from `sql/queries.json`. The actual pinned SQLeanParser
+Alloy Studio uses
+[SQLeanParser](https://github.com/University-of-Wild-Chicken/SQLeanParser)
+for SQL parsing and static schema checks. Its vendored commit is recorded in
+`vendor/sqlean/provenance.json`.
+Every data query comes from `sql/queries.json`. The actual pinned parser
 parses, type-checks and canonicalizes these templates; its AST and round-trip
 results are in `sql/compiled-queries.json`. A checked transformation replaces
 unique literal slots with SQLite bind parameters. Runtime accepts registered

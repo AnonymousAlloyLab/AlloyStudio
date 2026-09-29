@@ -70,6 +70,34 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def syntax(node):
+    """Stable AST bytes across Python versions; preserve every semantic field.
+
+    Python 3.12 adds an empty type_params field to ordinary definitions. Only
+    that empty field is normalized away; generic definitions are unsupported.
+    Do not use ast.dump's version-dependent display format as an identity.
+    """
+    def encode(value):
+        if isinstance(value, ast.AST):
+            fields = {}
+            for name in value._fields:
+                item = getattr(value, name, None)
+                if name == 'type_params':
+                    if item != []:
+                        raise BridgeError('Unsupported generic definition')
+                    continue
+                fields[name] = encode(item)
+            return {'node': type(value).__name__, 'fields': fields}
+        if isinstance(value, list):
+            return [encode(item) for item in value]
+        if value is None or type(value) in (str, int, bool):
+            return value
+        if type(value) is bytes:
+            return {'bytes': value.hex()}
+        raise BridgeError('Unsupported AST field value')
+    return canonical(encode(node))
+
+
 def read(root, relative):
     path = Path(root) / relative
     if path.is_symlink() or not path.is_file():
@@ -110,16 +138,16 @@ def body(node):
 def check_function(tree, name, expected):
     actual = function(tree, name)
     target = function(ast.parse(expected), name)
-    if (ast.dump(ast.Module(body=body(actual), type_ignores=[])) !=
-            ast.dump(ast.Module(body=body(target), type_ignores=[]))):
+    if (syntax(ast.Module(body=body(actual), type_ignores=[])) !=
+            syntax(ast.Module(body=body(target), type_ignores=[]))):
         raise BridgeError('Unsupported adapter semantics: ' + name)
     # Annotations are not runtime inputs. Argument names/defaults/decorators are.
     if ([(a.arg) for a in actual.args.args] != [a.arg for a in target.args.args]
             or actual.args.posonlyargs or actual.args.kwonlyargs or actual.args.vararg
             or actual.args.kwarg or actual.decorator_list
-            or [ast.dump(x) for x in actual.args.defaults] != [ast.dump(x) for x in target.args.defaults]):
+            or [syntax(x) for x in actual.args.defaults] != [syntax(x) for x in target.args.defaults]):
         raise BridgeError('Unsupported adapter signature: ' + name)
-    return sha(ast.dump(actual).encode())
+    return sha(syntax(actual))
 
 
 def extract(root=ROOT):
@@ -178,7 +206,7 @@ def extract(root=ROOT):
     if set(policy['trustedIntegrityFunctions']) != {'_registry','_read_artifact','_strict_json'}:
         raise BridgeError('Incomplete integrity routine policy')
     for name, expected in policy['trustedIntegrityFunctions'].items():
-        if sha(ast.dump(function(sql,name)).encode()) != expected:
+        if sha(syntax(function(sql,name))) != expected:
             raise BridgeError('Unregistered integrity routine semantics: ' + name)
     fields, controls, ddl = literals(sql, 'FIELDS'), literals(sql, 'CONTROLS'), literals(sql, 'DDL')
     hashes = literals(sql, 'ARTIFACT_HASHES')
@@ -288,8 +316,8 @@ def extract(root=ROOT):
                     while id(ancestor) in parents and not isinstance(ancestor,ast.For): ancestor = parents[id(ancestor)]
                     if not (isinstance(ancestor,ast.For) and ast.unparse(ancestor.target) == 'statement'
                             and ast.unparse(ancestor.iter) == 'DDL' and
-                            ast.dump(ast.Module(body=ancestor.body,type_ignores=[])) ==
-                            ast.dump(ast.parse('connection.execute(statement)'))):
+                            syntax(ast.Module(body=ancestor.body,type_ignores=[])) ==
+                            syntax(ast.parse('connection.execute(statement)'))):
                         raise BridgeError('Unregistered schema execution loop')
                     kind = 'fixed-schema'
             elif relative == 'exercise_store.py' and receiver == 'connection' and node.attr == 'execute':

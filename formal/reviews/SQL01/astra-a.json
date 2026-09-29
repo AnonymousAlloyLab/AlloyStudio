@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "reviewerModel": "gpt-6-astra",
   "tier": 3,
-  "blockManifestSha256": "eff6e64976ce501a133c6c7b15d5848e9cebb5c841da664312f26798270d0998",
+  "blockManifestSha256": "45da86ef21a72ae5a016308bbcef3272607ae64d71225ef4cecb4d5c7e1f1230",
   "priorReviews": {
-    "formal/reviews/SQL01/luna-a.json": "745c8296da4d35bfc71110cdd18860cd25c852b54449da1c1190f9f86cdf4fb5",
-    "formal/reviews/SQL01/luna-b.json": "fbbce8939856cb2d742c7d13699d1802a87924911eb565c535e42d1e4a1d2803",
-    "formal/reviews/SQL01/sol-a.json": "dd2bec74e53b243d961eb3fc103941a1c15123d44565920e173bc6d85fd7e95b",
-    "formal/reviews/SQL01/sol-b.json": "dd2bec74e53b243d961eb3fc103941a1c15123d44565920e173bc6d85fd7e95b"
+    "formal/reviews/SQL01/luna-a.json": "2237a24704c2bedcdf498cc6db0cbf6f712770063c9a3d2d128e73ed97617d57",
+    "formal/reviews/SQL01/luna-b.json": "2237a24704c2bedcdf498cc6db0cbf6f712770063c9a3d2d128e73ed97617d57",
+    "formal/reviews/SQL01/sol-a.json": "824a3e6b5cce5e462edb0b13ad45b060c5b0b78168068a32aff86605c5c517d9",
+    "formal/reviews/SQL01/sol-b.json": "824a3e6b5cce5e462edb0b13ad45b060c5b0b78168068a32aff86605c5c517d9"
   },
   "verdict": "no_constructed_breach",
   "findings": []

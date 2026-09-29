@@ -4,6 +4,8 @@ The mutated application source is inspected, never imported or executed. The
 browser witness executes the current production api() function in Node's VM.
 These checks test the trusted extractor; they do not replace Lean's kernel.
 """
+import ast
+import copy
 import json
 from pathlib import Path
 import shutil
@@ -16,6 +18,29 @@ from test_sql_injection import PAYLOADS
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class StableAstTests(unittest.TestCase):
+    def test_empty_python312_type_parameters_preserve_identity(self):
+        original = ast.parse('def f(x):\n    return x\n').body[0]
+        older = copy.deepcopy(original)
+        older._fields = tuple(name for name in older._fields if name != 'type_params')
+        newer = copy.deepcopy(older)
+        newer._fields += ('type_params',)
+        newer.type_params = []
+        self.assertEqual(bridge.syntax(older), bridge.syntax(newer))
+
+    def test_nonempty_type_parameters_are_not_erased(self):
+        node = ast.parse('def f(x):\n    return x\n').body[0]
+        node._fields = tuple(name for name in node._fields if name != 'type_params') + ('type_params',)
+        node.type_params = [ast.Name(id='T', ctx=ast.Load())]
+        with self.assertRaises(bridge.BridgeError):
+            bridge.syntax(node)
+
+    def test_semantic_fields_and_constant_types_remain_distinct(self):
+        sources = ('return x', 'return y', 'return None', "return 'None'", 'return 0', 'return False', "return b'0'")
+        identities = {bridge.syntax(ast.parse(source)) for source in sources}
+        self.assertEqual(len(identities), len(sources))
 
 
 class SqlSeparationMutationTests(unittest.TestCase):

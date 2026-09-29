@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewerModel": "gpt-6-luna",
   "tier": 1,
-  "blockManifestSha256": "eff6e64976ce501a133c6c7b15d5848e9cebb5c841da664312f26798270d0998",
+  "blockManifestSha256": "45da86ef21a72ae5a016308bbcef3272607ae64d71225ef4cecb4d5c7e1f1230",
   "priorReviews": {},
   "verdict": "no_constructed_breach",
   "findings": []

@@ -1,0 +1,293 @@
+"""Finite SQL-injection witnesses at the binder and authenticated upload boundary.
+
+These tests exercise actual SQLite and Alloy. The authorizer only observes
+operations; it never blocks an injected statement on the application's behalf.
+They establish regression evidence for the listed payloads, not universal safety
+of SQLite, the operating system, or arbitrary future application changes.
+"""
+from copy import deepcopy
+from http.client import HTTPConnection
+import json
+from pathlib import Path
+import shutil
+import sqlite3
+import tempfile
+import threading
+import time
+import unittest
+from unittest.mock import patch
+from urllib.parse import quote
+
+import admin_auth
+import exercise_sql as sql
+import exercise_store as store
+from runtime_dependencies import runtime_classpath
+import server
+from test_sql_queries import exercise_values
+from test_sqlite_store import ROOT, fixture
+
+
+PAYLOADS = (
+    "O'Brien's predicate",
+    "' OR 1=1 --",
+    "x'); DELETE FROM exercises; --",
+    "x'); DROP TABLE solutions; --",
+    "' UNION SELECT body FROM solutions --",
+    "'; UPDATE metadata SET value='injected'; --",
+    "'; ATTACH DATABASE ':memory:' AS injected; --",
+    "'; SELECT load_extension('injected'); --",
+    "'/**/OR/**/1=1; --\nSELECT 'second statement'",
+    'λ🙂 ”＇"; PRAGMA writable_schema=ON; --',
+)
+
+
+def observe(actions):
+    def authorize(*operation):
+        actions.append(operation)
+        return sqlite3.SQLITE_OK
+    return authorize
+
+
+class SqlInjectionBindingTests(unittest.TestCase):
+    def execute_slot(self, table, field, value):
+        """Use a fresh connection so SQLite must prepare each statement."""
+        with sqlite3.connect(':memory:') as connection:
+            sql.create_schema(connection)
+            values = {
+                'metadata': ('fixture-key', 'fixture-value'),
+                'exercises': exercise_values(),
+                'solutions': ('example', 0, 'oracle', 'some Node', '', 'token', '{}'),
+                'auxiliary': ('fixture-kind', 0, '{}', ''),
+            }[table]
+            values = dict(zip(sql.FIELDS[table], values))
+            values[field] = value
+            if table == 'solutions':
+                sql.execute(connection, 'insert_exercises', exercise_values(id=values['exercise_id']))
+                connection.commit()
+            actions = []
+            connection.set_authorizer(observe(actions))
+            sql.execute(connection, 'insert_' + table, tuple(values.values()))
+            connection.commit()
+            connection.set_authorizer(lambda *_: sqlite3.SQLITE_OK)
+            self.assertEqual(sql.execute(connection, 'select_' + table).fetchall(), [tuple(values.values())])
+            sql.validate_schema(connection)
+            self.assertEqual(connection.execute('PRAGMA database_list').fetchall(), [(0, 'main', '')])
+            return actions
+
+    def test_all_text_bind_slots_keep_identical_sqlite_instruction_structure(self):
+        # The only SQL-constrained text slot, origin, is exercised separately.
+        slots = [(table, parameter['name']) for table in sql.FIELDS
+                 for parameter in sql._registry()['insert_' + table]['parameters']
+                 if parameter['type'] == 'text' and parameter['name'] != 'origin']
+        self.assertEqual(len(slots), 24)
+        for table, field in slots:
+            baseline = self.execute_slot(table, field, 'benign fixture')
+            for payload in PAYLOADS:
+                with self.subTest(table=table, field=field, payload=payload):
+                    self.assertEqual(self.execute_slot(table, field, payload), baseline)
+
+    def test_constrained_origin_rejects_payload_without_executing_its_sql(self):
+        for payload in PAYLOADS:
+            with self.subTest(payload=payload), sqlite3.connect(':memory:') as connection:
+                sql.create_schema(connection)
+                actions = []
+                connection.set_authorizer(observe(actions))
+                with self.assertRaises(sqlite3.IntegrityError):
+                    sql.execute(connection, 'insert_exercises', exercise_values(origin=payload))
+                connection.rollback()
+                connection.set_authorizer(lambda *_: sqlite3.SQLITE_OK)
+                self.assertEqual(sql.execute(connection, 'select_exercises').fetchall(), [])
+                sql.validate_schema(connection)
+                self.assertTrue(actions)
+                self.assertTrue(all(action[0] in (sqlite3.SQLITE_INSERT, sqlite3.SQLITE_TRANSACTION)
+                                    for action in actions), actions)
+
+    def test_valid_json_replacement_of_compiled_sql_fails_before_sqlite(self):
+        with tempfile.TemporaryDirectory() as directory, sqlite3.connect(':memory:') as connection:
+            sql.create_schema(connection)
+            root = Path(directory).resolve()
+            for relative in sql.ARTIFACT_HASHES:
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / relative, destination)
+            path = root / 'sql/compiled-queries.json'
+            original = path.read_bytes()
+            with patch.object(sql, 'ROOT', root):
+                self.assertEqual(sql.execute(connection, 'select_metadata').fetchall(), [])
+                actions = []
+                connection.set_authorizer(observe(actions))
+                for malicious in (
+                        'DELETE FROM exercises;',
+                        'SELECT body FROM solutions UNION SELECT value FROM metadata;',
+                        "ATTACH DATABASE ':memory:' AS injected;",
+                        'SELECT 1; DROP TABLE exercises;'):
+                    artifact = json.loads(original)
+                    entry = next(row for row in artifact['queries'] if row['id'] == 'select_metadata')
+                    entry['sql'] = malicious
+                    path.write_text(json.dumps(artifact), encoding='utf-8')
+                    with self.subTest(statement=malicious), self.assertRaises(sql.QueryError):
+                        sql.execute(connection, 'select_metadata')
+                    self.assertEqual(actions, [])
+                path.write_bytes(original)
+                connection.set_authorizer(lambda *_: sqlite3.SQLITE_OK)
+                self.assertEqual(sql.execute(connection, 'select_metadata').fetchall(), [])
+                sql.validate_schema(connection)
+
+
+class SqlInjectionAdminHTTPTests(unittest.TestCase):
+    PASSWORD = 'synthetic SQL injection regression password'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.configuration = admin_auth.configuration('http://127.0.0.1:8080', '/', cls.PASSWORD)
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        fixture(self.root)
+        self.database = self.root / store.DATABASE_RELATIVE
+        with patch.dict('os.environ', {'OPENAI_DISABLED': '1'}):
+            self.app = server.Portal(('127.0.0.1', 0), root=self.root)
+        self.origin = 'http://127.0.0.1:' + str(self.app.server_port)
+        configuration = deepcopy(self.configuration)
+        configuration['origin'] = self.origin
+        config_path = self.root / admin_auth.CONFIG_NAME
+        config_path.write_text(json.dumps(configuration), encoding='utf-8')
+        config_path.chmod(0o600)
+        self.thread = threading.Thread(target=lambda: self.app.serve_forever(poll_interval=0.01), daemon=True)
+        self.thread.start()
+        self.addCleanup(self.stop)
+        self.cookies, self.csrf = {}, None
+
+    def stop(self):
+        self.app.shutdown()
+        self.app.server_close()
+        self.thread.join(2)
+
+    def request(self, method, route, body=None):
+        headers = {'Origin': self.origin, 'Content-Type': 'application/json', 'Sec-Fetch-Site': 'same-origin'}
+        if self.cookies:
+            headers['Cookie'] = '; '.join(name + '=' + value for name, value in self.cookies.items())
+        if self.csrf:
+            headers['X-CSRF-Token'] = self.csrf
+        connection = HTTPConnection('127.0.0.1', self.app.server_port, timeout=10)
+        try:
+            connection.request(method, route, body=None if body is None else json.dumps(body), headers=headers)
+            response = connection.getresponse()
+            for header in response.headers.get_all('Set-Cookie', []):
+                name, value = header.split(';', 1)[0].split('=', 1)
+                if value:
+                    self.cookies[name] = value
+                else:
+                    self.cookies.pop(name, None)
+            return response.status, json.loads(response.read())
+        finally:
+            connection.close()
+
+    def login(self):
+        status, session = self.request('GET', '/api/admin/session')
+        self.assertEqual(status, 200)
+        self.csrf = session['csrfToken']
+        # Use the real password verifier, including an SQL-shaped failed login.
+        self.assertEqual(self.request('POST', '/api/admin/login', {'password': "payload' OR 1=1 --"})[0], 401)
+        status, session = self.request('POST', '/api/admin/login', {'password': self.PASSWORD})
+        self.assertEqual(status, 200, session)
+        self.assertTrue(session['authenticated'])
+        self.csrf = session['csrfToken']
+
+    def test_authenticated_upload_payloads_survive_publish_reload_and_backup_as_data(self):
+        self.login()
+        before = store.load_store(self.root)
+        with sqlite3.connect(self.database) as connection:
+            schema_before = sql.execute(connection, 'select_schema_sql').fetchall()
+        source = ("module sql_regression\n"
+                  "// '; ATTACH DATABASE ':memory:' AS injected; --\n"
+                  "sig Node {}\n"
+                  "pred inv1C0 { some Node // x'); DROP TABLE solutions; --\n}\n"
+                  "pred inv1C1 { not no Node // ' UNION SELECT body FROM solutions --\n}\n")
+        filename = "x'); DELETE FROM exercises; --.als"
+        title = "O'Brien'); DROP TABLE exercises; --"
+        question = "' UNION SELECT body FROM solutions --\nExplain the property; keep λ🙂 unchanged."
+        actions = []
+        connect = store.connect
+        def tracked_connect(*args, **kwargs):
+            connection = connect(*args, **kwargs)
+            connection.set_authorizer(observe(actions))
+            return connection
+        with patch('admin_upload.runtime_classpath', return_value=runtime_classpath(ROOT)), \
+                patch('exercise_store.runtime_classpath', return_value=runtime_classpath(ROOT)), \
+                patch.object(store, 'connect', side_effect=tracked_connect):
+            status, draft = self.request('POST', '/api/admin/prepare',
+                                         {'source': source, 'filename': filename, 'modelId': 'sql-regression'})
+            self.assertEqual(status, 202)
+            deadline = time.monotonic() + 30
+            while draft['state'] == 'preparing' and time.monotonic() < deadline:
+                threading.Event().wait(0.02)
+                status, draft = self.request('GET', '/api/admin/drafts/' + draft['id'])
+                self.assertEqual(status, 200)
+            self.assertEqual(draft['state'], 'ready', draft)
+            self.assertEqual(draft['groups'][0]['oracleCount'], 2)
+            self.assertEqual(draft['filename'], filename)
+            status, result = self.request('POST', '/api/admin/commit', {
+                'id': draft['id'], 'revision': draft['revision'],
+                'exercises': [{'predicate': 'inv1', 'title': title, 'question': question}],
+            })
+            self.assertEqual(status, 200, result)
+            snapshot = store.load_store(self.root)
+            backup = self.root / 'snapshot.sqlite3'
+            store.backup_store(self.root, backup)
+            restored = store.restore_store(self.root / 'restored', backup)
+        identifier = 'sql-regression-inv1'
+        self.assertEqual(result['exerciseIds'], [identifier])
+        self.assertEqual(snapshot.exercise_count, before.exercise_count + 1)
+        for existing in before.exercises:
+            self.assertEqual(snapshot.exercises[existing], before.exercises[existing])
+            self.assertEqual(snapshot.correct_pools[existing], before.correct_pools[existing])
+        for value in (snapshot, restored):
+            self.assertEqual(value.exercises[identifier]['title'], title)
+            self.assertEqual(value.exercises[identifier]['description'], question)
+            self.assertEqual(value.admin_uploads[0]['originalSource'], source)
+            self.assertEqual(value.admin_uploads[0]['filename'], filename)
+            self.assertEqual(len(value.correct_pools[identifier]), 2)
+            self.assertIn("DROP TABLE solutions", value.correct_pools[identifier][0])
+            self.assertIn("UNION SELECT body", value.correct_pools[identifier][1])
+        self.assertEqual(restored.catalogue, snapshot.catalogue)
+        self.assertEqual(restored.pools_document, snapshot.pools_document)
+        status, public = self.request('GET', '/api/exercises/' + identifier)
+        self.assertEqual(status, 200)
+        self.assertEqual(public['title'], title)
+        self.assertEqual(public['description'], question)
+        self.assertNotIn('DROP TABLE solutions', json.dumps(public))
+        self.assertNotIn('UNION SELECT body FROM solutions --\n}', json.dumps(public))
+        with sqlite3.connect(self.database) as connection:
+            self.assertEqual(sql.execute(connection, 'select_schema_sql').fetchall(), schema_before)
+            sql.validate_schema(connection)
+        forbidden = {sqlite3.SQLITE_DELETE, sqlite3.SQLITE_UPDATE, sqlite3.SQLITE_DROP_TABLE,
+                     sqlite3.SQLITE_ALTER_TABLE, sqlite3.SQLITE_ATTACH, sqlite3.SQLITE_DETACH}
+        self.assertTrue(actions)
+        self.assertFalse([action for action in actions if action[0] in forbidden])
+        self.assertFalse([action for action in actions if action[0] == sqlite3.SQLITE_FUNCTION
+                          and 'load_extension' in action])
+        self.assertEqual(self.request('POST', '/api/admin/logout', {})[0], 200)
+
+    def test_request_identifiers_are_not_sql_commands_or_query_selectors(self):
+        self.login()
+        before = self.database.read_bytes()
+        with patch.object(store, 'connect', side_effect=AssertionError('Rejected route must not query SQLite')):
+            for payload in PAYLOADS:
+                with self.subTest(payload=payload):
+                    status, _ = self.request('GET', '/api/exercises/' + quote(payload, safe=''))
+                    self.assertEqual(status, 404)
+                    status, _ = self.request('POST', '/api/admin/commit',
+                                             {'id': payload, 'revision': 0, 'exercises': []})
+                    self.assertEqual(status, 404)
+            for query in ('select_solutions', 'DROP TABLE exercises;', "' OR 1=1 --"):
+                status, _ = self.request('POST', '/api/admin/commit',
+                                         {'id': 'missing', 'revision': 0, 'exercises': [], 'query': query})
+                self.assertEqual(status, 400)
+        self.assertEqual(self.database.read_bytes(), before)
+
+
+if __name__ == '__main__':
+    unittest.main()

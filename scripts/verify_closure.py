@@ -355,6 +355,8 @@ def execute():
                               'tests/test_sqlite_store.py','tests/test_sqlite_http.py',
                               'tests/test_sqlite_adversarial.py','tests/test_sql_queries.py','tests/test_exercise_validation.py',
                               'tests/test_sqlite_closure.py',
+                              'tests/test_sql_injection.py','tests/test_sql_separation.py',
+                              'scripts/sql_separation_bridge.py','formal/sql/bridge-policy.json',
                               'scripts/compile_sql_queries.py','engine/src/live/ExerciseValidator.java',
                               'admin_auth.py','admin_upload.py','admin_luna.py','admin_service.py',
                               'scripts/configure_admin.py','engine/src/live/UploadInspector.java',

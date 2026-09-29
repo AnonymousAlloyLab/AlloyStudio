@@ -852,6 +852,43 @@
         "closure/admin-spec.json",
         "docs/admin-implementation-review.md"
       ]
+    },
+    {
+      "id": "C-SQL-INJECTION",
+      "statement": "Frozen adversarial SQLite and authenticated HTTP/Alloy fixtures check literal parameter binding across all 25 TEXT slots, unchanged SQLite authorization operations, malicious artifact refusal, second-order reload/backup, and source-extractor mutation rejection plus actual browser JSON serialization. These are TESTED/CHECKED finite implementation witnesses; Lean theorem compilation and the universal modeled separation property are discharged separately by scripts/verify_sql_separation.py under its declared TCB.",
+      "claim_class": "test",
+      "verifier": "V-PYTHON",
+      "test_prefixes": [
+        "test_sql_injection.",
+        "test_sql_separation."
+      ],
+      "scope": {
+        "inputs": [
+          "exercise_sql.py",
+          "exercise_store.py",
+          "server.py",
+          "admin_auth.py",
+          "admin_service.py",
+          "admin_upload.py",
+          "web/admin/app.js",
+          "sql",
+          "formal/sql",
+          "scripts/sql_separation_bridge.py",
+          "scripts/verify_sql_separation.py",
+          "tests/test_sql_injection.py",
+          "tests/test_sql_separation.py",
+          "docs/sql-injection-proof.md"
+        ]
+      },
+      "public_claims": [
+        "docs/sql-injection-proof.md",
+        "closure/README.md#sql-injection-regression-boundary"
+      ],
+      "witnesses": [
+        "tests/test_sql_injection.py",
+        "tests/test_sql_separation.py",
+        "formal/sql/bridge-policy.json"
+      ]
     }
   ]
 }

@@ -1,0 +1,7 @@
+# SQL01 adversarial review, Luna B
+
+Verdict: `no_constructed_breach`. The frozen manifest SHA-256 is `eff6e64976ce501a133c6c7b15d5848e9cebb5c841da664312f26798270d0998`. All eight requested review inputs match their SHA-256 values in `formal/sql/block.json`.
+
+The Lean model returns a statement only from the registry entry selected by the identifier, carrying the supplied values unchanged. This holds with an arbitrary acceptance gate; the gate can reject but cannot rewrite either field. Its wire boundary decodes only modeled text and integer values. The bridge restricts the production executor, parameter adapter, and row adapters to checked source forms, binds the query/control/schema inputs and trusted integrity routines, maps every registered query and database sink, and fails closed on unregistered execution shapes. The verifier binds these sources and requires two identical offline Lean builds. I found no concrete accepted execution in the reviewed source that violates these invariants.
+
+The finite SQLite and authenticated HTTP witnesses support only their registered cases. The result remains bounded by the declared trust in the extractor, host-language and JSON semantics, prepared-statement binding, and listed system components; it does not establish universal application safety. This advisory review is not kernel evidence or a release closure decision. No frozen production or proof input was edited.

@@ -1,0 +1,10 @@
+{
+  "boundary": "Normalized AST identities freeze the inspected Python hash-validation and JSON implementation. They are not Lean proofs of Python semantics.",
+  "classification": "TRUSTED_REVIEWED_INTEGRITY_ROUTINES",
+  "schemaVersion": 1,
+  "trustedIntegrityFunctions": {
+    "_read_artifact": "317363de877ff800c506df5142893e2b69cafa684fe279747fc45adb1385a096",
+    "_registry": "55bf0b8886e35a9aa8df5d97678bc7285ccf04fc27baa03d86f9ad0baac92014",
+    "_strict_json": "e0ca320ddc4fd41182e5820471e1974d0f1ea8bd063226b282b539fd21d02a96"
+  }
+}

@@ -395,3 +395,13 @@ reports do not certify the newly added administration code. Actual IIS/NTFS,
 Cloudflare/TLS policy, generated-prose semantics and unbounded Alloy equivalence
 remain outside local verification. See `docs/admin-security-spec.md` and its
 review for the exact trust and authorization boundaries.
+
+## SQL injection regression boundary
+
+C-SQL-INJECTION binds the actual SQLite parameter-slot, HTTP publication,
+reload/backup, browser JSON serialization and source-extractor mutation tests.
+Its result is finite TESTED/CHECKED evidence. The independent offline
+`scripts/verify_sql_separation.py` gate compiles the SQL separation theorem and
+concrete registry bridge twice and audits zero axiom dependencies. These results
+must be reported separately; neither establishes universal application immunity.
+See [the SQL proof boundary](../docs/sql-injection-proof.md).

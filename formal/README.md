@@ -102,3 +102,11 @@ installed toolchain integrity, the audit/Python verifier, review orchestration,
 hashing, namespace enforcement, OS and hardware remain explicit trust boundaries.
 No claim of assumption-free physical execution or universal portal correctness
 is made.
+
+The separate SQL code/data separation block lives under `sql/`. Run
+`python3 scripts/verify_sql_separation.py` from the repository root to check its
+frozen source mappings, six ordered reviews, two offline Lean builds, theorem
+inventory and exact registry instantiation. It does not alter the B01–B03 blocks
+or close the original whole-portal obligations. The
+[SQL boundary](../docs/sql-injection-proof.md) distinguishes proved statements,
+checked source extraction, runtime witnesses, and trusted semantics.

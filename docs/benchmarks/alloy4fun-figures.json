@@ -1,0 +1,76 @@
+{
+  "execution_profile": {
+    "effective_limits": {
+      "cpu_quota_percent": 400,
+      "memory_high_bytes": 4294967296,
+      "memory_max_bytes": 6442450944,
+      "memory_swap_max_bytes": 0,
+      "nice": 10,
+      "workers": 4
+    },
+    "fresh_tar_resumed_rows": 0,
+    "guard_report_sha256": "dec124cee9c0eb96ce45a6a114bf2474dac2529642b032d663840eee48d32ff3",
+    "guard_source_sha256": "64f51a663f11b7230bc430b17ea52bfaffa90eb4a21af081b4ad75fcd5652ad0",
+    "interrupted_archive": "tar-interrupted-oom-20260929T234811",
+    "kind": "oom_recovery",
+    "preserved_arms": [
+      "ast-full",
+      "fm24-history",
+      "fm24-mutation",
+      "live-full"
+    ],
+    "resource_profile_sha256": "99d66f9877f31c85d6011f63fa0cbd83fb01b7a778caa4b9be42a5e808c422aa",
+    "status": "MATCHED",
+    "timing_comparison": "descriptive_unequal_resource_configurations",
+    "workers_by_tool": {
+      "fm24-history": 16,
+      "fm24-mutation": 16,
+      "live-ast": 16,
+      "live-canonical": 16,
+      "tar-depth-2": 4
+    }
+  },
+  "files": {
+    "alloy4fun-hit-rates.png": "67163d3f0e5707c250cca10322f2a40e393a6bfcf7a6ce5c65897bf8fde53843",
+    "alloy4fun-hit-rates.svg": "06e38622460a87c688da4ea58c82f9c3885abf189f8484a7f416e1d68ddf968d",
+    "alloy4fun-timely-hints.png": "29ad54fe64f304fdaa35961bd8ab04fb2434510636607d564f85db7acfc76ad9",
+    "alloy4fun-timely-hints.svg": "ca55b6d5ce4ee612fe40028f32ac7ba75700021cd21ee2c69b57d0cfa82e6a8f"
+  },
+  "generator_sha256": "abc64191c6470a2e6cec472f3b621294dc63930ff9f7045593f69d5826c44912",
+  "incorrect_denominator": 42388,
+  "input_sha256": "f2de6de630721cd22adcb6fb57154b33cf39fcc4a05f900d404dc0beaae07f8e",
+  "label_corrections": {
+    "applied_count": 2,
+    "case_ids": [
+      "socialMedia/correct/6j7rC3GMvjoGpyX7u_inv1.als",
+      "socialMedia/correct/RjBNwdcpzytR8C39D_inv1.als"
+    ],
+    "effective_classification_counts": {
+      "BOTH": 21715,
+      "CORRECT": 19210,
+      "OVERCONSTRAINED": 8095,
+      "UNDERCONSTRAINED": 12578
+    },
+    "registry_path": "benchmarks/alloy4fun/protocol/label-corrections.json",
+    "registry_sha256": "c4c0fae18df3eb7bb1e3e365daa84f8ab3970dd86f12bf544b485becc2441715",
+    "source_classification_counts": {
+      "BOTH": 21715,
+      "CORRECT": 19212,
+      "OVERCONSTRAINED": 8095,
+      "UNDERCONSTRAINED": 12576
+    },
+    "status": "MATCHED"
+  },
+  "matplotlib_version": "3.10.9",
+  "report_method_version": "alloy4fun-comparison-v3",
+  "report_schema_version": 2,
+  "schema_version": 1,
+  "timing_caveat": "Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM. Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.",
+  "tools": [
+    "live-canonical",
+    "live-ast",
+    "tar-depth-2",
+    "fm24-history",
+    "fm24-mutation"
+  ]
+}

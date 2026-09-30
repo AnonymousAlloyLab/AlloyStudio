@@ -60,6 +60,7 @@ probe = {'pid': os.getpid(), 'argv': sys.argv, 'cwd': os.getcwd(),
          'key_file': os.environ.get('OPENAI_API_KEY_FILE'),
          'config_file': os.environ.get('OPENAI_CONFIG_FILE'),
          'disabled': os.environ.get('OPENAI_DISABLED'),
+         'engine_tmp': os.environ.get('ALLOY_ENGINE_TMP_ROOT'),
          'no_bytecode': sys.dont_write_bytecode,
          'io_encoding': os.environ.get('PYTHONIOENCODING')}
 Path('probe.json').write_text(json.dumps(probe), encoding='utf-8')
@@ -85,6 +86,7 @@ print('Canonical feedback: λ → ∀ “no”', flush=True)
                 self.assertIsNone(probe['config_file'], 'Inherited config must not select another deployment credential')
                 self.assertEqual(probe['disabled'], '0' if enable_luna else '1')
                 self.assertTrue(probe['no_bytecode'])
+                self.assertEqual(probe['engine_tmp'], str(Path(config['log_directory']) / 'engine-tmp'))
                 self.assertEqual(probe['io_encoding'], 'utf-8')
                 self.assertFalse(list(backend.rglob('*.pyc')))
                 log = (Path(config['log_directory']) / 'backend.log').read_text(encoding='utf-8')

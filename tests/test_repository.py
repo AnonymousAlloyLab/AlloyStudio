@@ -32,7 +32,8 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertEqual(snapshot['commit'], '1e2667351532b0c632166fa21ae5fbc7308a8fe7')
         patches = snapshot['localPatches']
-        self.assertEqual([patch['id'] for patch in patches], ['parser-source-origins'])
+        self.assertEqual([patch['id'] for patch in patches],
+                         ['parser-source-origins', 'canonical-residual-quantifier-rendering'])
         files = patches[0]['files']
         self.assertEqual({entry['path'] for entry in files}, {
             'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
@@ -46,6 +47,12 @@ class RepositoryTests(unittest.TestCase):
         for entry in files:
             self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
             self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
+        rendering = patches[1]['files']
+        self.assertEqual(rendering, [{
+            'path': 'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
+            'baseSha256': '9396337563551660ac237ab7d3c271bd10174bf73204b806f422937664c32e40',
+        }])
+        self.assertNotEqual(rendering[0]['baseSha256'], expected[rendering[0]['path']])
 
     def test_no_credential_files_or_token_patterns_in_delivery_source(self):
         token = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')

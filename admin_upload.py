@@ -10,7 +10,7 @@ import re
 import subprocess
 import time
 
-from runtime_dependencies import runtime_classpath
+from runtime_dependencies import runtime_classpath, run_engine
 from scripts.import_exercises import tokens
 from scripts.import_correct_pools import body_token_sha256
 
@@ -281,7 +281,7 @@ def _remaining(deadline):
     return value
 
 
-def _worker(classpath, main, payload, java, deadline):
+def _worker(classpath, main, payload, java, deadline, *, root):
     from exercise_store import parse_json
     environment = {key: value for key, value in os.environ.items() if key.upper() not in {
         'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS'}}
@@ -289,9 +289,9 @@ def _worker(classpath, main, payload, java, deadline):
     if len(request.encode('utf-8')) > (2097152 if main == 'live.UploadInspector' else 1048576):
         raise UploadError('Upload validation exceeds the engine request limit.')
     try:
-        run = subprocess.run([str(java), '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
+        run = run_engine([str(java), '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
                               '-cp', classpath, main], input=request, capture_output=True, text=True,
-                             encoding='utf-8', timeout=_remaining(deadline), env=environment, check=False)
+                             encoding='utf-8', timeout=_remaining(deadline), env=environment, check=False, root=root)
         result = parse_json(run.stdout)
     except (OSError, subprocess.TimeoutExpired, ValueError, UnicodeError):
         raise UploadError('Alloy upload validation failed or timed out.') from None
@@ -367,7 +367,7 @@ def prepare_upload(root, envelope, *, java='java', timeout=60):
     classpath = runtime_classpath(Path(root))
     try:
         identity = _engine_identity(classpath)
-        inspected = _worker(classpath, 'live.UploadInspector', {'source': source}, java, deadline)
+        inspected = _worker(classpath, 'live.UploadInspector', {'source': source}, java, deadline, root=root)
         _check_inspection(inspected, source, declarations, witness['groups'])
         certificates = []
         for document, group in zip(documents, witness['groups']):
@@ -382,7 +382,7 @@ def prepare_upload(root, envelope, *, java='java', timeout=60):
                 payload = dict(predicate=document['predicate'], starter=document['starter'],
                     sourcePrefix=document['environmentBefore'] + document['predicateHeader'] + '{\n',
                     sourceSuffix='\n}' + document['environmentAfter'], oracleBodies=originals, correctBodies=[], scope=scope)
-                result = _worker(classpath, 'live.ExerciseValidator', payload, java, deadline)
+                result = _worker(classpath, 'live.ExerciseValidator', payload, java, deadline, root=root)
                 if type(result.get('evaluatedCandidates')) is not int or result['evaluatedCandidates'] != len(originals):
                     raise UploadError('Alloy did not check every source variant.')
             certificates.append(validate_import(root, document, java=java, timeout=_remaining(deadline)))

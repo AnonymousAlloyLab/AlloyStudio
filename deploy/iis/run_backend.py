@@ -26,6 +26,9 @@ def main():
     os.environ['OPENAI_DISABLED'] = '0' if config['enable_luna'] else '1'
     os.environ['PYTHONIOENCODING'] = 'utf-8'
     os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+    # The protected log directory already grants LOCAL SERVICE write access;
+    # backend code remains read-only. Parser scratch never enters wwwroot/TEMP.
+    os.environ['ALLOY_ENGINE_TMP_ROOT'] = str(Path(config['log_directory']) / 'engine-tmp')
     sys.dont_write_bytecode = True
     sys.argv = [str(backend / 'server.py'), '--host', '127.0.0.1', '--port', '8080',
                 '--java', config['java_exe'], '--timeout', str(config['engine_timeout']),

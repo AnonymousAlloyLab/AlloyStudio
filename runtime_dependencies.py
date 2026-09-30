@@ -8,9 +8,13 @@ from pathlib import Path
 import re
 import struct
 import subprocess
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parent
+JAVA_ENVIRONMENT_OPTIONS = frozenset((
+    'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS',
+))
 JAR_FILES = (
     'AlloyASG-Release.jar', 'AlloyASG.jar', 'AlloyParser.jar', 'alloy.jar',
     'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
@@ -47,6 +51,35 @@ def runtime_classpath(root):
     root = Path(root).resolve()
     return os.pathsep.join(str(path) for path in (
         root / 'build/engine/classes', *(root / 'vendor/acgn/lib' / name for name in JAR_FILES)))
+
+
+def clean_java_environment(env=None):
+    """Keep explicit JVM flags authoritative even with operator-supplied env."""
+    source = os.environ if env is None else env
+    return {name: value for name, value in source.items() if name not in JAVA_ENVIRONMENT_OPTIONS}
+
+
+def engine_temp_root(root=ROOT):
+    """Private application-owned scratch; never inherit the system temp root."""
+    root = Path(root).resolve()
+    configured = os.environ.get('ALLOY_ENGINE_TMP_ROOT')
+    directory = Path(configured) if configured else Path(root) / 'build/runtime/tmp'
+    if not directory.is_absolute():
+        directory = Path(root).resolve() / directory
+    # This path is operator configuration, never a model/request parameter.
+    for part in (directory, *directory.parents):
+        if part.is_symlink() or (part.exists() and getattr(part.lstat(), 'st_file_attributes', 0) & 0x400):
+            raise OSError('Linked engine scratch directory is not allowed')
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    return directory
+
+
+def run_engine(command, *, root=ROOT, **options):
+    """Give one JVM an owned directory; clean after run() has waited or killed it."""
+    with tempfile.TemporaryDirectory(prefix='engine-', dir=engine_temp_root(root)) as directory:
+        isolated = [command[0], '-Djava.io.tmpdir=' + directory, *command[1:]]
+        options['env'] = clean_java_environment(options.get('env'))
+        return subprocess.run(isolated, **options)
 
 
 def _read_regular(root, relative):
@@ -123,12 +156,11 @@ def check_runtime(root, java=None, *, require_classes=True):
         report['classes'].append(item)
 
     if java is not None and report['status'] == 'PASS':
-        environment = {name: value for name, value in os.environ.items()
-                       if name not in {'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS'}}
+        environment = clean_java_environment()
         command = [str(java), '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
                    '-cp', runtime_classpath(root), 'live.EngineSelfTest']
         try:
-            completed = subprocess.run(command, cwd=root, env=environment, capture_output=True,
+            completed = run_engine(command, root=root, cwd=root, env=environment, capture_output=True,
                                        text=True, encoding='utf-8', timeout=30, check=False)
             if (completed.returncode != 0
                     or completed.stdout.strip() != f'EngineSelfTest passed ({ENGINE_CHECKS} checks)'):

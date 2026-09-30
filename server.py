@@ -13,7 +13,7 @@ import threading
 import time
 from urllib.parse import unquote, urlsplit
 from luna import Explainer
-from runtime_dependencies import check_runtime, runtime_classpath
+from runtime_dependencies import check_runtime, runtime_classpath, run_engine
 from exercise_store import load_store, StoreError, parse_json
 from admin_auth import AuthManager, AuthError
 from admin_service import AdminService, AdminError
@@ -464,7 +464,7 @@ class Portal(ThreadingHTTPServer):
                        runtime_classpath(self.root),
                        'live.LiveFeedback']
             try:
-                completed = subprocess.run(command, input=json.dumps(payload), text=True, encoding='utf-8',
+                completed = run_engine(command, root=self.root, input=json.dumps(payload), text=True, encoding='utf-8',
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                            cwd=self.root, timeout=self.timeout, check=False)
                 if completed.returncode != 0:
@@ -522,7 +522,7 @@ class Portal(ThreadingHTTPServer):
                        'oracleSource': model(record, record['oracleBody']), 'predicate': record['predicate']}
             command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
                        runtime_classpath(self.root), 'live.BehaviorFeedback']
-            completed = subprocess.run(command, input=json.dumps(payload), text=True, encoding='utf-8',
+            completed = run_engine(command, root=self.root, input=json.dumps(payload), text=True, encoding='utf-8',
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.root,
                                        timeout=max(30, self.timeout), check=False)
             if completed.returncode or len(completed.stdout.encode('utf-8')) > 4 * 1024 * 1024:

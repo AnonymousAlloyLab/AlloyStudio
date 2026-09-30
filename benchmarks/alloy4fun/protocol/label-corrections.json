@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "scope": "Exact source-hash-bound corpus-label corrections; original corpus files remain unchanged",
+  "corrections": [
+    {
+      "case_id": "socialMedia/correct/6j7rC3GMvjoGpyX7u_inv1.als",
+      "source_sha256": "3832147bb3c35b0fcc15615abaaa4d8d7abda89cff27cd03f658fbdab7fffd1c",
+      "original_label": "CORRECT",
+      "corrected_label": "UNDERCONSTRAINED",
+      "reason": "Named check correct has a counterexample; run under is satisfiable and run over is unsatisfiable",
+      "verification": {
+        "solver": "SAT4J",
+        "no_overflow": false,
+        "module_facts": true,
+        "named_commands": {
+          "correct": {
+            "satisfiable": true,
+            "check": true,
+            "index": 1
+          },
+          "over": {
+            "satisfiable": false,
+            "check": false,
+            "index": 2
+          },
+          "under": {
+            "satisfiable": true,
+            "check": false,
+            "index": 3
+          }
+        }
+      },
+      "evidence": {
+        "report": "build/benchmarks/canonical-diagnostic/label-classifier-reproduction.json",
+        "report_sha256": "36e822a714efdc7b3500b287104f7c9cea6d07e53507b1b88f52457913d639b2",
+        "counterexample_private_path": "build/benchmarks/canonical-diagnostic/label-anomaly-counterexample.xml",
+        "counterexample_sha256": "98eaca9863881008b0cec3f32cc46847cf5ef0f067502b350d910216370274c9"
+      }
+    },
+    {
+      "case_id": "socialMedia/correct/RjBNwdcpzytR8C39D_inv1.als",
+      "source_sha256": "3832147bb3c35b0fcc15615abaaa4d8d7abda89cff27cd03f658fbdab7fffd1c",
+      "original_label": "CORRECT",
+      "corrected_label": "UNDERCONSTRAINED",
+      "reason": "Named check correct has a counterexample; run under is satisfiable and run over is unsatisfiable",
+      "verification": {
+        "solver": "SAT4J",
+        "no_overflow": false,
+        "module_facts": true,
+        "named_commands": {
+          "correct": {
+            "satisfiable": true,
+            "check": true,
+            "index": 1
+          },
+          "over": {
+            "satisfiable": false,
+            "check": false,
+            "index": 2
+          },
+          "under": {
+            "satisfiable": true,
+            "check": false,
+            "index": 3
+          }
+        }
+      },
+      "evidence": {
+        "report": "build/benchmarks/canonical-diagnostic/label-classifier-reproduction.json",
+        "report_sha256": "36e822a714efdc7b3500b287104f7c9cea6d07e53507b1b88f52457913d639b2",
+        "counterexample_private_path": "build/benchmarks/canonical-diagnostic/label-anomaly-counterexample.xml",
+        "counterexample_sha256": "98eaca9863881008b0cec3f32cc46847cf5ef0f067502b350d910216370274c9"
+      }
+    }
+  ]
+}

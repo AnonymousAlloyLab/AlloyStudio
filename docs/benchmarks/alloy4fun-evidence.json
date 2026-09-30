@@ -1,0 +1,240 @@
+{
+  "arms": [
+    {
+      "case_id_set_sha256": "911886dc6165d4b0ed02f822c3e4b6393f6963216d08d53df6444d77f9e0c0c4",
+      "cases": 61598,
+      "files": {
+        "manifest.json": "8c8f416640bb0c8ea86f4d8a2880173e898ed55a96663452fbf2e8567cb20920",
+        "responses.jsonl.gz": "41cb553844d6dd2f512b92d0c3afb3eb035f55a19e77b966c8d3bed30e39c30c",
+        "results.jsonl": "21e9e6aa163e9a77fe3b82e5e7beaad759ce33fdd8a37297b2891dbe75bafb8a",
+        "run.json": "f3905d5689fa27cd0f8b8b110a13574e70e33c7e2b9551e9e2cde3b64deb20cf"
+      },
+      "status": "PASS",
+      "tool": "live-canonical"
+    },
+    {
+      "case_id_set_sha256": "911886dc6165d4b0ed02f822c3e4b6393f6963216d08d53df6444d77f9e0c0c4",
+      "cases": 61598,
+      "files": {
+        "manifest.json": "c44b01d9a41ac2773d09e60d89e295ac90cda5dea84d29030572406cefb28d4b",
+        "responses.jsonl.gz": "d9c26c3db9857f822942e9bba8623a2dcb74a0f5621fb78874c007579da865d5",
+        "results.jsonl": "d853b6c8e049d9f3fd4a0eafdbf6a40d1448e6abdf2fa533456ac8660557a96b",
+        "run.json": "aed4d3e7e5cd8dff827ece68dfaaee6582f669c02b98f5f64af8d2da8d035533"
+      },
+      "status": "PASS",
+      "tool": "live-ast"
+    },
+    {
+      "case_id_set_sha256": "911886dc6165d4b0ed02f822c3e4b6393f6963216d08d53df6444d77f9e0c0c4",
+      "cases": 61598,
+      "files": {
+        "manifest.json": "3a6b402d28a969e7049817dde9b1cb639c6c6932b52c2ca73a41a723d18a9418",
+        "responses.jsonl.gz": "6006e11dad96405aa077897599f440694dcc0248933cac2cfba832806406cf63",
+        "results.jsonl": "e5523fe5a35ec6d5b04eb574a20077697a19eb282ba13131166a0dbec2ac3392",
+        "run.json": "0aadd3f9d10ddd06f62db997845f8224bd18d80598543d480f5397060de2aca8"
+      },
+      "status": "PASS",
+      "tool": "tar-depth-2"
+    },
+    {
+      "case_id_set_sha256": "911886dc6165d4b0ed02f822c3e4b6393f6963216d08d53df6444d77f9e0c0c4",
+      "cases": 61598,
+      "files": {
+        "manifest.json": "41a57403f3a4f77a86bbe143a6bb9e6b823dbd0236b7cee360b2ecf3d0732119",
+        "responses.jsonl.gz": "d1bf7f4624eb6eaf0af2388e06fe1d175c45d09fe5e0d5c31c4fb79c7ab7be02",
+        "results.jsonl": "3e25e6077e3b698bead20efd524140e9a22140828212126386f5208c7ce47b08",
+        "run.json": "ad2e83d65011bbe3fc3711664cb1797267e393c90dc7a6210c90b4734677ba0e"
+      },
+      "status": "PASS",
+      "tool": "fm24-history"
+    },
+    {
+      "case_id_set_sha256": "911886dc6165d4b0ed02f822c3e4b6393f6963216d08d53df6444d77f9e0c0c4",
+      "cases": 61598,
+      "files": {
+        "manifest.json": "dba47fc25a63f51826ceb284f955910f670d2da56fd31f19a76467cb1864c2ce",
+        "responses.jsonl.gz": "f5b3b189e716898ec12a271686afbcae1ee849f7eeac909206e7e209eceaead3",
+        "results.jsonl": "fa3078c45933b46dd7aa2999af66e401532b5594f5c4840037adc1bdd3cba5e9",
+        "run.json": "448fa2d3404b9f318a67312577dd982a9fb2ec3c4774240e073b688e151dfedf"
+      },
+      "status": "PASS",
+      "tool": "fm24-mutation"
+    }
+  ],
+  "checker_sha256": "d53bf9ce7132c566a994bcc2d1e842e8e9087e17492625491cc09e66f1e7ba9f",
+  "environment": {
+    "platform": "Linux",
+    "python": "3.10.11"
+  },
+  "execution_profile": {
+    "effective_limits": {
+      "cpu_quota_percent": 400,
+      "memory_high_bytes": 4294967296,
+      "memory_max_bytes": 6442450944,
+      "memory_swap_max_bytes": 0,
+      "nice": 10,
+      "workers": 4
+    },
+    "fresh_tar_resumed_rows": 0,
+    "guard_report_sha256": "dec124cee9c0eb96ce45a6a114bf2474dac2529642b032d663840eee48d32ff3",
+    "guard_source_sha256": "64f51a663f11b7230bc430b17ea52bfaffa90eb4a21af081b4ad75fcd5652ad0",
+    "interrupted_archive": "tar-interrupted-oom-20260929T234811",
+    "kind": "oom_recovery",
+    "preserved_arms": [
+      "ast-full",
+      "fm24-history",
+      "fm24-mutation",
+      "live-full"
+    ],
+    "resource_profile_sha256": "99d66f9877f31c85d6011f63fa0cbd83fb01b7a778caa4b9be42a5e808c422aa",
+    "status": "MATCHED",
+    "timing_comparison": "descriptive_unequal_resource_configurations",
+    "workers_by_tool": {
+      "fm24-history": 16,
+      "fm24-mutation": 16,
+      "live-ast": 16,
+      "live-canonical": 16,
+      "tar-depth-2": 4
+    }
+  },
+  "figures": {
+    "files": {
+      "alloy4fun-hit-rates.png": "67163d3f0e5707c250cca10322f2a40e393a6bfcf7a6ce5c65897bf8fde53843",
+      "alloy4fun-hit-rates.svg": "06e38622460a87c688da4ea58c82f9c3885abf189f8484a7f416e1d68ddf968d",
+      "alloy4fun-timely-hints.png": "29ad54fe64f304fdaa35961bd8ab04fb2434510636607d564f85db7acfc76ad9",
+      "alloy4fun-timely-hints.svg": "ca55b6d5ce4ee612fe40028f32ac7ba75700021cd21ee2c69b57d0cfa82e6a8f"
+    },
+    "generator_sha256_matches": true,
+    "input_sha256_matches": true,
+    "manifest_sha256": "7671884ecb878919c6330630da78865a04358a54ba9307b115b27bad96d0f0fa",
+    "output_hashes_match": true,
+    "status": "PASS"
+  },
+  "final_results": {
+    "path": "docs/benchmarks/alloy4fun-results.json",
+    "sha256": "f2de6de630721cd22adcb6fb57154b33cf39fcc4a05f900d404dc0beaae07f8e",
+    "status": "COMPLETE"
+  },
+  "guards": {
+    "finalization-guard.json": {
+      "effective_limits": {
+        "cpu_quota_percent": 400,
+        "memory_high_bytes": 4294967296,
+        "memory_max_bytes": 6442450944,
+        "memory_swap_max_bytes": 0,
+        "nice": 10,
+        "workers": 4
+      },
+      "exit_status": 0,
+      "global_available_min_bytes": 16404312064,
+      "memory_events": {
+        "high": 0,
+        "low": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0,
+        "sock_throttled": 0
+      },
+      "memory_peak_bytes": 2050547712,
+      "scratch_entries_after_run": 0,
+      "service_result": "success",
+      "sha256": "9f6feda21a4575558245be85f6676a3c010c56ec36f13379c9b84a2817812151",
+      "status": "COMPLETED"
+    },
+    "tar-guard.json": {
+      "effective_limits": {
+        "cpu_quota_percent": 400,
+        "memory_high_bytes": 4294967296,
+        "memory_max_bytes": 6442450944,
+        "memory_swap_max_bytes": 0,
+        "nice": 10,
+        "workers": 4
+      },
+      "exit_status": 0,
+      "global_available_min_bytes": 11227684864,
+      "memory_events": {
+        "high": 0,
+        "low": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0,
+        "sock_throttled": 0
+      },
+      "memory_peak_bytes": 3258179584,
+      "scratch_entries_after_run": 0,
+      "service_result": "success",
+      "sha256": "dec124cee9c0eb96ce45a6a114bf2474dac2529642b032d663840eee48d32ff3",
+      "status": "COMPLETED"
+    }
+  },
+  "input_root_sha256": "72111a0e3df6787fc04e492b1a63f04589a862d303961c0488992f69c36e3326",
+  "limits": [
+    "No benchmark queries, native builds or semantic checks were rerun.",
+    "Hash/record correspondence does not establish hint correctness or learning benefit.",
+    "TAR used 4 workers and a memory/CPU cap; other arms used 16 workers. Timing is descriptive.",
+    "Transient services have been unloaded; historical success relies on bound guard/completion records.",
+    "No clean-build determinism or formal mechanical-closure claim is made."
+  ],
+  "pipeline_completion": {
+    "final_results_sha256_matches": true,
+    "sha256": "cc8efa53a9fe9dd8e3b9db31fc1b3a0fbf9c8125fcf1535abd015c73f3f3b646",
+    "status": "COMPLETED"
+  },
+  "preservation": {
+    "completed_arms": 4,
+    "completed_artifacts_unchanged": 16,
+    "fresh_tar_resumed_rows": 0,
+    "frozen_runtime_archive_sha256": "734d0e06f720331f54d85b1d3c1b84f7cdcf2ba78ce8e2045a5cff1f4b472f37",
+    "interrupted_tar_artifacts_unchanged": 3,
+    "interrupted_tar_included_in_final": false,
+    "status": "PASS"
+  },
+  "raw_response_audit": {
+    "cases_per_tool": 61598,
+    "independently_reexecuted": true,
+    "raw_records_checked": 307990,
+    "reexecution_identical": true,
+    "scope": "raw-response-correspondence",
+    "sha256": "621a72b680e0aaf0763458678367f83a7c4f2d3078b0fac357c137ed3d93d9f4",
+    "status": "PASS",
+    "tar_checkpoint_provenance_checked": 61598,
+    "tools": 5,
+    "verifier_sha256": "8b1fa8ac9772ce451bc5c5a86f28661910c2186d44f01421ea2246736ff3067f"
+  },
+  "schema_version": 1,
+  "scope": "Saved-result provenance, raw-response correspondence, artifact integrity and completion; not semantic correctness proof",
+  "services": [
+    {
+      "ActiveState": "inactive",
+      "Id": "alloy-recovery-20260930000515-tar.service",
+      "LoadState": "not-found",
+      "MainPID": "0",
+      "SubState": "dead"
+    },
+    {
+      "ActiveState": "inactive",
+      "Id": "alloy-recovery-20260930000515-final.service",
+      "LoadState": "not-found",
+      "MainPID": "0",
+      "SubState": "dead"
+    },
+    {
+      "ActiveState": "inactive",
+      "Id": "alloy-recovery-20260930000515-supervisor.service",
+      "LoadState": "not-found",
+      "MainPID": "0",
+      "SubState": "dead"
+    }
+  ],
+  "status": "PASS",
+  "trusted": [
+    "Python JSON/gzip/hashlib implementations",
+    "SHA-256 collision resistance",
+    "Existing evidence-audit and strict manifest verifier implementations",
+    "OS/filesystem and hardware",
+    "Recorded wall times and systemd/cgroup observations"
+  ],
+  "verified_at": "2026-09-30T20:33:40.490327+00:00"
+}

@@ -21,7 +21,8 @@ public final class CanonicalStructureHarness {
     if (node == null) return;
     operations.put(new JSONObject().put("kind", "replace").put("component", "matrix")
       .put("path", path).put("sourceTerm", "IGNORED_TEXT_MATCH")
-      .put("expected", (String) render.invoke(null, node)).put("node", node.getOpcode().name()));
+      .put("expected", (String) render.invoke(null, node)).put("node", node.getOpcode().name())
+      .put("arity", node.getChildren().size()));
     for (int i=0;i<node.getChildren().size();i++) walk(node.getChildren().get(i), path+".child["+i+"]");
   }
   public static void main(String[] args) throws Exception {
@@ -29,7 +30,8 @@ public final class CanonicalStructureHarness {
     System.setOut(new java.io.PrintStream(java.io.OutputStream.nullOutputStream()));
     System.setErr(new java.io.PrintStream(java.io.OutputStream.nullOutputStream()));
     JSONObject request = new JSONObject(new String(System.in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
-    Canonical.Prepared learner = LiveFeedback.prepare(request.getString("source"), "target");
+    String predicate = request.optString("predicate", "target");
+    Canonical.Prepared learner = LiveFeedback.prepare(request.getString("source"), predicate);
     JSONArray forms = new JSONArray(Canonical.irTemporalFol(learner));
     render = CanonicalDistance.class.getDeclaredMethod("eGraphFormula", EGraphNode.class); render.setAccessible(true);
     ordered = CanonicalDistance.class.getDeclaredMethod("canonicalQuantifierOrder", List.class); ordered.setAccessible(true);
@@ -47,7 +49,11 @@ public final class CanonicalStructureHarness {
     if (request.has("operations")) operations = request.getJSONArray("operations");
     if (request.has("forms")) forms = request.getJSONArray("forms");
     CanonicalLocator.attach(learner, forms, operations);
-    wire.println(new JSONObject().put("forms", forms).put("operations", operations));
+    JSONObject result = new JSONObject().put("forms", forms).put("operations", operations);
+    if (request.has("reference")) result.put("feedback", LiveFeedback.evaluate(new JSONObject()
+      .put("studentSource", request.getString("source")).put("oracleSource", request.getString("reference"))
+      .put("predicate", predicate).put("metric", "canonical")));
+    wire.println(result);
   }
 }
 '''
@@ -200,3 +206,72 @@ class CanonicalStructureTests(unittest.TestCase):
         self.assertEqual(len(names), 2)
         for operation in names:
             self.span(result, operation)
+
+    def test_residual_quantifiers_preserve_bodies_and_locate_all_children(self):
+        for quantifier in ('one', 'lone', 'no'):
+            with self.subTest(quantifier=quantifier):
+                result = self.locate(f'some A and ({quantifier} a:A | some a.r)')
+                nodes = [op for op in result['operations']
+                         if op.get('node') == quantifier.upper() and op.get('arity', 0) > 1]
+                self.assertEqual(len(nodes), 1, 'fixture must exercise a residual quantified node')
+                quantified = nodes[0]
+                self.assertIn('(SOME (a . r))', quantified['expected'])
+                body = next(op for op in result['operations']
+                            if op['path'] == quantified['path'] + '.child[1]')
+                self.assertEqual(body['expected'], '(SOME (a . r))')
+                spans = {op['path']: self.span(result, op) for op in result['operations']}
+                for path, span in spans.items():
+                    if '.child[' in path:
+                        parent = spans[path.rsplit('.child[', 1)[0]]
+                        self.assertGreaterEqual(span['start'], parent['start'])
+                        self.assertLessEqual(span['end'], parent['end'])
+
+    def test_residual_body_change_has_distinct_rendering_and_exact_edit_location(self):
+        environment = 'sig A {r, s: set A}\n'
+        for quantifier in ('one', 'lone', 'no'):
+            with self.subTest(quantifier=quantifier):
+                before = f'some A and ({quantifier} a:A | some a.r)'
+                after = f'some A and ({quantifier} a:A | no a.r)'
+                student = environment + 'pred target {\n' + before + '\n}\n'
+                reference = environment + 'pred target {\n' + after + '\n}\n'
+                result = self.locate(before, reference=reference)
+                reverse = self.locate(after, reference=student)
+                self.assertNotEqual(result['forms'], reverse['forms'])
+                feedback = result['feedback']
+                self.assertEqual(feedback['status'], 'ok')
+                self.assertEqual(feedback['distance'], 1, 'renderer must not change the metric')
+                self.assertEqual(reverse['feedback']['distance'], 1)
+                self.assertEqual(len(feedback['operations']), 1)
+                operation = feedback['operations'][0]
+                self.assertEqual(operation['sourceOperator'], 'some')
+                self.assertEqual(operation['replacementOperator'], 'no')
+                self.assertTrue(feedback['trace']['matrixReplayVerified'])
+                span = self.span(result, operation)
+                self.assertEqual(utf16_slice(result['forms'][span['formIndex']],
+                                            span['start'], span['end']), '(SOME (a . r))')
+                raw = operation['sourceLocation']
+                self.assertEqual((raw['status'], raw['precision']), ('located', 'node'))
+                self.assertEqual(len(raw['ranges']), 1)
+                raw_span = raw['ranges'][0]
+                self.assertEqual(utf16_slice(student, raw_span['start'], raw_span['end']), 'some a.r')
+
+    def test_nested_residual_quantifiers_and_multiple_declarations_keep_every_occurrence(self):
+        result = self.locate('some A and (one a, b:A | lone c:A | some a.r and c in b.r)')
+        residual = [op for op in result['operations']
+                    if op.get('node') in ('ONE', 'LONE') and op.get('arity', 0) > 1]
+        self.assertGreaterEqual(len(residual), 2)
+        paths = {op['path']: self.span(result, op) for op in result['operations']}
+        for quantified in residual:
+            for child in range(quantified['arity']):
+                self.assertIn(quantified['path'] + f'.child[{child}]', paths)
+        repeated = [op for op in result['operations'] if op.get('expected') == 'A']
+        self.assertGreaterEqual(len(repeated), 3)
+        self.assertEqual(len({paths[op['path']]['start'] for op in repeated}), len(repeated))
+
+    def test_actual_unary_operator_rendering_is_unchanged(self):
+        for operator in ('some', 'no', 'one', 'lone'):
+            with self.subTest(operator=operator):
+                result = self.locate(operator + ' A')
+                self.assertEqual(result['forms'], [f'root normal form := target(({operator.upper()} A))'])
+                for operation in result['operations']:
+                    self.span(result, operation)

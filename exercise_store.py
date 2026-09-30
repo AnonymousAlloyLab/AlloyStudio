@@ -19,7 +19,7 @@ import tempfile
 import time
 
 import exercise_sql as sql
-from runtime_dependencies import runtime_classpath, JAR_FILES
+from runtime_dependencies import runtime_classpath, JAR_FILES, run_engine
 from scripts.import_correct_pools import (body_token_sha256, candidate,
                                          environment_sha256, verify_document)
 from scripts.import_exercises import tokens, verify_record
@@ -457,10 +457,10 @@ def validate_import(root, document, *, java='java', timeout=60):
     classpath = runtime_classpath(Path(root))
     try:
         identity = _engine_identity(classpath)
-        completed = subprocess.run([str(java), '-Dfile.encoding=UTF-8', '-Xmx256m',
+        completed = run_engine([str(java), '-Dfile.encoding=UTF-8', '-Xmx256m',
                     '-XX:ActiveProcessorCount=2','-cp',classpath,
                     'live.ExerciseValidator'], input=request, capture_output=True,
-                    text=True, encoding='utf-8', timeout=timeout, env=environment, check=False)
+                    text=True, encoding='utf-8', timeout=timeout, env=environment, check=False, root=root)
         result = parse_json(completed.stdout)
         if identity != _engine_identity(classpath):
             raise StoreError('Engine changed during validation.')

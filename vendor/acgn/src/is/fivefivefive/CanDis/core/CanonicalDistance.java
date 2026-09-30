@@ -1833,6 +1833,12 @@ public final class CanonicalDistance {
         if (node.getChildren().isEmpty()) {
             return node.getOpcode().toString();
         }
+        // ONE/LONE/NO also label residual quantified formulas. Their children
+        // include declarations and a body, so unary rendering would hide the
+        // body even though the distance and edit paths still traverse it.
+        if (node.getChildren().size() != 1) {
+            return operatorFormula(node);
+        }
         return "(" + node.getOpcode() + " " + eGraphFormula(node.getChildren().get(0)) + ")";
     }
 

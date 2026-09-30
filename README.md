@@ -6,6 +6,25 @@ operations, the learner's canonical form, saved drafts, and GPT-6 Luna guidance.
 Feedback uses the closest member of each bundled correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
 
+The completed [Alloy4Fun baseline comparison](docs/alloy4fun-comparison.md) evaluates
+**both Canonical and raw AST hints** against TAR and the FM24 historical-data
+approach on the 61,598-model cohort, with hit-rate definitions, runtime,
+held-out submission paths, reproducible adapters, and explicit study limits.
+All five arms completed on 2026-09-30. Incorrect-input native hint rates were
+100% for each Live mode, 44.59% for TAR, 34.02% for FM24 history, and 50.42% for
+FM24 with mutation. TAR's independently checked bounded repair rate was 43.73%.
+Hint availability is not repair quality; worker resources also differed.
+[Results, figures, and the evidence index](docs/benchmarks/README.md) accompany the report.
+Its five-fold reference exclusion is a benchmark adaptation; nonempty hints on
+held-out CORRECT submissions do not measure recognition of members of the
+original complete correct pool.
+The [engine and corpus diagnostic report](docs/hint-diagnostics.md) investigates
+temporary-file failures, omitted quantified bodies in the canonical display,
+nonzero distances on corpus-labelled correct predicates, and TAR output failures.
+The corrected rerun preserves the source corpus, records two legacy label fixes,
+and stores Java scratch files in owned directories under `build/` with cleanup
+after each worker exits.
+
 **Alpha v0.0.1** (`v0.0.1-alpha`) adds a metric selector and a
 [project CI/CD dashboard](docs/ci-cd.md) at `/dashboard/`. The
 [Lean closure plan](docs/lean-closure.md) lists 24 open formal obligations and

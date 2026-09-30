@@ -544,7 +544,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-      "sha256": "9396337563551660ac237ab7d3c271bd10174bf73204b806f422937664c32e40"
+      "sha256": "85dbbbeb547775419495ec76ef82e8ed79b17525d499739fd46d0f5e0244b39b"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
@@ -1451,6 +1451,16 @@
         {
           "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
           "baseSha256": "72c3f57102ef7c96d27aa02df2fc39d85fa3a42e2c73c90511892ccd4c929da0"
+        }
+      ]
+    },
+    {
+      "id": "canonical-residual-quantifier-rendering",
+      "description": "Presentation-only arity guard preserves all residual quantifier declaration and body children in canonical display; normalization, graph identity and metric costs are unchanged.",
+      "files": [
+        {
+          "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
+          "baseSha256": "9396337563551660ac237ab7d3c271bd10174bf73204b806f422937664c32e40"
         }
       ]
     }

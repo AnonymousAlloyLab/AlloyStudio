@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "title": "Alloy repair hint generation based on historical data",
+    "doi": "https://doi.org/10.1007/978-3-031-71177-0_8",
+    "author_pdf": "https://haslab.github.io/SpecRep/pubs/FM24.pdf",
+    "local_pdf_sha256": "54f5603caab06baf54ca103e2ac1ef538b93e67129cfe141db5b0af770a9f43e"
+  },
+  "discovery_source": "https://haslab.github.io/SpecRep/",
+  "repositories": [
+    {
+      "directory": "Alloy4Fun-FM24",
+      "url": "https://github.com/anaines14/Alloy4Fun",
+      "commit": "b1c34791ac9b900fc0e97e87090f2ecddbf5e596",
+      "license_file_found": false
+    },
+    {
+      "directory": "SpecAssistant",
+      "url": "https://github.com/K1yps/SpecAssistant",
+      "commit": "734eae6326b9ebd1e57ceb6adf8e50c506667702",
+      "license_file_found": false
+    },
+    {
+      "directory": "higena",
+      "url": "https://github.com/anaines14/higena",
+      "commit": "e2bfd0ea0f656d9ec563c119339d55028f5d2c90",
+      "license_file_found": false
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Alloy4Fun-FM24/api/lib/org/alloytools/Alloy/6.1.0/Alloy-6.1.0.jar",
+      "sha256": "ac0ee637172ed035a4ca43327d5e09c05990aa0d073887308e30f88c2471370c"
+    },
+    {
+      "path": "Alloy4Fun-FM24/api/lib/pt/haslab/specassistant/1.0.0/specassistant-1.0.0.jar",
+      "sha256": "c71eaf6a6eb497a667786a488bdd7f2826232aa7bb144827bf1b2228b9e3366a"
+    },
+    {
+      "path": "SpecAssistant/lib/pt/haslab/TAR/1.1.1/TAR-1.1.1.jar",
+      "sha256": "30097b137ec9714f2f8530196a9d608429f480ce9f3c333f97a86cd4b8702bd8"
+    },
+    {
+      "path": "Alloy4Fun-FM24/api/lib/org/higena/higena/1.0.0/higena-1.0.0.jar",
+      "sha256": "ba1ab9e6cfb2f06e043ff213a01ff6137ae212cf2231b64708aa882aef77f22c"
+    },
+    {
+      "path": "Alloy4Fun-FM24/api/lib/Apted/apted/0.1.1/apted-0.1.1.jar",
+      "sha256": "ec16a686e349378532771fb1a7ea5321ddf409ec10c7f8ba72eb99e548809c19"
+    }
+  ],
+  "maven_dependencies": [
+    {
+      "path": "fm24-dependencies/core-3.0.0.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/github/gumtreediff/core/3.0.0/core-3.0.0.jar",
+      "sha256": "4c8083c4eb87edf630ed522f1afa6ffe9aaa1dfa2c683bb365d0411a8a916799"
+    },
+    {
+      "path": "fm24-dependencies/classindex-3.10.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/atteo/classindex/classindex/3.10/classindex-3.10.jar",
+      "sha256": "fde4ea93496e638af2522482ac5d289ed7c7741d5e9930b029100ee620caf5d2"
+    },
+    {
+      "path": "fm24-dependencies/simmetrics-core-3.2.3.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/github/mpkorstanje/simmetrics-core/3.2.3/simmetrics-core-3.2.3.jar",
+      "sha256": "7be884605021172482c2bfda53907dbc8db4f6e8205bd05378084363f3a7d4ed"
+    },
+    {
+      "path": "fm24-dependencies/fastutil-8.3.1.jar",
+      "url": "https://repo.maven.apache.org/maven2/it/unimi/dsi/fastutil/8.3.1/fastutil-8.3.1.jar",
+      "sha256": "1ee5da1ebfdc86ab9574be3cc290769f319df901ae95932a118889b7c63636b9"
+    },
+    {
+      "path": "fm24-dependencies/gson-2.8.2.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar",
+      "sha256": "b7134929f7cc7c04021ec1cc27ef63ab907e410cf0588e397b8851181eb91092"
+    },
+    {
+      "path": "fm24-dependencies/jgrapht-core-1.5.1.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/jgrapht/jgrapht-core/1.5.1/jgrapht-core-1.5.1.jar",
+      "sha256": "a4d810cb63e0a77a753d147094fea9dd42e82cfc57aa289f9f85229f26043bb4"
+    },
+    {
+      "path": "fm24-dependencies/jheaps-0.13.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/jheaps/jheaps/0.13/jheaps-0.13.jar",
+      "sha256": "63414290c3497f8ac0f102209207088dec46fd4747e0f56a26c69308e85c6415"
+    },
+    {
+      "path": "fm24-dependencies/guava-18.0.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar",
+      "sha256": "d664fbfc03d2e5ce9cab2a44fb01f1d0bf9dfebeccc1a473b1f9ea31f79f6f99"
+    },
+    {
+      "path": "fm24-dependencies/neo4j-java-driver-4.3.6.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/neo4j/driver/neo4j-java-driver/4.3.6/neo4j-java-driver-4.3.6.jar",
+      "sha256": "57ca57d69410dcf951fad6c05636326d8bec9686b5e2e1fdb4b84865be44bb18"
+    },
+    {
+      "path": "fm24-dependencies/quarkus-core-3.11.2.jar",
+      "url": "https://repo.maven.apache.org/maven2/io/quarkus/quarkus-core/3.11.2/quarkus-core-3.11.2.jar",
+      "sha256": "0e474988bf46db92bb96b95739581f0c95cfc5c167c2e6093dcd34d161131a33"
+    },
+    {
+      "path": "fm24-dependencies/jboss-logging-3.5.3.Final.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/jboss/logging/jboss-logging/3.5.3.Final/jboss-logging-3.5.3.Final.jar",
+      "sha256": "7b119460de174195aca412dfed52ca0bbef0ece26c2d74301b6172cfadf4ff59"
+    }
+  ],
+  "dataset": {
+    "record": "https://zenodo.org/records/8123547",
+    "files": [
+      {
+        "path": "alloy4fun-zenodo-8123547/zoEADeCW2b2suJB2k.json",
+        "url": "https://zenodo.org/api/records/8123547/files/zoEADeCW2b2suJB2k.json/content",
+        "checksum": "md5:8e06543eb73ddc06f57dff6529eea44d",
+        "size": 4314017
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/PSqwzYAfW9dFAa9im.json",
+        "url": "https://zenodo.org/api/records/8123547/files/PSqwzYAfW9dFAa9im.json/content",
+        "checksum": "md5:a56214027137430c4601de08db979c77",
+        "size": 36795460
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/PQAJE67kz8w5NWJuM.json",
+        "url": "https://zenodo.org/api/records/8123547/files/PQAJE67kz8w5NWJuM.json/content",
+        "checksum": "md5:9621116012234425e9351b8948b4de36",
+        "size": 8369509
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/WGdhwKZnCu7aKhXq9.json",
+        "url": "https://zenodo.org/api/records/8123547/files/WGdhwKZnCu7aKhXq9.json/content",
+        "checksum": "md5:8ca50f6f95c85d5fe2c8616bbbfafded",
+        "size": 612449
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/QxGnrFQnXPGh2Lh8C.json",
+        "url": "https://zenodo.org/api/records/8123547/files/QxGnrFQnXPGh2Lh8C.json/content",
+        "checksum": "md5:ba93cab8913fc4d018064e5871dde0ae",
+        "size": 13232565
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/sDLK7uBCbgZon3znd.json",
+        "url": "https://zenodo.org/api/records/8123547/files/sDLK7uBCbgZon3znd.json/content",
+        "checksum": "md5:8df32699bc129e29d9b553e1b92262e8",
+        "size": 8266501
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/YH3ANm7Y5Qe5dSYem.json",
+        "url": "https://zenodo.org/api/records/8123547/files/YH3ANm7Y5Qe5dSYem.json/content",
+        "checksum": "md5:5bff7a4dec04b7ab55f6766269ed8f66",
+        "size": 19262143
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/zRAn69AocpkmxXZnW.json",
+        "url": "https://zenodo.org/api/records/8123547/files/zRAn69AocpkmxXZnW.json/content",
+        "checksum": "md5:541678ca82e8eb937a9bbfcc032561ca",
+        "size": 19015341
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/JC8Tij8o8GZb99gEJ.json",
+        "url": "https://zenodo.org/api/records/8123547/files/JC8Tij8o8GZb99gEJ.json/content",
+        "checksum": "md5:01bde949490dc09d4ada4c82cb47340a",
+        "size": 1841637
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/dkZH6HJNQNLLDX6Aj.json",
+        "url": "https://zenodo.org/api/records/8123547/files/dkZH6HJNQNLLDX6Aj.json/content",
+        "checksum": "md5:4072dd00c68295deff283f239b835bad",
+        "size": 37036435
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/9jPK8KBWzjFmBx4Hb.json",
+        "url": "https://zenodo.org/api/records/8123547/files/9jPK8KBWzjFmBx4Hb.json/content",
+        "checksum": "md5:0fada42df82952c88b4f92b0a2af0f2b",
+        "size": 15279847
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/jyS8Bmceejj9pLbTW.json",
+        "url": "https://zenodo.org/api/records/8123547/files/jyS8Bmceejj9pLbTW.json/content",
+        "checksum": "md5:045c1a7b6a1f93975a8b4aecb1e576b2",
+        "size": 1358209
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/aTwuoJgesSd8hXXEP.json",
+        "url": "https://zenodo.org/api/records/8123547/files/aTwuoJgesSd8hXXEP.json/content",
+        "checksum": "md5:a29830389340e4c683643973717e4304",
+        "size": 6453681
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/JDKw8yJZF5fiP3jv3.json",
+        "url": "https://zenodo.org/api/records/8123547/files/JDKw8yJZF5fiP3jv3.json/content",
+        "checksum": "md5:bef6cab468be29bcf8ff863f646e480f",
+        "size": 19165634
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/FwCGymHmbqcziisH5.json",
+        "url": "https://zenodo.org/api/records/8123547/files/FwCGymHmbqcziisH5.json/content",
+        "checksum": "md5:cafde68989065151eac790c9109764f0",
+        "size": 3919304
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/bNCCf9FMRZoxqobfX.json",
+        "url": "https://zenodo.org/api/records/8123547/files/bNCCf9FMRZoxqobfX.json/content",
+        "checksum": "md5:c0b40fb7c29568dc93c2e44f4f70e17c",
+        "size": 9979662
+      },
+      {
+        "path": "alloy4fun-zenodo-8123547/gAeD3MTGCCv8YNTaK.json",
+        "url": "https://zenodo.org/api/records/8123547/files/gAeD3MTGCCv8YNTaK.json/content",
+        "checksum": "md5:56e0c8dd8f95c0169bc72358b64bfd01",
+        "size": 5953911
+      }
+    ]
+  },
+  "scope": "Adapted FM24: original bundled Java normalization/APTED/mutation/hint code; in-memory graph persistence and deterministic MIN-TED Dijkstra; five-fold branch-held-out cohort. Not original REST deployment."
+}

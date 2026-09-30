@@ -77,8 +77,8 @@ final class AstFeedback {
             evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
             return pool ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
-                    "The complete reference pool could not be evaluated within the raw AST limits. No partial comparison is available.")
-                    : failure("engine_error", "REFERENCE_UNAVAILABLE", "The reference could not be evaluated within the raw AST limits.");
+                    "The complete reference pool could not be evaluated. Retry or ask the administrator to check the analysis service. No partial comparison is available.")
+                    : failure("engine_error", "REFERENCE_UNAVAILABLE", "The reference comparison could not complete. Retry or ask the administrator to check the analysis service.");
         }
         try {
             RawAstTrace.Result trace = RawAstTrace.trace(learner, nearest, minimum);

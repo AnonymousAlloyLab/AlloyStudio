@@ -174,6 +174,10 @@ final class CanonicalLocator {
                     CARDINALITY, CAST2INT, CAST2SIGINT, PRIME, BEFORE, HISTORICALLY, ONCE,
                     ALWAYS, EVENTUALLY, AFTER -> {
                 if (children.isEmpty()) text.append(node.getOpcode());
+                // Shared quantifier opcodes can retain declaration and body
+                // children. Match the authoritative renderer's arity guard and
+                // index every child occurrence, including the predicate body.
+                else if (children.size() != 1) renderOperator(node, path, text, spans, active);
                 else {
                     text.append('(').append(node.getOpcode()).append(' ');
                     renderChild(node, 0, path, text, spans, active);

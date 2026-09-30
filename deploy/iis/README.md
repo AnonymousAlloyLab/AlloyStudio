@@ -488,6 +488,7 @@ AlloyStudio\
     backend-task.json         generated configuration for this installation
     secrets\openai.key        optional separate plaintext credential
     logs\backend.log          private runtime log
+    logs\engine-tmp\          private per-JVM scratch, removed after each analysis
 ```
 
 Pass the same `-RuntimeRoot $RuntimeRoot` to every Install, Set-OpenAIKey, Start,

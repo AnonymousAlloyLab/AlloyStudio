@@ -26,7 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 
-WEB_FILES = ('index.html', 'app.js', 'styles.css', 'dashboard/index.html',
+WEB_FILES = ('index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard/index.html',
              'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
              'admin/index.html', 'admin/app.js', 'admin/styles.css')
 DEPLOY_FILES = (
@@ -99,6 +99,24 @@ def parse_json(data: bytes, label: str) -> dict:
     return result
 
 
+def version_portal_module(entries: dict[str, bytes]) -> dict[str, str]:
+    """Version the graph import before hashing its importing application.
+
+    The application hash must change when this dependency changes, even if
+    app.js itself has not changed. Relative imports keep IIS subpaths working.
+    """
+    name = 'instance-graph.js'
+    version = digest(entries['wwwroot/' + name])
+    application = entries['wwwroot/app.js']
+    pattern = re.compile(rb'(\bfrom\s+)([\'\"])(\./instance-graph\.js)\2')
+    if len(pattern.findall(application)) != 1:
+        raise PackageError('Expected exactly one relative instance-graph.js import in web/app.js.')
+    entries['wwwroot/app.js'] = pattern.sub(
+        lambda match: match[1] + match[2] + match[3] + b'?v='
+        + version.encode('ascii') + match[2], application)
+    return {name: version}
+
+
 def version_public_assets(entries: dict[str, bytes], directory: str = '') -> dict[str, str]:
     """Bind the packaged HTML's asset URLs to the exact JS/CSS payload bytes.
 
@@ -124,7 +142,8 @@ def version_public_assets(entries: dict[str, bytes], directory: str = '') -> dic
 def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, bytes]:
     root = checked_deployment_path(root).resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
-    public_asset_versions = version_public_assets(entries)
+    public_asset_versions = version_portal_module(entries)
+    public_asset_versions.update(version_public_assets(entries))
     public_asset_versions.update(version_public_assets(entries, 'dashboard/'))
     public_asset_versions.update(version_public_assets(entries, 'admin/'))
     for name in DEPLOY_FILES:

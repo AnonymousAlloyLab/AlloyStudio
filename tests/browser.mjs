@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { instanceDiagramGeometry } from './instance-graph-geometry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = path.join(root, 'build/browser');
@@ -759,7 +760,12 @@ try {
     await page.waitForFunction(() => location.search.includes('graphs-inv1'));
   });
   await check('real-behavior-score-and-four-bounded-categories', async () => {
-    await page.route('**/api/behavior', route => route.continue());
+    let realBehavior;
+    await page.route('**/api/behavior', async route => {
+      const response = await route.fetch();
+      realBehavior = await response.json();
+      return route.fulfill({ response });
+    });
     await submit('adj = ~adj'); await waitBehavior();
     assert.equal(await page.locator('.behavior-score').textContent(), '1.000');
     assert.equal(await page.locator('.behavior-category-choice').count(), 4);
@@ -782,9 +788,49 @@ try {
       await page.locator(`.behavior-category-choice[data-category="${id}"]`).click();
       const examples = await page.locator('.behavior-example-choice').count();
       assert(examples >= 1 && examples <= 3);
+      for (let index = 0; index < examples; index += 1) {
+        await page.getByRole('button', { name: `Example ${index + 1}`, exact: true }).click();
+        const stateData = realBehavior.categories.find(category => category.id === id).instances[index].states[0];
+        const expectedAtoms = [...new Set([...stateData.signatures.flatMap(signature => signature.atoms),
+          ...stateData.relations.flatMap(relation => relation.tuples.flat())])].sort();
+        assert.equal(await page.locator('.instance-graph').count(), 1);
+        assert.equal(await page.locator('.instance-graph').isVisible(), true);
+        assert.deepEqual(await page.locator('.instance-graph [data-atom]').evaluateAll(nodes =>
+          nodes.map(node => node.dataset.atom).sort()), expectedAtoms);
+        assert.equal(await page.locator('.instance-graph [data-tuple-id]').count(),
+          stateData.relations.reduce((count, relation) => count + relation.tuples.length, 0));
+        assert.equal(await page.locator('.instance-graph-limit').count(), 0);
+      }
     }
     await page.locator('.behavior-category-choice[data-category="undercoverage"]').click();
     await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'behavioral-examples.png') });
+    await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'instance-graph-real-desktop.png') });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await page.waitForFunction(() => {
+      const viewport = document.querySelector('.instance-graph-scroll');
+      return viewport && (viewport.scrollWidth <= viewport.clientWidth + 1
+        || Math.abs(viewport.scrollLeft - (viewport.scrollWidth - viewport.clientWidth) / 2) <= 2);
+    });
+    assert(await page.locator('.instance-graph-scroll').evaluate(viewport => {
+      const bounds = viewport.getBoundingClientRect();
+      return [...viewport.querySelectorAll('[data-atom]')].some(atom => {
+        const rect = atom.getBoundingClientRect();
+        return rect.left >= bounds.left && rect.right <= bounds.right;
+      });
+    }), 'The real example must show an object immediately on a narrow screen, before scrolling');
+    const hiddenOverlays = await page.locator('.skip-link, #toast').evaluateAll(elements => elements.map(element => {
+      const previous = element.hidden; element.hidden = true; return previous;
+    }));
+    try {
+      await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'instance-graph-real-mobile.png'),
+        style: '.skip-link, .toast { visibility: hidden !important; }' });
+    } finally {
+      await page.locator('.skip-link, #toast').evaluateAll((elements, previous) => elements.forEach((element, index) => {
+        element.hidden = previous[index];
+      }), hiddenOverlays);
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.unroute('**/api/behavior');
   });
   await check('behavior-rounding-categories-and-three-example-choices', async () => {
@@ -799,7 +845,17 @@ try {
       await choice.click();
       assert.equal(await choice.getAttribute('aria-pressed'), 'true');
       assert.equal(await page.locator('.behavior-example-choice').count(), 3);
-      await page.getByRole('button', { name: 'Example 3', exact: true }).click();
+      for (let example = 1; example <= 3; example += 1) {
+        await page.getByRole('button', { name: `Example ${example}`, exact: true }).click();
+        assert.equal(await page.locator('.instance-graph').count(), 1);
+        assert.equal(await page.locator('.instance-graph').isVisible(), true);
+        assert.deepEqual(await page.locator('.instance-graph [data-atom]').evaluateAll(nodes =>
+          nodes.map(node => node.dataset.atom).sort()), [`Node$${id}-${example}`, 'State$0']);
+        const edge = page.locator('.instance-graph-edge');
+        assert.equal(await edge.count(), 1);
+        assert.equal(await edge.getAttribute('data-source'), `Node$${id}-${example}`);
+        assert.equal(await edge.getAttribute('data-target'), 'State$0');
+      }
       assert((await page.locator('.behavior-signatures').textContent()).includes(`Node$${id}-3`));
       assert.deepEqual(await page.locator('.behavior-relation th').allTextContents(), ['From', 'To']);
       assert.match(await page.locator('.behavior-enumeration').textContent(), /More may exist/);
@@ -837,11 +893,229 @@ try {
     assert.match(await page.locator('.behavior-state-content').textContent(), /State\$2/);
     assert(!(await page.locator('.behavior-state-content').textContent()).includes('State$0'));
     assert((await page.locator('.behavior-state-content').textContent()).includes(markup));
+    assert((await page.locator('.instance-graph [data-atom]').evaluateAll(nodes => nodes.map(node => node.dataset.atom))).includes('State$2'));
+    assert(!(await page.locator('.instance-graph [data-atom]').evaluateAll(nodes => nodes.map(node => node.dataset.atom))).includes('State$0'));
+    assert.equal(await page.locator('.instance-graph script, .instance-graph img, .instance-graph foreignObject').count(), 0);
+    assert.equal(await page.locator('.instance-graph [onerror], .instance-graph [onclick]').count(), 0);
     assert.equal(await page.locator('#behavior-result img, #behavior-result script').count(), 0);
     assert.equal(await page.evaluate(() => window.BEHAVIOR_INJECTED), undefined);
     await page.getByRole('button', { name: 'Example 2', exact: true }).click();
     assert.equal(await page.locator('.behavior-state-select').count(), 0);
     assert.match(await page.locator('.behavior-instance .behavior-enumeration').textContent(), /Only state 1 of 3 is displayed.*repeats from state 2/);
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('instance-graph-preserves-membership-tuple-order-loops-and-integer-values', async () => {
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      data.categories[0].instances[0].states[0] = { index: 0,
+        signatures: [{ label: 'Thing', atoms: ['Thing$0', 'Thing$1', 'Thing$2'] }, { label: 'Chosen', atoms: ['Thing$0'] }],
+        relations: [{ label: 'self', arity: 2, tuples: [['Thing$0', 'Thing$0']] },
+          { label: 'marked', arity: 1, tuples: [['Thing$1']] },
+          { label: 'position', arity: 3, tuples: [['Thing$0', '-2', 'Thing$1'], ['Thing$1', '1', 'Thing$0']] },
+          { label: 'empty', arity: 2, tuples: [] }] };
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node'); await waitBehavior();
+    assert.deepEqual(await page.locator('.instance-graph [data-atom]').evaluateAll(nodes => nodes.map(node => node.dataset.atom).sort()),
+      ['-2', '1', 'Thing$0', 'Thing$1', 'Thing$2']);
+    assert.equal(await page.locator('.instance-graph [data-atom="Thing$0"]').count(), 1, 'Overlapping signature membership must not duplicate an atom');
+    assert.equal(await page.locator('.instance-graph [data-atom="Thing$2"]').count(), 1, 'Disconnected atoms remain visible');
+    const loop = page.locator('.instance-graph-edge[data-source="Thing$0"][data-target="Thing$0"]');
+    assert.equal(await loop.count(), 1);
+    assert(await loop.evaluate(edge => {
+      const length = edge.getTotalLength(), first = edge.getPointAtLength(0), last = edge.getPointAtLength(length);
+      return length > Math.hypot(last.x - first.x, last.y - first.y) + 10;
+    }), 'A self relation must visibly leave and return to its object, rather than collapse into a line');
+    const unary = page.locator('.instance-graph [data-tuple-id="tuple-1-0"]');
+    assert.equal(await unary.getAttribute('data-arity'), '1');
+    const ternary = page.locator('.instance-graph [data-tuple-id="tuple-2-0"]');
+    assert.equal(await ternary.getAttribute('data-arity'), '3');
+    assert.deepEqual(await ternary.locator('.instance-graph-column-label').evaluateAll(nodes => nodes.map(node => node.dataset.column)), ['1', '2', '3']);
+    await ternary.focus(); await ternary.press('Enter');
+    const details = await page.locator('.instance-graph-details').textContent();
+    assert.match(details, /position/);
+    assert(details.indexOf('Thing$0') < details.indexOf('-2') && details.indexOf('-2') < details.indexOf('Thing$1'),
+      'The selected tuple description must preserve all three column positions');
+    const atom = page.locator('.instance-graph [data-atom="Thing$0"]');
+    await atom.focus(); await atom.press('Space');
+    assert.match(await page.locator('.instance-graph-details').textContent(), /Thing\$0/);
+    assert.match(await page.locator('.instance-graph-details').textContent(), /Chosen/);
+    assert.match(await page.locator('.instance-graph-details').textContent(), /Thing/);
+    await page.locator('.instance-graph-relation-filter').selectOption('1');
+    assert.equal(await page.locator('.instance-graph [data-tuple-id]').count(), 1);
+    assert.equal(await page.locator('.instance-graph [data-tuple-id="tuple-1-0"]').count(), 1);
+    await page.locator('.instance-graph-relation-filter').selectOption('3');
+    assert.equal(await page.locator('.instance-graph [data-tuple-id]').count(), 0);
+    assert.equal(await page.locator('.instance-graph [data-atom="Thing$2"]').count(), 1);
+    await page.locator('.instance-graph-relation-filter').selectOption('all');
+    assert.equal(await page.locator('.instance-graph [data-tuple-id]').count(), 4);
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
+  await check('instance-graph-routing-does-not-cross-unrelated-atoms', async () => {
+    // Synthetic size-three signatures are compatible with the portal's bounds.
+    // These expose loops hidden behind another row and nonadjacent grid edges
+    // passing through an atom that is not an endpoint of the selected tuple.
+    const signatures = ['A', 'B', 'C'].map(label => ({ label,
+      atoms: [0, 1, 2].map(index => `${label}$${index}`) }));
+    const cases = [
+      [{ label: 'A.r', arity: 2, tuples: [['A$0', 'A$0']] },
+        { label: 'A.s', arity: 2, tuples: [['A$0', 'A$0']] }],
+      [{ label: 'A.r', arity: 2, tuples: [['A$0', 'A$1'], ['A$1', 'A$2'], ['A$0', 'A$2']] }],
+      [{ label: 'A.r', arity: 3, tuples: [['A$0', 'A$0', 'A$2'], ['B$0', 'C$2', 'B$0']] }],
+    ];
+    let relations;
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      data.categories[0].instances[0].states[0] = { index: 0, signatures, relations };
+      return route.fulfill({ json: data });
+    });
+    try {
+      for (const [caseIndex, fixture] of cases.entries()) {
+        relations = fixture;
+        await submit(`some Node // routing fixture ${caseIndex}`); await waitBehavior();
+        const expectedEdges = relations.reduce((sum, relation) => sum
+          + relation.tuples.length * (relation.arity === 2 ? 1 : relation.arity), 0);
+        assert.equal(await page.locator('.instance-graph-edge').count(), expectedEdges,
+          'Every tuple column connection must remain present after routing');
+        const collisions = await page.locator('.instance-graph-canvas').evaluate(canvas => {
+          const obstacles = [...canvas.querySelectorAll('.instance-graph-node > rect, .instance-graph-junction > rect')];
+          const failures = [];
+          for (const edge of canvas.querySelectorAll('.instance-graph-edge')) {
+            const tuple = edge.closest('.instance-graph-tuple');
+            const length = edge.getTotalLength();
+            const samples = Math.max(1, Math.ceil(length / 2));
+            for (const rectangle of obstacles) {
+              const atom = rectangle.closest('.instance-graph-node')?.dataset.atom;
+              const junction = rectangle.closest('.instance-graph-junction');
+              if (atom !== undefined && (atom === edge.dataset.source || atom === edge.dataset.target)) continue;
+              if (junction && junction.closest('.instance-graph-tuple') === tuple) continue;
+              const bounds = rectangle.getBoundingClientRect();
+              for (let index = 1; index < samples; index += 1) {
+                const point = edge.getPointAtLength(length * index / samples).matrixTransform(edge.getScreenCTM());
+                if (point.x > bounds.left + 1 && point.x < bounds.right - 1
+                  && point.y > bounds.top + 1 && point.y < bounds.bottom - 1) {
+                  failures.push({ tuple: tuple.dataset.tupleId, column: edge.dataset.column || null,
+                    obstacle: atom ?? junction.closest('.instance-graph-tuple').dataset.tupleId });
+                  break;
+                }
+              }
+            }
+          }
+          return failures;
+        });
+        assert.deepEqual(collisions, [], `Routing fixture ${caseIndex} must not imply connections through unrelated objects`);
+      }
+    } finally {
+      await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+    }
+  });
+  await check('complex-instance-layout-keeps-objects-labels-and-routes-separated', async () => {
+    const fixture = JSON.parse(await readFile(path.join(root, 'tests/fixtures/production-line-inv3-instances.json'), 'utf8'));
+    assert.equal(fixture.provenance.exerciseId, 'productionLineNew-inv3');
+    assert.equal(fixture.examples.length, 6);
+    // Long names, parallel and reverse relations, loops, and repeated tuple
+    // columns stress label measurement and route separation independently of
+    // the six real solver examples above.
+    const atoms = ['Machine_With_A_Very_Long_Name$0', 'Machine_With_A_Very_Long_Name$1', 'Machine_With_A_Very_Long_Name$2'];
+    const stress = { index: 0,
+      signatures: [{ label: 'Machine_With_A_Very_Long_Name', atoms },
+        { label: 'Production_Equipment_With_A_Long_Name', atoms: [atoms[0], atoms[2]] }],
+      relations: [
+        ...Array.from({ length: 8 }, (_, index) => ({ label: `ProductionLine.long_parallel_relation_${index}`,
+          arity: 2, tuples: [[atoms[0], atoms[1]], [atoms[1], atoms[0]], [atoms[2], atoms[2]]] })),
+        { label: 'Repeated_column_positions_remain_distinguishable', arity: 4,
+          tuples: [[atoms[0], atoms[0], atoms[2], atoms[0]], [atoms[1], atoms[2], atoms[1], atoms[2]]] },
+      ] };
+    const maximalAtoms = Array.from({ length: 40 }, (_, index) => `Part$${index}`);
+    const maximal = { index: 0, signatures: [{ label: 'Part', atoms: maximalAtoms }],
+      relations: Array.from({ length: 6 }, (_, relation) => ({ label: `Eight_column_relation_${relation}`, arity: 8,
+        tuples: Array.from({ length: 8 }, (_, tuple) => Array.from({ length: 8 }, (_, column) =>
+          maximalAtoms[(relation * 7 + tuple * 3 + column * 5) % maximalAtoms.length])) })) };
+    const cases = [...fixture.examples.map(example => ({
+      name: `${example.category}-${example.example}`, state: example.state })),
+    { name: 'bounded-max-arity', state: maximal }, { name: 'long-parallel-repeated', state: stress }];
+    const visual = await context.newPage();
+    visual.on('pageerror', error => errors.push(error.message));
+    try {
+      await visual.route(url + '/instance-layout-test', route => route.fulfill({ contentType: 'text/html', body:
+        '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<link rel="stylesheet" href="/styles.css"></head><body><main id="layout-probe"></main></body></html>' }));
+      await visual.goto(url + '/instance-layout-test');
+      await visual.evaluate(() => document.fonts.ready);
+      for (const width of [1440, 390]) {
+        await visual.setViewportSize({ width, height: 1000 });
+        for (const fixtureCase of cases) {
+          await visual.evaluate(async state => {
+            const { renderInstanceGraph } = await import('/instance-graph.js');
+            document.querySelector('#layout-probe').replaceChildren(renderInstanceGraph(state));
+            await new Promise(resolve => requestAnimationFrame(resolve));
+          }, fixtureCase.state);
+          const canvas = visual.locator('.instance-graph-canvas');
+          const report = await canvas.evaluate(instanceDiagramGeometry);
+          assert(report.objects > 0 && report.texts >= report.objects);
+          assert.deepEqual(report.failures, [], `${fixtureCase.name} at ${width}px: objects and labels must be readable without overlaps`);
+          const expected = fixtureCase.state.relations.reduce((sum, relation) => sum
+            + relation.tuples.length * (relation.arity === 2 ? 1 : relation.arity), 0);
+          assert.equal(report.edges, expected, `${fixtureCase.name}: routing must retain every relation connection`);
+          const routes = await canvas.locator('.instance-graph-edge').evaluateAll(edges => edges.map(edge => edge.getAttribute('d')));
+          assert.equal(new Set(routes).size, routes.length, `${fixtureCase.name}: parallel/repeated connections must not collapse onto the same path`);
+          assert(await visual.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+            `${fixtureCase.name}: diagram overflow must stay inside its scroll region`);
+          if (width === 390) {
+            assert(await visual.locator('.instance-graph-scroll').evaluate(viewport => {
+              const bounds = viewport.getBoundingClientRect();
+              return [...viewport.querySelectorAll('.instance-graph-node > rect')].some(node => {
+                const card = node.getBoundingClientRect();
+                return card.left >= bounds.left && card.right <= bounds.right
+                  && card.top >= bounds.top && card.bottom <= bounds.bottom;
+              });
+            }), `${fixtureCase.name}: initial mobile view must show at least one complete object`);
+          }
+          if (fixtureCase.name === 'both-3') {
+            await visual.locator('.instance-graph').screenshot({ path: path.join(artifacts,
+              `instance-graph-production-line-${width === 390 ? 'mobile' : 'desktop'}.png`) });
+          }
+        }
+      }
+      await visual.locator('.instance-graph-relation-filter').selectOption('8');
+      assert.deepEqual((await visual.locator('.instance-graph-canvas').evaluate(instanceDiagramGeometry)).failures, [],
+        'Filtering must recompute a collision-free layout');
+      assert.equal(await visual.locator('[data-tuple-id]').count(), 2);
+    } finally { await visual.close(); }
+  });
+  await check('instance-graph-empty-and-bounded-dense-states-are-explicit', async () => {
+    let dense = false;
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      data.categories[0].instances[0].states[0] = dense ? { index: 0,
+        signatures: [{ label: 'Many', atoms: Array.from({ length: 55 }, (_, index) => `Many$${index}`) }],
+        relations: [{ label: 'links', arity: 2, tuples: Array.from({ length: 70 }, (_, index) => [`Many$${index % 55}`, `Many$${(index + 1) % 55}`]) }] }
+        : { index: 0, signatures: [{ label: 'Empty', atoms: [] }], relations: [{ label: 'links', arity: 2, tuples: [] }] };
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node'); await waitBehavior();
+    assert.equal(await page.locator('.instance-graph').count(), 1);
+    assert.equal(await page.locator('.instance-graph [data-atom], .instance-graph [data-tuple-id]').count(), 0);
+    assert.match(await page.locator('.instance-graph').textContent(), /no atoms|no objects|empty/i);
+    assert.equal(await page.locator('.instance-graph-limit').count(), 0);
+    dense = true; await submit('some Node // dense'); await waitBehavior();
+    const atoms = await page.locator('.instance-graph [data-atom]').evaluateAll(nodes => nodes.map(node => node.dataset.atom));
+    assert(atoms.length > 0 && atoms.length <= 40);
+    assert((await page.locator('.instance-graph [data-tuple-id]').count()) <= 48);
+    assert.match(await page.locator('.instance-graph-limit').textContent(), /show|omitt|limit/i);
+    assert.match(await page.locator('.behavior-signatures').textContent(), /Many\$54/);
+    const edges = await page.locator('.instance-graph-edge').evaluateAll(nodes => nodes.map(node => [node.dataset.source, node.dataset.target]));
+    assert(edges.every(edge => edge.every(atom => atoms.includes(atom))), 'Truncated views may not draw edges to missing nodes');
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    const viewport = page.locator('.instance-graph-scroll');
+    await viewport.focus();
+    assert(await viewport.evaluate(node => node === document.activeElement));
+    await viewport.press('ArrowRight');
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
   });
   await check('behavior-unavailable-polarity-and-timeout-are-distinct', async () => {
@@ -1312,14 +1586,18 @@ try {
     // loopback backend. The browser's Origin remains the public proxy origin.
     // Serve the actual packaged HTML. An old CDN entry poisons each unversioned
     // asset URL, so this workflow can only pass if new content URLs are used.
-    const packagedIndex = execFileSync('python3', ['-c',
-      'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("wwwroot/index.html"))',
-      path.join(root, 'build/iis/alloy-studio-iis.zip')]);
-    const assetVersions = new Map(await Promise.all(['app.js', 'styles.css'].map(async name =>
-      [name, createHash('sha256').update(await readFile(path.join(root, 'web', name))).digest('hex')])));
-    for (const [name, version] of assetVersions) {
+    const packagedAsset = name => execFileSync('python3', ['-c',
+      'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("wwwroot/" + sys.argv[2]))',
+      process.env.ALLOY_IIS_TEST_ARCHIVE || path.join(root, 'build/iis/alloy-studio-iis.zip'), name]);
+    const packagedIndex = packagedAsset('index.html');
+    const packagedAssets = new Map(['app.js', 'styles.css', 'instance-graph.js'].map(name => [name, packagedAsset(name)]));
+    const assetVersions = new Map([...packagedAssets].map(([name, content]) =>
+      [name, createHash('sha256').update(content).digest('hex')]));
+    for (const name of ['app.js', 'styles.css']) {
+      const version = assetVersions.get(name);
       assert(packagedIndex.includes(Buffer.from(`./${name}?v=${version}`)));
     }
+    assert(packagedAssets.get('app.js').includes(Buffer.from(`./instance-graph.js?v=${assetVersions.get('instance-graph.js')}`)));
     let backendURL;
     let backend;
     let proxyContext;
@@ -1340,6 +1618,10 @@ try {
         response.writeHead(200, { 'Content-Type': asset.endsWith('.js') ? 'application/javascript' : 'text/css' });
         response.end(asset.endsWith('.js') ? 'throw new Error("Stale cached JavaScript loaded")' : 'body { display: none }');
         return;
+      }
+      if (packagedAssets.has(asset)) {
+        response.writeHead(200, { 'Content-Type': asset.endsWith('.js') ? 'application/javascript' : 'text/css' });
+        response.end(packagedAssets.get(asset)); return;
       }
       const upstream = httpRequest(target, {
         method: request.method,
@@ -1383,8 +1665,10 @@ try {
       assert.equal(await proxyPage.locator('#exercise-count').textContent(), '181');
       assert(proxyRequests.includes(`/alloy/app.js?v=${assetVersions.get('app.js')}`));
       assert(proxyRequests.includes(`/alloy/styles.css?v=${assetVersions.get('styles.css')}`));
+      assert(proxyRequests.includes(`/alloy/instance-graph.js?v=${assetVersions.get('instance-graph.js')}`));
       assert(!proxyRequests.includes('/alloy/app.js'));
       assert(!proxyRequests.includes('/alloy/styles.css'));
+      assert(!proxyRequests.includes('/alloy/instance-graph.js'));
       assert(proxyRequests.includes('/alloy/api/exercises'));
       assert(proxyRequests.includes('/alloy/api/feedback'));
       const proxyEditor = proxyPage.locator('#predicate-editor');

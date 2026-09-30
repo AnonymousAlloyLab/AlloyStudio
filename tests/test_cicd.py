@@ -134,6 +134,24 @@ class DashboardTests(unittest.TestCase):
                     self.assertEqual(report['status'], 'FAIL')
                     self.assertEqual(report['failure_code'], expected)
 
+    def test_ci_child_uses_owned_scratch_instead_of_ambient_temp_directory(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        import sys
+        ambient = self.root / 'ambient temporary directory'
+        ambient.mkdir()
+        scratch = (self.root / 'build/ci/tmp').resolve()
+        command = [sys.executable, '-c',
+                   'import tempfile; from pathlib import Path; '
+                   f'assert Path(tempfile.gettempdir()).resolve() == Path({str(scratch)!r}); '
+                   'f=tempfile.TemporaryFile(); f.write(b"scratch probe"); f.close()']
+        with patch.dict(os.environ, {key: str(ambient) for key in ('TMPDIR', 'TMP', 'TEMP')}), \
+             patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+             patch.object(ci_check, 'build_command', return_value=command), \
+             redirect_stdout(StringIO()):
+            self.assertEqual(ci_check.execute('build', self.root), 0)
+        self.assertEqual(list(ambient.iterdir()), [])
+
     def test_windows_build_uses_bash_beside_git_not_system_wsl(self):
         for layout in ('cmd', 'bin', 'mingw64/bin', 'mingw32/bin'):
             install = self.root / ('Git ' + layout.replace('/', '-'))

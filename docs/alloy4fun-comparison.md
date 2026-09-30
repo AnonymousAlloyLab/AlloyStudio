@@ -216,6 +216,45 @@ FM24 `target` expression is not reproduced here. TAR emits the selected mutation
 sequence's native hints only after finding and serializing a complete candidate;
 the independently checked repair rate is therefore reported separately.
 
+## Initial quality assessment: ten example exercises
+
+For the complete catalogue, see the subsequent
+[181-invariant availability and guidance audit](alloy4fun-181-hint-quality.md).
+It measures guidance properties over all 42,388 incorrect inputs and retains
+one current starter comparison per invariant. Its observed location, wording,
+trace-length, and repair-validation properties are kept separate from the
+smaller qualitative pilot below.
+
+The [ten-exercise quality appendix](alloy4fun-hint-quality.md) now compares fresh
+current-portal Canonical and AST hints with the exact saved TAR and FM24 responses
+for the same drafts. It includes every learner draft and operation in a
+[public evidence file](benchmarks/alloy4fun-hint-quality.json), side-by-side
+excerpts, two reproduced literal-edit probes, and two separate GPT-6 Luna
+subagent reviews. No paid portal narration was generated.
+
+The ten preselected catalogue starters cover ten model families and varied
+constructs, but **all are underconstrained**; they are illustrative, not a
+representative quality sample. Each portal mode emitted hints for 10/10, TAR
+for 7/10, and both FM24 variants for 5/10. All seven emitted TAR candidates passed
+their saved independent bounded check. Both FM24 modes gave the same historical
+hints here, so mutation-only hint quality is not assessed by this pilot.
+
+The qualitative tradeoff is visible in the actual wording: Canonical/AST give
+structural detail and highlights; available FM24 hints often explain an operator's
+purpose more clearly; TAR's short generic cues accompany searched repairs.
+Two probes sharpen that distinction. A literal reading of the first canonical
+tutoring-role operator replacement produces a type error, whereas the AST
+junction hint's `implies` → `iff` edit compiles, reaches distance zero, and passes
+its bounded behavior check. These selected probes do not measure a population
+first-edit success rate or invalidate/validate entire redacted traces.
+
+Current portal pools include all compatible correct references; the saved
+baselines use the documented experimental history policy. Saved Canonical/AST
+controls expose the resulting distance differences. Reviewer agreement on
+next-step ratings was only 1/37 available outputs, so the appendix makes **no
+rating-based method ranking or human learning claim**. The original full-corpus
+measurements and evidence hashes remain unchanged.
+
 ## Dataset and separation of training history
 
 The cohort is **66,080 source files − 4,482 raw-AST-identical student/oracle

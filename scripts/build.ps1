@@ -85,6 +85,8 @@ if ($LASTEXITCODE -ne 0) { throw "Python validation failed with exit code $LASTE
 if ($nodeCommand) {
     & $Node '--check' (Join-Path $projectRoot 'web\app.js')
     if ($LASTEXITCODE -ne 0) { throw "JavaScript validation failed with exit code $LASTEXITCODE." }
+    & $Node '--check' (Join-Path $projectRoot 'web\instance-graph.js')
+    if ($LASTEXITCODE -ne 0) { throw "Instance graph JavaScript validation failed with exit code $LASTEXITCODE." }
     & $Node '--check' (Join-Path $projectRoot 'web\admin\app.js')
     if ($LASTEXITCODE -ne 0) { throw "Admin JavaScript validation failed with exit code $LASTEXITCODE." }
 } else {

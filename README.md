@@ -18,6 +18,15 @@ Hint availability is not repair quality; worker resources also differed.
 Its five-fold reference exclusion is a benchmark adaptation; nonempty hints on
 held-out CORRECT submissions do not measure recognition of members of the
 original complete correct pool.
+The [ten-exercise hint-quality pilot](docs/alloy4fun-hint-quality.md) adds current
+Canonical/AST hints beside TAR and FM24 outputs, two literal-edit checks, and
+separate Luna reviews. It distinguishes useful source highlights from directly
+applicable edits and documents the sample and pool-policy limits.
+The [181-invariant hint-quality report](docs/alloy4fun-181-hint-quality.md)
+extends coverage and measured guidance properties to the complete catalogue,
+keeping Canonical, AST, TAR, and both FM24 configurations separate.
+The [181-invariant image audit](docs/instance-audit-v003.md) records real solver
+instances, desktop/mobile layout checks, and any cases without drawable results.
 The [engine and corpus diagnostic report](docs/hint-diagnostics.md) investigates
 temporary-file failures, omitted quantified bodies in the canonical display,
 nonzero distances on corpus-labelled correct predicates, and TAR output failures.
@@ -25,7 +34,23 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
-**Alpha v0.0.1** (`v0.0.1-alpha`) adds a metric selector and a
+**Alpha v0.0.3** (`v0.0.3-alpha`) adds interactive instance diagrams, measured
+spacing and obstacle-aware connection routes, the completed five-arm Alloy4Fun
+benchmark, and the catalogue-wide image and hint-quality audits. It also includes
+canonical display and JVM temporary-file fixes, benchmark label diagnostics,
+and the SQL AST-identity bridge and clarified proof claims. See the
+[release notes](docs/releases/v0.0.3-alpha.md) for validation and limitations.
+
+**Alpha v0.0.2** (`v0.0.2-alpha`) added SQLite exercise storage through the
+[SQLeanParser](https://github.com/University-of-Wild-Chicken/SQLeanParser)-checked
+query registry, private exercise imports, previous/next navigation, authenticated
+model uploads with bounded equivalence checks, Luna metadata suggestions,
+per-deployment administrator setup, timestamped IIS packages, and macOS
+portability fixes. Its [release notes](docs/releases/v0.0.2-alpha.md) distinguish
+the constructive Lean SQL separation proof from checked production mappings
+and finite regression tests. It did not prove universal application immunity.
+
+**Alpha v0.0.1** (`v0.0.1-alpha`) added a metric selector and a
 [project CI/CD dashboard](docs/ci-cd.md) at `/dashboard/`. The
 [Lean closure plan](docs/lean-closure.md) lists 24 open formal obligations and
 their implementation requirements. Supporting Lean proofs and four finite
@@ -74,8 +99,11 @@ Behavioral feedback loads separately below the editor and feedback panels. It
 shows the **behavioral similarity score** to three decimal places and up to three
 instances in each oracle/student category: both accept, undercoverage (only the
 oracle accepts), overcoverage (only your predicate accepts), and neither accepts.
-Select an example to inspect its atoms and relations; temporal instances also
-let you select a state. Empty categories mean no instance exists **within the
+Select an example to see a labeled diagram of its objects and connections.
+Choose a relation to simplify the picture, or select an object or connection
+for a plain-language description. Temporal instances also let you select a
+state; the picture updates with it. Expand **Exact atoms and relation tables**
+to inspect the values behind the drawing. Empty categories mean no instance exists **within the
 displayed bounds**. Changing the draft clears the previous behavioral results.
 All 181 exercises have natural-language requirements displayed above the editor.
 Read them together in [the exercise guide](docs/exercise-descriptions.md).
@@ -247,6 +275,25 @@ and other atom identities come from the public model. No solver command, private
 source, XML metadata, or skolem bindings are returned. Only this public instance
 projection is available to Luna for explaining the displayed examples.
 
+Each selected example is rendered locally as an interactive SVG diagram from
+that same public instance data. Objects shared by several signatures appear
+once, with their memberships retained. Binary relations use directed arrows;
+relations with other arities use numbered tuple connections so column order
+and repeated objects remain explicit. A legend and selection descriptions
+explain how to read the picture. The renderer handles isolated objects, empty
+relations, integer values, and anonymized string identities without inventing
+objects or links. It does not ask Luna or an image service to reconstruct an
+instance, and needs no external graphics library or network request.
+
+Large diagrams have a clearly labeled visual limit; the exact tables retain all
+data returned for the selected state. This display limit is separate from the
+backend's existing truncation warning. Graph labels are inserted as text, and
+the renderer receives no private predicates or solver metadata. Keyboard
+selection, horizontally scrollable diagrams on narrow screens, and the exact
+tables provide alternative ways to inspect an example. See the
+[instance visualization guide](docs/instance-visualization.md) for the notation
+and its limits.
+
 If model facts make either oracle polarity unsatisfiable within these bounds,
 ACGN's sampled reward is undefined: the score is unavailable while the categories
 remain usable. A timeout or unsupported form is also distinct from UNSAT. Models
@@ -378,6 +425,9 @@ remain the **older successful build**; they do not contain the failed changes.
 The packaged `wwwroot/index.html` references `app.js` and `styles.css` with
 SHA-256 query versions derived from their exact bytes. This changes the asset
 URLs whenever their content changes; source `web/index.html` stays unchanged.
+The instance renderer has its own versioned module URL. Packaging updates its
+import before hashing `app.js`, so a renderer-only update also refreshes the
+application URL. CDN cache rules must preserve those versioned URLs.
 The IIS settings configure `Cache-Control: no-cache, no-store`, disable
 static/output caching, and suppress static ETags; verify the effective headers
 on the target host. Existing browser or Cloudflare entries still need clearing

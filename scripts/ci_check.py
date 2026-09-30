@@ -56,7 +56,13 @@ def execute(name, root=ROOT):
     before = revision(root)
     report = {'check': name, 'status': 'FAIL', 'count': None,
               'revision': before['sha'], 'dirty': before['dirty']}
-    environment = dict(os.environ, OPENAI_DISABLED='1')
+    # Browser profiles/shared-memory fallback and child runtimes must not fill
+    # the host's shared temporary directory. Keep diagnostic leftovers owned by
+    # this checkout too; a full /tmp directory index can fail despite free disk.
+    scratch = (output / 'tmp').resolve()
+    scratch.mkdir(parents=True, exist_ok=True)
+    environment = dict(os.environ, OPENAI_DISABLED='1', TMPDIR=str(scratch),
+                       TMP=str(scratch), TEMP=str(scratch))
     commands = {
         'build': None,
         'runtime': [sys.executable, 'runtime_dependencies.py', '--java', 'java'],

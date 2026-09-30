@@ -146,7 +146,7 @@ try {
     Assert-Check $true 'private paths are outside IIS and ACLs exclude public readers'
 
     $stage = 'IIS static assets and proxy health'
-    foreach ($asset in @('', 'index.html', 'app.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+    foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
         'admin/', 'admin/app.js', 'admin/styles.css')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"

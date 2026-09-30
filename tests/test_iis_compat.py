@@ -62,7 +62,7 @@ class IISCompatibilityTests(unittest.TestCase):
     def test_versioned_frontend_urls_serve_current_bytes_without_cache_revalidation(self):
         # Version queries must preserve the strict asset allowlist. Old IIS
         # validators must not turn changed local frontend content into a 304.
-        for name in ('index.html', 'app.js', 'styles.css'):
+        for name in ('index.html', 'app.js', 'instance-graph.js', 'styles.css'):
             with self.subTest(asset=name):
                 request = Request(self.url + '/' + name + '?v=content-hash', headers={
                     'If-None-Match': 'W/"old-release-timestamp"',
@@ -82,6 +82,13 @@ class IISCompatibilityTests(unittest.TestCase):
         for value, expected in cases.items():
             with self.subTest(value=value):
                 self.assertEqual(server.normalize_origin(value), expected)
+
+    def test_graph_es_module_serves_locally_without_packaged_query(self):
+        with urlopen(self.url + '/instance-graph.js', timeout=10) as response:
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.headers.get_content_type(), 'text/javascript')
+            self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
+            self.assertEqual(response.read(), (ROOT / 'web/instance-graph.js').read_bytes())
 
     def test_origin_rejects_non_origins_and_ambiguous_values(self):
         for value in ('null', '*', '', 'alloy.example', 'ftp://alloy.example',

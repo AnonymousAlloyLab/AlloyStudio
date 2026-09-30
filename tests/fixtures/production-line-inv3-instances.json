@@ -1,0 +1,813 @@
+{
+  "provenance": {
+    "exerciseId": "productionLineNew-inv3",
+    "learnerBody": "\nall m:Material | m in Component  => one workstation.m\n",
+    "origin": "Local public /api/behavior response; projected concrete instances only; no oracle source.",
+    "scope": {
+      "overall": 3,
+      "bitwidth": 3,
+      "maxSequence": 3,
+      "poolSize": 100,
+      "minTrace": 1,
+      "maxTrace": 10,
+      "moduleFacts": true
+    }
+  },
+  "examples": [
+    {
+      "category": "both",
+      "example": 1,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": []
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Worker$0",
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0",
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$0"
+              ],
+              [
+                "Component$2",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Workstation$0"
+              ],
+              [
+                "Workstation$0",
+                "Workstation$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Worker$0"
+              ],
+              [
+                "Workstation$0",
+                "Robot$0"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "category": "both",
+      "example": 2,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": [
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Worker$0",
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0",
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$0"
+              ],
+              [
+                "Component$2",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Workstation$0"
+              ],
+              [
+                "Workstation$1",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Worker$0"
+              ],
+              [
+                "Workstation$0",
+                "Robot$0"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "category": "both",
+      "example": 3,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": [
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Worker$0",
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0",
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$0"
+              ],
+              [
+                "Component$2",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ],
+              [
+                "Component$2",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Workstation$0"
+              ],
+              [
+                "Workstation$1",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Worker$0"
+              ],
+              [
+                "Workstation$0",
+                "Robot$0"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "category": "overcoverage",
+      "example": 1,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": [
+              "Component$1"
+            ]
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$0"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": []
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": []
+          }
+        ]
+      }
+    },
+    {
+      "category": "overcoverage",
+      "example": 2,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": [
+              "Component$1"
+            ]
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Worker$0",
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0",
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$1"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$1"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Workstation$0"
+              ],
+              [
+                "Workstation$0",
+                "Workstation$1"
+              ],
+              [
+                "Workstation$1",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": [
+              [
+                "Workstation$0",
+                "Worker$0"
+              ],
+              [
+                "Workstation$0",
+                "Robot$0"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "category": "overcoverage",
+      "example": 3,
+      "state": {
+        "index": 0,
+        "signatures": [
+          {
+            "label": "Component",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Dangerous",
+            "atoms": [
+              "Component$1"
+            ]
+          },
+          {
+            "label": "Human",
+            "atoms": [
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Material",
+            "atoms": []
+          },
+          {
+            "label": "Product",
+            "atoms": [
+              "Component$0",
+              "Component$1",
+              "Component$2"
+            ]
+          },
+          {
+            "label": "Robot",
+            "atoms": [
+              "Robot$0"
+            ]
+          },
+          {
+            "label": "Worker",
+            "atoms": [
+              "Worker$0",
+              "Robot$0",
+              "Human$0"
+            ]
+          },
+          {
+            "label": "Workstation",
+            "atoms": [
+              "Workstation$0"
+            ]
+          },
+          {
+            "label": "begin",
+            "atoms": [
+              "Workstation$0"
+            ]
+          },
+          {
+            "label": "end",
+            "atoms": [
+              "Workstation$0"
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "label": "Component.workstation",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Workstation$0"
+              ],
+              [
+                "Component$1",
+                "Workstation$0"
+              ]
+            ]
+          },
+          {
+            "label": "Product.parts",
+            "arity": 2,
+            "tuples": [
+              [
+                "Component$0",
+                "Component$2"
+              ],
+              [
+                "Component$1",
+                "Component$0"
+              ],
+              [
+                "Component$1",
+                "Component$1"
+              ]
+            ]
+          },
+          {
+            "label": "Workstation.succ",
+            "arity": 2,
+            "tuples": []
+          },
+          {
+            "label": "Workstation.workers",
+            "arity": 2,
+            "tuples": []
+          }
+        ]
+      }
+    }
+  ]
+}

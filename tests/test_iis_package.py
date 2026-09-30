@@ -94,6 +94,7 @@ class IisPackageTests(unittest.TestCase):
     def fixture(self):
         for name in WEB_FILES:
             self.write(f'web/{name}', 'public learner application')
+        self.write('web/app.js', "import { renderInstanceGraph } from './instance-graph.js';\n")
         self.write('web/index.html', '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
         self.write('web/dashboard/index.html', '<link rel="stylesheet" href="./styles.css">'
@@ -341,6 +342,39 @@ class IisPackageTests(unittest.TestCase):
         self.assertNotEqual(first['wwwroot/dashboard/index.html'], changed['wwwroot/dashboard/index.html'])
         self.assertEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
 
+    def test_module_change_versions_the_dependency_and_importing_application(self):
+        original_app = (self.root / 'web/app.js').read_bytes()
+        _, first = self.archive()
+        first_manifest = json.loads(first['manifest.json'])
+        name = 'instance-graph.js'
+        version = hashlib.sha256(first['wwwroot/' + name]).hexdigest()
+        self.assertEqual(first_manifest['publicAssetVersions'][name], version)
+        self.assertEqual(first['wwwroot/app.js'], original_app.replace(
+            b"'./instance-graph.js'", ("'./instance-graph.js?v=" + version + "'").encode()))
+        self.write('web/instance-graph.js', 'updated graph rendering')
+        _, changed = self.archive()
+        self.assertNotEqual(first['wwwroot/app.js'], changed['wwwroot/app.js'])
+        self.assertNotEqual(first['wwwroot/index.html'], changed['wwwroot/index.html'])
+        self.assertEqual(first['wwwroot/dashboard/index.html'], changed['wwwroot/dashboard/index.html'])
+        self.assertEqual(first['wwwroot/admin/index.html'], changed['wwwroot/admin/index.html'])
+        self.assertEqual((self.root / 'web/app.js').read_bytes(), original_app)
+        changed_manifest = json.loads(changed['manifest.json'])
+        for asset in ('app.js', 'instance-graph.js'):
+            self.assertEqual(changed_manifest['publicAssetVersions'][asset],
+                             hashlib.sha256(changed['wwwroot/' + asset]).hexdigest())
+
+    def test_missing_or_ambiguous_module_import_preserves_previous_archive(self):
+        self.archive()
+        original = self.output.read_bytes()
+        import_line = (self.root / 'web/app.js').read_bytes()
+        for application in (b'// no dependency', import_line + import_line,
+                            import_line.replace(b'instance-graph.js', b'instance-graph.js?v=stale')):
+            with self.subTest(application=application):
+                self.write('web/app.js', application)
+                with self.assertRaisesRegex(PackageError, 'relative instance-graph.js import'):
+                    build_package(self.root, self.output)
+                self.assertEqual(self.output.read_bytes(), original)
+
     def test_admin_asset_hashes_refresh_without_exposing_private_configuration(self):
         self.write('admin.local.json', '{"hash":"PRIVATE_ADMIN_HASH_SENTINEL"}')
         self.write('.admin-config-fixture.tmp', 'PRIVATE_ADMIN_HASH_SENTINEL')
@@ -364,6 +398,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertGreater(manager.index(writable), readonly)
         self.assertNotRegex(manager, r'Set-RestrictedAcl -Path \$BackendRoot[^\n]*-LocalServiceAccess Modify')
         startup = (ROOT / 'deploy/iis/Start-AlloyStudio.ps1').read_text()
+        self.assertIn("$expectedAssets = @('index.html', 'app.js', 'instance-graph.js', 'styles.css',", startup)
         self.assertNotRegex(startup, r'\$health\.exercises\s+-eq\s+181')
         self.assertIn('$health.exercises -gt 0', startup)
         self.assertIn('@($listing.exercises).Count -ne $health.exercises', startup)
@@ -402,7 +437,7 @@ class IisPackageTests(unittest.TestCase):
     def test_missing_input_refuses_package_and_preserves_previous_archive(self):
         self.archive()
         original = self.output.read_bytes()
-        for name in ('web/app.js', 'deploy/iis/web.config', 'deploy/iis/Start-AlloyStudio.ps1',
+        for name in ('web/app.js', 'web/instance-graph.js', 'deploy/iis/web.config', 'deploy/iis/Start-AlloyStudio.ps1',
                      'openai.example.json', 'exercise_store.py', 'exercise_sql.py', 'sql/compiled-queries.json',
                      'scripts/import_correct_pools.py', 'scripts/import_exercises.py',
                      'build/engine/classes/live/LiveFeedback.class'):
@@ -717,14 +752,15 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(action.get('appendQueryString'), 'true')
         blocked = re.compile(boundary.find('match').get('url'))
         self.assertEqual(boundary.find('action').get('statusCode'), '404')
-        for path in ('', 'index.html', 'app.js', 'styles.css', 'dashboard', 'dashboard/',
+        for path in ('', 'index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard', 'dashboard/',
                      'dashboard/index.html', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
                      'admin', 'admin/', 'admin/index.html', 'admin/app.js', 'admin/styles.css'):
             self.assertIsNone(blocked.fullmatch(path))
         for path in ('web.config', 'manifest.json', 'backend/server.py', 'exercises/catalogue.json',
                      'exercises/correct-pools.json', 'scripts/import_correct_pools.py',
                      'openai.local.json', 'openai.example.json',
-                     '.env', 'openai.key', 'app.js.map', '../server.py', 'INDEX.HTML',
+                     '.env', 'openai.key', 'app.js.map', 'instance-graph.js.map',
+                     'instance-graph.js/extra', 'INSTANCE-GRAPH.JS', '../server.py', 'INDEX.HTML',
                      'dashboard/.env', 'dashboard/closure-report.json', 'dashboard/../server.py',
                      'dashboard/backend/catalogue.json', 'dashboard/index.html/extra',
                      'admin.local.json', 'admin/admin.local.json', 'admin/upload.als', 'admin/drafts.json',

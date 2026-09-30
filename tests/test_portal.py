@@ -166,7 +166,8 @@ class HTTPTests(unittest.TestCase):
     def test_static_allowlist_blocks_secrets_and_traversal(self):
         for path in ('/server.py', '/luna.py', '/exercises/catalogue.json', '/vendor/acgn/lib/alloy.jar',
                      '/.env', '/openai.key', '/closure/reports/closure-report.json', '/../server.py',
-                     '/%2e%2e/server.py', '/app.js.map', '/api/exercises/../../catalogue.json'):
+                     '/%2e%2e/server.py', '/app.js.map', '/instance-graph.js.map',
+                     '/instance-graph.js/extra', '/INSTANCE-GRAPH.JS', '/api/exercises/../../catalogue.json'):
             with self.subTest(path=path): self.assertEqual(self.request(path)[0], 404)
 
     def test_real_engine_and_body_coordinates(self):

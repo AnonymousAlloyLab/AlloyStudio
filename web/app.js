@@ -1,3 +1,5 @@
+import { renderInstanceGraph } from './instance-graph.js';
+
 // BEGIN LEAN POLICY KERNEL
 const LEAN_POLICIES = {"feedbackSuccess":{"acceptedMasks":[1023],"arity":10},"guidanceSuccess":{"acceptedMasks":[8191],"arity":13},"poolChoose":{"acceptedMasks":[0,2,3],"arity":2},"poolFinish":{"acceptedMasks":[3],"arity":2}};
 function verifiedPolicy(name, atoms) {
@@ -898,13 +900,16 @@ function behaviorTable(caption, headings, rows) {
 }
 
 function renderBehaviorState(container, stateData) {
-  container.replaceChildren();
+  container.replaceChildren(renderInstanceGraph(stateData));
+  const exactData = node('details', 'behavior-exact-data');
+  exactData.append(node('summary', '', 'Exact atoms and relation tables'));
+  exactData.append(node('p', 'behavior-data-intro', 'These are the values behind the picture. Each row in a relation table is one connection; read its columns from left to right.'));
   const signatures = node('div', 'behavior-signatures');
   if (stateData.signatures.length) {
     signatures.append(behaviorTable('Atoms in this state', ['Signature', 'Atoms'],
       stateData.signatures.map(signature => [signature.label, signature.atoms.length ? signature.atoms.join(', ') : 'No atoms'])));
   } else signatures.append(node('p', 'behavior-empty', 'No named signatures in this state.'));
-  container.append(signatures);
+  exactData.append(signatures);
   const relations = node('div', 'behavior-relations');
   relations.append(node('h4', '', 'Relations'));
   if (!stateData.relations.length) relations.append(node('p', 'behavior-empty', 'No relations in this state.'));
@@ -919,7 +924,8 @@ function renderBehaviorState(container, stateData) {
     } else detail.append(node('p', 'behavior-empty', 'No tuples in this state.'));
     relations.append(detail);
   });
-  container.append(relations);
+  exactData.append(relations);
+  container.append(exactData);
 }
 
 function renderBehaviorInstance(container, instance, categoryId, exampleIndex) {

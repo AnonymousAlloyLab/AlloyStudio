@@ -9,6 +9,7 @@ esac
 python3 -E -s scripts/prepare_private_data.py --root "$PWD"
 python3 -c 'import ast; from pathlib import Path; ast.parse(Path("server.py").read_text())'
 node --check web/app.js
+node --check web/instance-graph.js
 node --check web/admin/app.js
 # Packaging compiles the vendored engine into a clean directory first. A failed
 # validation or compilation stops instead of reusing an older IIS archive.

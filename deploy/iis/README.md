@@ -128,7 +128,11 @@ for that check.
 
 Packaging gives the script and stylesheet URLs in `wwwroot/index.html` a
 `?v=<SHA-256>` suffix computed from each asset's bytes. The source
-`web/index.html` is unchanged. The included `web.config` configures
+`web/index.html` is unchanged. The instance renderer is also packaged as
+`instance-graph.js`; its import in packaged `app.js` receives its own content
+hash before the application hash is computed. A renderer-only change therefore
+refreshes both URLs. The source JavaScript remains unchanged. Copy this module
+with the other public files when upgrading. The included `web.config` configures
 `Cache-Control: no-cache, no-store` for static content, suppresses static ETags,
 and disables IIS output and kernel caching for this application. Verify the
 effective response headers on the target host. Preserve these
@@ -699,7 +703,7 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    timestamps leaves the package's content hashes unchanged:
 
    ```powershell
-   @('index.html','app.js','styles.css','web.config','dashboard/index.html','dashboard/app.js','dashboard/styles.css','dashboard/data.json','admin/index.html','admin/app.js','admin/styles.css') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
+   @('index.html','app.js','instance-graph.js','styles.css','web.config','dashboard/index.html','dashboard/app.js','dashboard/styles.css','dashboard/data.json','admin/index.html','admin/app.js','admin/styles.css') | ForEach-Object { (Get-Item -LiteralPath (Join-Path $WebRoot $_)).LastWriteTimeUtc = [DateTime]::UtcNow }
    ```
 
 4. Restart the backend and start only the selected website:
@@ -713,7 +717,7 @@ $Installed = Get-Content -LiteralPath (Join-Path $RuntimeRoot 'backend-task.json
    `Restart-WebAppPool -Name $PoolName` only when that pool is dedicated to Alloy.
    Do not restart all IIS services or recycle a shared pool.
 
-5. Purge this website's homepage, `index.html`, `app.js`, and `styles.css` URLs in
+5. Purge this website's homepage, `index.html`, `app.js`, `instance-graph.js`, and `styles.css` URLs in
    Cloudflare, including cached versioned variants when applicable; do not purge
    unrelated sites in the zone. Hard-reload the browser and verify that HTML uses
    the SHA-256 asset URLs. Cache rules or Workers must not override this site's

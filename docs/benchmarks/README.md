@@ -22,6 +22,9 @@ inputs, metrics, and reproduction requirements.
 | [Hit rates, SVG](alloy4fun-hit-rates.svg) / [PNG](alloy4fun-hit-rates.png) | Timely native-hint availability on the 42,388 incorrect inputs. |
 | [Availability curves, SVG](alloy4fun-timely-hints.svg) / [PNG](alloy4fun-timely-hints.png) | Measured wall-time thresholds, with the unequal worker configurations disclosed. |
 | [Figure manifest](alloy4fun-figures.json) | Results input SHA-256, generator hash, four figure hashes, denominator, label corrections, and resource profile. |
+| [Ten-exercise quality pilot](../alloy4fun-hint-quality.md) / [evidence JSON](alloy4fun-hint-quality.json) | Fresh current portal hints, matched saved TAR/FM24 outputs, source ranges, held-out Live controls, literal-edit probes, and two separate Luna reviews; a purposive all-underconstrained sample, not a learning study. |
+| [181-invariant hint-quality audit](../alloy4fun-181-hint-quality.md) / [evidence JSON](alloy4fun-181-hint-quality.json) | Complete incorrect-input coverage and per-invariant guidance properties, with current starter responses and explicit distinctions between metadata, bounded repair validation, and teaching quality. |
+| [181-invariant instance audit](../instance-audit-v003.md) / [evidence JSON](instance-audit-v003.json) | Real solver examples rendered at desktop and mobile widths; geometry, tuple correspondence, runtime bindings, and empty-starter limitations. |
 
 The frozen final results JSON has SHA-256:
 

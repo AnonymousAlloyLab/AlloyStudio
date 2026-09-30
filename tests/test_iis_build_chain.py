@@ -64,6 +64,16 @@ class IisPackageBuildChainTests(unittest.TestCase):
         path.write_text(content.replace(declaration, declaration + '\n    public static final String BUILD_CHAIN_HINT = "' + MARKER + '";', 1), encoding='utf-8')
         self.assertNotIn(MARKER.encode(), (self.classes / 'live/LiveFeedback.class').read_bytes())
 
+    def assert_current_frontend(self, archive):
+        module = (self.root / 'web/instance-graph.js').read_bytes()
+        self.assertEqual(archive.read('wwwroot/instance-graph.js'), module)
+        version = hashlib.sha256(module).hexdigest()
+        application = (self.root / 'web/app.js').read_bytes().replace(
+            b"'./instance-graph.js'", ("'./instance-graph.js?v=" + version + "'").encode())
+        self.assertEqual(archive.read('wwwroot/app.js'), application)
+        application_version = hashlib.sha256(application).hexdigest()
+        self.assertIn(('./app.js?v=' + application_version).encode(), archive.read('wwwroot/index.html'))
+
     def test_cli_recompiles_changed_source_and_replaces_old_zip_without_obsolete_classes(self):
         obsolete = self.classes / 'live/ObsoleteBuildChainClass.class'
         obsolete.write_bytes((self.classes / 'live/LiveFeedback.class').read_bytes())
@@ -80,7 +90,7 @@ class IisPackageBuildChainTests(unittest.TestCase):
         with zipfile.ZipFile(self.output) as archive:
             self.assertIn(MARKER.encode(), archive.read('backend/build/engine/classes/live/LiveFeedback.class'))
             self.assertNotIn('backend/build/engine/classes/live/ObsoleteBuildChainClass.class', archive.namelist())
-            self.assertEqual(archive.read('wwwroot/app.js'), (self.root / 'web/app.js').read_bytes())
+            self.assert_current_frontend(archive)
         self.assertEqual(metadata['sha256'], hashlib.sha256(self.output.read_bytes()).hexdigest())
         self.assertEqual(self.output.with_suffix('.zip.sha256').read_text().split()[0], metadata['sha256'])
 
@@ -149,7 +159,7 @@ class IisPackageBuildChainTests(unittest.TestCase):
                              metadata['sha256'] + '  ' + archive_path.name + '\n')
             with zipfile.ZipFile(archive_path) as archive:
                 self.assertIn(MARKER.encode(), archive.read('backend/build/engine/classes/live/LiveFeedback.class'))
-                self.assertEqual(archive.read('wwwroot/app.js'), (self.root / 'web/app.js').read_bytes())
+                self.assert_current_frontend(archive)
             archives.append(archive_path)
         self.assertEqual(archives[0].read_bytes(), archives[1].read_bytes())
         for path, contents in legacy_contents.items():

@@ -332,7 +332,7 @@ def execute():
         write_json(run / "claims.json", {"schema_version": SCHEMA, "claims": claims})
         entries = inventory(ROOT)
         input_paths = {entry["path"]: entry for entry in entries}
-        required = ["scripts/build.sh", "tests/browser.mjs", "node_modules/playwright/package.json", "web/app.js",
+        required = ["scripts/build.sh", "tests/browser.mjs", "node_modules/playwright/package.json", "web/app.js", "web/instance-graph.js",
                     "tests/test_ast_engine.py", "engine/test/RawAstTraceSelfTest.java", "tests/test_metric_modes.py",
                     "tests/test_cicd.py", "tests/test_dashboard_routes.py", "tests/dashboard.mjs", "tests/test_lean_obligations.py",
                     "closure/lean-obligations.json", "web/dashboard/index.html"]
@@ -364,7 +364,8 @@ def execute():
                               'tests/test_admin_store.py','tests/test_admin_http.py','tests/test_admin_service.py',
                               'tests/test_admin_browser.py','tests/admin.mjs'])
             if identifier == 'V-BROWSER':
-                paths.extend(['tests/navigation.mjs','tests/browser-suite.mjs'])
+                paths.extend(['tests/navigation.mjs','tests/browser-suite.mjs',
+                              'tests/instance-graph-geometry.mjs'])
             implementation = [{"path": path, "sha256": input_paths[path]["sha256"]} for path in paths]
             registry[identifier] = {"id": identifier, "implementation": implementation,
                                     "version_hash": sha(canonical(implementation)),

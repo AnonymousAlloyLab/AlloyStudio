@@ -17,6 +17,7 @@ const records = [
   source: { path: `${record.group.toLowerCase()}.als`, sha256: `fixture-${record.id}` } }));
 const assets = new Map(await Promise.all([
   ['/', 'index.html', 'text/html'], ['/app.js', 'app.js', 'text/javascript'], ['/styles.css', 'styles.css', 'text/css'],
+  ['/instance-graph.js', 'instance-graph.js', 'text/javascript'],
 ].map(async ([url, file, type]) => [url, { type, bytes: await readFile(path.join(root, 'web', file)) }])));
 const server = createServer((request, response) => {
   const asset = assets.get(new URL(request.url, 'http://localhost').pathname);

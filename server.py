@@ -29,6 +29,7 @@ METRICS = {'canonical': 'acgn-fast-rewrite-canonical-distance',
 STATIC = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/index.html': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
+          '/instance-graph.js': ('instance-graph.js', 'text/javascript; charset=utf-8'),
           '/styles.css': ('styles.css', 'text/css; charset=utf-8')}
 STATIC.update({'/dashboard/' + name: ('dashboard/' + name, mime) for name, mime in (
     ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),

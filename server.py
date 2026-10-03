@@ -534,11 +534,11 @@ class Portal(BoundedHTTPServer):
         deadline = time.monotonic() + 65
         close_engine_admission(self.root)
         self.scheduler.close()
-        pool_status = self.engine_pool.close()
+        pool_status = self.engine_pool.close(timeout=max(0, deadline - time.monotonic()))
         admin_drained = self.admin.close(timeout=max(0, deadline - time.monotonic()))
         oneshots_drained = wait_for_oneshots(self.root, timeout=max(0, deadline - time.monotonic()))
         super().server_close()
-        if not admin_drained or not oneshots_drained or pool_status['unreaped']:
+        if not admin_drained or not oneshots_drained or pool_status['unreaped'] or pool_status['starting']:
             raise RuntimeError('Backend shutdown could not drain active analysis.')
 
     def evaluate(self, record, body, metric='canonical', *, snapshot=None, generation=None,

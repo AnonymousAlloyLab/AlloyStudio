@@ -76,6 +76,9 @@ class _Worker:
         self.tasks = self.parses = 0
         try:
             self.owner = pool.budget.reserve(lane, max(0, deadline - time.monotonic()))
+            with pool.condition:
+                if pool.stopped:
+                    raise EngineUnavailable()
             self.directory = Path(tempfile.mkdtemp(prefix='worker-', dir=engine_temp_root(pool.root)))
             command = pool._command(lane, self.incarnation, self.directory)
             if time.monotonic() >= deadline:
@@ -216,11 +219,16 @@ class _Worker:
                 or self.parses >= self.pool.max_parse_units
                 or time.monotonic() - self.started >= self.pool.max_age_seconds)
 
-    def stop(self):
-        with self.stop_lock:
-            return self._stop_locked()
+    def stop(self, timeout=5):
+        deadline = time.monotonic() + max(0, timeout)
+        if not self.stop_lock.acquire(timeout=max(0, deadline - time.monotonic())):
+            return False
+        try:
+            return self._stop_locked(deadline)
+        finally:
+            self.stop_lock.release()
 
-    def _stop_locked(self):
+    def _stop_locked(self, deadline):
         self.closed.set()
         try:
             self.outgoing.put_nowait(None)
@@ -230,7 +238,7 @@ class _Worker:
             try:
                 if self.process.poll() is None:
                     self.process.kill()
-                self.process.wait(timeout=5)
+                self.process.wait(timeout=max(0, deadline - time.monotonic()))
             except (OSError, subprocess.TimeoutExpired):
                 # Retain the permit and scratch while the OS has not reaped it.
                 return False
@@ -240,7 +248,7 @@ class _Worker:
                 except OSError:
                     pass
         for thread in self.threads:
-            thread.join(timeout=0.2)
+            thread.join(timeout=min(0.2, max(0, deadline - time.monotonic())))
         if self.directory is not None:
             shutil.rmtree(self.directory, ignore_errors=True)
         if self.owner is not None:
@@ -283,8 +291,8 @@ class EnginePool:
         with self.condition:
             self.launches += 1
 
-    def _retire(self, worker):
-        reaped = worker.stop()
+    def _retire(self, worker, timeout=5):
+        reaped = worker.stop(timeout=timeout)
         with self.condition:
             if worker in self.workers[worker.lane]:
                 self.workers[worker.lane].remove(worker)
@@ -400,12 +408,31 @@ class EnginePool:
                     'unreaped': len(self.unreaped), 'closed': self.stopped,
                     'processBudget': self.budget.stats()}
 
-    def close(self):
+    def close(self, timeout=15):
+        """Drain constructors as well as published workers within one budget.
+
+        A constructor owns its starting count through handshake failure and
+        reaping. It cannot publish after stopped becomes true. An expired drain
+        leaves starting/unreaped visible; callers must not acknowledge clean exit.
+        """
+        if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout < 0:
+            raise ValueError('A finite nonnegative shutdown budget is required')
+        deadline = time.monotonic() + timeout
         with self.condition:
             self.stopped = True
             workers = [worker for lane in self.workers.values() for worker in lane]
             workers += list(self.unreaped)
             self.condition.notify_all()
         for worker in workers:
-            self._retire(worker)
+            self._retire(worker, timeout=min(5, max(0, deadline - time.monotonic())))
+        with self.condition:
+            while any(self.starting.values()):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                self.condition.wait(remaining)
+            # Constructors may have added a failed reap while the drain waited.
+            unreaped = list(self.unreaped)
+        for worker in unreaped:
+            self._retire(worker, timeout=min(5, max(0, deadline - time.monotonic())))
         return self.stats()

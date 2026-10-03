@@ -168,11 +168,74 @@ class WorkerProtocolTests(unittest.TestCase):
         original = pool._launched
         def launched():
             original()
-            pool.close()
+            # Reentrant close from this constructor cannot wait for itself.
+            # The caller explicitly requests a nonblocking ownership snapshot.
+            self.assertEqual(pool.close(timeout=0)['starting'], 1)
         pool._launched=launched
         with self.assertRaises(EngineUnavailable):
             pool.evaluate('feedback', {}, 2)
         self.assertEqual(pool.budget.stats()['reserved'], 0)
+
+    def test_close_waits_for_starting_handshake_and_reaping(self):
+        pool = self.pool(mode='startup_hang', startup_timeout=.3)
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(pool.evaluate, 'feedback', {}, 2)
+            deadline = time.monotonic() + 1
+            while pool.stats()['launches'] != 1:
+                self.assertLess(time.monotonic(), deadline)
+                time.sleep(.001)
+            status = pool.close()
+            # A PID exists before its ready frame registers an idle worker.
+            # Closing must include that owner, rather than returning cleanly.
+            self.assertEqual(status['starting'], 0)
+            self.assertEqual(status['unreaped'], 0)
+            self.assertEqual(status['processBudget']['reserved'], 0)
+            with self.assertRaises(EngineUnavailable):
+                future.result(1)
+
+    def test_close_deadline_reports_still_starting_instead_of_clean_exit(self):
+        pool = self.pool(mode='startup_hang', startup_timeout=.4)
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(pool.evaluate, 'feedback', {}, 2)
+            deadline = time.monotonic() + 1
+            while pool.stats()['launches'] != 1:
+                self.assertLess(time.monotonic(), deadline)
+                time.sleep(.001)
+            started = time.monotonic()
+            status = pool.close(timeout=.02)
+            self.assertLess(time.monotonic() - started, .3)
+            self.assertEqual(status['starting'], 1)
+            self.assertEqual(status['processBudget']['reserved'], 1)
+            with self.assertRaises(EngineUnavailable):
+                future.result(1)
+        status = pool.close(timeout=1)
+        self.assertEqual(status['starting'], 0)
+        self.assertEqual(status['unreaped'], 0)
+        self.assertEqual(status['processBudget']['reserved'], 0)
+
+    def test_closing_constructor_waiting_for_capacity_cannot_launch_after_release(self):
+        pool = self.pool()
+        owners = [pool.budget.reserve('feedback', 1) for _ in range(2)]
+        try:
+            with ThreadPoolExecutor(1) as executor:
+                future = executor.submit(pool.evaluate, 'feedback', {}, 2)
+                deadline = time.monotonic() + 1
+                while pool.stats()['starting'] != 1:
+                    self.assertLess(time.monotonic(), deadline)
+                    time.sleep(.001)
+                status = pool.close(timeout=.02)
+                self.assertEqual(status['starting'], 1)
+                for owner in owners:
+                    pool.budget.release_reaped(owner)
+                with self.assertRaises(EngineUnavailable):
+                    future.result(1)
+            status = pool.close(timeout=1)
+            self.assertEqual(status['launches'], 0)
+            self.assertEqual(status['starting'], 0)
+            self.assertEqual(status['processBudget']['reserved'], 0)
+        finally:
+            for owner in owners:
+                pool.budget.release_reaped(owner)
 
     def test_expired_deadline_cannot_launch_a_new_worker(self):
         pool = self.pool()

@@ -112,7 +112,7 @@ dependencies. The private control port must not be exposed or proxied publicly.
 
 ## Tests and reproducibility
 
-Local feedback qualification passed **1,086/1,086 exact comparisons**: 181
+The initial complete local feedback qualification passed **1,086/1,086 exact comparisons**: 181
 exercises × three draft variants × two metrics. There were 724 successful
 observations and 362 matching invalid-input diagnostics; every selected correct
 draft had zero distance in both metrics. Canonical evaluation time summed to
@@ -136,6 +136,15 @@ Windows/macOS results. The
 includes aggregate feedback/behavior reports, numeric reuse witnesses and the
 TB01 proof report. Local working-tree reports retain that provenance; they are
 not relabeled as clean-commit CI runs.
+
+Pre-publication review also constructed a shutdown race in which a worker still
+performing its startup handshake was absent from the published-worker list.
+Shutdown now waits for constructor ownership as well as published workers, using
+the shared drain deadline, and refuses a clean acknowledgement while a constructor
+or unreaped child remains. New tests reproduce startup overlap, an exhausted
+drain budget and a constructor waiting for process capacity. The release evidence
+retains the initial results and repeats both catalogue qualifications after this
+lifecycle correction.
 
 The release evidence records the final catalogue differential, Python and browser
 results and the source/toolchain identities used. The differential compares the

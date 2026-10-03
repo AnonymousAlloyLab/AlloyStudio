@@ -125,7 +125,7 @@ class PortalLifecycleTests(unittest.TestCase):
         app.root = server.ROOT
         app.scheduler = Mock()
         app.engine_pool = Mock()
-        app.engine_pool.close.return_value = {'unreaped': 1}
+        app.engine_pool.close.return_value = {'unreaped': 1, 'starting': 0}
         app.admin = Mock()
         app.admin.close.return_value = True
         with patch.object(server, 'close_engine_admission') as admission, \
@@ -135,7 +135,9 @@ class PortalLifecycleTests(unittest.TestCase):
                 app.server_close()
             admission.assert_called_once_with(server.ROOT)
             app.scheduler.close.assert_called_once_with()
-            app.engine_pool.close.assert_called_once_with()
+            app.engine_pool.close.assert_called_once()
+            self.assertGreater(app.engine_pool.close.call_args.kwargs['timeout'], 0)
+            self.assertLessEqual(app.engine_pool.close.call_args.kwargs['timeout'], 65)
             app.admin.close.assert_called_once()
             drain.assert_called_once()
             sockets.assert_called_once_with()
@@ -145,16 +147,31 @@ class PortalLifecycleTests(unittest.TestCase):
         app.root = server.ROOT
         app.scheduler = Mock()
         app.engine_pool = Mock()
-        app.engine_pool.close.return_value = {'unreaped': 0}
+        app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 0}
         app.admin = Mock()
         app.admin.close.return_value = True
         with patch.object(server, 'close_engine_admission'), \
              patch.object(server, 'wait_for_oneshots', return_value=True) as drain, \
              patch.object(server.BoundedHTTPServer, 'server_close'), \
-             patch.object(server.time, 'monotonic', side_effect=[100, 110, 120]):
+             patch.object(server.time, 'monotonic', side_effect=[100, 105, 110, 120]):
             app.server_close()
+        app.engine_pool.close.assert_called_once_with(timeout=60)
         app.admin.close.assert_called_once_with(timeout=55)
         drain.assert_called_once_with(server.ROOT, timeout=45)
+
+    def test_starting_worker_prevents_successful_shutdown_acknowledgement(self):
+        app = object.__new__(server.Portal)
+        app.root = server.ROOT
+        app.scheduler = Mock()
+        app.engine_pool = Mock()
+        app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 1}
+        app.admin = Mock()
+        app.admin.close.return_value = True
+        with patch.object(server, 'close_engine_admission'), \
+             patch.object(server, 'wait_for_oneshots', return_value=True), \
+             patch.object(server.BoundedHTTPServer, 'server_close'):
+            with self.assertRaisesRegex(RuntimeError, 'could not drain'):
+                app.server_close()
 
 
 if __name__=='__main__':unittest.main()

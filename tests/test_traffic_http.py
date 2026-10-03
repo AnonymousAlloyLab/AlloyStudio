@@ -132,30 +132,67 @@ class HTTPBoundaryTests(unittest.TestCase):
             app.shutdown(); app.server_close(); thread.join(2)
         self.temporary.cleanup()
 
-    def request(self, method, path, body=None, headers=None, app=None):
+    def request(self, method, path, body=None, headers=None, app=None, *, allow_peer_close=False):
         app = app or self.app
         conn = HTTPConnection('127.0.0.1', app.server_port, timeout=2)
         try:
             conn.request(method, path, body, headers=headers or {})
             response = conn.getresponse()
             return response.status, response.headers, response.read()
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            if not allow_peer_close:
+                raise
+            return None, {}, b''
         finally:
             conn.close()
 
     def raw(self, value, app=None):
         app = app or self.app
         with socket.create_connection(('127.0.0.1', app.server_port), timeout=2) as sock:
-            sock.sendall(value)
+            try:
+                sock.sendall(value)
+            except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+                return b''
             result = bytearray()
             while True:
                 try:
                     chunk = sock.recv(65536)
-                except ConnectionResetError:
+                except (ConnectionResetError, ConnectionAbortedError):
                     break
                 if not chunk:
                     break
                 result.extend(chunk)
             return bytes(result)
+
+    def capacity_request(self, app, expected_status, *, headers=None):
+        """Allow only peer-close transport outcomes, while checking real admission.
+
+        Pre-thread rejection may close before the client's request arrives. Its
+        decision/counters remain observable even if Windows drops the response.
+        Any delivered response must retain the precise retryable JSON contract.
+        """
+        decisions = []
+        reserve = app.http_admission.reserve
+        before = app.traffic_stats()
+        def observe_reserve(*args, **kwargs):
+            result = reserve(*args, **kwargs)
+            decisions.append(result)
+            return result
+        with patch.object(app.http_admission, 'reserve', observe_reserve):
+            status, response_headers, body = self.request('GET', '/api/health', headers=headers,
+                                                         app=app, allow_peer_close=True)
+        self.assertEqual(decisions, [expected_status])
+        after = app.traffic_stats()
+        self.assertEqual(after['acceptedConnections'], before['acceptedConnections'])
+        self.assertEqual(after['rejectedConnections'], before['rejectedConnections'] + 1)
+        self.assertEqual(after['peakHandlers'], before['peakHandlers'])
+        if status is not None:
+            self.assertEqual(status, expected_status)
+            self.assertEqual(response_headers['Retry-After'], '1')
+            self.assertEqual(json.loads(body), {'status': 'busy', 'retryable': True,
+                                              'dispatched': False, 'code': 'capacity'})
+        else:
+            self.assertEqual((response_headers, body), ({}, b''))
 
     def await_active(self, app, count, timeout=1):
         deadline = time.monotonic() + timeout
@@ -262,18 +299,43 @@ class HTTPBoundaryTests(unittest.TestCase):
 
     def test_slow_trickle_body_has_absolute_expiry_and_json_error(self):
         app = self.make_app(replace(self.profile, body_seconds=.18, idle_seconds=.15))
-        with socket.create_connection(('127.0.0.1', app.server_port), timeout=1) as sock:
+        rejections, dispatches = [], []
+        original_reply = server.Handler.reply
+        started = time.monotonic()
+        def observe_reply(handler, status, data, *args, **kwargs):
+            if handler.server is app:
+                rejections.append((status, data, time.monotonic() - started))
+            return original_reply(handler, status, data, *args, **kwargs)
+        app.evaluate = lambda *args, **kwargs: dispatches.append(args) or {'status': 'ok'}
+        with patch.object(server.Handler, 'reply', observe_reply), \
+                socket.create_connection(('127.0.0.1', app.server_port), timeout=1) as sock:
             sock.sendall(b'POST /api/feedback HTTP/1.1\r\nHost: localhost\r\n'
                          b'Content-Type: application/json\r\nContent-Length: 100\r\n\r\n{')
             for _ in range(7):
                 time.sleep(.035)
                 try:
                     sock.sendall(b' ')
-                except OSError:
+                except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     break
-            result = sock.recv(8192)
-            self.assertIn(b' 400 ', result)
+            # Windows may abort/reset after post-deadline writes rather than
+            # deliver the already-attempted rejection. A timeout or unrelated
+            # socket error is not an accepted outcome. Independently verify the
+            # server's rejection and its deadline below, even when TCP drops it.
+            try:
+                result = sock.recv(8192)
+            except (ConnectionResetError, ConnectionAbortedError):
+                result = b''
+            if result:
+                self.assertIn(b' 400 ', result)
             self.await_active(app, 0)
+        self.assertEqual(len(rejections), 1)
+        status, body, rejected_after = rejections[0]
+        self.assertEqual(status, 400)
+        self.assertIn('timed-out', body['error'])
+        self.assertGreaterEqual(rejected_after, .15)
+        self.assertLess(rejected_after, .35)  # idle-only expiry would exceed .39s
+        self.assertLess(time.monotonic() - started, .65)
+        self.assertEqual(dispatches, [])
 
     def test_gate_precedes_thread_and_control_survives_public_saturation(self):
         profile = replace(self.profile, public_handlers=1, header_seconds=.5)
@@ -281,10 +343,7 @@ class HTTPBoundaryTests(unittest.TestCase):
         control = self.make_app(profile, control=True, shared_app=public)
         with socket.create_connection(('127.0.0.1', public.server_port), timeout=1):
             self.await_active(public, 1)
-            status, headers, body = self.request('GET', '/api/health', app=public)
-            self.assertEqual(status, 503)
-            self.assertEqual(headers['Retry-After'], '1')
-            self.assertEqual(json.loads(body)['dispatched'], False)
+            self.capacity_request(public, 503)
             self.assertEqual(public.traffic_stats()['peakHandlers'], 1)
             self.assertEqual(self.request('GET', '/api/health', app=control)[0], 200)
             self.assertEqual(self.request('GET', '/api/exercises', app=control)[0], 404)
@@ -296,7 +355,7 @@ class HTTPBoundaryTests(unittest.TestCase):
         app = self.make_app(profile)
         self.assertEqual(self.request('GET', '/api/health', headers={'X-Forwarded-For': '192.0.2.1'}, app=app)[0], 200)
         for source in ('192.0.2.2', '192.0.2.3'):
-            self.assertEqual(self.request('GET', '/api/health', headers={'X-Forwarded-For': source}, app=app)[0], 429)
+            self.capacity_request(app, 429, headers={'X-Forwarded-For': source})
         self.assertEqual(app.traffic_stats()['peerEntries'], 1)
 
     def test_control_listener_rejects_non_loopback_bind(self):

@@ -218,6 +218,11 @@ class ActualWorkerTests(unittest.TestCase):
         cls.java = shutil.which('java')
         if not cls.java or not (ROOT/'build/engine/classes/live/EngineWorker.class').is_file():
             raise unittest.SkipTest('Compiled EngineWorker and Java required')
+        # This class runs before WorkerProtocolTests in a clean checkout; own
+        # both the evidence and compiler scratch parent instead of relying on
+        # a different test class (or a prior local run) to have created it.
+        cls.scratch = ROOT / 'build/tests'
+        cls.scratch.mkdir(parents=True, exist_ok=True)
 
     def setUp(self):
         open_engine_admission(ROOT)
@@ -266,7 +271,7 @@ class ActualWorkerTests(unittest.TestCase):
                 'durationSeconds':round(time.monotonic()-started,3), 'stats':self.pool.stats(),
                 'profile':{'maxTasks':self.pool.max_tasks,'maxParseUnits':self.pool.max_parse_units,
                            'maxAgeSeconds':self.pool.max_age_seconds}}
-        (ROOT/'build/tests/worker-100-edit-report.json').write_text(json.dumps(report,indent=2)+'\n')
+        (self.scratch/'worker-100-edit-report.json').write_text(json.dumps(report,indent=2)+'\n')
 
     def test_java_worker_rejects_non_json_and_oversized_protocol_frames(self):
         command=[self.java,'-Dfile.encoding=UTF-8','-Xmx256m','-XX:ActiveProcessorCount=2',
@@ -293,7 +298,7 @@ class ActualWorkerTests(unittest.TestCase):
         compiler=shutil.which('javac')
         if not compiler:
             self.skipTest('JDK required')
-        with tempfile.TemporaryDirectory(prefix='worker-boundary-',dir=ROOT/'build/tests') as directory:
+        with tempfile.TemporaryDirectory(prefix='worker-boundary-', dir=self.scratch) as directory:
             source=Path(directory)/'WorkerBoundaryProbe.java'
             source.write_text(r'''package live;
 import java.nio.file.*;

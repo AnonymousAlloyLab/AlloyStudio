@@ -124,6 +124,7 @@ def setup(root, *, source_root=None, bundle=None, java_home=None, java=None):
                '-d', str(output), str(root / 'engine/src/live/LiveFeedback.java'),
                str(root / 'engine/src/live/EngineSelfTest.java'),
                str(root / 'engine/src/live/BehaviorFeedback.java'),
+               str(root / 'engine/src/live/EngineWorker.java'),
                str(root / 'engine/src/live/ExerciseValidator.java'),
                str(root / 'engine/src/live/UploadInspector.java')]
     print('Building the Java engine...', flush=True)
@@ -152,11 +153,18 @@ def main(argv=None):
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--timeout', type=float, default=12)
-    parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--workers', type=int, default=2,
+                        help='Feedback workers (capped at 2; behavior and admin reserve separate lanes)')
+    parser.add_argument('--engine-mode', choices=('persistent', 'oneshot'), default='persistent',
+                        help='Reuse Java workers by default; oneshot restores per-request JVM execution')
+    parser.add_argument('--control-port', type=int, default=0,
+                        help='Optional separate loopback health listener; 0 disables it')
     parser.add_argument('--public-origin', action='append', default=[])
     args = parser.parse_args(argv)
-    if not 0 <= args.port <= 65535 or args.timeout <= 0 or args.workers < 1:
-        parser.error('port must be 0..65535; timeout and workers must be positive')
+    if (not 0 <= args.port <= 65535 or not 0 <= args.control_port <= 65535
+            or args.control_port and args.control_port == args.port
+            or args.timeout <= 0 or args.workers < 1):
+        parser.error('ports must be 0..65535 and distinct when enabled; timeout and workers must be positive')
     try:
         runtime = setup(ROOT, source_root=args.source_root, bundle=args.from_bundle,
                         java_home=args.java_home, java=args.java)
@@ -168,7 +176,8 @@ def main(argv=None):
             return 0
         command = [sys.executable, '-E', '-s', str(ROOT / 'server.py'),
                    '--java', str(runtime), '--host', args.host, '--port', str(args.port),
-                   '--timeout', str(args.timeout), '--workers', str(args.workers)]
+                   '--timeout', str(args.timeout), '--workers', str(args.workers),
+                   '--engine-mode', args.engine_mode, '--control-port', str(args.control_port)]
         for origin in args.public_origin:
             command.extend(('--public-origin', origin))
         # Replace this process: terminal signals reach the server directly.

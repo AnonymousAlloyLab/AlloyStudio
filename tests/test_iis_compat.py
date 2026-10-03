@@ -21,7 +21,7 @@ import server
 class IISCompatibilityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0),
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot',
                                 public_origins=('https://Alloy.Example:443/',
                                                 'https://alloy.example:8443'))
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
@@ -71,7 +71,7 @@ class IISCompatibilityTests(unittest.TestCase):
                 with urlopen(request, timeout=10) as response:
                     self.assertEqual(response.status, 200)
                     self.assertEqual(response.read(), (ROOT / 'web' / name).read_bytes())
-                    self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
+                    self.assertEqual(response.headers.get('Cache-Control'), 'no-cache, max-age=0, must-revalidate')
 
     def test_origin_normalization(self):
         cases = {'https://ALLOY.example:443/': 'https://alloy.example',
@@ -87,7 +87,7 @@ class IISCompatibilityTests(unittest.TestCase):
         with urlopen(self.url + '/instance-graph.js', timeout=10) as response:
             self.assertEqual(response.status, 200)
             self.assertEqual(response.headers.get_content_type(), 'text/javascript')
-            self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
+            self.assertEqual(response.headers.get('Cache-Control'), 'no-cache, max-age=0, must-revalidate')
             self.assertEqual(response.read(), (ROOT / 'web/instance-graph.js').read_bytes())
 
     def test_origin_rejects_non_origins_and_ambiguous_values(self):
@@ -132,7 +132,7 @@ class IISCompatibilityTests(unittest.TestCase):
 
     def test_java_path_and_protocol_are_explicitly_utf8(self):
         java = r'C:\Program Files\Java\jdk-17\bin\java.exe'
-        app = server.Portal(('127.0.0.1', 0), java=java)
+        app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', java=java)
         raw = {'status': 'ok', 'distance': 1,
                'comparison': {'strategy': 'nearest-known-correct',
                               'poolSize': len(app.correct_pools['graphs-inv1']),

@@ -1,0 +1,94 @@
+{
+  "allowlistedAxioms": [],
+  "claims": [
+    "TRFM-RESOURCES",
+    "TRFM-REUSE",
+    "TRFM-INGRESS"
+  ],
+  "excluded": [
+    "Production Python/Java/JavaScript transition and decoding refinement",
+    "A fully composed scheduler or unconditional fairness/liveness",
+    "Java warm/fresh evaluator and prepared-pool equivalence",
+    "Actual allocated bytes/RSS and OS process termination guarantees",
+    "Generic resource-ledger stale-release safety if external owner IDs are reused",
+    "Actual public-value projection, credential isolation or SQL/security immunity",
+    "Measured web performance and cross-platform implementation acceptance",
+    "Closure of any original L00-L23 or end-to-end TRF00-22 obligation"
+  ],
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-j1"
+  ],
+  "id": "TB01",
+  "inputs": {
+    "closure/traffic-obligations.json": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+    "docs/backend-performance-spec.md": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a",
+    "docs/traffic-proof-handoff.md": "4c7faa6ff58ef8c07a7cd818e525c2781a875e4ab5bd6ed3fdc7bb9ddd9f7330",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/traffic/Audit.lean": "af6f0c246d7542273f065d348e4c1ecb25e2f719e620012bd59f3fe0a75aca50",
+    "formal/traffic/README.md": "2c5571269d979743d77e7f7b1637e295715bab4f5f7fd2fa1bcc93b1e7523f55",
+    "formal/traffic/Traffic/Ingress.lean": "d606ed22a65e2b55c1b78cd6c7338b639e1e7834889c32415eb6ea8d33ee243b",
+    "formal/traffic/Traffic/Resources.lean": "de0dab8bc22a0f0b1df182267fad6edfb287c1edfa4d9ef40eb2f1855b3a7f44",
+    "formal/traffic/Traffic/Reuse.lean": "284086f60c0b6535575ac35f6b1a8f2eacb855a312da00ef978075b31f1517cb",
+    "formal/traffic/claims.json": "76992ab3819169decd5472458d69b3842b0ef0a99b7e7f87e1bdaab555a982a7",
+    "formal/traffic/theorems.json": "84f5d96ca085ca1f52d8da1e7002c889301fb019a0bda2a0bbe6a3f1136edd42",
+    "formal/traffic/witnesses.json": "311e070519f131c491d91d63532544fd8afae99d959a1f57eb0d7bc6989efe2f",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_traffic_proofs.py": "fcfb38b4487e06d9e5c23287fa24fef34ca0499aef95f6090310fea0a0c630dd",
+    "tests/test_traffic_proofs.py": "26b7932a1d0a0e21c7ee1ee0a50a89f4797f1f9306ff3f7d3e18fb6a6816e568"
+  },
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "modules": [
+    "Traffic.Resources",
+    "Traffic.Reuse",
+    "Traffic.Ingress"
+  ],
+  "productionRefinementEstablished": false,
+  "publicClaims": [
+    "formal/traffic/README.md",
+    "docs/traffic-proof-handoff.md",
+    "docs/backend-performance-spec.md"
+  ],
+  "requiredCleanBuilds": 2,
+  "requiredReviews": 6,
+  "reviewPolicy": "Two GPT-6 Luna, then two GPT-6 Sol, then two GPT-6 Astra, each tier bound to prior review JSON plus coverage-note hashes; constructed witnesses required for breaches. Reviews never discharge proofs.",
+  "schemaVersion": 1,
+  "scope": "traffic-model-only",
+  "theoremDeclarations": 560,
+  "trust": [
+    {
+      "binding": "Installed bin/lib inventory and reported version checked before and after both clean builds; theorem and definition transitive axiom sets must be empty.",
+      "classification": "TRUSTED",
+      "components": [
+        "Lean 4.34.1 kernel and installed standard library/compiler"
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "binding": "Verifier and all transitive project script inputs hashed; raw kernel audit output bound to immutable input snapshot. Review text is advisory, not mathematical evidence.",
+      "classification": "TRUSTED",
+      "components": [
+        "Frozen Python verifier and inventory/manifest/claim/witness machinery",
+        "Registered Lean audit metaprogram",
+        "Hashing and review orchestration"
+      ],
+      "id": "TCB-VERIFIER"
+    },
+    {
+      "binding": "Execution environment recorded; each proof child has isolated network namespace and sanitized environment; run-owned read-only snapshots assumed unmodified by hostile privileged host processes.",
+      "classification": "TRUSTED",
+      "components": [
+        "Python runtime and standard library",
+        "Linux kernel, unshare namespace enforcement and filesystem/process semantics",
+        "Hardware and cryptographic hash integrity"
+      ],
+      "id": "TCB-HOST"
+    }
+  ],
+  "witnessGroups": 22
+}

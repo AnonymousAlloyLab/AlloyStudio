@@ -1,5 +1,4 @@
 """Server-only explanation client. Neither credentials nor oracle data are prompt inputs."""
-from collections import OrderedDict
 from copy import deepcopy
 import hashlib
 import json
@@ -9,6 +8,7 @@ from pathlib import Path
 import re
 import sys
 import threading
+import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
@@ -447,13 +447,32 @@ def _education_response(data, evidence, key):
     return result
 
 
+class _ExplanationFlight:
+    def __init__(self):
+        self.event = threading.Event()
+        self.result = None
+
+
 class Explainer:
-    def __init__(self, *, timeout=40, transport=None, key_reader=None):
+    def __init__(self, *, timeout=40, transport=None, key_reader=None,
+                 cache_bytes=8 * 1048576, cache_ttl=120, max_followers=32, clock=time.monotonic):
+        # Keep credential loading self-contained for private setup/relocation;
+        # the shared cache implementation is needed only by the runtime client.
+        from traffic_scheduler import ResultCache
         self.timeout = timeout
         self.transport = transport or urlopen
         self.key_reader = key_reader or read_key
         self.slots = threading.BoundedSemaphore(2)
-        self.lock, self.cache = threading.Lock(), OrderedDict()
+        self.lock = threading.Lock()
+        self.cache = ResultCache(128, cache_bytes, ttl=cache_ttl, clock=clock)
+        self.pending = {}
+        self.followers = 0
+        self.max_followers = max_followers
+
+    @staticmethod
+    def unavailable():
+        return dict(model=MODEL, status='unavailable',
+                    message='Luna could not complete the explanation. Distance feedback remains available.')
 
     def explain(self, feedback, *, student_body='', behavior=None):
         base = {'model': MODEL}
@@ -463,17 +482,53 @@ class Explainer:
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
             return dict(base, status='unavailable', message='The complete learner evidence cannot be explained within the supported limits.')
         encoded = json.dumps(trace, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
-        # Rotating a deployment key must not reuse an explanation obtained with
-        # the previous account. Store only a one-way credential digest in scope.
-        digest = hashlib.sha256(hashlib.sha256(key.encode()).digest() + b'\0' + encoded.encode()).hexdigest()
+        # Exact prompt bytes are retained for equality; a prompt digest alone is
+        # not identity. Credentials contribute only their one-way account scope.
+        identity = (hashlib.sha256(key.encode()).hexdigest(), base['model'], INSTRUCTIONS, encoded)
         with self.lock:
-            if digest in self.cache:
-                self.cache.move_to_end(digest)
-                return deepcopy(self.cache[digest])
-        if not self.slots.acquire(blocking=False):
-            return dict(base, status='busy', message='Luna is busy. Retry shortly.')
+            cached = self.cache.get(identity)
+            if cached is not None:
+                return cached
+            flight = self.pending.get(identity)
+            leader = flight is None
+            if leader:
+                if not self.slots.acquire(blocking=False):
+                    return dict(base, status='busy', message='Luna is busy. Retry shortly.')
+                flight = _ExplanationFlight()
+                self.pending[identity] = flight
+            else:
+                if self.followers >= self.max_followers:
+                    return dict(base, status='busy', message='Luna is busy. Retry shortly.')
+                self.followers += 1
+        if not leader:
+            try:
+                if not flight.event.wait(self.timeout):
+                    return self.unavailable()
+                return json.loads(flight.result) if flight.result is not None else self.unavailable()
+            finally:
+                with self.lock:
+                    self.followers -= 1
+        result = self.unavailable()
         try:
-            payload = {'model': MODEL, 'instructions': INSTRUCTIONS, 'input': encoded,
+            result = self._produce(trace, encoded, key, base, identity[2])
+            return deepcopy(result)
+        finally:
+            # A failing producer releases every follower, including on an
+            # unexpected exception. Neither an error nor overload is cached.
+            try:
+                with self.lock:
+                    flight.result = json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+                    if result.get('status') == 'ok':
+                        self.cache[identity] = result
+            finally:
+                with self.lock:
+                    self.pending.pop(identity, None)
+                    self.slots.release()
+                    flight.event.set()
+
+    def _produce(self, trace, encoded, key, base, instructions):
+        try:
+            payload = {'model': base['model'], 'instructions': instructions, 'input': encoded,
                        'reasoning': {'effort': 'low'},
                        'max_output_tokens': min(26000, 1200 + 180 * sum(map(len, _expected_ids(trace)))),
                        'text': {'format': {'type': 'json_schema', 'name': 'alloy_education',
@@ -487,9 +542,6 @@ class Explainer:
                 data = _unique_json(content)
             education = _education_response(data, trace, key)
             result = dict(base, status='ok', **education)
-            with self.lock:
-                self.cache[digest] = deepcopy(result)
-                if len(self.cache) > 128: self.cache.popitem(last=False)
             return result
         except HTTPError as error:
             quota = False
@@ -504,5 +556,3 @@ class Explainer:
             return dict(base, status='unavailable', message=message)
         except (URLError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
             return dict(base, status='unavailable', message='Luna could not complete the explanation. Distance feedback remains available.')
-        finally:
-            self.slots.release()

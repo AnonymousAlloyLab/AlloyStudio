@@ -15,7 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES, check_runtime
 
-ENTRY_POINTS = ('LiveFeedback.java', 'EngineSelfTest.java', 'BehaviorFeedback.java',
+ENTRY_POINTS = ('EngineWorker.java', 'LiveFeedback.java', 'EngineSelfTest.java', 'BehaviorFeedback.java',
                 'ExerciseValidator.java', 'UploadInspector.java')
 JAVA_ENVIRONMENT = frozenset(('CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS',
                               'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS'))

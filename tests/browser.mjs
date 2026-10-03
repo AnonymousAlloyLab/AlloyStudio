@@ -21,7 +21,7 @@ const externalRequests = [];
 async function check(name, fn) { await fn(); passed.push(name); }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const result = (payload, distance) => ({ ...payload, body: undefined, status: 'ok', metric: 'acgn-fast-rewrite-canonical-distance',
-  requestedMetric: payload.metric || 'canonical',
+  requestedMetric: payload.metric || 'canonical', evidenceToken: 'a'.repeat(64),
   distance, breakdown: { temporal: 0, quantifier: 0, matrix: distance }, canonicalForm: ['some Node'],
   operations: distance ? [{ kind: 'component-edit', component: 'matrix', path: 'matrix', cost: distance, aggregate: true,
     description: 'Matrix edit units with no matching detailed trace.' }] : [],
@@ -52,7 +52,7 @@ const astResult = payload => {
   const first = payload.body.indexOf('some Node'), last = payload.body.lastIndexOf('Node');
   const ranges = [[first, first + 9], [last, last + 4], [first, first + 9]];
   return { ...payload, body: undefined, requestedMetric: 'ast', metric: 'acgn-raw-ast-zhang-shasha-distance',
-    status: 'ok', distance: 3, breakdown: { ast: 3 }, astSize: 5, canonicalForm: [],
+    status: 'ok', evidenceToken: 'b'.repeat(64), distance: 3, breakdown: { ast: 3 }, astSize: 5, canonicalForm: [],
     comparison: { strategy: 'nearest-known-correct', poolSize: 2, evaluatedCandidates: 2, complete: true },
     operations: ['replace', 'delete', 'insert'].map((kind, index) => ({
       kind, component: 'ast', path: `ast.child[${index}]`, cost: 1, aggregate: false,
@@ -534,7 +534,8 @@ try {
     assert.equal(await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1')), canonicalHistory);
     const astHistory = await page.evaluate(() => localStorage.getItem('alloy-studio:v1:history:graphs-inv1:ast'));
     assert(JSON.parse(astHistory).every(item => item.distance === 3 && item.basis === 'nearest-known-correct-raw-ast-v1'));
-    assert(behaviorRequests.every(payload => !('metric' in payload)));
+    assert(behaviorRequests.every(payload => ['canonical', 'ast'].includes(payload.metric)));
+    // This metric is delivery identity; the server keeps behavioral work metric-independent.
     await page.locator('.operation-select').first().click();
     // Hide fixed overlays during Chromium's stitched element captures.
     const hidden = await page.locator('.skip-link, #toast').evaluateAll(elements => elements.map(element => {

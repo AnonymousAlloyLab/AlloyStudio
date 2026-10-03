@@ -46,16 +46,17 @@ class EngineTempIntegrationTests(unittest.TestCase):
         self.assertTrue(all(not path.exists() for path in self.scratch_paths))
 
     def test_feedback_and_behavior_use_the_configured_backend_root(self):
-        portal = SimpleNamespace(root=self.root, java='java', timeout=5,
-            slots=threading.BoundedSemaphore(1), cache_lock=threading.Lock(), cache=OrderedDict(),
-            correct_pools={'fixture': ['some A']}, behavior_slots=threading.BoundedSemaphore(1),
-            behavior_cache=OrderedDict())
+        portal = object.__new__(server.Portal)
+        portal.root, portal.java, portal.timeout, portal.engine_mode = self.root, 'java', 5, 'oneshot'
         record = dict(id='fixture', environmentBefore='sig A {}\n', predicateHeader='pred inv1 ',
                       environmentAfter='', predicate='inv1', oracleBody='some A')
         with patch.object(runtime_dependencies.subprocess, 'run', side_effect=self.fake_run):
-            answer = server.Portal.evaluate(portal, record, 'no A')
+            payload = dict(studentSource=server.model(record, 'no A'), referenceBodies=['some A'],
+                           referencePrefix='sig A {}\npred inv1 {\n', referenceSuffix='\n}',
+                           predicate='inv1', metric='canonical')
+            answer = portal._feedback(record, 'no A', 'canonical', payload)
             self.assertEqual(answer['status'], 'invalid')
-            behavior = server.Portal.evaluate_behavior(portal, record, 'no A')
+            behavior = portal._behavior(portal.behavior_payload(record, 'no A'))
             self.assertEqual(behavior['status'], 'invalid')
         self.assert_cleaned(2)
 

@@ -34,6 +34,16 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Alpha v0.0.4** (`v0.0.4-alpha`) reuses a bounded pool of JVM workers across edits,
+shares identical pending analyses, and caches exact-context results. Browser
+channels discard superseded work and reuse retained evidence for Luna. Bounded
+HTTP admission, strict request framing, revalidation of public API responses,
+and graceful worker shutdown reduce repeated work. Canonical remains the default;
+both metrics still scan the complete correct pool. See the
+[implementation and validation report](docs/performance-implementation.md) and
+[release notes](docs/releases/v0.0.4-alpha.md), including remaining proof and
+deployment boundaries.
+
 **Alpha v0.0.3** (`v0.0.3-alpha`) adds interactive instance diagrams, measured
 spacing and obstacle-aware connection routes, the completed five-arm Alloy4Fun
 benchmark, and the catalogue-wide image and hint-quality audits. It also includes
@@ -58,6 +68,14 @@ runtime policy bridges are described in the
 [implementation and obligation overview](docs/implementation-bridges.md);
 full formal closure is not established.
 
+The frozen [backend performance specification](docs/backend-performance-spec.md) specifies
+persistent JVM workers, duplicate-request sharing and bounded inbound traffic
+without changing analysis logic. The [TB01 traffic models](formal/traffic/README.md)
+and [proof-to-implementation handoff](docs/traffic-proof-handoff.md) supply the
+separate offline proof surface. Its [23 end-to-end obligations](closure/traffic-obligations.json)
+remain OPEN as formal end-to-end claims: model proofs and the implementation's
+finite tests do not establish semantic refinement of production code.
+
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
 From a new clone, run:
 
@@ -73,7 +91,10 @@ required. To prepare and check the checkout without starting the server, use
 Open **http://127.0.0.1:8080**. Setup and startup validate the bundled JARs, compile
 the engine, and run 378 engine checks. They need no Node, npm, pip packages, or
 IIS. No frontend CDN or external font is needed. Stop with Ctrl+C. Options include
-`--port 8081`, `--timeout 12`, `--workers 4`, and `--java-home /path/to/jdk`.
+`--port 8081`, `--timeout 12`, `--workers 2`, and `--java-home /path/to/jdk`.
+Persistent workers are the default; `--engine-mode oneshot` retains the diagnostic
+fresh-JVM path. Optional `--control-port 8082` adds a separate loopback-only health
+listener; keep it private.
 See [Linux and macOS setup](docs/local-setup.md) for installation, private config,
 and troubleshooting. The separate developer/release build uses Node for its
 JavaScript syntax check.

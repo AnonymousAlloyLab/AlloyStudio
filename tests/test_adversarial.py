@@ -25,7 +25,7 @@ TRACE = {'status': 'ok', 'distance': 1,
 class AdversarialHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         cls.app.handle_error = lambda *args: None
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
@@ -59,8 +59,8 @@ class AdversarialHTTPTests(unittest.TestCase):
                 payload = json.dumps({'exerciseId': 'graphs-inv1', 'revision': 1, 'body': value}).encode()
                 with patch.object(self.app, 'evaluate', side_effect=AssertionError('Must reject before engine')):
                     code, result = self.post_bytes(payload)
-                self.assertEqual(code, 200)
-                self.assertEqual(result['status'], 'invalid')
+                self.assertEqual(code, 400)
+                self.assertEqual(set(result), {'error'})
                 self.assertNotIn('distance', result)
 
     def test_deep_json_within_size_limit_is_a_sanitized_http_error(self):

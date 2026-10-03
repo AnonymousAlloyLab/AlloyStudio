@@ -13,6 +13,11 @@ def main():
     parser.add_argument('--config', required=True, type=Path)
     args = parser.parse_args()
     config = json.loads(args.config.read_text(encoding='utf-8-sig'))
+    engine_mode = config.get('engine_mode', 'persistent')
+    control_port = config.get('control_port', 0)
+    if (engine_mode not in ('persistent', 'oneshot') or type(control_port) is not int
+            or not 0 <= control_port <= 65535 or control_port == 8080):
+        parser.error('Invalid engine_mode or control_port in the protected task configuration.')
     backend = Path(config['backend_root'])
     # The manager restricts this entire directory to administrators and the task.
     log = (Path(config['log_directory']) / 'backend.log').open('a', encoding='utf-8', buffering=1)
@@ -32,7 +37,8 @@ def main():
     sys.dont_write_bytecode = True
     sys.argv = [str(backend / 'server.py'), '--host', '127.0.0.1', '--port', '8080',
                 '--java', config['java_exe'], '--timeout', str(config['engine_timeout']),
-                '--workers', str(config['workers'])]
+                '--workers', str(config['workers']), '--engine-mode', engine_mode,
+                '--control-port', str(control_port)]
     for origin in config['public_origins']:
         sys.argv.extend(['--public-origin', origin])
     os.chdir(backend)

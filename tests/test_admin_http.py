@@ -29,7 +29,7 @@ class AdminHTTPTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         fixture(self.root)
-        self.app = server.Portal(('127.0.0.1', 0), root=self.root)
+        self.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', root=self.root)
         self.origin = 'http://127.0.0.1:' + str(self.app.server_port)
         self.config = deepcopy(self.configuration)
         self.config['origin'] = self.origin

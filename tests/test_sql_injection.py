@@ -148,7 +148,7 @@ class SqlInjectionAdminHTTPTests(unittest.TestCase):
         fixture(self.root)
         self.database = self.root / store.DATABASE_RELATIVE
         with patch.dict('os.environ', {'OPENAI_DISABLED': '1'}):
-            self.app = server.Portal(('127.0.0.1', 0), root=self.root)
+            self.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', root=self.root)
         self.origin = 'http://127.0.0.1:' + str(self.app.server_port)
         configuration = deepcopy(self.configuration)
         configuration['origin'] = self.origin

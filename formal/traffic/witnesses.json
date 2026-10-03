@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "scope": "traffic-model-only",
+  "witnesses": [
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W01",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Resources.w01_atomic_reservation_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W02",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Resources.w02_cancel_does_not_release_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W03",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W03_cancel_preserves_B",
+        "AlloyStudio.Traffic.Reuse.W03_join_one_job",
+        "AlloyStudio.Traffic.Reuse.W03_last_queued_cancel_reclaims",
+        "AlloyStudio.Traffic.Reuse.W03_naive_cancel_breach",
+        "AlloyStudio.Traffic.Reuse.W03_running_not_killed"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W04",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W04_normalization_breach"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W05",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W05_generation_breach",
+        "AlloyStudio.Traffic.Reuse.W05_old_cache_not_new_generation"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W06",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w06_same_sequence_old_incarnation_rejected",
+        "AlloyStudio.Traffic.Resources.w06_incarnation_ticket_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W07",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w07_first_byte_then_absolute_rejection",
+        "AlloyStudio.Traffic.Ingress.w07_idle_trickle_would_continue"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W08",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W08_new_channel_identity_valid",
+        "AlloyStudio.Traffic.Reuse.W08_new_channel_rejected_at_global_cap"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W09",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w09_naive_allocation_exceeds_cap",
+        "AlloyStudio.Traffic.Ingress.w09_prefix_rejected_before_allocation"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W10",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W10_late_malformed_breach"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W11",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W11_eviction_keeps_evidence"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W12",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Resources.w12_fatal_requires_retirement_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W13",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w13_conflicting_lengths_rejected",
+        "AlloyStudio.Traffic.Ingress.w13_spoofed_forwarding_does_not_change_identity"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W14",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Resources.w14_recycle_each_edit_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W15",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w15_public_cannot_spend_control_reserve",
+        "AlloyStudio.Traffic.Ingress.w15_public_handler_saturation_leaves_private_slot",
+        "AlloyStudio.Traffic.Ingress.w15_public_saturation_reachable",
+        "AlloyStudio.Traffic.Ingress.w15_shared_bucket_naively_starves_control"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W16",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W16_field_allowlist_breach"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W17",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Ingress.w17_allowlist_removes_key",
+        "AlloyStudio.Traffic.Ingress.w17_java_option_filter_leaks_key"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W18",
+      "scope": "Closed model replay or independent miniature policy counterexample; exact theorem statements are authoritative. Not a production exploit or runtime correspondence proof.",
+      "specification": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.W18_async_boundary"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W19",
+      "scope": "Generic ledger external owner reuse permits delayed stale release of a new charge; caller freshness/production interpretation remains OPEN.",
+      "theorems": [
+        "AlloyStudio.Traffic.Resources.owner_reuse_breach"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W20",
+      "scope": "A key omitting structural metric aliases Canonical and AST; correct model keys distinguish them.",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.metric_omission_breach"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W21",
+      "scope": "A key/delivery mismatch must not enter the subscriber table.",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.mismatched_delivery_rejected"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "W22",
+      "scope": "A failed running computation removes unfulfilled ownership without manufacturing a successful cached observation.",
+      "theorems": [
+        "AlloyStudio.Traffic.Reuse.terminal_failure_not_cached"
+      ]
+    }
+  ]
+}

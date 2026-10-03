@@ -32,6 +32,7 @@ const state = {
   feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
+  channel: null, channelPromise: null, checkFlight: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
 const APP_BASE = new URL('.', import.meta.url);
@@ -119,7 +120,10 @@ function setStatus(status, text) {
 function invalidateFeedback() {
   clearOperationHighlight();
   resetBehavior();
+  const pending = state.checkFlight || state.feedbackAbort || state.behaviorAbort || state.explainAbort;
   state.revision += 1;
+  if (pending) cancelChannel(state.revision);
+  state.checkFlight = null;
   clearTimeout(state.timer);
   state.feedbackAbort?.abort();
   state.feedbackAbort = null;
@@ -140,7 +144,7 @@ function showWaiting(message = 'Your next edit is ready to explore.') {
   elements.result.replaceChildren(wrapper);
 }
 
-async function fetchJSON(url, options = {}) {
+async function fetchJSONResponse(url, options = {}) {
   const endpoint = new URL(url, APP_BASE);
   const response = await fetch(endpoint, { ...options, headers: { Accept: 'application/json', ...options.headers } });
   // An IIS error page or sign-in redirect is not an application result. Report
@@ -169,7 +173,105 @@ async function fetchJSON(url, options = {}) {
   if (!response.ok && !(data && typeof data.status === 'string')) {
     throw new Error(data?.error?.message || data?.error || data?.message || `Request failed (${response.status}).`);
   }
-  return data;
+  return { data, response };
+}
+
+async function fetchJSON(url, options = {}) {
+  return (await fetchJSONResponse(url, options)).data;
+}
+
+// BEGIN TRAFFIC RETRY POLICY
+function retryDelay(response, data, attempt, now, deadline, random = Math.random) {
+  // Only an explicit rejection before dispatch permits an automatic retry.
+  // A lost response, worker timeout or provider error never enters this branch.
+  if (attempt !== 0 || ![429, 503].includes(response.status)
+    || data.status !== 'busy' || data.retryable !== true || data.dispatched !== false
+    || data.code !== 'capacity') return null;
+  const seconds = response.headers.get('Retry-After');
+  if (typeof seconds !== 'string' || !/^\d+(?:\.\d+)?$/.test(seconds)) return null;
+  const wait = Number(seconds) * 1000;
+  if (!Number.isFinite(wait) || wait < 0 || wait > 5000) return null;
+  const delay = wait + Math.floor(random() * 151);
+  return now + delay < deadline ? delay : null;
+}
+
+function abortableDelay(milliseconds, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => { clearTimeout(timer); reject(new DOMException('Request superseded.', 'AbortError')); };
+    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, milliseconds);
+    if (signal.aborted) abort();
+    else signal.addEventListener('abort', abort, { once: true });
+  });
+}
+// END TRAFFIC RETRY POLICY
+
+async function learnerJSON(url, payload, signal, current) {
+  const serialized = JSON.stringify(payload);
+  const deadline = performance.now() + 120000;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal.addEventListener('abort', abort, { once: true });
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 120000);
+  try {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (signal.aborted || !current() || performance.now() >= deadline) {
+        throw new DOMException('Request superseded.', 'AbortError');
+      }
+      const { data, response } = await fetchJSONResponse(url, {
+        method: 'POST', signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' }, body: serialized,
+      });
+      if (performance.now() >= deadline) {
+        throw new Error('The analysis request timed out. Check your predicate again when ready.');
+      }
+      if (data.status === 'expired' && data.code === 'channel_expired' && state.channel === payload.channel) {
+        state.channel = null;
+      }
+      const delay = retryDelay(response, data, attempt, performance.now(), deadline);
+      if (delay === null || !current()) return data;
+      await abortableDelay(delay, controller.signal);
+    }
+    throw new Error('The analysis service is busy. Check your predicate again shortly.');
+  } catch (error) {
+    if (timedOut) throw new Error('The analysis request timed out. Check your predicate again when ready.');
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener('abort', abort);
+  }
+}
+
+async function ensureChannel() {
+  if (state.channel) return state.channel;
+  if (!state.channelPromise) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    state.channelPromise = fetchJSON('api/channel', {
+      method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: '{}',
+    }).then(result => {
+      if (result.status !== 'ok' || typeof result.channel !== 'string'
+        || !/^[a-zA-Z0-9_-]{32,256}$/.test(result.channel)) {
+        throw new Error('The editing session could not be started. Check your predicate again shortly.');
+      }
+      state.channel = result.channel;
+      return result.channel;
+    }).catch(error => {
+      if (error.name === 'AbortError') throw new Error('The editing session timed out. Check your predicate again when ready.');
+      throw error;
+    }).finally(() => { clearTimeout(timer); state.channelPromise = null; });
+  }
+  return state.channelPromise;
+}
+
+function cancelChannel(revision) {
+  if (!state.channel) return;
+  // Cancellation reaches only this tab's subscribers. Local guards take effect
+  // immediately; server suppression starts when this notification arrives.
+  fetchJSON('api/cancel', { method: 'POST', keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channel: state.channel, revision }),
+  }).catch(() => {});
 }
 
 function visibleExercises() {
@@ -503,7 +605,7 @@ async function selectExercise(id) {
   showWaiting('Loading your model…');
   $('#startup-error').hidden = true;
   try {
-    const exercise = await fetchJSON(`api/exercises/${encodeURIComponent(id)}`, { signal: controller.signal });
+    const exercise = await fetchJSON(`api/exercises/${encodeURIComponent(id)}`, { signal: controller.signal, cache: 'no-cache' });
     if (selection !== state.selection) return;
     if (!exercise || typeof exercise.id !== 'string' || typeof exercise.starter !== 'string') throw new Error('This exercise could not be loaded.');
     state.exercise = exercise;
@@ -557,9 +659,20 @@ function onEdit() {
   if (elements.live.checked) scheduleFeedback();
 }
 
-async function checkPredicate() {
+function checkPredicate() {
   clearTimeout(state.timer);
   if (!state.exercise || elements.editor.disabled) return;
+  const identity = JSON.stringify([state.exercise.id, state.selection, state.metric, elements.editor.value]);
+  if (state.checkFlight?.identity === identity) return state.checkFlight.promise;
+  const flight = { identity, promise: null };
+  state.checkFlight = flight;
+  flight.promise = runPredicateCheck().finally(() => {
+    if (state.checkFlight === flight) state.checkFlight = null;
+  });
+  return flight.promise;
+}
+
+async function runPredicateCheck() {
   clearOperationHighlight();
   clearCanonicalForm('Checking this draft…');
   resetBehavior('Waiting for this draft to compile…', 'Waiting');
@@ -572,6 +685,8 @@ async function checkPredicate() {
   const selection = state.selection;
   const body = elements.editor.value;
   const metric = state.metric;
+  const current = () => revision === state.revision && selection === state.selection && metric === state.metric
+    && exerciseId === state.exercise?.id && body === elements.editor.value && !controller.signal.aborted;
   saveDraft();
   setStatus('pending', 'Checking…');
   const pending = node('div', 'pending-message');
@@ -580,11 +695,9 @@ async function checkPredicate() {
   pending.append(spinner, node('span', '', 'Comparing your predicate with the correct answers…'));
   elements.result.replaceChildren(pending);
   try {
-    const result = await fetchJSON('api/feedback', {
-      method: 'POST', signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ exerciseId, body, revision, metric }),
-    });
+    const channel = await ensureChannel();
+    if (!current()) return;
+    const result = await learnerJSON('api/feedback', { exerciseId, body, revision, metric, channel }, controller.signal, current);
     if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
     // Atom order is registered by SessionBridge.feedbackAtomNames.
     if (result.status === 'ok' && !verifiedPolicy('feedbackSuccess', [
@@ -622,9 +735,11 @@ async function checkPredicate() {
       renderHistory();
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
-      requestBehavior({ exerciseId, body, revision }, selection, true, metric);
+      const evidenceToken = typeof result.evidenceToken === 'string' && /^[a-f0-9]{64}$/.test(result.evidenceToken)
+        ? result.evidenceToken : null;
+      await requestBehavior({ exerciseId, body, revision, metric, channel, ...(evidenceToken ? { evidenceToken } : {}) }, selection, true, metric);
     } else if (result.status === 'unsupported') {
-      requestBehavior({ exerciseId, body, revision }, selection, false, metric);
+      await requestBehavior({ exerciseId, body, revision, metric, channel }, selection, false, metric);
     }
   } catch (error) {
     if (error.name === 'AbortError' || revision !== state.revision || selection !== state.selection || metric !== state.metric) return;
@@ -716,6 +831,8 @@ function renderFeedback(result, sourceContext = null) {
       busy: ['pending', 'Server busy', 'The comparison engine is busy.'],
       error: ['error', 'Unavailable', 'The check could not be completed.'],
       engine_error: ['error', 'Engine error', 'The comparison engine could not complete this check.'],
+      expired: ['error', 'Session expired', 'Check your predicate again to start a new editing session.'],
+      superseded: ['waiting', 'Draft changed', 'Check your current predicate to continue.'],
     };
     const [status, label, title] = statuses[result.status] || statuses.error;
     setStatus(status, label);
@@ -1039,10 +1156,13 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
     && metric === state.metric
     && payload.exerciseId === state.exercise?.id && payload.body === elements.editor.value && !controller.signal.aborted;
   behaviorMessage('pending', 'Analyzing…', 'Comparing behavior with the oracle and finding examples within the model bounds…');
+  let allowExplanation = true;
   try {
-    const result = await fetchJSON('api/behavior', { method: 'POST', signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!current()) return;
+    const { evidenceToken: structuralEvidence, ...behaviorPayload } = payload;
+    const result = await learnerJSON('api/behavior', behaviorPayload, controller.signal, current);
+    if (!current()) return;
+    if (['superseded', 'expired'].includes(result.status)) allowExplanation = false;
     if (result.exerciseId !== payload.exerciseId || result.revision !== payload.revision) throw new Error('Behavioral feedback for this draft is unavailable. Check your predicate again.');
     if (result.status !== 'ok') {
       const errors = {
@@ -1065,9 +1185,13 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
     behaviorMessage('error', 'Unavailable', error.message);
   } finally {
     if (state.behaviorAbort === controller) state.behaviorAbort = null;
-    if (current() && explain) {
+    if (current() && explain && allowExplanation) {
       const token = state.behaviorEvidence?.token;
-      requestExplanation({ ...payload, metric, ...(token ? { behaviorToken: token } : {}) }, selection);
+      await requestExplanation({ ...payload, metric, ...(token ? { behaviorToken: token } : {}) }, selection);
+    } else if (current() && explain && !allowExplanation) {
+      const container = $('#luna-explanation-body');
+      if (container) renderExplanationUnavailable(container,
+        'This check has expired or changed. Check your predicate again to refresh guidance.', payload, selection, false);
     }
   }
 }
@@ -1123,6 +1247,12 @@ async function requestExplanation(payload, selection) {
   if (!education || !sourceContextCurrent(education.context) || payload.body !== education.context.body
     || payload.revision !== education.context.revision || selection !== education.context.selection
     || payload.exerciseId !== education.context.exerciseId || payload.metric !== education.context.metric) return;
+  if (typeof payload.evidenceToken !== 'string' || !/^[a-f0-9]{64}$/.test(payload.evidenceToken)) {
+    const container = $('#luna-explanation-body');
+    if (container) renderExplanationUnavailable(container,
+      'Guidance is unavailable for this check. Your structural feedback and examples remain available.', payload, selection, false);
+    return;
+  }
   const behaviorToken = payload.behaviorToken || null;
   if (behaviorToken !== (state.behaviorEvidence?.token || null)) return;
   state.explainAbort?.abort();
@@ -1137,10 +1267,8 @@ async function requestExplanation(payload, selection) {
   refreshEducationSlots();
   $('#luna-explanation-body')?.replaceChildren(node('p', 'explanation-pending', 'Preparing short explanations…'));
   try {
-    const explanation = await fetchJSON('api/explain', {
-      method: 'POST', signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-    });
+    if (!current()) return;
+    const explanation = await learnerJSON('api/explain', payload, controller.signal, current);
     if (!current()) return;
     if (explanation.status !== 'ok' && (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision)) throw new Error('Guidance for this draft is unavailable. Please check again.');
     if (explanation.status !== 'ok' && !responseMetricMatches(explanation, payload.metric)) throw new Error('Guidance for this comparison method is unavailable. Check again or retry guidance.');
@@ -1172,7 +1300,7 @@ async function requestExplanation(payload, selection) {
   }
 }
 
-function renderExplanationUnavailable(container, message, payload, selection) {
+function renderExplanationUnavailable(container, message, payload, selection, retryable = true) {
   if (state.education) {
     state.education.phase = 'unavailable';
     state.education.operations.clear(); state.education.instances.clear();
@@ -1183,7 +1311,7 @@ function renderExplanationUnavailable(container, message, payload, selection) {
   retry.addEventListener('click', () => {
     requestExplanation(payload, selection);
   });
-  container.replaceChildren(node('p', 'explanation-unavailable', message), retry);
+  container.replaceChildren(node('p', 'explanation-unavailable', message), ...(retryable ? [retry] : []));
 }
 
 function renderHistory() {
@@ -1286,14 +1414,17 @@ async function initialize() {
   });
   elements.download.addEventListener('click', downloadModel);
   document.querySelectorAll('.environment-tab').forEach((button) => button.addEventListener('click', () => { state.context = button.dataset.context; renderContext(); }));
-  window.addEventListener('beforeunload', () => { if (!elements.editor.disabled) saveDraft(); });
+  window.addEventListener('beforeunload', () => {
+    if (!elements.editor.disabled) saveDraft();
+    if (state.checkFlight || state.explainAbort) cancelChannel(state.revision + 1);
+  });
   await loadExercises();
 }
 
 async function loadExercises() {
   $('#startup-error').hidden = true;
   try {
-    const data = await fetchJSON('api/exercises');
+    const data = await fetchJSON('api/exercises', { cache: 'no-cache' });
     if (!Array.isArray(data.exercises)) throw new Error('The exercise catalog could not be read.');
     state.exercises = data.exercises;
     $('#exercise-count').textContent = String(state.exercises.length);

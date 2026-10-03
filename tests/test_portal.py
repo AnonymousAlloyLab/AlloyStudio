@@ -127,7 +127,7 @@ class LunaTests(unittest.TestCase):
 class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', traffic_profile=server.TrafficProfile(public_burst=10000, peer_burst=10000))
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = 'http://127.0.0.1:' + str(cls.app.server_port)
@@ -203,10 +203,11 @@ class HTTPTests(unittest.TestCase):
             result = self.app.evaluate(self.record, 'some Node // fail')
             self.assertEqual(result['status'], 'error')
             self.assertNotIn('PRIVATE_CANARY', json.dumps(result))
-        for _ in range(4): self.app.slots.acquire()
+        previous = self.app.scheduler.max_jobs
+        self.app.scheduler.max_jobs = 0
         try: self.assertEqual(self.app.evaluate(self.record, 'some Node // busy')['status'], 'busy')
         finally:
-            for _ in range(4): self.app.slots.release()
+            self.app.scheduler.max_jobs = previous
 
     def test_explanation_endpoint_uses_server_trace(self):
         with patch.object(self.app.explainer, 'explain', return_value={'status': 'ok', 'model': MODEL, 'operations': [], 'instances': [], 'summary': 'Examine matrix edits.'}) as explain:

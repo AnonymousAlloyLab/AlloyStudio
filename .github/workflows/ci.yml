@@ -84,6 +84,13 @@ jobs:
         run: python scripts/ci_check.py build
       - name: Validate every dependency and run the engine
         run: python scripts/ci_check.py runtime
+      - name: Persistent transport, scheduling and HTTP boundary regressions
+        env:
+          PYTHONPATH: ${{ github.workspace }}/tests
+          TMPDIR: ${{ github.workspace }}/build/ci/tmp
+          TMP: ${{ github.workspace }}/build/ci/tmp
+          TEMP: ${{ github.workspace }}/build/ci/tmp
+        run: python -m unittest test_engine_workers test_traffic_scheduler test_traffic_http test_traffic_portal test_luna_sharing -v
       - name: Generate safe dashboard summary
         if: always()
         run: python scripts/ci_dashboard.py

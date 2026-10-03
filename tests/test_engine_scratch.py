@@ -5,8 +5,12 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
+import runtime_dependencies as runtime
 from runtime_dependencies import clean_java_environment, engine_temp_root, run_engine
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,13 +80,13 @@ public class ScratchProbe {
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(engine_temp_root(self.root), self.root / 'build/runtime/tmp')
 
-    def test_java_environment_removes_only_option_injection_variables(self):
+    def test_java_environment_is_minimal_and_excludes_unknown_values(self):
         original = {'PATH': '/example', 'LANG': 'en_US.UTF-8', 'KEEP': 'unchanged',
                     'CLASSPATH': 'wrong', 'JAVA_TOOL_OPTIONS': '-Dbad=true',
                     '_JAVA_OPTIONS': '-Dbad=true', 'JDK_JAVA_OPTIONS': '-Dbad=true',
                     'JDK_JAVAC_OPTIONS': '-Dbad=true'}
         self.assertEqual(clean_java_environment(original),
-                         {'PATH': '/example', 'LANG': 'en_US.UTF-8', 'KEEP': 'unchanged'})
+                         {'PATH': '/example', 'LANG': 'en_US.UTF-8'})
         self.assertEqual(original['_JAVA_OPTIONS'], '-Dbad=true')
 
     def test_ambient_options_cannot_redirect_actual_jvm_files_outside_owned_scratch(self):
@@ -103,6 +107,55 @@ public class ScratchProbe {
                 self.assertEqual(path.parent.parent, engine_temp_root(self.root))
                 self.assertFalse(path.parent.exists())
                 self.assertEqual(list(escape.iterdir()), [])
+
+    def test_shutdown_drains_registered_admin_before_acknowledging_exit(self):
+        started, release = threading.Event(), threading.Event()
+        def fake_run(*args, **kwargs):
+            started.set()
+            release.wait(2)
+            return subprocess.CompletedProcess(args[0], 0, '', '')
+        with patch.object(runtime.subprocess, 'run', side_effect=fake_run), ThreadPoolExecutor(1) as executor:
+            future = executor.submit(run_engine, self.command, root=self.root, timeout=2)
+            self.assertTrue(started.wait(1))
+            runtime.close_engine_admission(self.root)
+            self.assertFalse(runtime.wait_for_oneshots(self.root, timeout=.02))
+            with self.assertRaises(OSError):
+                run_engine(self.command, root=self.root, timeout=.01)
+            release.set()
+            future.result(1)
+            self.assertTrue(runtime.wait_for_oneshots(self.root, timeout=1))
+        runtime.open_engine_admission(self.root)
+        self.assertEqual(runtime.PROCESS_BUDGET.stats()['reserved'], 0)
+
+    def test_shutdown_rejects_a_registered_call_still_waiting_for_process_slot(self):
+        owner = runtime.PROCESS_BUDGET.reserve('admin', 1)
+        try:
+            with patch.object(runtime.subprocess, 'run') as process, ThreadPoolExecutor(1) as executor:
+                future = executor.submit(run_engine, self.command, root=self.root, timeout=1)
+                deadline = time.monotonic() + 1
+                key = str(self.root.resolve())
+                while not runtime._ONESHOT_ROOTS.get(key, {}).get('active'):
+                    self.assertLess(time.monotonic(), deadline)
+                    time.sleep(.001)
+                runtime.close_engine_admission(self.root)
+                runtime.PROCESS_BUDGET.release_reaped(owner)
+                with self.assertRaises(OSError):
+                    future.result(1)
+                process.assert_not_called()
+                self.assertTrue(runtime.wait_for_oneshots(self.root, timeout=1))
+        finally:
+            runtime.PROCESS_BUDGET.release_reaped(owner)
+            runtime.open_engine_admission(self.root)
+
+    def test_explicit_one_shot_lane_consumes_its_own_reserved_capacity(self):
+        def fake_run(*args, **kwargs):
+            self.assertNotIn('lane', kwargs)
+            self.assertEqual(runtime.PROCESS_BUDGET.stats()['lanes']['feedback'], 1)
+            self.assertEqual(runtime.PROCESS_BUDGET.stats()['lanes']['admin'], 0)
+            return subprocess.CompletedProcess(args[0], 0, '', '')
+        with patch.object(runtime.subprocess, 'run', side_effect=fake_run):
+            run_engine(self.command, root=self.root, lane='feedback', timeout=1)
+        self.assertEqual(runtime.PROCESS_BUDGET.stats()['reserved'], 0)
 
     @unittest.skipIf(os.name == 'nt', 'Creating symlinks needs additional Windows privileges')
     def test_linked_configuration_is_rejected(self):

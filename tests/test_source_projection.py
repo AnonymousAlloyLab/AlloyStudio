@@ -216,7 +216,7 @@ class CanonicalProjectionTests(unittest.TestCase):
 class SourceProjectionEngineBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         cls.record = cls.app.exercises['graphs-inv1']
 
     @classmethod

@@ -39,7 +39,7 @@ run over
 run under
 '''
 RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
-RUNTIME_FILES = ('server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
+RUNTIME_FILES = ('engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
                  'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
                  'scripts/configure_admin.py', 'docs/admin-setup.md', 'docs/admin-security-spec.md',
                  'scripts/manage_exercises.py', 'docs/private-exercises.md',
@@ -275,6 +275,40 @@ class SetupFailureTests(unittest.TestCase):
                     self.assertIn('Java compilation', str(caught.exception))
                     self.assertTrue(set(JAVA_HOOKS).isdisjoint(run.call_args.kwargs['env']))
                     self.assertEqual(run.call_args.kwargs['timeout'], 180)
+                    self.assertIn(str(Path(directory).resolve() / 'engine/src/live/EngineWorker.java'),
+                                  run.call_args.args[0])
+
+
+class RuntimeOptionTests(unittest.TestCase):
+    def invoke(self, arguments):
+        with patch.object(local_portal, 'setup', return_value=Path('/jdk/bin/java')) as setup, \
+                patch.object(local_portal.os, 'execve') as execute:
+            local_portal.main(['run', *arguments])
+            setup.assert_called_once()
+            return execute.call_args.args[1]
+
+    def test_persistent_default_and_disabled_control_listener_reach_server(self):
+        argv = self.invoke([])
+        self.assertEqual(argv[argv.index('--engine-mode') + 1], 'persistent')
+        self.assertEqual(argv[argv.index('--control-port') + 1], '0')
+        self.assertEqual(argv[argv.index('--workers') + 1], '2')
+
+    def test_rollback_and_separate_control_listener_are_forwarded(self):
+        argv = self.invoke(['--engine-mode', 'oneshot', '--control-port', '9091', '--port', '9090', '--workers', '4'])
+        self.assertEqual(argv[argv.index('--engine-mode') + 1], 'oneshot')
+        self.assertEqual(argv[argv.index('--control-port') + 1], '9091')
+        self.assertEqual(argv[argv.index('--port') + 1], '9090')
+        self.assertEqual(argv[argv.index('--workers') + 1], '4')
+
+    def test_invalid_or_colliding_control_ports_are_rejected_before_setup(self):
+        for arguments in (['--control-port', '-1'], ['--control-port', '65536'],
+                          ['--control-port', '8080'], ['--engine-mode', 'unknown']):
+            with self.subTest(arguments=arguments), patch.object(local_portal, 'setup') as setup, \
+                    contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as caught:
+                    local_portal.main(['run', *arguments])
+                self.assertEqual(caught.exception.code, 2)
+                setup.assert_not_called()
 
 
 class ShellEntrypointTests(unittest.TestCase):

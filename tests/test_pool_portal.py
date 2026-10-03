@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class PoolPortalTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         cls.record = cls.app.exercises['graphs-inv5']
 
     @classmethod
@@ -90,7 +90,7 @@ class PoolPortalTests(unittest.TestCase):
                 load_store(root)
 
     def test_server_instances_cannot_mutate_each_others_pool_registry(self):
-        other = server.Portal(('127.0.0.1', 0))
+        other = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         try:
             other.correct_pools[self.record['id']] = ()
             self.assertGreater(len(self.app.correct_pools[self.record['id']]), 1)

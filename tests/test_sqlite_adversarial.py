@@ -160,7 +160,7 @@ class SQLiteAdversarialTests(unittest.TestCase):
     def test_public_http_projection_and_private_sqlite_artifacts_do_not_leak(self):
         store.add_exercise(self.root, authored())
         with patch('server.Explainer'):
-            instance = server.Portal(('127.0.0.1', 0), root=self.root)
+            instance = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', root=self.root)
         thread = threading.Thread(target=instance.serve_forever, daemon=True)
         thread.start()
         client = HTTPConnection(*instance.server_address, timeout=5)

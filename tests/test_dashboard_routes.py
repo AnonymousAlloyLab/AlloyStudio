@@ -16,7 +16,7 @@ import server
 class DashboardRouteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
 
@@ -67,7 +67,7 @@ class DashboardRouteTests(unittest.TestCase):
                     self.assertEqual(headers['Content-Type'], content_type + '; charset=utf-8')
                     self.assertEqual(body, (ROOT / 'web/dashboard' / name).read_bytes())
                     self.assertEqual(headers['Content-Length'], str(len(body)))
-                    self.assertEqual(headers['Cache-Control'], 'no-store')
+                    self.assertEqual(headers['Cache-Control'], 'no-cache, max-age=0, must-revalidate')
                     self.assertEqual(headers['X-Content-Type-Options'], 'nosniff')
 
     def test_github_connection_permission_is_confined_to_dashboard_responses(self):

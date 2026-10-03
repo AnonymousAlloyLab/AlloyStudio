@@ -106,6 +106,8 @@ class IisPackageTests(unittest.TestCase):
         self.write('LICENSE', 'Portal licence')
         self.write('server.py', '"""Private backend."""\n')
         self.write('luna.py', '"""Private explanation client."""\n')
+        for module in ('engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py'):
+            self.write(module, (ROOT / module).read_bytes())
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
         for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):

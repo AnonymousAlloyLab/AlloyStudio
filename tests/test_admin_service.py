@@ -273,6 +273,23 @@ class AdminServiceTests(unittest.TestCase):
         self.assertEqual(after['suggestionStatus'], 'unavailable')
         self.assertEqual(self.service.drafts[ready['id']].prepared, original)
 
+    def test_shutdown_rejects_admission_and_waits_for_pending_work(self):
+        pending = self.service.prepare(self.principal, ENVELOPE)
+        self.assertFalse(self.service.close(timeout=0))
+        self.denied(503, lambda: self.service.prepare(self.principal, ENVELOPE))
+        self.denied(503, lambda: self.service.view(self.principal, pending['id']))
+        with patch.object(service, 'prepare_upload') as prepare:
+            QueuedThread.run()
+        prepare.assert_not_called()
+        self.assertTrue(self.service.close(timeout=0))
+
+    def test_shutdown_rejects_prepared_publication(self):
+        ready = self.ready()
+        self.assertTrue(self.service.close(timeout=0))
+        with patch.object(service, 'commit_upload') as commit:
+            self.denied(503, lambda: self.service.commit(self.principal, ready['id'], ready['revision'], []))
+        commit.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()

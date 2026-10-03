@@ -197,7 +197,7 @@ class BehaviorProjectionTests(unittest.TestCase):
 class BehaviorWorkerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0), timeout=2, workers=1)
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', timeout=2, workers=1)
         cls.record = cls.app.exercises['graphs-inv5']
 
     @classmethod
@@ -220,7 +220,8 @@ class BehaviorWorkerTests(unittest.TestCase):
         self.assertEqual(payload['oracleSource'], server.model(self.record, self.record['oracleBody']))
         self.assertEqual(payload['predicate'], self.record['predicate'])
         self.assertIn('live.BehaviorFeedback', run.call_args.args[0])
-        self.assertGreaterEqual(run.call_args.kwargs['timeout'], 30)
+        self.assertGreater(run.call_args.kwargs['timeout'], 29)
+        self.assertLessEqual(run.call_args.kwargs['timeout'], 30)
         self.assertFalse(run.call_args.kwargs['check'])
 
     def test_cache_is_separate_and_bound_to_exercise_and_exact_body(self):
@@ -261,27 +262,30 @@ class BehaviorWorkerTests(unittest.TestCase):
             self.assertEqual(self.app.evaluate_behavior(self.record, 'some Node')['status'], 'ok')
 
     def test_behavior_and_canonical_worker_capacity_are_independent(self):
-        self.app.behavior_slots.acquire()
-        try:
-            self.assertEqual(self.app.evaluate_behavior(self.record, 'some Node')['status'], 'busy')
-            comparison = {'strategy': 'nearest-known-correct', 'poolSize': len(self.app.correct_pools[self.record['id']]),
-                          'evaluatedCandidates': len(self.app.correct_pools[self.record['id']]), 'complete': True}
-            with patch('server.subprocess.run', return_value=completed({'status': 'ok', 'distance': 0, 'comparison': comparison})):
-                self.assertEqual(self.app.evaluate(self.record, 'some Node')['status'], 'ok')
-        finally:
-            self.app.behavior_slots.release()
-        self.app.slots.acquire()
-        try:
-            with patch('server.subprocess.run', return_value=completed(valid_behavior())):
-                self.assertEqual(self.app.evaluate_behavior(self.record, 'some Node')['status'], 'ok')
-        finally:
-            self.app.slots.release()
+        started, release = threading.Event(), threading.Event()
+        def slow_behavior():
+            started.set()
+            release.wait(3)
+            return {'status': 'ok'}
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(1) as executor:
+            running = executor.submit(self.app.scheduler.run, 'behavior', ('occupied',), slow_behavior)
+            self.assertTrue(started.wait(1))
+            try:
+                comparison = {'strategy': 'nearest-known-correct', 'poolSize': len(self.app.correct_pools[self.record['id']]),
+                              'evaluatedCandidates': len(self.app.correct_pools[self.record['id']]), 'complete': True}
+                with patch('server.subprocess.run', return_value=completed({'status': 'ok', 'distance': 0, 'comparison': comparison})):
+                    self.assertEqual(self.app.evaluate(self.record, 'some Node')['status'], 'ok')
+            finally:
+                release.set()
+            self.assertEqual(running.result(1)['status'], 'ok')
+
 
 
 class BehaviorHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0), public_origins=('https://as.555.is',))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', public_origins=('https://as.555.is',))
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = 'http://127.0.0.1:' + str(cls.app.server_port)

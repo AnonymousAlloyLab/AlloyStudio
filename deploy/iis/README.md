@@ -426,8 +426,12 @@ the task. Start and Restart repeat it before changing task state, using the
 Python executable recorded in the scheduled task and the configured Java runtime.
 If a required JAR is missing, a running backend is not stopped by Restart.
 
-The default runtime parameters are four workers, a 12-second engine timeout,
-and `127.0.0.1:8080`. The port is intentionally shared with the fixed rewrite
+The default engine mode is `persistent`: two feedback JVMs and one behavioral
+JVM remain alive between edits, with a separate administrator process slot.
+The shared backend budget permits at most four engine children. Existing task
+configurations with `workers: 4` remain valid; feedback concurrency is capped at
+two. A 12-second feedback timeout and `127.0.0.1:8080` remain the defaults.
+The port is intentionally shared with the fixed rewrite
 rule. This recipe installs one backend per Windows host. The task starts at
 boot, ignores overlapping starts, has no execution time limit, and retries
 unexpected failures up to 999 times at one-minute intervals. Microsoft documents
@@ -435,6 +439,35 @@ unexpected failures up to 999 times at one-minute intervals. Microsoft documents
 [restart settings](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset?view=windowsserver2025-ps),
 and [unlimited task runtime](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-executiontimelimit).
 The account must retain the Windows policy permission to run scheduled tasks.
+
+The private `backend-task.json` accepts two optional runtime fields without
+changing the provider key or administrator password configuration:
+
+```json
+"engine_mode": "persistent",
+"control_port": 0
+```
+
+Add these fields to the existing JSON object, preserving its other fields and
+restricted ACLs. Older files that omit them use these defaults. To roll back to
+per-request Java execution, change `engine_mode` to `"oneshot"` and restart the
+backend task. This retains request validation, work-sharing and output checks;
+it changes the Java process lifecycle. The source launcher exposes the same
+choice as `--engine-mode oneshot`.
+
+For independent local health checks, set `control_port` to an unused port such
+as `8081` and restart. The listener binds only to `127.0.0.1`, has a separate
+bounded admission budget, and serves `http://127.0.0.1:8081/api/health`. It does
+not serve analysis, assets or administration. Zero disables it. Keep the fixed
+IIS rewrite upstream on port `8080`; do not route the control listener through
+IIS or Cloudflare. A malformed setting or port `8080` is rejected before startup.
+
+Normal Ctrl+C/SIGTERM shutdown closes and reaps the backend's worker processes.
+A forced Task Scheduler stop or host crash can bypass Python cleanup; this
+implementation does not establish Windows Job Object containment. Check for
+orphan Java processes during the target-host lifecycle acceptance below. CI now
+exercises native Windows and macOS worker transport and request boundaries, but
+its results do not replace that IIS host check.
 
 For deterministic feedback without network calls, omit `-EnableLuna`. To change
 that option, executable paths, worker settings, or the allowed origin list,

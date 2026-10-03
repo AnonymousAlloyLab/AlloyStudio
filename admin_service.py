@@ -45,6 +45,19 @@ class AdminService:
         self.lock = threading.RLock()
         self.slot = threading.BoundedSemaphore(1)
         self.drafts = {}
+        self.closed = False
+        self.idle = threading.Event()
+        self.idle.set()
+
+    def close(self, timeout=65):
+        """Stop admission/publication and wait for the bounded active operation."""
+        with self.lock:
+            self.closed = True
+        return self.idle.wait(timeout)
+
+    def _available(self):
+        if self.closed:
+            raise AdminError(503, 'The administrator service is stopping.')
 
     def _cleanup(self):
         for identifier, draft in list(self.drafts.items()):
@@ -58,6 +71,7 @@ class AdminService:
                 del self.drafts[identifier]
 
     def _owned(self, principal, identifier, revision=NO_REVISION):
+        self._available()
         self.auth.validate(principal)
         self._cleanup()
         draft = self.drafts.get(identifier) if type(identifier) is str else None
@@ -94,6 +108,7 @@ class AdminService:
         text(envelope['modelId'],128,empty=False)
         envelope = deepcopy(envelope)
         with self.lock:
+            self._available()
             self.auth.validate(principal)
             self._cleanup()
             if (len(self.drafts) >= MAX_DRAFTS
@@ -103,11 +118,13 @@ class AdminService:
                 raise AdminError(429,'An upload operation is running. Try again shortly.')
             draft = Draft(secrets.token_urlsafe(32),principal,self.clock())
             self.drafts[draft.identifier] = draft
+            self.idle.clear()
             try:
                 threading.Thread(target=self._prepare,args=(draft,envelope),daemon=True).start()
             except Exception:
                 del self.drafts[draft.identifier]
                 self.slot.release()
+                self.idle.set()
                 raise AdminError(503,'The upload worker is unavailable.') from None
             return self._view(draft)
 
@@ -139,7 +156,9 @@ class AdminService:
                     draft.message = (str(error)[:300] if isinstance(error,(StoreError,UploadError))
                                      else 'The upload could not be validated. Check the format guide and try again.')
         finally:
-            self.slot.release()
+            with self.lock:
+                self.slot.release()
+                self.idle.set()
 
     def request_suggestion(self, principal, identifier, revision, seed):
         text(seed,8192)
@@ -151,11 +170,13 @@ class AdminService:
                 raise AdminError(429,'An upload operation is running. Try again shortly.')
             draft.state, draft.message = 'suggesting','Luna is drafting question suggestions…'
             draft.revision += 1
+            self.idle.clear()
             try:
                 threading.Thread(target=self._suggest,args=(draft,seed),daemon=True).start()
             except Exception:
                 draft.state = 'ready'
                 self.slot.release()
+                self.idle.set()
                 raise AdminError(503,'The suggestion worker is unavailable.') from None
             return self._view(draft)
 
@@ -187,7 +208,9 @@ class AdminService:
                     draft.state, draft.revision = 'ready',draft.revision+1
                     draft.message = 'Suggestions are unavailable. Enter and review the questions yourself.'
         finally:
-            self.slot.release()
+            with self.lock:
+                self.slot.release()
+                self.idle.set()
 
     @contextmanager
     def _publication_guard(self, principal, draft, revision):

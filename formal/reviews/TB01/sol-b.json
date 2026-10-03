@@ -1,0 +1,12 @@
+{
+  "blockManifestSha256": "7683d900cb639ee71051144edb1bb39e9c3918cb5a6cb77a421dc2839daed318",
+  "findings": [],
+  "notesSha256": "f2d1f0ba768be85ba19cde4b0e0ca36ec08faef716d4817a3f2bf1d669bec22b",
+  "priorReviews": {
+    "formal/reviews/TB01/luna-a.json": "a9a56b9ec9286b45a9ec4f9aa09620424ce1e24fa824f54bbfce83604786b5b8",
+    "formal/reviews/TB01/luna-b.json": "3fd7ec65daadf291969811dbecbb8ce98848491172eb017532852e833e269204"
+  },
+  "reviewerModel": "gpt-6-sol",
+  "tier": 2,
+  "verdict": "no_constructed_breach"
+}

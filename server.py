@@ -6,6 +6,10 @@ import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
+import os
+import secrets
+import signal
+from types import SimpleNamespace
 from pathlib import Path
 import re
 import subprocess
@@ -13,7 +17,11 @@ import threading
 import time
 from urllib.parse import unquote, urlsplit
 from luna import Explainer
-from runtime_dependencies import check_runtime, runtime_classpath, run_engine
+from runtime_dependencies import (check_runtime, runtime_classpath, run_engine,
+                                  open_engine_admission, close_engine_admission, wait_for_oneshots)
+from engine_workers import EnginePool, EngineUnavailable, EngineTimeout
+from traffic_scheduler import Scheduler, EvidenceStore, CapacityError, Superseded, ChannelExpired, encode
+from traffic_http import BoundedHTTPServer, TrafficProfile, DeadlineReader, HTTPInputError, bounded_json
 from exercise_store import load_store, StoreError, parse_json
 from admin_auth import AuthManager, AuthError
 from admin_service import AdminService, AdminError
@@ -415,27 +423,55 @@ def validate_body(body):
     return None
 
 
-class Portal(ThreadingHTTPServer):
+class Portal(BoundedHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, address, *, root=ROOT, timeout=12, workers=4, java='java', public_origins=()):
+    def __init__(self, address, *, root=ROOT, timeout=12, workers=2, java='java', public_origins=(),
+                 engine_mode=None, traffic_profile=None):
         self.root = Path(root)
-        snapshot = load_store(self.root)
-        self.snapshot = snapshot
-        self.admin_auth = AuthManager(self.root)
-        self.admin = AdminService(self, self.admin_auth)
+        self.snapshot_lock = threading.RLock()
+        self._snapshot = load_store(self.root)
+        self.generation = secrets.token_hex(16)
         self.timeout = timeout
         self.java = str(java)
+        self.engine_mode = engine_mode or os.environ.get('ALLOY_ENGINE_MODE', 'persistent')
+        if self.engine_mode not in ('persistent', 'oneshot'):
+            raise ValueError('Engine mode must be persistent or oneshot')
         self.public_origins = frozenset(normalize_origin(origin) for origin in public_origins)
+        self.admin_auth = AuthManager(self.root)
+        open_engine_admission(self.root)
         self.explainer = Explainer()
-        self.slots = threading.BoundedSemaphore(workers)
-        self.cache, self.cache_lock = OrderedDict(), threading.Lock()
-        # SAT enumeration has its own small lane, so a slow behavior request
-        # cannot occupy the canonical feedback workers.
-        self.behavior_slots = threading.BoundedSemaphore(1)
-        self.behavior_cache = OrderedDict()
-        super().__init__(address, Handler)
+        self.scheduler = Scheduler({'feedback': min(2, max(1, workers)), 'behavior': 1})
+        self.cache_lock = self.scheduler.lock
+        self.cache = self.scheduler.caches['feedback']
+        self.behavior_cache = self.scheduler.caches['behavior']
+        self.evidence = EvidenceStore()
+        self.engine_pool = EnginePool(self.root, self.java, feedback_workers=min(2, max(1, workers)), behavior_workers=1)
+        # Engine/dependency changes require a backend restart; exact payload bytes
+        # and a service-local generation isolate all result/evidence identities.
+        self.service_identity = secrets.token_hex(16)
+        self.admin = AdminService(self, self.admin_auth)
+        try:
+            super().__init__(address, Handler, traffic_profile=traffic_profile)
+        except Exception:
+            self.scheduler.close()
+            self.engine_pool.close()
+            raise
+
+    @property
+    def snapshot(self):
+        return self._snapshot
+
+    @snapshot.setter
+    def snapshot(self, value):
+        with self.snapshot_lock:
+            self._snapshot = value
+            self.generation = secrets.token_hex(16)
+
+    def capture(self):
+        with self.snapshot_lock:
+            return self._snapshot, self.generation
 
     @property
     def exercises(self):
@@ -445,90 +481,124 @@ class Portal(ThreadingHTTPServer):
     def correct_pools(self):
         return self.snapshot.correct_pools
 
-    def evaluate(self, record, body, metric='canonical'):
+    def _key(self, kind, payload, generation):
+        return (self.service_identity, generation, kind, encode(payload).decode('ascii'))
+
+    def _engine(self, kind, payload):
+        budget = self.timeout if kind == 'feedback' else max(30, self.timeout)
+        if self.engine_mode == 'persistent':
+            try:
+                return self.engine_pool.evaluate(kind, payload, budget)
+            except EngineTimeout:
+                raise subprocess.TimeoutExpired('analysis', budget) from None
+            except EngineUnavailable:
+                raise OSError('Analysis unavailable') from None
+        command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
+                   '-cp', runtime_classpath(self.root),
+                   'live.LiveFeedback' if kind == 'feedback' else 'live.BehaviorFeedback']
+        completed = run_engine(command, root=self.root, lane=kind, input=json.dumps(payload), text=True,
+                               encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               cwd=self.root, timeout=budget, check=False)
+        if completed.returncode or len(completed.stdout.encode('utf-8')) > 4 * 1048576:
+            raise OSError('Analysis unavailable')
+        return json.loads(completed.stdout)
+
+    def _schedule(self, lane, key, compute, channel, revision):
+        try:
+            return self.scheduler.run(lane, key, compute, channel=channel, revision=revision,
+                                      timeout=self.timeout if lane == 'feedback' else max(30, self.timeout))
+        except CapacityError:
+            return {'status': 'busy', 'code': 'capacity', 'retryable': True, 'dispatched': False,
+                    'message': 'Analysis capacity is full. Try again shortly.'}
+        except Superseded:
+            return {'status': 'superseded', 'message': 'A newer edit replaced this request.'}
+        except (RuntimeError, TimeoutError):
+            return {'status': 'error', 'message': 'Analysis could not complete. Try again.'}
+
+    def feedback_payload(self, record, body, metric, snapshot):
+        return {'studentSource': model(record, body),
+                'referenceBodies': snapshot.correct_pools[record['id']],
+                'referencePrefix': record['environmentBefore'] + record['predicateHeader'] + '{\n',
+                'referenceSuffix': '\n}' + record['environmentAfter'],
+                'predicate': record['predicate'], 'metric': metric}
+
+    def behavior_payload(self, record, body):
+        return {'studentSource': model(record, body), 'studentBody': body,
+                'oracleSource': model(record, record['oracleBody']), 'predicate': record['predicate']}
+
+    def evidence_identity(self, record, body, metric, generation, channel, kind='feedback'):
+        return (self.service_identity, generation, kind, record['id'], body,
+                metric if kind == 'feedback' else None, channel)
+
+    def server_close(self):
+        deadline = time.monotonic() + 65
+        close_engine_admission(self.root)
+        self.scheduler.close()
+        pool_status = self.engine_pool.close()
+        admin_drained = self.admin.close(timeout=max(0, deadline - time.monotonic()))
+        oneshots_drained = wait_for_oneshots(self.root, timeout=max(0, deadline - time.monotonic()))
+        super().server_close()
+        if not admin_drained or not oneshots_drained or pool_status['unreaped']:
+            raise RuntimeError('Backend shutdown could not drain active analysis.')
+
+    def evaluate(self, record, body, metric='canonical', *, snapshot=None, generation=None,
+                 channel=None, revision=0):
         if not isinstance(metric, str) or metric not in METRICS:
             return {'status': 'invalid', 'diagnostics': [{'message': 'Choose Canonical form or Raw syntax tree.'}]}
-        key = (record['id'], hashlib.sha256(body.encode()).hexdigest(), metric)
-        with self.cache_lock:
-            if key in self.cache:
-                self.cache.move_to_end(key)
-                return self.cache[key]
-        if not self.slots.acquire(blocking=False):
-            return {'status': 'busy', 'diagnostics': [{'message': 'All analysis workers are busy. Try again shortly.'}]}
-        try:
-            payload = {'studentSource': model(record, body),
-                       'referenceBodies': self.correct_pools[record['id']],
-                       'referencePrefix': record['environmentBefore'] + record['predicateHeader'] + '{\n',
-                       'referenceSuffix': '\n}' + record['environmentAfter'],
-                       'predicate': record['predicate'], 'metric': metric}
-            command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
-                       runtime_classpath(self.root),
-                       'live.LiveFeedback']
-            try:
-                completed = run_engine(command, root=self.root, input=json.dumps(payload), text=True, encoding='utf-8',
-                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                           cwd=self.root, timeout=self.timeout, check=False)
-                if completed.returncode != 0:
-                    return {'status': 'error', 'diagnostics': [{'message': 'Analysis could not complete. Try a smaller predicate.'}]}
-                raw = json.loads(completed.stdout)
-                if not isinstance(raw, dict):
-                    return {'status': 'error', 'diagnostics': [{'message': 'The analysis service returned an invalid response.'}]}
-                expected_comparison = {'strategy': 'nearest-known-correct',
-                                       'poolSize': len(self.correct_pools[record['id']]),
-                                       'evaluatedCandidates': len(self.correct_pools[record['id']]),
-                                       'complete': True}
-                if raw.get('status') == 'ok' and raw.get('comparison') != expected_comparison:
-                    return {'status': 'error', 'diagnostics': [{'message': 'The complete correct-predicate pool could not be compared.'}]}
-                if raw.get('status') == 'ok' and raw.get('metric', METRICS['canonical']) != METRICS[metric]:
-                    return {'status': 'error', 'diagnostics': [{'message': 'The analysis returned a different distance metric. Please retry.'}]}
-                # The adapter emits only public data. Project again at the HTTP boundary.
-                allowed = ('status', 'metric', 'distance', 'breakdown', 'canonicalForm',
-                           'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison', 'astSize')
-                result = {k: raw[k] for k in allowed if k in raw}
-                project_canonical_locations(result)
-                project_source_locations(result.get('operations'), record, body)
-                # Parser coordinates use the complete model; expose body coordinates.
-                for diagnostic in result.get('diagnostics', []):
-                    if 'line' in diagnostic:
-                        first = (record['environmentBefore'] + record['predicateHeader'] + '{\n').count('\n') + 1
-                        module_line = diagnostic['line']
-                        diagnostic['moduleLine'] = module_line
-                        if first <= module_line <= first + body.count('\n'):
-                            diagnostic['line'] = module_line - first + 1
-                        else:
-                            diagnostic.pop('line', None)
-                            diagnostic.pop('column', None)
-                if result.get('status') == 'ok':
-                    with self.cache_lock:
-                        self.cache[key] = result
-                        if len(self.cache) > 128: self.cache.popitem(last=False)
-                return result
-            except subprocess.TimeoutExpired:
-                return {'status': 'timeout', 'diagnostics': [{'message': 'Analysis exceeded the time limit. Simplify the predicate and retry.'}]}
-            except (OSError, ValueError):
-                return {'status': 'error', 'diagnostics': [{'message': 'The analysis service is unavailable.'}]}
-        finally:
-            self.slots.release()
+        if snapshot is None:
+            snapshot, generation = self.capture()
+        payload = self.feedback_payload(record, body, metric, snapshot)
+        snapshot = None  # retain only this bounded request, not an old whole catalogue
+        key = self._key('feedback', payload, generation)
+        return self._schedule('feedback', key, lambda: self._feedback(record, body, metric, payload), channel, revision)
 
-    def evaluate_behavior(self, record, body):
-        key = (record['id'], hashlib.sha256(body.encode()).hexdigest())
-        with self.cache_lock:
-            if key in self.behavior_cache:
-                self.behavior_cache.move_to_end(key)
-                return self.behavior_cache[key]
-        if not self.behavior_slots.acquire(blocking=False):
-            return {'status': 'busy', 'message': 'Behavioral analysis is busy. Try again shortly.'}
+    def _feedback(self, record, body, metric, payload):
         try:
-            payload = {'studentSource': model(record, body), 'studentBody': body,
-                       'oracleSource': model(record, record['oracleBody']), 'predicate': record['predicate']}
-            command = [self.java, '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
-                       runtime_classpath(self.root), 'live.BehaviorFeedback']
-            completed = run_engine(command, root=self.root, input=json.dumps(payload), text=True, encoding='utf-8',
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.root,
-                                       timeout=max(30, self.timeout), check=False)
-            if completed.returncode or len(completed.stdout.encode('utf-8')) > 4 * 1024 * 1024:
-                return {'status': 'error', 'message': 'Behavioral analysis could not complete.'}
-            raw = json.loads(completed.stdout)
+            raw = self._engine('feedback', payload)
+            if not isinstance(raw, dict):
+                raise ValueError('Invalid response')
+            expected_comparison = {'strategy': 'nearest-known-correct',
+                                   'poolSize': len(payload['referenceBodies']),
+                                   'evaluatedCandidates': len(payload['referenceBodies']),
+                                   'complete': True}
+            if raw.get('status') == 'ok' and raw.get('comparison') != expected_comparison:
+                return {'status': 'error', 'diagnostics': [{'message': 'The complete correct-predicate pool could not be compared.'}]}
+            if raw.get('status') == 'ok' and raw.get('metric', METRICS['canonical']) != METRICS[metric]:
+                return {'status': 'error', 'diagnostics': [{'message': 'The analysis returned a different distance metric. Please retry.'}]}
+            # The adapter emits only public data. Project again at the HTTP boundary.
+            allowed = ('status', 'metric', 'distance', 'breakdown', 'canonicalForm',
+                       'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison', 'astSize')
+            result = {k: raw[k] for k in allowed if k in raw}
+            project_canonical_locations(result)
+            project_source_locations(result.get('operations'), record, body)
+            # Parser coordinates use the complete model; expose body coordinates.
+            for diagnostic in result.get('diagnostics', []):
+                if 'line' in diagnostic:
+                    first = (record['environmentBefore'] + record['predicateHeader'] + '{\n').count('\n') + 1
+                    module_line = diagnostic['line']
+                    diagnostic['moduleLine'] = module_line
+                    if first <= module_line <= first + body.count('\n'):
+                        diagnostic['line'] = module_line - first + 1
+                    else:
+                        diagnostic.pop('line', None)
+                        diagnostic.pop('column', None)
+            return result
+        except subprocess.TimeoutExpired:
+            return {'status': 'timeout', 'diagnostics': [{'message': 'Analysis exceeded the time limit. Simplify the predicate and retry.'}]}
+        except (OSError, ValueError, TypeError, KeyError, RecursionError):
+            return {'status': 'error', 'diagnostics': [{'message': 'The analysis service is unavailable.'}]}
+
+    def evaluate_behavior(self, record, body, *, snapshot=None, generation=None, channel=None, revision=0):
+        if snapshot is None:
+            snapshot, generation = self.capture()
+        payload = self.behavior_payload(record, body)
+        snapshot = None
+        key = self._key('behavior', payload, generation)
+        return self._schedule('behavior', key, lambda: self._behavior(payload), channel, revision)
+
+    def _behavior(self, payload):
+        try:
+            raw = self._engine('behavior', payload)
             if isinstance(raw, dict) and raw.get('status') in ('invalid', 'unsupported', 'error', 'invalid_request'):
                 status = 'invalid' if raw['status'] in ('invalid', 'invalid_request') else raw['status']
                 message = 'The solver could not evaluate this predicate in the fixed model. Canonical feedback remains available.'
@@ -541,17 +611,11 @@ class Portal(ThreadingHTTPServer):
                     message = 'Behavioral analysis does not support recursion or model facts and shared helpers that depend on the edited predicate.'
                 return {'status': status, 'message': message}
             result = project_behavior(raw)
-            with self.cache_lock:
-                self.behavior_cache[key] = result
-                if len(self.behavior_cache) > 32:
-                    self.behavior_cache.popitem(last=False)
             return result
         except subprocess.TimeoutExpired:
             return {'status': 'timeout', 'message': 'Behavioral analysis exceeded its time limit. Canonical feedback remains available.'}
         except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError):
             return {'status': 'error', 'message': 'Behavioral analysis returned no usable evidence. Try again.'}
-        finally:
-            self.behavior_slots.release()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -572,69 +636,140 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(status,{'error': 'Method not allowed.' if status == 405 else 'Invalid administrator request.'})
         return super().send_error(code,message,explain)
 
-    def reply(self, status, data, content_type='application/json; charset=utf-8', *, cookies=()):
-        if not isinstance(data, bytes): data = json.dumps(data, ensure_ascii=False).encode()
-        self.send_response(status)
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', str(len(data)))
-        if status == 405:
-            self.send_header('Allow', 'GET, POST')
-        admin = unquote(urlsplit(self.path).path).startswith('/api/admin/')
-        self.send_header('Cache-Control', 'no-store, private' if admin else 'no-store')
-        for cookie in cookies:
-            self.send_header('Set-Cookie', cookie)
-        self.send_header('X-Content-Type-Options', 'nosniff')
-        self.send_header('Referrer-Policy', 'no-referrer')
-        connect = "'self' https://api.github.com" if urlsplit(self.path).path.startswith('/dashboard/') else "'self'"
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src " + connect + "; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
-        self.end_headers()
+    def setup(self):
+        super().setup()
+        self.rfile.close()
+        self.rfile = DeadlineReader(self.connection, self.server.traffic_profile)
+
+    def handle_one_request(self):
         try:
-            if self.command != 'HEAD':
-                self.wfile.write(data)
-        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+            super().handle_one_request()
+        except HTTPInputError as error:
+            # Parsing can fail before BaseHTTPRequestHandler sets these fields.
+            if not hasattr(self, 'request_version'):
+                self.request_version = 'HTTP/1.0'
+            if not hasattr(self, 'requestline'):
+                self.requestline = ''
+            if not hasattr(self, 'command'):
+                self.command = None
+            if not hasattr(self, 'path'):
+                self.path = ''
+            self.close_connection = True
+            self.reply(error.status, {'error': error.message})
+        except (OSError, ValueError):
+            self.close_connection = True
+        finally:
+            # One request owns one admission credit and one handler reservation.
+            self.close_connection = True
+
+    def reply(self, status, data, content_type='application/json; charset=utf-8', *, cookies=(), etag=None):
+        if not isinstance(data, bytes):
+            data = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        profile = self.server.traffic_profile
+        if len(data) > profile.response_bytes:
+            status, data, etag = 503, b'{"error":"Response exceeds its byte limit."}', None
+        self.close_connection = True
+        deadline = time.monotonic() + profile.write_seconds
+        self.connection.settimeout(min(profile.idle_seconds, profile.write_seconds))
+        try:
+            self.send_response(status)
+            self.send_header('Content-Type', content_type)
+            if status != 304:
+                self.send_header('Content-Length', str(len(data)))
+            self.send_header('Connection', 'close')
+            if status == 405:
+                self.send_header('Allow', 'GET, POST')
+            path = unquote(urlsplit(getattr(self, 'path', '')).path)
+            admin = path.startswith('/api/admin/') or path.startswith('/admin/')
+            self.send_header('Cache-Control', ('no-cache, max-age=0, must-revalidate' if etag and not admin
+                                               else 'no-store, private' if admin else 'no-store'))
+            if etag and not admin:
+                self.send_header('ETag', etag)
+            if status in (429, 503) and isinstance(data, bytes) and b'"retryable": true' in data:
+                self.send_header('Retry-After', '1')
+            for cookie in cookies:
+                self.send_header('Set-Cookie', cookie)
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            connect = "'self' https://api.github.com" if path.startswith('/dashboard/') else "'self'"
+            self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src " + connect + "; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
+            self.end_headers()
+            if self.command != 'HEAD' and status != 304:
+                for offset in range(0, len(data), 65536):
+                    budget = deadline - time.monotonic()
+                    if budget <= 0:
+                        raise TimeoutError()
+                    self.connection.settimeout(min(profile.idle_seconds, budget))
+                    self.wfile.write(data[offset:offset + 65536])
+        except (OSError, TimeoutError):
             pass
 
-    def admin_headers(self, *, mutation=False):
-        self.connection.settimeout(5)
-        # Reject ambiguous framing before authentication or a body read.
-        for name in ('Origin','Host','Content-Length','Content-Type','X-CSRF-Token','Sec-Fetch-Site'):
+    def public_reply(self, key, produce, content_type='application/json; charset=utf-8', *, generation=None):
+        app = self.server
+        generation = app.snapshot if generation is None else generation
+        data, etag = app.http_public_views.get(generation, key, produce)
+        tags = self.headers.get('If-None-Match', '').split(',')
+        matched = any(tag.strip().removeprefix('W/') in ('*', etag) for tag in tags)
+        return self.reply(304 if matched else 200, b'' if matched else data, content_type, etag=etag)
+
+    def request_headers(self, *, mutation=False, admin=False):
+        # Framing is validated for every route, even a GET or a rejected request.
+        for name in ('Origin', 'Host', 'Content-Length', 'Content-Type', 'Content-Encoding',
+                     'X-CSRF-Token', 'Sec-Fetch-Site', 'If-None-Match', 'Expect'):
             if len(self.headers.get_all(name, [])) > 1:
-                raise AdminError(400, 'Duplicate administrator request header.')
+                raise HTTPInputError(400, 'Duplicate administrator request header.' if admin
+                                     else 'Duplicate request header.')
         if self.headers.get_all('Transfer-Encoding', []):
-            raise AdminError(400, 'Transfer encoding is not supported.')
+            raise HTTPInputError(400, 'Transfer encoding is not supported.')
+        if self.headers.get('Content-Encoding', 'identity').lower() != 'identity':
+            raise HTTPInputError(415, 'Content encoding is not supported.')
+        if self.headers.get('Expect'):
+            raise HTTPInputError(417, 'Expect is not supported.')
         if mutation and self.headers.get_content_type() != 'application/json':
-            raise AdminError(415, 'Send application/json.')
+            raise HTTPInputError(415, 'Send application/json.')
+        charset = self.headers.get_content_charset()
+        if charset is not None and charset.lower() not in ('utf-8', 'utf8'):
+            raise HTTPInputError(415, 'Send UTF-8 JSON.')
         length = self.headers.get('Content-Length', '0')
         if re.fullmatch(r'0|[1-9][0-9]{0,7}', length) is None:
-            raise AdminError(400, 'Invalid content length.')
+            raise HTTPInputError(400, 'Invalid content length.')
         if not mutation and int(length):
-            raise AdminError(400, 'This request must not have a body.')
+            raise HTTPInputError(400, 'This request must not have a body.')
         return int(length)
 
-    def admin_body(self, length, limit):
+    def read_json_body(self, length, limit, *, admin=False):
         if not 0 < length <= limit:
-            raise AdminError(413, 'Administrator request exceeds its byte limit.')
-        deadline = time.monotonic() + 5
+            raise HTTPInputError(413, 'Administrator request exceeds its byte limit.' if admin
+                                 else 'Request must be at most 16 KiB.')
+        self.rfile.begin_body()
         remaining, chunks = length, []
         try:
             while remaining:
-                budget = deadline - time.monotonic()
-                if budget <= 0:
-                    raise TimeoutError()
-                self.connection.settimeout(budget)
                 chunk = self.rfile.read1(min(65536, remaining))
                 if not chunk:
                     raise ValueError()
                 chunks.append(chunk)
                 remaining -= len(chunk)
-            if time.monotonic() >= deadline:
+            if time.monotonic() >= self.rfile.deadline:
                 raise TimeoutError()
-            data = parse_json(b''.join(chunks))
-            if type(data) is not dict:
-                raise ValueError()
-            return data
+            return bounded_json(b''.join(chunks), self.server.traffic_profile.json_depth)
         except (OSError, ValueError, RecursionError):
-            raise AdminError(400, 'Invalid, incomplete or timed-out JSON request.') from None
+            raise HTTPInputError(400, 'Invalid, incomplete or timed-out JSON request.') from None
+
+    def public_body(self):
+        return self.read_json_body(self.request_headers(mutation=True), MAX_REQUEST_BYTES)
+
+    def admin_headers(self, *, mutation=False):
+        try:
+            return self.request_headers(mutation=mutation, admin=True)
+        except HTTPInputError as error:
+            raise AdminError(error.status, error.message) from None
+
+    def admin_body(self, length, limit):
+        try:
+            return self.read_json_body(length, limit, admin=True)
+        except HTTPInputError as error:
+            raise AdminError(error.status, error.message) from None
 
     def admin_failure(self, error):
         self.close_connection = True  # a rejected, unread body is never reused
@@ -711,100 +846,189 @@ class Handler(BaseHTTPRequestHandler):
             return self.admin_failure(error)
 
     def do_GET(self):
-        raw_path = urlsplit(self.path).path
-        path = unquote(raw_path)
-        if path.startswith('/api/admin/') and path != raw_path:
-            return self.reply(404, {'error': 'Not found.'})
-        if path.startswith('/api/admin/'):
-            return self.admin_GET(path)
-        if path in ('/dashboard', '/admin'):
-            self.send_response(308)
-            self.send_header('Location', path[1:] + '/')
-            self.send_header('Content-Length', '0')
-            self.end_headers()
-            return
-        if path == '/api/health':
-            return self.reply(200, {'status': 'ok', 'exercises': len(self.server.exercises),
-                                    'engine': 'ACGN / CanDis Fast Rewrite IR'})
-        if path == '/api/exercises':
-            return self.reply(200, {'exercises': [project(e, SUMMARY_FIELDS) for e in self.server.exercises.values()]})
-        if path.startswith('/api/exercises/'):
-            record = self.server.exercises.get(path[len('/api/exercises/'):])
-            if record: return self.reply(200, project(record, PUBLIC_FIELDS))
-        if path in STATIC:
-            name, mime = STATIC[path]
-            try: return self.reply(200, (self.server.root / 'web' / name).read_bytes(), mime)
-            except FileNotFoundError: pass
-        self.reply(404, {'error': 'Not found.'})
+        try:
+            self.request_headers()
+            raw_path = urlsplit(self.path).path
+            path = unquote(raw_path)
+            if self.server.control_listener:
+                if path != '/api/health':
+                    return self.reply(404, {'error': 'Not found.'})
+                app = self.server.shared_app
+                return self.reply(200, {'status': 'ok', 'exercises': len(app.exercises),
+                                        'engine': 'ACGN / CanDis Fast Rewrite IR'})
+            if path.startswith('/api/admin/') and path != raw_path:
+                return self.reply(404, {'error': 'Not found.'})
+            if path.startswith('/api/admin/'):
+                return self.admin_GET(path)
+            if path in ('/dashboard', '/admin'):
+                self.connection.settimeout(self.server.traffic_profile.write_seconds)
+                self.send_response(308)
+                self.send_header('Location', path[1:] + '/')
+                self.send_header('Content-Length', '0')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Connection', 'close')
+                self.end_headers()
+                return
+            if path == '/api/health':
+                return self.reply(200, {'status': 'ok', 'exercises': len(self.server.exercises),
+                                        'engine': 'ACGN / CanDis Fast Rewrite IR'})
+            snapshot = self.server.snapshot
+            if path == '/api/exercises':
+                return self.public_reply(('catalogue',), lambda: {
+                    'exercises': [project(e, SUMMARY_FIELDS) for e in snapshot.exercises.values()]}, generation=snapshot)
+            if path.startswith('/api/exercises/'):
+                record = snapshot.exercises.get(path[len('/api/exercises/'):])
+                if record:
+                    return self.public_reply(('exercise', record['id']), lambda: project(record, PUBLIC_FIELDS), generation=snapshot)
+            if path in STATIC:
+                name, mime = STATIC[path]
+                target = self.server.root / 'web' / name
+                try:
+                    stat = target.stat()
+                    def contents():
+                        with target.open('rb') as stream:
+                            return stream.read(self.server.traffic_profile.response_bytes + 1)
+                    if path.startswith('/admin/'):
+                        return self.reply(200, contents(), mime)
+                    return self.public_reply(('static', name, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_ino, stat.st_size),
+                                             contents, mime, generation=snapshot)
+                except FileNotFoundError:
+                    pass
+            self.reply(404, {'error': 'Not found.'})
+        except HTTPInputError as error:
+            self.reply(error.status, {'error': error.message})
 
     def do_POST(self):
         path = urlsplit(self.path).path
+        if self.server.control_listener:
+            return self.reply(405, {'error': 'Method not allowed.'})
         if path.startswith('/api/admin/'):
             return self.admin_POST(path)
-        if path not in ('/api/feedback', '/api/explain', '/api/behavior'):
-            return self.reply(404, {'error': 'Not found.'})
-        origin = self.headers.get('Origin')
-        if origin:
-            try:
-                allowed = self.server.public_origins or frozenset(
-                    normalize_origin(scheme + self.headers.get('Host', '')) for scheme in ('http://', 'https://'))
-                accepted = normalize_origin(origin) in allowed
-            except ValueError:
-                accepted = False
-            if not accepted:
-                return self.reply(403, {'error': 'Cross-origin requests are not allowed.'})
-        if self.headers.get_content_type() != 'application/json':
-            return self.reply(415, {'error': 'Send application/json.'})
         try:
-            length = int(self.headers.get('Content-Length', '0'))
-            if not 0 < length <= MAX_REQUEST_BYTES: return self.reply(413, {'error': 'Request must be at most 16 KiB.'})
-            self.connection.settimeout(5)
-            data = json.loads(self.rfile.read(length))
-        except (ValueError, OSError, RecursionError):
-            return self.reply(400, {'error': 'Invalid JSON request.'})
+            self.request_headers(mutation=True)
+            if path not in ('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel'):
+                return self.reply(404, {'error': 'Not found.'})
+            origin = self.headers.get('Origin')
+            if origin:
+                try:
+                    allowed = self.server.public_origins or frozenset(
+                        normalize_origin(scheme + self.headers.get('Host', '')) for scheme in ('http://', 'https://'))
+                    accepted = normalize_origin(origin) in allowed
+                except ValueError:
+                    accepted = False
+                if not accepted:
+                    return self.reply(403, {'error': 'Cross-origin requests are not allowed.'})
+            data = self.public_body()
+        except HTTPInputError as error:
+            return self.reply(error.status, {'error': error.message})
+        if path == '/api/channel':
+            if data:
+                return self.reply(400, {'error': 'No channel fields are accepted.'})
+            try:
+                channel = self.server.scheduler.issue_channel(self.client_address[0])
+                return self.reply(200, {'status': 'ok', 'channel': channel})
+            except CapacityError:
+                return self.reply(429, {'status': 'busy', 'code': 'capacity', 'retryable': True, 'dispatched': False})
+        if path == '/api/cancel':
+            if (set(data) != {'channel', 'revision'} or not isinstance(data.get('channel'), str)
+                    or re.fullmatch(r'[A-Za-z0-9_-]{43}', data['channel']) is None
+                    or type(data.get('revision')) is not int or not 0 <= data['revision'] <= 2**53 - 1):
+                return self.reply(400, {'error': 'Expected channel and revision.'})
+            try:
+                self.server.scheduler.observe(data['channel'], data['revision'])
+            except ChannelExpired:
+                return self.reply(410, {'status': 'expired', 'code': 'channel_expired'})
+            except Superseded:
+                pass  # a delayed cancel cannot roll a channel back
+            return self.reply(200, {'status': 'ok'})
         expected = {'exerciseId', 'body', 'revision'}
-        optional = ({'metric', 'behaviorToken'} if path == '/api/explain'
-                    else {'metric'} if path == '/api/feedback' else set())
-        fields = set(data) if isinstance(data, dict) else set()
-        if (not isinstance(data, dict)
-                or not expected <= fields or not fields <= expected | optional
+        optional = {'metric', 'channel'} | ({'behaviorToken', 'evidenceToken'} if path == '/api/explain' else set())
+        fields = set(data)
+        if (not expected <= fields or not fields <= expected | optional
                 or not isinstance(data['exerciseId'], str)
                 or type(data['revision']) is not int or not 0 <= data['revision'] <= 2**53 - 1
                 or ('metric' in data and (not isinstance(data['metric'], str) or data['metric'] not in METRICS))
-                or ('behaviorToken' in data and (not isinstance(data['behaviorToken'], str)
-                    or re.fullmatch(r'[0-9a-f]{64}', data['behaviorToken']) is None))):
+                or ('channel' in data and (not isinstance(data['channel'], str)
+                    or re.fullmatch(r'[A-Za-z0-9_-]{43}', data['channel']) is None))
+                or any(name in data and (not isinstance(data[name], str)
+                    or re.fullmatch(r'[0-9a-f]{64}', data[name]) is None)
+                       for name in ('behaviorToken', 'evidenceToken'))):
             return self.reply(400, {'error': 'Expected exerciseId, body, and a nonnegative integer revision.'})
-        record = self.server.exercises.get(data['exerciseId'])
-        if not record: return self.reply(404, {'error': 'Exercise not found.'})
+        snapshot, generation = self.server.capture()
+        record = snapshot.exercises.get(data['exerciseId'])
+        if not record:
+            return self.reply(404, {'error': 'Exercise not found.'})
+        metric, channel, revision = data.get('metric', 'canonical'), data.get('channel'), data['revision']
         error = validate_body(data['body'])
+        if not error:
+            try:
+                self.server.scheduler.observe(channel, revision, (generation, record['id'], data['body'], metric))
+            except ChannelExpired:
+                return self.reply(410, {'status': 'expired', 'code': 'channel_expired'})
+            except Superseded:
+                return self.reply(200, {'status': 'superseded', 'exerciseId': record['id'], 'revision': revision})
+        selected = SimpleNamespace(correct_pools={record['id']: snapshot.correct_pools[record['id']]})
+        snapshot = None  # publication cannot accumulate whole historical catalogues in waiters
+        context = dict(snapshot=selected, generation=generation, channel=channel, revision=revision)
+        identity = self.server.evidence_identity(record, data['body'], metric, generation, channel)
+        behavior_identity = self.server.evidence_identity(record, data['body'], metric, generation, channel, 'behavior')
         if path == '/api/behavior':
-            result = ({'status': 'invalid', 'message': error} if error
-                      else self.server.evaluate_behavior(record, data['body']))
+            result = ({'status': 'invalid', 'message': error} if error else
+                      self.server.evaluate_behavior(record, data['body'], **context))
             if result.get('status') == 'ok':
-                result = dict(result, behaviorToken=behavior_token(record['id'], data['body'], result))
-            return self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision']))
-        metric = data.get('metric', 'canonical')
-        result = ({'status': 'invalid', 'diagnostics': [{'message': error}]} if error
-                  else self.server.evaluate(record, data['body'], metric))
-        if path == '/api/explain':
-            if result.get('status') != 'ok':
-                result = {'status': 'unavailable', 'model': 'gpt-6-luna',
-                          'message': 'Check a valid predicate before requesting an explanation.'}
+                token = behavior_token(record['id'], data['body'], result)
+                # Each channel gets its own accounted pin; the public behavior
+                # token remains derived only from displayed evidence as before.
+                if channel is not None:
+                    self.server.evidence.pin(behavior_identity, result)
+                result = dict(result, behaviorToken=token)
+        else:
+            evidence_token = data.get('evidenceToken')
+            if error:
+                result = {'status': 'invalid', 'diagnostics': [{'message': error}]}
+            elif path == '/api/explain' and evidence_token is not None:
+                result = self.server.evidence.get(evidence_token, identity)
+                if result is None:
+                    result = {'status': 'expired'}
             else:
-                evidence = None
+                result = self.server.evaluate(record, data['body'], metric, **context)
+            if path == '/api/feedback' and result.get('status') == 'ok':
+                result = dict(result, evidenceToken=self.server.evidence.pin(identity, result))
+            if path == '/api/explain':
                 token = data.get('behaviorToken')
+                evidence = None
                 if token is not None:
-                    cache_key = (record['id'], hashlib.sha256(data['body'].encode()).hexdigest())
-                    with self.server.cache_lock:
-                        evidence = self.server.behavior_cache.get(cache_key)
-                    if evidence is None or behavior_token(record['id'], data['body'], evidence) != token:
-                        return self.reply(200, {'status': 'unavailable', 'model': 'gpt-6-luna',
-                            'message': 'These examples have expired. Check your predicate again to refresh their guidance.',
-                            'exerciseId': record['id'], 'revision': data['revision'], 'requestedMetric': metric})
-                result = self.server.explainer.explain(result, student_body=data['body'], behavior=evidence)
-                if token is not None:
-                    result = dict(result, behaviorToken=token)
-        self.reply(200, dict(result, exerciseId=record['id'], revision=data['revision'], requestedMetric=metric))
+                    if channel is not None:
+                        evidence = self.server.evidence.find(behavior_identity,
+                            lambda value: behavior_token(record['id'], data['body'], value) == token)
+                    if evidence is None and channel is None:
+                        # Compatibility for old clients; never rerun behavioral
+                        # enumeration to recreate a displayed instance.
+                        key = self.server._key('behavior', self.server.behavior_payload(record, data['body']), generation)
+                        with self.server.cache_lock:
+                            evidence = self.server.behavior_cache.get(key)
+                        if evidence is not None and behavior_token(record['id'], data['body'], evidence) != token:
+                            evidence = None
+                if result.get('status') != 'ok' or token is not None and evidence is None:
+                    result = {'status': 'unavailable', 'model': 'gpt-6-luna',
+                              'message': 'These hints or examples have expired. Check your predicate again to refresh guidance.'}
+                else:
+                    with self.server.scheduler.lock:
+                        current = self.server.scheduler.current(channel, revision)
+                    if not current:
+                        result = {'status': 'superseded'}
+                    else:
+                        result = self.server.explainer.explain(result, student_body=data['body'], behavior=evidence)
+                        if token is not None:
+                            result = dict(result, behaviorToken=token)
+        with self.server.scheduler.lock:
+            if not error and not self.server.scheduler.current(channel, revision):
+                result = {'status': 'superseded'}
+        status = 503 if result.get('code') == 'capacity' and result.get('dispatched') is False else 200
+        delivery = {'exerciseId': record['id'], 'revision': revision}
+        if path != '/api/behavior':
+            delivery['requestedMetric'] = metric
+        self.reply(status, dict(result, **delivery))
 
 
 def main():
@@ -812,12 +1036,20 @@ def main():
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--timeout', type=float, default=12)
-    parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--workers', type=int, default=2,
+                        help='Feedback workers (capped at 2; behavior and admin each reserve another lane)')
+    parser.add_argument('--engine-mode', choices=('persistent', 'oneshot'),
+                        default=os.environ.get('ALLOY_ENGINE_MODE', 'persistent'))
+    parser.add_argument('--control-port', type=int, default=0,
+                        help='Optional separate loopback health listener; 0 disables it')
     parser.add_argument('--java', default='java', help='Java 17+ executable (absolute path recommended on Windows)')
     parser.add_argument('--public-origin', action='append', default=[], type=normalize_origin,
                         help='Trusted browser origin behind IIS, e.g. https://alloy.example.org; repeat for aliases')
     args = parser.parse_args()
-    if args.timeout <= 0 or args.workers < 1: parser.error('timeout and workers must be positive')
+    if not math.isfinite(args.timeout) or not 0 < args.timeout <= 120 or not 1 <= args.workers <= 32:
+        parser.error('timeout must be in (0, 120] and workers in [1, 32] (feedback capped at 2)')
+    if not 0 <= args.port <= 65535 or not 0 <= args.control_port <= 65535 or args.control_port and args.control_port == args.port:
+        parser.error('Use distinct valid public and control ports.')
     if not (ROOT / 'build/engine/classes/live/LiveFeedback.class').is_file():
         parser.error('Build the engine first: ./scripts/build.sh')
     runtime = check_runtime(ROOT)
@@ -827,13 +1059,36 @@ def main():
                      + '. Restore the complete deployment archive and run runtime_dependencies.py.')
     try:
         server = Portal((args.host, args.port), timeout=args.timeout, workers=args.workers,
-                        java=args.java, public_origins=args.public_origin)
+                        java=args.java, public_origins=args.public_origin, engine_mode=args.engine_mode)
     except StoreError:
         parser.error('Private exercise database validation failed. Run python scripts/manage_exercises.py info.')
-    print(f'Alloy practice: http://{args.host}:{server.server_port}', flush=True)
-    try: server.serve_forever()
+    control = None
+    if args.control_port:
+        try:
+            control = BoundedHTTPServer(('127.0.0.1', args.control_port), Handler,
+                                        control=True, shared_app=server)
+        except OSError:
+            server.server_close()
+            parser.error('The loopback control port could not be bound.')
+        threading.Thread(target=control.serve_forever, daemon=True).start()
+    def terminate(signum, frame):
+        raise KeyboardInterrupt()
+    signal.signal(signal.SIGTERM, terminate)
+    try:
+        if args.engine_mode == 'persistent':
+            try:
+                server.engine_pool.prewarm()
+            except EngineUnavailable:
+                # No unbudgeted one-shot fallback.
+                print('Analysis prewarm unavailable; check the Java runtime.', flush=True)
+        print(f'Alloy practice: http://{args.host}:{server.server_port}', flush=True)
+        server.serve_forever()
     except KeyboardInterrupt: pass
-    finally: server.server_close()
+    finally:
+        if control is not None:
+            control.shutdown()
+            control.server_close()
+        server.server_close()
 
 
 if __name__ == '__main__': main()

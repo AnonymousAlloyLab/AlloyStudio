@@ -71,7 +71,7 @@ class NavigationEvidenceTests(unittest.TestCase):
             root = Path(directory)
             (root / 'tests').mkdir()
             shutil.copyfile(ROOT / 'tests/browser-suite.mjs', root / 'tests/browser-suite.mjs')
-            for name, report in zip(('browser.mjs', 'navigation.mjs'), reports):
+            for name, report in zip(('browser.mjs', 'navigation.mjs', 'traffic-browser.mjs', 'persistent-browser.mjs'), (*reports, reports[0], reports[0])):
                 # Literal declarations are the frozen scenario inventory. The
                 # child is constructed to emit a controlled report instead.
                 declarations = ''.join("// await check('" + item + "', async () => {});\n" for item in declared)
@@ -96,9 +96,11 @@ class NavigationEvidenceTests(unittest.TestCase):
         result = self.run_fixture((good, good))
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertEqual(report['checks'], 4)
+        self.assertEqual(report['checks'], 8)
         self.assertEqual(report['passed'], ['tests/browser.mjs:one', 'tests/browser.mjs:two',
-                                            'tests/navigation.mjs:one', 'tests/navigation.mjs:two'])
+                                            'tests/navigation.mjs:one', 'tests/navigation.mjs:two',
+                                            'tests/traffic-browser.mjs:one', 'tests/traffic-browser.mjs:two',
+                                            'tests/persistent-browser.mjs:one', 'tests/persistent-browser.mjs:two'])
 
 
 if __name__ == '__main__':

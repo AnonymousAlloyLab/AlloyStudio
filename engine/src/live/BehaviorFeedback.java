@@ -47,6 +47,7 @@ public final class BehaviorFeedback {
                     ? failure("invalid_request", "REQUEST_TOO_LARGE")
                     : evaluate(new JSONObject(new String(input, StandardCharsets.UTF_8)));
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             response = failure("engine_error", "BEHAVIOR_FAILURE");
         }
         wire.println(response.toString());
@@ -67,17 +68,18 @@ public final class BehaviorFeedback {
         Func learnerTarget;
         try {
             // Do not let a learner call resolve to a private oracle predicate.
-            learner = CompUtil.parseEverything_fromString(A4Reporter.NOP, studentSource);
+            learner = WorkerSafety.parse(studentSource);
             learnerTarget = selected(learner, predicate);
             if (hasUnsafeDependencies(learner, learnerTarget))
                 return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
         } catch (Err error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("invalid", "INVALID_LEARNER");
         } catch (RuntimeException error) {
             return failure("unsupported", "UNSUPPORTED_PREDICATE");
         }
         try {
-            CompModule world = CompUtil.parseEverything_fromString(A4Reporter.NOP, oracleSource);
+            CompModule world = WorkerSafety.parse(oracleSource);
             Func oracleTarget = selected(world, predicate);
             if (hasUnsafeDependencies(world, oracleTarget))
                 return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
@@ -145,6 +147,7 @@ public final class BehaviorFeedback {
                             .put("negativeRejected", negativeCounts[1]).put("semanticCounterexamples", semanticCounterexamples))
                     .put("categories", categories);
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("engine_error", "BEHAVIOR_FAILURE");
         }
     }

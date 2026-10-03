@@ -16,7 +16,7 @@ import test_education as education
 class MetricModeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = 'http://127.0.0.1:' + str(cls.app.server_port)
@@ -84,14 +84,16 @@ class MetricModeTests(unittest.TestCase):
                 self.assertEqual(result['canonicalForm'], [])
                 self.assertEqual(result['astSize'], 3)
 
-    def test_unknown_metrics_and_behavior_metric_fields_are_rejected_before_worker(self):
+    def test_unknown_metrics_rejected_and_behavior_metric_is_delivery_only(self):
         with patch.object(self.app, 'evaluate', side_effect=AssertionError('Invalid metric reached worker')):
             for value in ('AST', '', 'oracle', None, 0, [], {}, True):
-                for path in ('/api/feedback', '/api/explain'):
+                for path in ('/api/feedback', '/api/explain', '/api/behavior'):
                     code, _ = self.request(path, metric=value)
                     self.assertEqual(code, 400)
-        code, _ = self.request('/api/behavior', metric='ast')
-        self.assertEqual(code, 400)
+        with patch.object(self.app, 'evaluate_behavior', return_value={'status': 'unsupported'}) as behavior:
+            code, _ = self.request('/api/behavior', metric='ast')
+        self.assertEqual(code, 200)
+        self.assertNotIn('metric', behavior.call_args.kwargs)
 
     def test_wrong_worker_metric_is_not_cached_or_given_to_luna(self):
         with patch('server.subprocess.run', return_value=self.completed('canonical')):

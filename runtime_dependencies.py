@@ -9,6 +9,10 @@ import re
 import struct
 import subprocess
 import tempfile
+import threading
+import time
+import itertools
+import shutil
 
 
 ROOT = Path(__file__).resolve().parent
@@ -20,6 +24,7 @@ JAR_FILES = (
     'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
 )
 REQUIRED_CLASSES = (
+    'live/EngineWorker.class', 'live/WorkerJson.class', 'live/WorkerSafety.class', 'live/WorkerSafety$PoisonedWorker.class',
     'live/UploadInspector.class', 'live/UploadInspector$Declaration.class',
     'live/ExerciseValidator.class', 'live/ExerciseValidator$Rejected.class',
     'live/BridgePolicies.class', 'live/VerifiedPoolSelection.class', 'live/VerifiedPoolSelection$Result.class',
@@ -53,10 +58,56 @@ def runtime_classpath(root):
         root / 'build/engine/classes', *(root / 'vendor/acgn/lib' / name for name in JAR_FILES)))
 
 
+JAVA_ENVIRONMENT_ALLOWLIST = frozenset((
+    'PATH', 'SYSTEMROOT', 'WINDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ',
+))
+
+
 def clean_java_environment(env=None):
-    """Keep explicit JVM flags authoritative even with operator-supplied env."""
+    """Construct the runtime environment; credentials never enter JVM env."""
     source = os.environ if env is None else env
-    return {name: value for name, value in source.items() if name not in JAVA_ENVIRONMENT_OPTIONS}
+    return {name: value for name, value in source.items()
+            if name.upper() in JAVA_ENVIRONMENT_ALLOWLIST}
+
+
+class ProcessBudget:
+    """Count starting/live/stopping JVMs until their owner has reaped them."""
+    def __init__(self, feedback=2, behavior=1, admin=1):
+        self.limits = {'feedback': feedback, 'behavior': behavior, 'admin': admin}
+        self.total_limit = sum(self.limits.values())
+        self.condition = threading.Condition()
+        self.owners = {}
+        self.serial = itertools.count(1)
+        self.high_water = 0
+
+    def reserve(self, lane, timeout):
+        deadline = time.monotonic() + max(0, timeout)
+        with self.condition:
+            while (len(self.owners) >= self.total_limit
+                   or sum(value == lane for value in self.owners.values()) >= self.limits[lane]):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired('engine capacity', timeout)
+                self.condition.wait(remaining)
+            owner = next(self.serial)
+            self.owners[owner] = lane
+            self.high_water = max(self.high_water, len(self.owners))
+            return owner
+
+    def release_reaped(self, owner):
+        with self.condition:
+            self.owners.pop(owner, None)
+            self.condition.notify_all()
+
+    def stats(self):
+        with self.condition:
+            return {'reserved': len(self.owners), 'limit': self.total_limit,
+                    'highWater': self.high_water,
+                    'lanes': {lane: sum(value == lane for value in self.owners.values())
+                              for lane in self.limits}}
+
+
+PROCESS_BUDGET = ProcessBudget()
 
 
 def engine_temp_root(root=ROOT):
@@ -74,12 +125,94 @@ def engine_temp_root(root=ROOT):
     return directory
 
 
-def run_engine(command, *, root=ROOT, **options):
-    """Give one JVM an owned directory; clean after run() has waited or killed it."""
-    with tempfile.TemporaryDirectory(prefix='engine-', dir=engine_temp_root(root)) as directory:
+_ONESHOT_CONDITION = threading.Condition()
+_ONESHOT_ROOTS = {}
+
+
+def _root_key(root):
+    return str(Path(root).resolve())
+
+
+def open_engine_admission(root=ROOT):
+    """A newly initialized backend may admit one-shot calls after prior drain."""
+    key = _root_key(root)
+    with _ONESHOT_CONDITION:
+        state = _ONESHOT_ROOTS.setdefault(key, {'closed': False, 'active': 0})
+        if state['closed'] and (state['active'] or state.get('unreaped', 0)):
+            raise OSError('Previous engine calls have not drained')
+        state['closed'] = False
+
+
+def close_engine_admission(root=ROOT):
+    """Close before stopping pool lanes, including callers waiting for a slot."""
+    key = _root_key(root)
+    with _ONESHOT_CONDITION:
+        _ONESHOT_ROOTS.setdefault(key, {'closed': False, 'active': 0})['closed'] = True
+        _ONESHOT_CONDITION.notify_all()
+
+
+def wait_for_oneshots(root=ROOT, timeout=65):
+    """Wait a fixed shutdown budget; never claim an active child is reaped."""
+    key = _root_key(root)
+    deadline = time.monotonic() + max(0, timeout)
+    with _ONESHOT_CONDITION:
+        while (_ONESHOT_ROOTS.get(key, {}).get('active', 0)
+               or _ONESHOT_ROOTS.get(key, {}).get('unreaped', 0)):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return False
+            _ONESHOT_CONDITION.wait(remaining)
+        return True
+
+
+def run_engine(command, *, root=ROOT, lane="admin", **options):
+    """One-shot evaluation shares its explicit lane and participates in drain."""
+    key = _root_key(root)
+    with _ONESHOT_CONDITION:
+        state = _ONESHOT_ROOTS.setdefault(key, {'closed': False, 'active': 0})
+        if state['closed']:
+            raise OSError('Engine admission is closed')
+        state['active'] += 1
+    try:
+        return _run_engine_registered(command, root=root, lane=lane, state=state, **options)
+    finally:
+        with _ONESHOT_CONDITION:
+            state['active'] -= 1
+            _ONESHOT_CONDITION.notify_all()
+
+
+def _run_engine_registered(command, *, root, lane, state, **options):
+    started = time.monotonic()
+    timeout = options.get('timeout', 60)
+    if timeout is None:
+        timeout = 60
+    owner = PROCESS_BUDGET.reserve(lane, timeout)
+    directory = None
+    acknowledged = False
+    try:
+        with _ONESHOT_CONDITION:
+            if state['closed']:
+                raise OSError('Engine admission is closed')
+        directory = tempfile.mkdtemp(prefix='engine-', dir=engine_temp_root(root))
         isolated = [command[0], '-Djava.io.tmpdir=' + directory, *command[1:]]
         options['env'] = clean_java_environment(options.get('env'))
-        return subprocess.run(isolated, **options)
+        options['timeout'] = max(0.001, timeout - (time.monotonic() - started))
+        try:
+            return subprocess.run(isolated, **options)
+        finally:
+            # subprocess.run's context waits after ordinary exception/timeout.
+            # KeyboardInterrupt alone permits Python's short wait to expire;
+            # retain its reservation rather than claiming the child is reaped.
+            import sys
+            acknowledged = not isinstance(sys.exc_info()[1], KeyboardInterrupt)
+    finally:
+        if directory is None or acknowledged:
+            if directory is not None:
+                shutil.rmtree(directory, ignore_errors=True)
+            PROCESS_BUDGET.release_reaped(owner)
+        else:
+            with _ONESHOT_CONDITION:
+                state['unreaped'] = state.get('unreaped', 0) + 1
 
 
 def _read_regular(root, relative):

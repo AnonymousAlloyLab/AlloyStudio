@@ -105,14 +105,15 @@ source is required for a fresh clone or subsequent launches.
 ./scripts/run.sh
 ```
 
-Open **http://127.0.0.1:8080**. The server stays in the terminal; Ctrl+C stops it.
+Open **http://127.0.0.1:8080**. The server stays in the terminal. Ctrl+C and
+SIGTERM stop admissions, close the worker pools, and reap their Java children.
 Startup repeats data/dependency checks, compilation, and engine tests, so source
 updates are built before serving requests.
 
 These local launchers compile the engine without creating an IIS archive. The
 separate `./scripts/build.sh` developer/release command also checks the frontend
-with Node and refreshes `build/iis/alloy-studio-iis.zip` and its checksum after a
-successful build. Packaging on its own with `python3 scripts/package_iis.py`
+with Node and creates `build/iis/alloy-studio-iis-<UTC timestamp>.zip` and its
+matching checksum after a successful build. Packaging on its own with `python3 scripts/package_iis.py`
 also compiles Java afresh through `scripts/build_engine.py`; it requires a JDK,
 while the Node check belongs to the portal build wrapper. A failed build leaves
 any previous ZIP as an older artifact. See [IIS build options](../README.md#iis-100-deployment)
@@ -125,9 +126,40 @@ If port 8080 is occupied, use:
 ```
 
 Then open http://127.0.0.1:8081. Other server options include `--timeout 12`,
-`--workers 4`, `--host`, and repeatable `--public-origin`. The default address
+`--workers 2`, `--host`, and repeatable `--public-origin`. The default address
 is accessible only on your own computer. These local commands do not configure
 a production proxy or an operating-system service.
+
+Java workers remain alive between edits by default (`--engine-mode persistent`).
+Two feedback workers and one behavioral worker are reserved, with one separate
+administrator process slot: at most four engine children in the backend's shared
+process budget. `--workers 1` reduces the feedback lane; older `--workers 4`
+commands are accepted but capped at two feedback workers. The same canonical,
+AST and behavioral computations run inside each worker, with one job at a time.
+Exact repeated requests share work and bounded results; a timeout retires its
+worker without silently launching a fallback.
+
+To compare behavior with the previous per-request JVM execution path, stop the
+server and restart with the explicit rollback option:
+
+```bash
+./scripts/run.sh --engine-mode oneshot
+```
+
+An optional health listener has its own connection and admission budget. It
+binds only to `127.0.0.1` and accepts health requests, not analysis or admin work:
+
+```bash
+./scripts/run.sh --control-port 8081
+# From another terminal on this computer:
+curl http://127.0.0.1:8081/api/health
+```
+
+The control port defaults to `0` (disabled); select an unused port different
+from the main port. Keep it on loopback, outside public proxy routing. Public
+health remains available on the main port. Hard termination such as SIGKILL
+bypasses Python cleanup; ordinary signal shutdown and target-host process
+containment are separate acceptance checks.
 
 ## Optional OpenAI configuration
 
@@ -166,9 +198,12 @@ Linux regression tests launch source trees from paths containing spaces, build
 without Node or the original ACGN directory, request real JVM feedback over
 HTTP, and stop the server. Optional archive restoration is also covered.
 macOS JDK discovery and failure handling are exercised with simulated fixtures
-on Linux. Native macOS execution, including Apple silicon, has not been tested
-in this environment. On a Mac, successful setup's engine checks followed by an
-editor feedback request are the local acceptance check.
+on Linux. CI additionally runs persistent-worker framing, reuse, scheduling,
+HTTP-boundary and explanation-sharing regressions on Windows and macOS after
+the portable build and engine checks. Those platform results must be read from
+the corresponding CI run; Linux execution alone does not establish native
+macOS or Windows acceptance. On a Mac, successful setup's engine checks followed
+by an editor feedback request are the local acceptance check.
 
 For the developer and release test suite, see [Checks and closure](../README.md#checks-and-closure).
 Those additional checks require Node and browser tooling; ordinary local use

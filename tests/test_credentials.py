@@ -270,7 +270,7 @@ class DeploymentCredentialCacheTests(unittest.TestCase):
 class CredentialHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(("127.0.0.1", 0))
+        cls.app = server.Portal(("127.0.0.1", 0), engine_mode="oneshot")
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
         cls.base = "http://127.0.0.1:" + str(cls.app.server_port)

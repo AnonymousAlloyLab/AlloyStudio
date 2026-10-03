@@ -22,7 +22,7 @@ class SQLiteHTTPTests(unittest.TestCase):
         fixture(cls.root)
         with patch('exercise_store.runtime_classpath',return_value=runtime_classpath(ROOT)):
             store.add_exercise(cls.root,authored())
-        cls.app = server.Portal(('127.0.0.1',0),root=cls.root)
+        cls.app = server.Portal(('127.0.0.1',0), engine_mode='oneshot',root=cls.root)
         cls.thread = threading.Thread(target=cls.app.serve_forever,daemon=True)
         cls.thread.start()
 

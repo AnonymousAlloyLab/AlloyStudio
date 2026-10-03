@@ -46,7 +46,7 @@ def education_reply():
 class EducationHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0), public_origins=('https://as.555.is',))
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot', public_origins=('https://as.555.is',))
         cls.thread = threading.Thread(target=cls.app.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = 'http://127.0.0.1:' + str(cls.app.server_port)

@@ -51,6 +51,7 @@ public final class LiveFeedback {
                 response = evaluate(new JSONObject(new String(input, StandardCharsets.UTF_8)));
             }
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             response = failure("engine_error", "ENGINE_FAILURE", "The feedback engine could not finish this request.");
         }
         wire.println(response.toString());
@@ -95,9 +96,10 @@ public final class LiveFeedback {
         Canonical.Prepared student;
         CompModule learnerModule;
         try {
-            learnerModule = CompUtil.parseEverything_fromString(A4Reporter.NOP, studentSource);
+            learnerModule = WorkerSafety.parse(studentSource);
             student = prepare(learnerModule, predicate);
         } catch (Err error) {
+            WorkerSafety.rethrowFatal(error);
             JSONObject response = failure("invalid", error instanceof ErrorSyntax ? "SYNTAX_ERROR"
                     : error instanceof ErrorType ? "TYPE_ERROR" : "ALLOY_ERROR",
                     error instanceof ErrorSyntax ? "Check Alloy syntax at the indicated position."
@@ -109,6 +111,7 @@ public final class LiveFeedback {
             }
             return response;
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("unsupported", "UNSUPPORTED_FORM", "The framework could not normalize this learner predicate.");
         }
 
@@ -132,6 +135,7 @@ public final class LiveFeedback {
             distance = selected.value().distance();
             evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return poolMode ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
                     "The complete reference pool could not be evaluated. No partial comparison is available.")
                     : failure("engine_error", "REFERENCE_UNAVAILABLE", "The reference for this exercise could not be prepared.");
@@ -211,12 +215,13 @@ public final class LiveFeedback {
                     .put("evaluatedCandidates", evaluatedCandidates).put("complete", true));
             return response;
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("unsupported", "COMPARISON_UNAVAILABLE", "The framework could not compare this predicate.");
         }
     }
 
     static Canonical.Prepared prepare(String source, String predicate) {
-        CompModule module = CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
+        CompModule module = WorkerSafety.parse(source);
         return prepare(module, predicate);
     }
 

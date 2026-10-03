@@ -45,9 +45,10 @@ final class AstFeedback {
         CompModule module;
         RawAstTrace.Prepared learner;
         try {
-            module = CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
+            module = WorkerSafety.parse(source);
             learner = RawAstTrace.prepare(module, predicate);
         } catch (Err error) {
+            WorkerSafety.rethrowFatal(error);
             JSONObject response = failure("invalid", error instanceof ErrorSyntax ? "SYNTAX_ERROR"
                     : error instanceof ErrorType ? "TYPE_ERROR" : "ALLOY_ERROR",
                     error instanceof ErrorSyntax ? "Check Alloy syntax at the indicated position."
@@ -57,6 +58,7 @@ final class AstFeedback {
                 response.getJSONArray("diagnostics").getJSONObject(0).put("line", error.pos.y).put("column", error.pos.x);
             return response;
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("unsupported", "AST_UNAVAILABLE", "This predicate could not be represented within the raw AST limits.");
         }
         int references = pool ? bodies.length() : 1;
@@ -67,7 +69,7 @@ final class AstFeedback {
             for (int i = 0; i < references; i++) {
                 String reference = pool ? prefix + bodies.getString(i) + suffix : oracle;
                 RawAstTrace.Prepared candidate = RawAstTrace.prepare(
-                        CompUtil.parseEverything_fromString(A4Reporter.NOP, reference), predicate);
+                        WorkerSafety.parse(reference), predicate);
                 int distance = RawAstTrace.distance(learner, candidate);
                 selection.consider(i, new Candidate(candidate, distance), distance);
             }
@@ -76,6 +78,7 @@ final class AstFeedback {
             minimum = selected.value().distance();
             evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return pool ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
                     "The complete reference pool could not be evaluated. Retry or ask the administrator to check the analysis service. No partial comparison is available.")
                     : failure("engine_error", "REFERENCE_UNAVAILABLE", "The reference comparison could not complete. Retry or ask the administrator to check the analysis service.");
@@ -107,6 +110,7 @@ final class AstFeedback {
                     .put("poolSize", references).put("evaluatedCandidates", evaluatedCandidates).put("complete", true));
             return result;
         } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
             return failure("unsupported", "AST_COMPARISON_UNAVAILABLE", "The raw AST edit trace could not be verified.");
         }
     }

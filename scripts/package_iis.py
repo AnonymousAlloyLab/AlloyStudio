@@ -150,7 +150,8 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
     entries['LICENSE'] = read_source(root, 'LICENSE')
-    for name in ('server.py', 'luna.py', 'runtime_dependencies.py'):
+    for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'engine_workers.py',
+                 'traffic_scheduler.py', 'traffic_http.py'):
         entries[f'backend/{name}'] = read_source(root, name)
     for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):
         entries[f'backend/{name}'] = read_source(root, name)

@@ -78,6 +78,7 @@ print('Canonical feedback: λ → ∀ “no”', flush=True)
                 self.assertEqual(probe['pid'], process.pid, 'Task must own the backend process directly')
                 self.assertEqual(probe['argv'], [str(backend / 'server.py'), '--host', '127.0.0.1',
                     '--port', '8080', '--java', config['java_exe'], '--timeout', '12', '--workers', '4',
+                    '--engine-mode', 'persistent', '--control-port', '0',
                     '--public-origin', 'https://alloy.example', '--public-origin', 'https://alias.example:8443'])
                 self.assertEqual(probe['cwd'], str(backend))
                 self.assertEqual(probe['path'], str(backend))
@@ -92,6 +93,37 @@ print('Canonical feedback: λ → ∀ “no”', flush=True)
                 log = (Path(config['log_directory']) / 'backend.log').read_text(encoding='utf-8')
                 self.assertEqual(log, 'Canonical feedback: λ → ∀ “no”\n')
                 self.assertNotIn('SYNTHETIC_INHERITED_KEY', log)
+
+    def test_optional_engine_rollback_and_private_health_port_reach_server_without_key_changes(self):
+        source = '''import json, sys
+from pathlib import Path
+Path('probe.json').write_text(json.dumps(sys.argv))
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            config_path, config = self.configure(Path(directory), source, enable_luna=False)
+            config.update(engine_mode='oneshot', control_port=8081)
+            config_path.write_text(json.dumps(config), encoding='utf-8')
+            before = Path(config['key_file']).read_bytes()
+            process, stdout, stderr = self.launch(config_path)
+            self.assertEqual(process.returncode, 0, stderr)
+            self.assertEqual((stdout, stderr), ('', ''))
+            argv = json.loads((Path(config['backend_root']) / 'probe.json').read_text())
+            self.assertEqual(argv[argv.index('--engine-mode') + 1], 'oneshot')
+            self.assertEqual(argv[argv.index('--control-port') + 1], '8081')
+            self.assertEqual(Path(config['key_file']).read_bytes(), before)
+
+    def test_invalid_new_runtime_options_fail_before_backend_execution_without_echoing_values(self):
+        for field, value in (('engine_mode', 'PRIVATE_INVALID_MODE'), ('control_port', -1),
+                             ('control_port', 65536), ('control_port', True), ('control_port', 8080)):
+            with self.subTest(field=field, value=value), tempfile.TemporaryDirectory() as directory:
+                config_path, config = self.configure(Path(directory), "raise RuntimeError('BACKEND_WAS_RUN')", enable_luna=False)
+                config[field] = value
+                config_path.write_text(json.dumps(config), encoding='utf-8')
+                process, stdout, stderr = self.launch(config_path)
+                self.assertEqual(process.returncode, 2)
+                self.assertIn('Invalid engine_mode or control_port', stderr)
+                self.assertNotIn('PRIVATE_INVALID_MODE', stdout + stderr)
+                self.assertNotIn('BACKEND_WAS_RUN', stdout + stderr)
 
     def test_deployment_json_config_selected_without_inherited_credential(self):
         source = '''import json

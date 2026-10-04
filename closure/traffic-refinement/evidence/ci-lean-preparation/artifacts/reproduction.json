@@ -1,0 +1,17 @@
+{
+  "elanHomeOverride": "build/trf-closure/ci-lean-provisioning-20261004/empty-elan",
+  "existingToolchain": "/home/augustus/.elan/toolchains/leanprover--lean4---v4.34.1",
+  "exitCode": 1,
+  "method": "Only discovery is narrowed in the scratch process; test and report code are unchanged.",
+  "missingReason": "Install the pinned toolchain before entering the offline proof process",
+  "ordinaryUnittestSummary": "OK (skipped=1)",
+  "pin": "leanprover/lean4:v4.34.1",
+  "report": {
+    "outcomes": {
+      "test_admission_bridge.AdmissionBridgeTests.test_translated_mutants_fail_independent_lean_obligations_offline": "BLOCK"
+    },
+    "successful": false,
+    "tests_run": 1
+  },
+  "testId": "test_admission_bridge.AdmissionBridgeTests.test_translated_mutants_fail_independent_lean_obligations_offline"
+}

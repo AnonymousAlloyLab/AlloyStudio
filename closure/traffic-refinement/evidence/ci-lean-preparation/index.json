@@ -1,0 +1,205 @@
+{
+  "closureClaim": false,
+  "excluded": [
+    "downloaded Lean archive",
+    "extracted Lean toolchain",
+    "github-env",
+    "private configurations and environment files"
+  ],
+  "files": {
+    "README.md": {
+      "bytes": 4274,
+      "sha256": "37023194490db79f0d2416bc554a35a6e7e0a9d86771aae651e6f9e72d5b7e49"
+    },
+    "after/ci-cd.md": {
+      "bytes": 5066,
+      "sha256": "d5adf638c45b9594d816960c2779fe322b7edae81ef0e300fab8ed321ba03d29"
+    },
+    "after/workflow.yml": {
+      "bytes": 5205,
+      "sha256": "7096612dca21ed3de5a149d5d90682f939f55f94eff8dd4b0e24ddd15a8bb1a4"
+    },
+    "artifacts/ci-history-20261004T194714Z.json": {
+      "bytes": 3511,
+      "sha256": "e875184457c2bbebef5eaf583cfc659e4ca62e1c23d73624bf969ac7c8359a24"
+    },
+    "artifacts/ci-run-37228525806-20261004T194714Z.json": {
+      "bytes": 9949,
+      "sha256": "cb1c855086c387fb7fe4915faaf7388575775b762ae3d2bbeac09d54608ae5e3"
+    },
+    "artifacts/ci-run-37228525806-20261004T194924Z.json": {
+      "bytes": 10188,
+      "sha256": "6a7146b9cb68586b03cc3086b20fdc0c07028c2f03201329b8125f29057c632a"
+    },
+    "artifacts/cicd-tests.txt": {
+      "bytes": 1562,
+      "sha256": "24d63ead25b4db61efd20e5b77078b8e1bfc6edc3cb5a2210b3e1645fd998525"
+    },
+    "artifacts/evidence-index.json": {
+      "bytes": 1901,
+      "sha256": "adc4769634a04ef6d6fb74a953cc17123b807c8970fc43e27a6d715a317e87ab"
+    },
+    "artifacts/inputs.json": {
+      "bytes": 677,
+      "sha256": "97a718d00cd14d8e6718fde5da00549e2d9bb7c01ee86976c21133f14f3746a4"
+    },
+    "artifacts/missing-toolchain-log.txt": {
+      "bytes": 294,
+      "sha256": "c413c770a9fbe8cdd82ad454ea1eb00f2414f7a6c925204a8066d83dfaa64cdf"
+    },
+    "artifacts/missing-toolchain-report.json": {
+      "bytes": 167,
+      "sha256": "bd81f9eeaccc99d6968c7457736d7166871f9d4294f4bafad2a3990fb16a016c"
+    },
+    "artifacts/official-Ubuntu2204-Readme.md": {
+      "bytes": 18567,
+      "sha256": "6dda9f7a72667d4f52158c7b90164d99956d5b1850ce842daf4f5bb296b2bb43"
+    },
+    "artifacts/official-release-v4.34.1.json": {
+      "bytes": 18792,
+      "sha256": "6e40b137acbeae0ddc5e817af2c233037e8be09eb177658212e8aff1fc8c28a8"
+    },
+    "artifacts/original-ci-failure.txt": {
+      "bytes": 2169,
+      "sha256": "f6e33dde6688b61a5b0d09eec6b06ad2259ef12450505084a4c276957dd59394"
+    },
+    "artifacts/prepare-execution.json": {
+      "bytes": 80,
+      "sha256": "da13ca3a301ac8382e22f33741957d4486cdbff52eb5bf18a2796ed994b6b9d3"
+    },
+    "artifacts/prepare-execution.txt": {
+      "bytes": 1574,
+      "sha256": "10887fc37949a7b504784aeda90a63b84191bcf39b5bc29f864348c560dc6232"
+    },
+    "artifacts/prepare-lean.sh": {
+      "bytes": 909,
+      "sha256": "c0d2981bd7d568ce391b02ec61dfbf6900c45c0a605c049c53abe9741292a4a1"
+    },
+    "artifacts/prepared-toolchain-tests.txt": {
+      "bytes": 1223,
+      "sha256": "eff94c29c8f732e734f238d3435041a147c0adc014dbdfc8af10d841d3f395ab"
+    },
+    "artifacts/reproduce.py": {
+      "bytes": 2490,
+      "sha256": "25cad8a6ce61783aee46c1b6d51f62d41e06639abb80bcac11c6667b7b271ef1"
+    },
+    "artifacts/reproduction.json": {
+      "bytes": 807,
+      "sha256": "e625197032666e314ce433df5a55ad293085f2c612f6426544963e70b6a91a69"
+    },
+    "artifacts/selected-linux-asset.json": {
+      "bytes": 286,
+      "sha256": "78122270cd186066e9534e2c612a202379736d7cb9555641cab5d04bdb81e393"
+    },
+    "artifacts/workflow-validation.json": {
+      "bytes": 98,
+      "sha256": "e52c9cb67030fdb6d089d1b71610d302abcedffc81b84713c1eb8e8b06dc8107"
+    },
+    "before/workflow.yml": {
+      "bytes": 4107,
+      "sha256": "8751ffb84ff1540b713f7c52a204a7a0d86fe12ff920fd4962848d5e00805f36"
+    },
+    "replay-inputs.json": {
+      "bytes": 942,
+      "sha256": "f663718081f6036c65487cf3135315a2c332c4e01947013a323da6bee78d1ec8"
+    },
+    "verify.py": {
+      "bytes": 4848,
+      "sha256": "a57a91d635fc31ab5814bb1cc948f9b5dc33a94a929fb701646e2d08f55befe8"
+    }
+  },
+  "kind": "ci-dependency-preparation-evidence",
+  "preservedOriginals": {
+    "after/ci-cd.md": {
+      "path": "docs/ci-cd.md",
+      "sha256": "d5adf638c45b9594d816960c2779fe322b7edae81ef0e300fab8ed321ba03d29"
+    },
+    "after/workflow.yml": {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "7096612dca21ed3de5a149d5d90682f939f55f94eff8dd4b0e24ddd15a8bb1a4"
+    },
+    "artifacts/ci-history-20261004T194714Z.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/ci-history-20261004T194714Z.json",
+      "sha256": "e875184457c2bbebef5eaf583cfc659e4ca62e1c23d73624bf969ac7c8359a24"
+    },
+    "artifacts/ci-run-37228525806-20261004T194714Z.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/ci-run-37228525806-20261004T194714Z.json",
+      "sha256": "cb1c855086c387fb7fe4915faaf7388575775b762ae3d2bbeac09d54608ae5e3"
+    },
+    "artifacts/ci-run-37228525806-20261004T194924Z.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/ci-run-37228525806-20261004T194924Z.json",
+      "sha256": "6a7146b9cb68586b03cc3086b20fdc0c07028c2f03201329b8125f29057c632a"
+    },
+    "artifacts/cicd-tests.txt": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/cicd-tests.txt",
+      "sha256": "24d63ead25b4db61efd20e5b77078b8e1bfc6edc3cb5a2210b3e1645fd998525"
+    },
+    "artifacts/evidence-index.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/evidence-index.json",
+      "sha256": "adc4769634a04ef6d6fb74a953cc17123b807c8970fc43e27a6d715a317e87ab"
+    },
+    "artifacts/inputs.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/inputs.json",
+      "sha256": "97a718d00cd14d8e6718fde5da00549e2d9bb7c01ee86976c21133f14f3746a4"
+    },
+    "artifacts/missing-toolchain-log.txt": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/missing-toolchain-log.txt",
+      "sha256": "c413c770a9fbe8cdd82ad454ea1eb00f2414f7a6c925204a8066d83dfaa64cdf"
+    },
+    "artifacts/missing-toolchain-report.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/missing-toolchain-report.json",
+      "sha256": "bd81f9eeaccc99d6968c7457736d7166871f9d4294f4bafad2a3990fb16a016c"
+    },
+    "artifacts/official-Ubuntu2204-Readme.md": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/official-Ubuntu2204-Readme.md",
+      "sha256": "6dda9f7a72667d4f52158c7b90164d99956d5b1850ce842daf4f5bb296b2bb43"
+    },
+    "artifacts/official-release-v4.34.1.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/official-release-v4.34.1.json",
+      "sha256": "6e40b137acbeae0ddc5e817af2c233037e8be09eb177658212e8aff1fc8c28a8"
+    },
+    "artifacts/original-ci-failure.txt": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/original-ci-failure.txt",
+      "sha256": "f6e33dde6688b61a5b0d09eec6b06ad2259ef12450505084a4c276957dd59394"
+    },
+    "artifacts/prepare-execution.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/prepare-execution.json",
+      "sha256": "da13ca3a301ac8382e22f33741957d4486cdbff52eb5bf18a2796ed994b6b9d3"
+    },
+    "artifacts/prepare-execution.txt": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/prepare-execution.txt",
+      "sha256": "10887fc37949a7b504784aeda90a63b84191bcf39b5bc29f864348c560dc6232"
+    },
+    "artifacts/prepare-lean.sh": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/prepare-lean.sh",
+      "sha256": "c0d2981bd7d568ce391b02ec61dfbf6900c45c0a605c049c53abe9741292a4a1"
+    },
+    "artifacts/prepared-toolchain-tests.txt": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/prepared-toolchain-tests.txt",
+      "sha256": "eff94c29c8f732e734f238d3435041a147c0adc014dbdfc8af10d841d3f395ab"
+    },
+    "artifacts/reproduce.py": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/reproduce.py",
+      "sha256": "25cad8a6ce61783aee46c1b6d51f62d41e06639abb80bcac11c6667b7b271ef1"
+    },
+    "artifacts/reproduction.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/reproduction.json",
+      "sha256": "e625197032666e314ce433df5a55ad293085f2c612f6426544963e70b6a91a69"
+    },
+    "artifacts/selected-linux-asset.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/selected-linux-asset.json",
+      "sha256": "78122270cd186066e9534e2c612a202379736d7cb9555641cab5d04bdb81e393"
+    },
+    "artifacts/workflow-validation.json": {
+      "path": "build/trf-closure/ci-lean-provisioning-20261004/workflow-validation.json",
+      "sha256": "e52c9cb67030fdb6d089d1b71610d302abcedffc81b84713c1eb8e8b06dc8107"
+    },
+    "before/workflow.yml": {
+      "gitCommit": "ad6ea7ccc40f04d8022063fcf6012e6aef7fb3da",
+      "path": ".github/workflows/ci.yml",
+      "sha256": "8751ffb84ff1540b713f7c52a204a7a0d86fe12ff920fd4962848d5e00805f36"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Single missing-toolchain skip-to-BLOCK witness; CI-only preparation validation and finite related tests; no complete new CI outcome or closure claim."
+}

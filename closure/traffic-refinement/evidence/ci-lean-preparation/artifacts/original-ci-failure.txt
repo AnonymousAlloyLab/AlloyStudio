@@ -1,0 +1,17 @@
+Linux build and regressions	Python regressions	﻿2026-10-04T19:31:37.4288765Z ##[group]Run python scripts/ci_check.py python
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4289490Z [36;1mpython scripts/ci_check.py python[0m
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4358855Z shell: /usr/bin/bash -e {0}
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4359364Z env:
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4359564Z   OPENAI_DISABLED: 1
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4359869Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.16/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4360526Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.16/x64/lib/pkgconfig
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4360976Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.16/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4361374Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.16/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4361756Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.16/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4362150Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.16/x64/lib
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4362584Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4363062Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4363481Z   MAVEN_ARGS: -ntp
+Linux build and regressions	Python regressions	2026-10-04T19:31:37.4363692Z ##[endgroup]
+Linux build and regressions	Python regressions	2026-10-04T19:48:55.8930688Z {"check": "python", "count": null, "dirty": false, "revision": "ad6ea7ccc40f04d8022063fcf6012e6aef7fb3da", "status": "FAIL"}
+Linux build and regressions	Python regressions	2026-10-04T19:48:55.9021894Z ##[error]Process completed with exit code 1.

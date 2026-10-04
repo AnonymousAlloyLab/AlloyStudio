@@ -1,0 +1,15 @@
+test_actual_numeric_operators_are_translated_not_approved_by_shape (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_actual_source_projection_is_exact_and_closed (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_allocation_reorder_release_loss_and_namespace_escape_rejected (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_finite_production_transition_projection (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_guard_lock_owner_and_rejection_mutations_rejected (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_identity_only_reaper_is_rejected_even_with_registered_class_hash (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_observation_exception_mutants_rejected_with_registered_class_hash (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_profile_postinit_mutation_and_portal_override_are_closed (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_topology_and_initial_state_mutations_rejected (test_admission_bridge.AdmissionBridgeTests) ... ok
+test_translated_mutants_fail_independent_lean_obligations_offline (test_admission_bridge.AdmissionBridgeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 5.161s
+
+OK

@@ -1,0 +1,51 @@
+{
+  "closureClaim": false,
+  "files": {
+    "ci-history-20261004T194714Z.json": {
+      "bytes": 3511,
+      "sha256": "e875184457c2bbebef5eaf583cfc659e4ca62e1c23d73624bf969ac7c8359a24"
+    },
+    "ci-run-37228525806-20261004T194714Z.json": {
+      "bytes": 9949,
+      "sha256": "cb1c855086c387fb7fe4915faaf7388575775b762ae3d2bbeac09d54608ae5e3"
+    },
+    "cicd-tests.txt": {
+      "bytes": 1562,
+      "sha256": "24d63ead25b4db61efd20e5b77078b8e1bfc6edc3cb5a2210b3e1645fd998525"
+    },
+    "inputs.json": {
+      "bytes": 677,
+      "sha256": "97a718d00cd14d8e6718fde5da00549e2d9bb7c01ee86976c21133f14f3746a4"
+    },
+    "missing-toolchain-log.txt": {
+      "bytes": 294,
+      "sha256": "c413c770a9fbe8cdd82ad454ea1eb00f2414f7a6c925204a8066d83dfaa64cdf"
+    },
+    "missing-toolchain-report.json": {
+      "bytes": 167,
+      "sha256": "bd81f9eeaccc99d6968c7457736d7166871f9d4294f4bafad2a3990fb16a016c"
+    },
+    "official-Ubuntu2204-Readme.md": {
+      "bytes": 18567,
+      "sha256": "6dda9f7a72667d4f52158c7b90164d99956d5b1850ce842daf4f5bb296b2bb43"
+    },
+    "official-release-v4.34.1.json": {
+      "bytes": 18792,
+      "sha256": "6e40b137acbeae0ddc5e817af2c233037e8be09eb177658212e8aff1fc8c28a8"
+    },
+    "reproduce.py": {
+      "bytes": 2490,
+      "sha256": "25cad8a6ce61783aee46c1b6d51f62d41e06639abb80bcac11c6667b7b271ef1"
+    },
+    "reproduction.json": {
+      "bytes": 807,
+      "sha256": "e625197032666e314ce433df5a55ad293085f2c612f6426544963e70b6a91a69"
+    },
+    "selected-linux-asset.json": {
+      "bytes": 286,
+      "sha256": "78122270cd186066e9534e2c612a202379736d7cb9555641cab5d04bdb81e393"
+    }
+  },
+  "kind": "CI dependency-environment mismatch investigation",
+  "scope": "Single unchanged regression test with empty ELAN_HOME; required-test report turns skip into BLOCK. No suite rerun or source edit. Official dependency metadata only; archive not downloaded."
+}

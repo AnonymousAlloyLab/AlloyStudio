@@ -1,0 +1,21 @@
+test_browser_dashboard_contract (test_cicd.DashboardTests) ... ok
+test_browser_wrapper_does_not_use_old_fixture_after_packaging_failure (test_cicd.DashboardTests) ... ok
+test_browser_wrapper_refreshes_explicit_fixture_before_launch (test_cicd.DashboardTests) ... ok
+test_build_failures_publish_only_fixed_diagnostic_codes (test_cicd.DashboardTests) ... ok
+test_ci_child_uses_owned_scratch_instead_of_ambient_temp_directory (test_cicd.DashboardTests) ... ok
+test_ci_wrapper_disables_openai_and_never_prints_process_output (test_cicd.DashboardTests) ... ok
+test_generator_exports_only_four_dashboard_files (test_cicd.DashboardTests) ... ok
+test_historical_closure_omits_paths_logs_and_arbitrary_failure_text (test_cicd.DashboardTests) ... ok
+test_maintenance_alias_requires_exact_package_and_lock_identity (test_cicd.DashboardTests) ... ok
+test_maintenance_release_accepts_only_exact_documented_tag_alias (test_cicd.DashboardTests) ... ok
+test_malformed_and_symlinked_reports_are_unavailable (test_cicd.DashboardTests) ... ok
+test_missing_inputs_never_become_success (test_cicd.DashboardTests) ... ok
+test_release_tag_must_match_both_package_versions (test_cicd.DashboardTests) ... ok
+test_reports_are_allowlisted_and_bound_to_a_clean_revision (test_cicd.DashboardTests) ... ok
+test_windows_build_uses_bash_beside_git_not_system_wsl (test_cicd.DashboardTests) ... ok
+test_workflows_pin_actions_and_publish_only_dashboard_allowlist (test_cicd.DashboardTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.583s
+
+OK

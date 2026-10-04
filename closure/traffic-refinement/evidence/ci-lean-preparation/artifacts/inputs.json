@@ -1,0 +1,9 @@
+{
+  ".github/workflows/ci.yml": "8751ffb84ff1540b713f7c52a204a7a0d86fe12ff920fd4962848d5e00805f36",
+  "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+  "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+  "scripts/ci_check.py": "a272fa9a91ee8ef7c26d74a13b5869429fff341ced546d886412784946b8c3cf",
+  "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+  "scripts/verify_closure.py": "0cfa0bce333fcdfa1cc1db9e84e06bb1afede5961e6ff9eba65ad927c5a94916",
+  "tests/test_admission_bridge.py": "1b88410a4faa93788e1061c9e948be2212c515ec7704a08c7a6fec647f40ed1b"
+}

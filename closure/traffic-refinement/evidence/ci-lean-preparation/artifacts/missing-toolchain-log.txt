@@ -1,0 +1,6 @@
+test_translated_mutants_fail_independent_lean_obligations_offline (test_admission_bridge.AdmissionBridgeTests) ... skipped 'Pinned Lean unavailable outside the registered closure gate'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK (skipped=1)

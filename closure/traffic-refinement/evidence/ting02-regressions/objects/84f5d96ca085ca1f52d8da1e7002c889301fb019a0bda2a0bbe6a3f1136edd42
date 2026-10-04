@@ -1,0 +1,3938 @@
+{
+  "block": "TB01",
+  "schemaVersion": 1,
+  "theorems": [
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.accepted_frame_matches_ticket",
+      "typeSha256": "5043c8a64951fc1f1ce4b42265212f22b4943139ad4180c1dcab0f5dcd01d86b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.add_elapsed_eq",
+      "typeSha256": "337eb258bbfee9b60307af50b3b3f886466b01441a3689c3188739ecb54a837a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.admissions_le_budget",
+      "typeSha256": "a53d54dfd309a83dd4c45fe2871e177cf4b7be74ed044ce3ee75b8aa64a4ad40"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.allocation_is_bounded",
+      "typeSha256": "40fde0b5526f1de9e9fab99faaf78c34473c01169ed1ee24ebc68cfd2fca1568"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.backwards_tick_unchanged",
+      "typeSha256": "a144991a04676970e8fd795e8a2b774e5fefbbc2fec78aee72c6cfe814fb2872"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.body_allocation_validated",
+      "typeSha256": "cf26913fbc752541bc48bbb5135baf51dc33d71adbc6df7fdca3b6fb8b879f26"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.bucket_clock_monotone",
+      "typeSha256": "3d5adca18254c86a3f2e992d829a85f3c4841144837217e0a017adebcb460b54"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.bucket_step_safe",
+      "typeSha256": "9a5e7cd5f4f987a42546906c863d89e9610350a0f1dc7235373382c492c9dbe8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.combined_admissions_le_envelope",
+      "typeSha256": "478e7447bd197b70428af14bfe95fbe7cd9f914b032789de3fb1bdd121f4f617"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.combined_handler_bound",
+      "typeSha256": "11d257aa6255294420b647de05a6cf4ce296045f8b1bc6a2f816a55c245d6aa2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.control_cannot_borrow_public",
+      "typeSha256": "52955c2f488ebb7267c19c2bc4d0bc9612cc39ca164a1145cd29ef86be926654"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.direct_peer_cannot_spoof",
+      "typeSha256": "33b43a00c721bed54a2309ed6375544e01d29685f6b08a6fc7270d426cdc9c62"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.dispatched_request_validated",
+      "typeSha256": "3d2cb5b95cb213ace09355026427b983ff981fbbe4f6c37693f015cb2c7da968"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.duplicate_content_length_rejected",
+      "typeSha256": "19132a87d583d676a8e302c140199a33cad08d1edf00a34275e5f0a12f8b08ed"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.expired_read_rejected",
+      "typeSha256": "33b8c6b897f28e60bc9614d353c828e1561bcda08c012febaa2c7aaf83648e41"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.frame_completion_at_most_once",
+      "typeSha256": "ee3df4cb8108f28ad1e9e97a4e49b5430aa7577ec533fd0fc0ce3b8e1d016f2e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.handler_allocation_has_reservation",
+      "typeSha256": "65fd3311831915f3aab777e1b56b2628c0bdc8980874479659985b84c655ded0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.handler_step_safe",
+      "typeSha256": "a77f4b5ea0ebcb8f00daa58fba2baf72f4244425f4a148f40b049cb9c1bbc06d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ingress_reachable_components",
+      "typeSha256": "db725a7eeaecc20f6b051db699d4adba69d28039fc865758ffa21c613031617d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.initial_bucket_safe",
+      "typeSha256": "66a327a0c897678d6d93201cfeab018fe346d22584796f146f65066e69aa916f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.launch_environment_allowlisted",
+      "typeSha256": "10f9a3389d0d2ccb76d6b9832347575f8dd7300724f6bf002fd8cd5974b791e5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.oversized_prefix_rejected",
+      "typeSha256": "13905def155ae5aaa07bfeef79fa306f45e3f2ee63312014cb13da68a984f309"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.public_cannot_borrow_control",
+      "typeSha256": "4b76a425a1be4d30b7babfee56130a9595c839a2a844781a0442b0ab369cdb03"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.public_handler_cannot_borrow_control",
+      "typeSha256": "0b8e587f1a51363e7f3730c5b23c9bc91c105af1e2121b184773080bdb13c0b1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.reachable_bucket_safe",
+      "typeSha256": "9cce766c9a9df71f1e8dda7f4297491e1f2874328c4a11eba63f3e110a264822"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.reachable_handler_bounds",
+      "typeSha256": "90db7ac6db2b62b586d58b4af58608cb79ec4d3a12f496af532fb615126b7796"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.reachable_retries_bounded",
+      "typeSha256": "fa6eb8cd60576b6851615d3e2a67a859c16b61fadd0aab9eff2d114f221bbd25"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.read_progress_preserves_deadline",
+      "typeSha256": "e68af97bdca1f1580baa7f3600e17a45f19a199e385b755fa08d4b5ffbad32b2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.rejected_request_cannot_mint",
+      "typeSha256": "f5d30a21d72d72a6c2e45d0b7c2bad6183ec02718b7dcdae3d528f0412e05fce"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.release_handler_length",
+      "typeSha256": "0b12768dfa70e0c2ff2269fd871adfc1fe0fc91d74d4986a939e2f4ee2647cef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.retry_preserves_rate_reachability",
+      "typeSha256": "810bc9f7e96d93de10cf4359cb004f826332043e151c8ac1fc3b34985163bac3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.retry_timeout_and_admin_rejected",
+      "typeSha256": "69b6945f5bd551c45eb8d643687711ddab78398fcf7a1559c64bbe608beb1d8e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.run_public_requests_reachable",
+      "typeSha256": "089c8650e2021430a9368197d6b8ca2bf1a22f88209425fbe3bdc76fdfa736d4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.saturate_le_available",
+      "typeSha256": "e06c99077454fec61e1ffb08453885b54d170860a32f58e0548467a694348045"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.saturate_le_cap",
+      "typeSha256": "8501893988cd8c54b9c0998e3bdd0be7e1c87c38dc5cf90172234694398f9aa1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.strict_length_singleton",
+      "typeSha256": "d0a2b7ee099013eefc38c9ef898a74f0c7e3e50f95253d27a19890f0b2c26a0a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.successful_retry_bounded",
+      "typeSha256": "7064003c2cbc15416aaa995650045f7b080d287299c2c47eab1edeed56e81105"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.sum_rates_mul",
+      "typeSha256": "5b94b0447ca54f31b85a166e5084b26cdd6148fa44d13e473f277cc5b0ec4c10"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.transfer_encoding_rejected",
+      "typeSha256": "45d8f063dcf5ee93cac4c3c63db919b39b9ab472f44935e4bb2635f211100e16"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w06_same_sequence_old_incarnation_rejected",
+      "typeSha256": "d9e3cff26e7a7b361b8cd844b476d66c931d17e35d5e7d045ace6f57539961ac"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w07_first_byte_then_absolute_rejection",
+      "typeSha256": "88ad704556de788caee4974a7934ffac40279ae16386ec8c1c303116653f14cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w07_idle_trickle_would_continue",
+      "typeSha256": "ddb0f34fec74a502fadb17c92b84b7b6328c51f4ef59de85093ca7c032633aff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w09_naive_allocation_exceeds_cap",
+      "typeSha256": "078bb7d3fd907c415eb7b4c45cb3b43ec1b3695dc09c0466eb41f43f3496e844"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w09_prefix_rejected_before_allocation",
+      "typeSha256": "74984adf6eed4862088761fbffbe081e53e61556eea053a5ef863e479b94e4f4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w13_conflicting_lengths_rejected",
+      "typeSha256": "57fe5dcfe75779540c19113fbf705d4681e05ff79a757df350cb77f018466728"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w13_spoofed_forwarding_does_not_change_identity",
+      "typeSha256": "da471809e7a39167e3e8ff462c5e14c5a1aa92e889c4cf2e64837eaa8d04ec71"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w15_public_cannot_spend_control_reserve",
+      "typeSha256": "a442098786342cc93efeb200f40ffc9e1715f6a3a97cb8f13323436454b07004"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w15_public_handler_saturation_leaves_private_slot",
+      "typeSha256": "c63c7c53c5617a95343c8f72573ffa6674fbffad4fd0bea0a803b601ec6a1a55"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w15_public_saturation_reachable",
+      "typeSha256": "6b3a555e38da2b5cfbdc2323de85a3a368ea81a1ba33b46cb2ed97a3d2296481"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w15_shared_bucket_naively_starves_control",
+      "typeSha256": "6e7e990fe5d2701fa45204cbc5317ebd6ebb78a2c22a526b4a094c57bf7a9287"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w17_allowlist_removes_key",
+      "typeSha256": "a9698e7d105966c9c4c0e2ebe7cae064707d9b7b01ca11a7ef8b682a4651a252"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.w17_java_option_filter_leaks_key",
+      "typeSha256": "a94ed5f8a930760110eb50c1c19f13db921e4f0429065776b5a273e70e59a4d9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.acquire_preserves_bounds",
+      "typeSha256": "6613fe5d0a9ddf956eba86a9253ef3f55d854431884052c12444460d5a99d25c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.busy_worker_cannot_start_second_task",
+      "typeSha256": "16fca5f61893a3037aeac2cb6dce24f64f42574b9688973379bbf22fe92ac3a1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.completion_does_not_launch",
+      "typeSha256": "fda66d25021ea82f6bbc8746ac6af8f9cc3c3ce753250a32a9cdc81cfb01e18b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.completion_requires_current_ticket",
+      "typeSha256": "ef9a3916bfad0535f531d45f8d763a90ddc7e657491ce52f3a137ef1f1121960"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.completion_to_idle",
+      "typeSha256": "b8cd87d5ca2b2db8dfd8a6ed3904607c1280650be585841b2bcac2fc549763cc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.duplicate_completion_is_noop",
+      "typeSha256": "891484168d0e41a4f41bf38e6a839ec55f92c12ce1ede427af974d818e7372a5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.global_bytes_is_lane_sum",
+      "typeSha256": "f1fef2fd0c9a72f47314a8ef9f9da642b34a8546f338081663b2e3f54dd5fde7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.global_count_is_lane_sum",
+      "typeSha256": "2b96b8bb5b31d06ff78e1453077800432fb7ba7aa404896276c63a7ccd6a3004"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.one_task_per_worker",
+      "typeSha256": "05c6452ed6ee3c6f8421e1c1a30d4220c744d6cee7ab4fb01c360fd50a158fd0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.owner_reuse_breach",
+      "typeSha256": "b03f4b820634b6da51fd976ab0c33800b0f6012357ac99a036648d8322ef12f8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.poolReplay_reachable",
+      "typeSha256": "f99d16f260c8d7c2b37d5e78856d7f3a348bde460078025faad5c74a5544479a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.pool_incarnation_never_decreases",
+      "typeSha256": "aa246c5130c4940516b70bd0e52d5419081932b171a864891fb0a9b8253de5aa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.prewarmedWitness_reachable",
+      "typeSha256": "67f93e2375e872e90f084e5e0ceeb57e7cdd242f3f7134cac219e39c1aaa245e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.prewarmedWitness_state",
+      "typeSha256": "3d9658b94bd4a1467576d85c6bb7f245cb837467b0e0dc124e007ff45ba1d047"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_fresh_incarnation",
+      "typeSha256": "704d9013b1555293d18a3e628d5933223afdbe2c18ffd74b7825699ecb074278"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_process_bounds",
+      "typeSha256": "a987a1f1d0a71230a16225e9747fc34ebc76b91e9d39dad9f822a388cae35d9a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_resource_bounds",
+      "typeSha256": "165600b726c54a1d4381a835cc5526e8ebff590ae7f65c564083578a3a222307"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_unique_owners",
+      "typeSha256": "307062c04d952b42f797c78fd72d26078516a219a4ae8d96355bedd38d6484b3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_unique_process_owners",
+      "typeSha256": "eafb000bafa985cc355bbfaebd931556e27844807f822d2721c59dd2587bda03"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reachable_valid_tickets",
+      "typeSha256": "55faa907b08307591fdf6902496139494599231cf3704e0d70b275effbaf5b57"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reap_idempotent",
+      "typeSha256": "a86ef05facd6146c5a33ae426d716350386a27fa78a804a296d0655585be5c29"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reap_retains_other_worker",
+      "typeSha256": "8b8803421b184b731c5ee4345a5ae4d201baf2269226f94b946ad997f7c86f3e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.release_idempotent",
+      "typeSha256": "a25d3fceb86c8130a5618f2e683f85265ef7cebf695e5c4549cd6df638b6ed38"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.release_preserves_bounds",
+      "typeSha256": "7e50f205c6720559430710adb94eea9b0160e2f33fc4c7969780afaa11f6114e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.release_requires_matching_reaped_owner",
+      "typeSha256": "193c6cf4ef7ea4ccf44177de4f040b454104144d00426a16851c69a9fee227f2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.release_resource_conservation",
+      "typeSha256": "bed3f50eded2596bbba074cdb716854e26fce50e4d55b552ea176791c8e50fdc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.replay_incarnation_never_decreases",
+      "typeSha256": "981284072ff406f9bb03d82d4aab83c270335841226bbd34f475aa5dd05f1c9a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.sequential_jobs_no_new_launches",
+      "typeSha256": "8218485907a93cf97390f21544065cabedc2a387c712afd8012582dc8a24a69f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.sequential_jobs_reuse_fixed_worker",
+      "typeSha256": "e64c6f22cc680bf4f514a9ee2f178523939ffc1c4d964d8f3cf16df0fcf78e43"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.start_issues_fresh_ticket",
+      "typeSha256": "d8e5e55227e0ea7e107f2463ccfcbe1c698d0dec28d45ac40c8f236dfd4d655e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.stop_retains_all_reservations",
+      "typeSha256": "6f48ed1dfd9a2417c5cc1d60114ca2ba8939694d968c621bdd26b8798803747d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.w01_atomic_reservation_witness",
+      "typeSha256": "431795501b88678a7ddeeb93036a7d5a0153652f3546ebf6a9925e603ce0be0a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.w02_cancel_does_not_release_witness",
+      "typeSha256": "a66359e53ddd38846a9b2bb64a3990566c8fae1dfe15ffd9272ca14c28a8df8b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.w06_incarnation_ticket_witness",
+      "typeSha256": "1b562f4aeffa0678f106a919fa9816ebfd9eb0852df38bf9b42f52d315df42e4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.w12_fatal_requires_retirement_witness",
+      "typeSha256": "64ab89139f1564c9657475dd661ab10c5d83ea246f372a795348eaea2e2e7517"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.w14_recycle_each_edit_witness",
+      "typeSha256": "e59d2c32f1399244eaf2ce9444cf5e030b4553b4d9e5fbbd87876e4d9357a2d5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.warmJobs_reachable",
+      "typeSha256": "25421bec1c52713a81f6f07a366d8053837f7838c341ba495ddc350345084854"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.warm_job_reuses_worker",
+      "typeSha256": "98b079f9bad31a6edefe151cd8f339f3dead4b53eaf18aac20258cfbc5dad0c0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.warm_start_does_not_launch",
+      "typeSha256": "48a6c5f09dc56bbd0de62ddaf4636f5a7c951428a450256a609caf3ebe18f692"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.worker_commands_retain_reservations",
+      "typeSha256": "be7a65546ea7e697ed5608159f6d118f0f6fe67e4dbf592ab456bdc30bb74182"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.worker_serial_never_decreases",
+      "typeSha256": "5fa628320a3d70877cbd3942d865e974001bcace629ece870249736bbb3fb0ac"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.wrong_ticket_is_noop",
+      "typeSha256": "f4dd90155c37a7b77fa779169582e46ae8324c6b00c0ebe3123c792ff8d7a9c0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W03_cancel_preserves_B",
+      "typeSha256": "06901a0e170481cb85b031a4ceb43972002f95624b88759f1db2967dacac4ef9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W03_join_one_job",
+      "typeSha256": "f31e1e9ea699bf10b4c098bd16b965ac8802701c63eeb32ffb3b8949dd6eec58"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W03_last_queued_cancel_reclaims",
+      "typeSha256": "c5786b523e28b82f10fcf54d9ba551101b9901a177912cd0ef0384e4a19de475"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W03_naive_cancel_breach",
+      "typeSha256": "f13214c951136a2cf83c374aefa7a0918139435d55ae8da41979c87f1c8cc326"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W03_running_not_killed",
+      "typeSha256": "5a1e10d40765563bb5084156aee7c8afd210ba283c323f6095d6819ecf9b8ba6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W04_normalization_breach",
+      "typeSha256": "ec94d70fd93257f6a7d38ff8af11d8e49e8e579f918a329ae6a7bb55d5403c91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W05_generation_breach",
+      "typeSha256": "cdf9034becf255012104f0cc37e31de808cf5cc2a0f8cfee16764c8d4fd7410e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W05_old_cache_not_new_generation",
+      "typeSha256": "181e449ddc2122f611d062bc13a964cf2f407928d0c6c420f78080c920412563"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W08_new_channel_identity_valid",
+      "typeSha256": "95f5717156d27f55beda5e7658aec4f05c4b7547dd719b150e06b18f236c5711"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W08_new_channel_rejected_at_global_cap",
+      "typeSha256": "7175fc3f58754f4fb8a87d291c56513e4407d0fbb306bd448bfcc0d15b313a30"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W10_late_malformed_breach",
+      "typeSha256": "b8ab59f10f8166ee47d027abd9520780e4618ed981db4f9f4de2ab71a084bb04"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W11_eviction_keeps_evidence",
+      "typeSha256": "b8da2771fca5ce130a4ec8416fb52025d29818a766b2f9187bca5d6f49a59b99"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W16_field_allowlist_breach",
+      "typeSha256": "80d0aa11326f4c10db8538be69e67a12ad2142999b28b8a3112354205b8f05ce"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.W18_async_boundary",
+      "typeSha256": "db557d90376022d94429de0cc92472aac805f198cc9edbb7e0d9edc1cadb2a91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.admit_binding",
+      "typeSha256": "b7fa8b7ac283cfe5e443d9e6947b9be9b69b565dc5036eca7ae7a983b82cd019"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.admit_bounded",
+      "typeSha256": "f864ddaa4ee6c455d9eff671b0642f08a5f7a568beb767038f7422294a5184f3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.admit_owns",
+      "typeSha256": "3532cd7d7e0b945594f8bee64d5a9dd3424d8090076d164461776af2ed720b49"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.admit_sound",
+      "typeSha256": "93423b95c9b2f98c5668a1c2eab55e914c824a8201e03281d08fb57a48cf5d58"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.admit_unique",
+      "typeSha256": "a7837d18347d3c60ad71c47ed4a306fe9e842dc83cc26d4009e2178d8c6cfdeb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.behavior_metric_independent",
+      "typeSha256": "6be0fb67e2e62acb0e630ae1a5a1dd6f057f6895b54a9e0538d89a0f65b784f7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cache_hit_observation",
+      "typeSha256": "21ac51aecc491e463ba1b18cb30c79e6a34ae55721586868c2facf553fa66160"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cached_sound",
+      "typeSha256": "7d0794d5ac48b48a3aee2b8231445da27f93ce5d65277608d3e3081ba2266acb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cancel_other_channel",
+      "typeSha256": "366a329accc3d14c5c48f0c0fce2353fefc44fad47a2880d4d1af21f329794fd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cancel_other_keeps_job",
+      "typeSha256": "5bc3a587b8e2b2438b546850d14f9037fb38192b670ead6e770597e9c8d7888d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cancel_other_subscriber",
+      "typeSha256": "dbc102b3141b78b1e8c1fe20572a6a7309b2a1063f218d6afb33e038f020ac32"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.cancellation_preserves_computation",
+      "typeSha256": "41b365ed3f3b0fba28fab78197e50c871e4e169ca2a0a4e90b7eed3f16acd86f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.delivered_context_current",
+      "typeSha256": "5bdf52f3ba4ca3d16a45086d088be1e8beefbd0fd742de97b39ee26bfbb00c2e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.delivery_identity",
+      "typeSha256": "5cfe0eeb6ed5c0a105778435002e6443d84923a6d3bec4a556899951ff0dae07"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.dispatch_requires_subscriber",
+      "typeSha256": "e58d4b60fa445c1e416a7da05aab83d7d1acef0a7dfc7525358454d4e82b68fd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.eviction_preserves_pins",
+      "typeSha256": "735e98e1dbc34bd8cf877c9c838400f541836ad69fbcc3b0954c234fadcb4b27"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.exact_context",
+      "typeSha256": "fc82c3f74543fc78f3468c14ae4d13a26cfcdb23636553f61b085a44479cb038"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.exact_kind_options",
+      "typeSha256": "b021ddf3c95fb07a77cd7adffeefa7972b89707ad896ce190409f2dff856d818"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.exact_ordered_pool",
+      "typeSha256": "a36815d7aeb5488d9277098770cb0212b6522df66ac377b571a352a8128d6785"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.exact_raw",
+      "typeSha256": "e95ad52c55fd80e67e19074231ab8019f53c7a0c1b57d6c16942bf281b000e12"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.exact_snapshot",
+      "typeSha256": "bca2576e3a6011edaa9d10a8507fe69e2b7e11a08ff6fd96773d024b0fd889fa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.failure_never_caches",
+      "typeSha256": "21bfb9bfd169000b7110231d9b1cb79c04ad8cf305bc5380991875d28895232a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.filter_length",
+      "typeSha256": "6ad57c9f8a54c7a4a2ed6d39ef481eba32269e8063ad72c00fe1d37457f955c1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.filter_length_strict",
+      "typeSha256": "7e19d20995333da8dc784866705889685426f9a3d016124115bd44c9d8b1dac6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.filter_mem",
+      "typeSha256": "cdd64ba3379444ff8bd72b09c3690367dbd46c21f9049c9bfd278f9b4b5919ef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.joining_keeps_computation_owner",
+      "typeSha256": "e9aec3bc8b6b26d14e871eda727dbb913bc2439cd2bc529d0847e659232ce99d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.latestAdmission_reachable",
+      "typeSha256": "8340b5cd4387bec6bc8ae9eb804d7e586b01ca462d6aa001fdd381974ec288c2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.latest_channel_identity",
+      "typeSha256": "7864ad94f2d1b5191c746026b3aeb6befb273fac8b66f3695032036ae575d25a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.map_length",
+      "typeSha256": "38676910ed8ce80393203f0586661a4b4046c4f3554f8ec3bb68a3571c0a6c60"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.map_mem",
+      "typeSha256": "40c529908b9b3e51d5b1a9c5ca4720fa3afacfdb3d09290dc238e724ba209e5f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.map_mem_of_mem",
+      "typeSha256": "784cda8f96871cb26ecfde6ba4f92085161636566e7563d9fc45f5e6c3c97cc9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.memberBool_false",
+      "typeSha256": "f76fbe6aee3b8323870b21830498af572dd40d33377e01b276cbb5438db89f19"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.memberBool_of_mem",
+      "typeSha256": "94e5262652463126e5f0d47ec44ff36d0c9eb42d3311adf4a1efc16f8df5e2da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.memberBool_true",
+      "typeSha256": "b25add4b867ddf8d33da678391160046f4807043e3cab54a2c587d82fe3217c2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.metric_omission_breach",
+      "typeSha256": "a6fa5d0f3b6e07be0eae92c7b97763f75147b4f9562f87bf8008fd1e0b7fc0ac"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.mismatched_delivery_rejected",
+      "typeSha256": "f4f8475386c57b4186e9fb16b3282d79a86ebe9f3053aa18fb2ae7ba0909e35a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.no_obsolete_downstream",
+      "typeSha256": "c43682c83eb42b5f0fb01ace05dd4e3d2535b4aaa6c99bb05544533de836aef3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.nodup_filter",
+      "typeSha256": "41e78847f68e2837d3b58d1f89d719b5d593d8326092e0349cdf518d7ad6e85c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.nodup_subset_length",
+      "typeSha256": "e6ed448130a2ce7e42c871e764866f1ec535758bbfe555345f4ea2dfaa9e2dd4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.one_computation_per_key",
+      "typeSha256": "505568dfdaff73c6f3ceb1f316519a78f0e52bcd4f73ed722af25ad800857505"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.pinned_observation",
+      "typeSha256": "9de465f7c01daedc9b09ee3ba6b5df83e68c1d7b676be7af34b79576ee46823f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.prune_keeps_subscribed",
+      "typeSha256": "96cc4c19db834d8db82e963483caccd7eb0d13687de20b5085805932365a7565"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.prune_owns",
+      "typeSha256": "0102ee5a823506d2791a78e0cb1ed84fb1c0883abeefe7c9b437e5f2f1016f2e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.publish_only_current",
+      "typeSha256": "fde8af25c134e97e8b92a6ceaae3e96ce91207143a2eae009f33df4c4f346db2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.reachable_bounds",
+      "typeSha256": "2a98550c05b054969c9e9b488b02b74db895b362470c4547e36debaabbcb1b13"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.reachable_cache_and_pins",
+      "typeSha256": "ef50ae4c4d4075004a9e80c7cd989e03ff7913417949bf716e794d9d5211d814"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.reachable_running_owners",
+      "typeSha256": "57395d09c781d347756f9882a29676a1fa0fc7d492b0ff56d4e9b9caa774f74f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.reachable_subscriber_binding",
+      "typeSha256": "03f9b287044d42279928001bdadb37a276b5347645d7ad7d41ca6bebe3770ac8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.retain_condition",
+      "typeSha256": "8ec660d0bc6dee892a7897203d0f014c60b95d38885b3baae4d7c3309ede72e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.retain_kept",
+      "typeSha256": "6bdcedf5c64e0ffc358f710b06687ffec9d2949c6bc7b4ecfb1cee29e1133f13"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.running_count_bounded",
+      "typeSha256": "597ea51a7fe79419fb7bab8731ca0f9bfb3c26edf0db15f3656746895567a577"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.running_count_le_jobs",
+      "typeSha256": "985becf9eb286b6487666c9bf25b9551960fd7def4f10e969b095bf273992b22"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.step_binding",
+      "typeSha256": "a7d3c997b6bb2987763ba20466bc90f0928304c8dba788dc086935cfa70cc46e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.step_bounded",
+      "typeSha256": "6efff753b8307e5eba3d646d74eac9458932bc5c261f5bbfaa67d0216417e213"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.step_owns",
+      "typeSha256": "b5cd9cf0b5ba51c3b2ed31e4186537f4433d739e76a58163ffe6e2ec687b39c9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.step_sound",
+      "typeSha256": "5a38c8af048fb201d3105a490c365290b8873e90e50f525e22357beb0bcb9a9b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.step_unique",
+      "typeSha256": "b120c44ac9c159a87350905316001ca6af39a2db37bb554c4df049823c77bc2c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.structural_metric_distinct",
+      "typeSha256": "774988e798c2632f6cde626246d40b37635b55c8ef940d1a4862dfe2a3556437"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.subscriber_enables",
+      "typeSha256": "478bf4898cedc1accbb1c2d999a493a11724d12885f83b23918f2efd9a1bc977"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.superseded_removed",
+      "typeSha256": "fd0599cfc6014289d5f46c9a6d5604f71fa245f0bf9ce729cc552f807aa08a4b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.terminal_failure_not_cached",
+      "typeSha256": "568c99e87891517bdd0a63d462f0e95ff43df6ae4b4ad78e4db743da2287e82b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.acquire_unique",
+      "typeSha256": "a02399e64febbfb26f85ec7f838cf9b1d6e845b255de6dbbdd9469f24d9a93de"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.alter_before",
+      "typeSha256": "7450e8df6468b5c2c29255b7410334f63202e124411e9df269b938e15d0fadd1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.alter_charges",
+      "typeSha256": "be7a65546ea7e697ed5608159f6d118f0f6fe67e4dbf592ab456bdc30bb74182"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.alter_valid",
+      "typeSha256": "bac6edc88fcfe9fe678356de76feba4d54b7f69d80e69306e6e5aa5a5f2c2dee"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.and_true",
+      "typeSha256": "1e592d9a3a245b39a4a5dc56c50c364f2810e883b64443fd021aa60707db7ebc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.before_mono",
+      "typeSha256": "1ee2c440bc5c7028749b4b45e1dbe6ef9134cac810a3ab1789afaf16ec013894"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.fits_sound",
+      "typeSha256": "a33270cfc0ce6c43e0d4eefea32e64a8d5b600d22f0d4bc803864d9340729296"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.poolStep_before",
+      "typeSha256": "75c45aa181a626a638f2a6ebaaf8528d282396462807a0c6a8f26a44e23e7c5c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.poolStep_bounds",
+      "typeSha256": "312a6fc0cfb3a2233608e563bd7af2a4686dbdcca7a5a4a6b7f5f46d39c3cc91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.poolStep_unique",
+      "typeSha256": "fece73d8db4f136f8f7ffe5baf7be00ed9b1c737eb35618613c27d14d2dc9f40"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.poolStep_valid",
+      "typeSha256": "ad857c4e1c53dc7b3f77e999b6b2470dd14b3bda862469b73091523b0139f2ae"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.pool_ext",
+      "typeSha256": "88b304f30c3f7c44e880f34d716ef4dec16c838313efeba3c52593ac2155e615"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.reap_before",
+      "typeSha256": "3e258f04205fb16272787dc3d39384f06e2a6ed22504a0566b383d66f861b3cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.reap_preserves_absence",
+      "typeSha256": "bd1caca712b2cc22cb65ceaa7cd21b5b04589e05b5cef2f777345822901a2e5d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.reap_total_le",
+      "typeSha256": "84c047df3597d04a2dc4d4144a4fb3a3fffdd13ba6da227cd2a0b1bdee36ee53"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.reap_unique",
+      "typeSha256": "dc837b7a701c1f3ea3d58f54db0b13b1a97c542e0cee10dd909e6efa2bd797c9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.reap_valid",
+      "typeSha256": "c8d95574f1f507dd54ddc6180732ba1ff02965c41b084ef63d4d56f3af34445d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.release_not_owned",
+      "typeSha256": "7014355278b91a9edad6ebc9af8624bd46dd9454fae9e6e46ecc54e78581f90c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.release_preserves_absence",
+      "typeSha256": "b476b0f9c7ff0e1e3af77008e7b921b55ec953c41196b8a9ecbf0fa1d8ef5815"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.release_total_le",
+      "typeSha256": "41a72a278d0e465b033aa10cac7a3d920f2963204812f67e37a8507fd99220c3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.release_unique",
+      "typeSha256": "a3d6cd31338c8d64af272a6286bc390ee117aaa402a7e815a82a2c1e0f70164d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.total_partition",
+      "typeSha256": "62c59234aed19ab8fff347900b7c742bdb596939d555f2a93c17c31ade1a6499"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.w06NewBusy_state",
+      "typeSha256": "07ccab3906cc46fdb14c315c5be4fff9dc6e0a04f3a6dc67127f62b009b6f2fe"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.w06OldBusy_state",
+      "typeSha256": "a01f7db36d92c54cbecb5dad759875d1ef5fedf56ca8f81d66a543c1bf7fb4b2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.w06Replacement_state",
+      "typeSha256": "8ed1628538a7ae201124026a9d2325269f7d9beb491eaed71f7c16ad4bf37077"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.workerStep_owner",
+      "typeSha256": "324e29ca088c3654c39931539e47ded5e41d36c7042e7325e9f5fbb595515b64"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.workerStep_valid",
+      "typeSha256": "a90d47e39a1a6f1bac6a8029693b8786561fe9272dd10c9100965f32c37f2af2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.ofNat_ctorIdx",
+      "typeSha256": "b2c9bcef04a948f63edf004970fabdbff65a125fb4951f02b09815ae60f5f6d1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.BucketReachable.brecOn",
+      "typeSha256": "4dc594663621ebf62f7c03f495e12aee70e3fb2859a4280c1addc709f79e80df"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ContentEncoding.ofNat_ctorIdx",
+      "typeSha256": "daa160155f8570c7efe54aab38c928a1c900e8fa6a46daf177b579167b9049d2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.ofNat_ctorIdx",
+      "typeSha256": "316e85ac8ea1d25d6648102176d3fe9d6fa957cc46b163ff1af3266d20f15853"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerReachable.brecOn",
+      "typeSha256": "4a73518c5a6e20aeda599a2fc4b4e0af340ea71ebe864d0a3fd191e0a52319c9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressReachable.brecOn",
+      "typeSha256": "6c1f7c5ed54424469cafa7a57d24eb02d4ffd9ee75a47d56174eede224fcde57"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.ofNat_ctorIdx",
+      "typeSha256": "682283dcbd068c6bea666ee8ca8adde8cff7f58d0c04a25c74c76a1b7ccdde86"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.RetryReachable.brecOn",
+      "typeSha256": "df60870dfeeb1b6b85826014b845f8f731499bdfb4dfbbab5a6508a60d8b7da3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqAnalysisKind._proof_1",
+      "typeSha256": "43cf03e2e1dadd4ed54d09088c400198cc1c71d03e0608ba096107c8877dae43"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqAnalysisKind._proof_2",
+      "typeSha256": "7b77534dbee5d2eaeb3e10a77caac3348a69a0e19f0ded64bcd6fb95f7f4534d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqContentEncoding._proof_1",
+      "typeSha256": "91512c137ec555cf13c451ee85a58a0d0acdcf1b34844edc7ea77f8361c995ff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqContentEncoding._proof_2",
+      "typeSha256": "3159fdd5c06d0ac9bc05c97b163a827be8ff41202e0761b4d169e2f93d79cad3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvName._proof_1",
+      "typeSha256": "639f234f4e682b90d3d426cd1141b06fcdb9cf92ccb15165d6d16fdf87840a3c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvName._proof_2",
+      "typeSha256": "34563d5334d9b8d622b9808f289777484d6b1e350131ca6adcdd27a3f3276a33"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRejection._proof_1",
+      "typeSha256": "05a7b2ac0603fd1e247737d1faf572f7c3c35c61f8eee40259088011c511f3fc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRejection._proof_2",
+      "typeSha256": "bb7083b0b9d6cecf05bea87a376b20d8c24f53389f1f8bef9b9bccd88a5ce83f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Lane.ofNat_ctorIdx",
+      "typeSha256": "5584fbe6756d8fe6ab80beb182b295d422ef5ea955c22035e86981160c53b3e1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.LedgerReachable.brecOn",
+      "typeSha256": "131f30a50f2435b061eebcbdae8db55e857613b4f8707cbe85a21f504935bddf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.PoolReachable.brecOn",
+      "typeSha256": "dbc4859c634e3ace0dc23db7f36b6c6899fe76b5fcea90df1d00d83e142f273c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqLane._proof_1",
+      "typeSha256": "5313347bdaf8d0ec837dd6f7993d4bba41da1273e85e2a60d2fb552e2e3bc6a0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqLane._proof_2",
+      "typeSha256": "046d0f5dc22dd4396f55d401293771858399cb8609ed48c6a11ef39ec4955e39"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.owns.eq_def",
+      "typeSha256": "4400db2bcf328c4e56c14c87c92e4d7b88d7a36ebe30de61c185bd663883ca97"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.reap.eq_def",
+      "typeSha256": "cd902137e36046cd3403231579f7d00e274cbdeedf1b1c1bec39824254b77ffc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.release.eq_def",
+      "typeSha256": "d69c7914303f7bc7dd7e75c922376d574d5a1e6dc4133012dfc1ca351f9d27a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Metric.ofNat_ctorIdx",
+      "typeSha256": "64f6bc10a9fe8d2718bc45a5890cf60ceb41f4092abd6e607cb74550a65f5fdb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Reachable.brecOn",
+      "typeSha256": "cd6dbdf8b05c1e22d481362df169cca6649ba5b9a7844ff35ab205281bb5f0d7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableDeliveryMatches._proof_1",
+      "typeSha256": "881dba0fee4c83190eaab74c567585b44e06884e9ca161f52d77b366aee10a89"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableDeliveryMatches._proof_2",
+      "typeSha256": "1b6f9fb2ed958651393174e7b0dd222a4533eaa96beb236e65f8b3c5bb2676e8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableDeliveryMatches._proof_3",
+      "typeSha256": "fb3dd4298711451db14ab86fc0c27d8de802c76314189390a2243e6ad12b222f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqMetric._proof_1",
+      "typeSha256": "90e4e530a03f90329de6c2a86ac859cdd359817bfd9ae6341e8559d2c076531b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqMetric._proof_2",
+      "typeSha256": "9616d0741f21c71d126f5d024f40f14c6343429c7d4090198b175cf416f4631e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.administrator.sizeOf_spec",
+      "typeSha256": "89384b87cfa476ffccf5f8661d50571449740d727810c0a1dfd190a830d88680"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.behavior.sizeOf_spec",
+      "typeSha256": "5226d3567c17bc41edc7e5c8d81d9eafe1ff8aee6d70bd116526a8384ff441bf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.explanation.sizeOf_spec",
+      "typeSha256": "7a5436ffd0dd36ff0f6e2df729deeda91367fc4b286c5eb25b14a9ea7a7a2958"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.feedback.sizeOf_spec",
+      "typeSha256": "30d4ed1db9044cf59b3e0f212f20babed0a95f7308b3f1a249fabfcd106889f9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.AnalysisKind.other.sizeOf_spec",
+      "typeSha256": "044fa511bf8e946bff6b2d14313769ba50971cfbadd3dec4797e620ae1e7dde9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Bucket.mk.sizeOf_spec",
+      "typeSha256": "96138cfc621a3853453218f06a36e542032cd28b7795a15fbe4a6d43b6ecfabb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.BucketEvent.charge.sizeOf_spec",
+      "typeSha256": "d94c18c7b422a1245cb9905fe1d87546b9be51ae314655a4217cbe1d8fb0313e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.BucketEvent.reject.sizeOf_spec",
+      "typeSha256": "b6c7f2381369307faf91e60db832b09be314b24d7410ec967eb12fa1a50802b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.BucketEvent.tick.sizeOf_spec",
+      "typeSha256": "ce1dbaf45a0753cfa8a737918389b9ed7b0f13468608408335d194646afd4586"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.BucketProfile.mk.sizeOf_spec",
+      "typeSha256": "947ea0b4ad92977f378c6423dac92b88f6cdb1f1c443211867874ed3a7a879cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ContentEncoding.identity.sizeOf_spec",
+      "typeSha256": "371de0828724b318b2398d831c647cba414b8edae2e5d801cfdec58847ab9b6e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ContentEncoding.unsupported.sizeOf_spec",
+      "typeSha256": "713918103e61d507113453e52d0a8ead6cb1090bc18e670af7bef4066ed43747"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.DecodedBody.mk.sizeOf_spec",
+      "typeSha256": "fe13b730e08f6114931c80ed958bd9ed45ca654ddfc3b189264c7711847a751b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvEntry.mk.sizeOf_spec",
+      "typeSha256": "97996db6c21a6a5952b19b54e92fbeb6900e899fc67003de9e6d27f324bcb025"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.adminSecret.sizeOf_spec",
+      "typeSha256": "a2401ecade869250191937686ccdb837e86385e55964e3bc39a064b352bd1d1c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.javaOptions.sizeOf_spec",
+      "typeSha256": "2d1a3ce9263d5f9872c39225bd00da79e8bbc7759823c2115c9edaf1b54ce52c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.locale.sizeOf_spec",
+      "typeSha256": "0a9e12c7b83de65079316c2d22ace2d0e700c6f431e7ed55ab478d2815099777"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.openAIKey.sizeOf_spec",
+      "typeSha256": "b33ea29d81160a0c8fa7a5225a3b56cf22365d6fddf36727da1b8e6cdac00cb7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.other.sizeOf_spec",
+      "typeSha256": "9016b88bbc08fb4f071657dd90b5b105f7b373685eccce3b32d543380bc53cbd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.path.sizeOf_spec",
+      "typeSha256": "6c779f2c115a30abb594e08a2475a0dee5d7df0ed9f520d2f204c76da6a7e796"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.EnvName.scratch.sizeOf_spec",
+      "typeSha256": "92dcd029404d2fef5fef04a2b0c5590d8041d60ce8c1cf2b10d35976123cee0c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Envelope.mk.sizeOf_spec",
+      "typeSha256": "3807cbe13c70f1c7c16e61b414c42184583555f9c649fcfc788cfe369757ab5c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Frame.mk.sizeOf_spec",
+      "typeSha256": "14b5e8f5198de1eb3fb3a82120cddd53a934603136cf3c339ec7243a5a68179a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.FrameResult.mk.sizeOf_spec",
+      "typeSha256": "7fb63db597cf3a3e8af7bc9574290ed20cd8be520bb6973494110f80864097cf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerEvent.controlAdmission.sizeOf_spec",
+      "typeSha256": "0a672c16f50bab4478531016f4f5296cf55febffea7487c7d6b48cb47a8a83e2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerEvent.controlRelease.sizeOf_spec",
+      "typeSha256": "0f92f8f1749a05806bda34ebf242bd8004442fbedc0dce742eed0b8724416cce"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerEvent.publicAdmission.sizeOf_spec",
+      "typeSha256": "e59a736c3c0a5308d4cb39f537a4d88c714b510e3f393935b4d6b688d9321043"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerEvent.publicRelease.sizeOf_spec",
+      "typeSha256": "56e20a4d45768c6410508ec44c4d026cce26a93df1a2de790481324d9306d6c6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerPlan.mk.sizeOf_spec",
+      "typeSha256": "3c59847b99c6eef7e5e817292e04820fa6a98842f6fe8c3a407e5b5edd4c649a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.HandlerState.mk.sizeOf_spec",
+      "typeSha256": "af83fc7f54fdfdff65eeca1ad0690e5c49588acbe83a9605fcb80ea2e006e911"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Headers.mk.sizeOf_spec",
+      "typeSha256": "9d38c72772f219a57f0f6108fcbcaa8cbc7d9529fd5ef24dac05f32ee3f9f86f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressEvent.controlRequest.sizeOf_spec",
+      "typeSha256": "c2554d29825ac56622de336769d74640db01e8b3ccec49568aab1bc37f2a774d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressEvent.publicRequest.sizeOf_spec",
+      "typeSha256": "265753ec3891f3d2c8addbfe7d53d45ce5b8cf8fcd5a5e2a7966fbbbc6610c06"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressEvent.reject.sizeOf_spec",
+      "typeSha256": "9e8714b0eda24440d41cc590cdb75b21c4be0f6d8ce1fc371bab0ccb630b4a86"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressEvent.tick.sizeOf_spec",
+      "typeSha256": "39c511324cafa011243917e870ebaa2fb6d33010ddc8f4468278563d510394bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.IngressState.mk.sizeOf_spec",
+      "typeSha256": "85fbfb9f66074b87605feab86dcd886479942784dd6eb39efb1cfa1c0319b528"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ListenerProfile.mk.sizeOf_spec",
+      "typeSha256": "c9aa0792cd29b7681ee00d20a1b988ffd5185bbe9d8b8ba1e9d481120746fcb2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Message.mk.sizeOf_spec",
+      "typeSha256": "cedb9bbd7218fa49b1b36185030addfa922ac6ad142ee630df32e8a45941fb7a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.ReadWindow.mk.sizeOf_spec",
+      "typeSha256": "6efbb585b6e89cd8ef3d4f30ad8a59c105c2dcadf9b4f9ee9aa24f8cb979f6ea"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.analysisTimeout.sizeOf_spec",
+      "typeSha256": "6027e52efdd7fdee89b5a1190e59ab48124d4c826b3ac67044cc0cba7128d39f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.authentication.sizeOf_spec",
+      "typeSha256": "5003f7fa5f5ad3c602f90b44dfdc132e96e62ca9cd5f1017c9ea1a4a59c1719b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.globalCapacity.sizeOf_spec",
+      "typeSha256": "0dfb57b633d82e6f932255f5daf1b06bdcddd9a5cb491bdd63216e7a5100577f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.invalid.sizeOf_spec",
+      "typeSha256": "77ae6755128047eb3b887c185104f5aed99dbb99bb063d95af61a95b997138d7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.rateCapacity.sizeOf_spec",
+      "typeSha256": "d1561ae719e35393694b54ed4e73b8e9677bf0b2b6ff973c80770ee976ab1391"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.unknownOutcome.sizeOf_spec",
+      "typeSha256": "946a80af5b7234a81ac1becc320b58cfd29ac7bfdfb59a6d68ee7eb14d573674"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Rejection.unsupported.sizeOf_spec",
+      "typeSha256": "a7e61088ece466b6ea238809f04fe07a90f8730c32ae3c3637c32ced92c371ca"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.RequestLimits.mk.sizeOf_spec",
+      "typeSha256": "b7ff34fd17feebe707ec587f178b27717d3621b7d89f563dd8af9d15bd68507c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.RetryIdentity.mk.sizeOf_spec",
+      "typeSha256": "8dcff42fb1cf9cb452f286330d406fe523bcf031e35ab00d2bd85dd22e6507f4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.RetryState.mk.sizeOf_spec",
+      "typeSha256": "e5b91de0df04f2927b52ada87a7dfa911a0a3d31c6d85dbedec5a8d90402c4b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.Ticket.mk.sizeOf_spec",
+      "typeSha256": "e14b3a58649dc432816797dcee80ad66a3f577886b2fcc2a9b38fac1336bdf48"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.WorkerPhase.busy.sizeOf_spec",
+      "typeSha256": "74cedadd58d474d2da1d82d7f8387a4fbe778bbde6a6159973fbcea66bd3c6fc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.WorkerPhase.idle.sizeOf_spec",
+      "typeSha256": "6273cc64d7f5ce3f458e5669e0c9d3af0f27db1ef617de04ecd01a31ecd33ebd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.WorkerPhase.retired.sizeOf_spec",
+      "typeSha256": "65537d680b116b476fd2de85f05e6903d4e8477fbe5652b9645f86f946da60f6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucket.decEq._proof_1",
+      "typeSha256": "e0808bfe72790f0ec88d568584399ef7e1019997894a954d0100ab0c018c54b4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucket.decEq._proof_2",
+      "typeSha256": "8304ee9a23d6599248d4bf63b0555a3178e13ec73021d8e89a2d889131363b3a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucket.decEq._proof_3",
+      "typeSha256": "ac11a94655380b4f19921aa350945bce21f5f5b612daa9368e66d4ca58715721"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucket.decEq._proof_4",
+      "typeSha256": "bda4f24d50bace52df5c0c540ec10a04133686e8bd755311a0cf30030fd8316f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucket.decEq._proof_5",
+      "typeSha256": "f9f73297ef5dcf39be2f1962696be069a6d1f364694543b44182d35440006561"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_1",
+      "typeSha256": "f90a0b12d61c97c90947f3bcad7e76b47414c115371525a8f22997129675a387"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_2",
+      "typeSha256": "6f1b442d6091a0572b813a8b4cdc0b9b57b1e709a041f50e72e080030a82bf0f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_3",
+      "typeSha256": "ed4c1d5e47c5594b350652d7ca6a5b9917e5f6945703795c37851660113da905"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_4",
+      "typeSha256": "6c554c7306618b6847ac0224ed05c33de8dea175cce6bedccce66cbc0fdce883"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_5",
+      "typeSha256": "d231121a955f1b65757138d4ea2e06473ce3025d133ca926ef2a2689033ba9f4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_6",
+      "typeSha256": "3ba8f572f95eeee92529e97387aacec3421bb86e3acb767fa3974564aacae078"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_7",
+      "typeSha256": "b8da3ede9e834fe8891eab12c6cf033759d22aa7b440cfc47f587793fbca146e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketEvent.decEq._proof_8",
+      "typeSha256": "264c0b2ab6d0de8feffb3f7ceb73e1aab45753f3fdd8d86485bd411ce0c79099"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketProfile.decEq._proof_1",
+      "typeSha256": "a3a6abb9dd469e58f3d126b8fd1be59aa7d1a654dbdb39df2b67545293c4e037"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketProfile.decEq._proof_2",
+      "typeSha256": "70d7906fe654ef5c0f3f5b6e3951cac964afe4b6207b4922cfd5c8694ae502a5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqBucketProfile.decEq._proof_3",
+      "typeSha256": "a9656014b5754a3915de906ca19700da36f812024d881fa22d9974cad5fa8197"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_1",
+      "typeSha256": "54d3ed25b4dde0f40c8d6389107f587c43a9fb73c471916ec3fdb6d116e73dd5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_2",
+      "typeSha256": "f0308d29052db9bc2b46e260e74534666884734956c8fa23014d3896d5a2bb85"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_3",
+      "typeSha256": "f9e0826b37d321d007a9fb63c185523d8507745e2136496eada89b7b17497b3a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_4",
+      "typeSha256": "44ca0bb100c1bbe8034dc334389517aa2d60317388289c5a9b0ca3b54b9448ef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_5",
+      "typeSha256": "8f5ffde2dc4f1374b21f9a5c6785f155e69bd5e1246f2914e15ec4cf012ca96f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_6",
+      "typeSha256": "1ff704207ade2735abafc0661b82789cdc992d82e1b54bef1a3b5663b860d927"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqDecodedBody.decEq._proof_7",
+      "typeSha256": "41cbfc3e51de35ed04819dff97a3f9713005691bf3037c969d8352311a99022e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvEntry.decEq._proof_1",
+      "typeSha256": "13b5688a5ac4fa64af4c64799939e2afba801013889785ffcfd079691e01d73b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvEntry.decEq._proof_2",
+      "typeSha256": "234b1f9ea36b0c50e4b7059e250355392cd1297c552ad4bbf66bc254e8d3c826"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvEntry.decEq._proof_3",
+      "typeSha256": "3198d821d21062d84c859c9e4d99e2cacd6f6d6e668b0c78b2be628f35b5dca4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvelope.decEq._proof_1",
+      "typeSha256": "f772f2d1fec8f4255b5800e22b61ffc99c41e6738629a1ecfa86b3f6335757b7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvelope.decEq._proof_2",
+      "typeSha256": "94aff21ede93415eac60b789277578c4b9779ec9c9c9ac2f2cf0e251e264de4d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqEnvelope.decEq._proof_3",
+      "typeSha256": "2f0b188b2cade35680ed45c43d698cecd59c4961dd1aa58721af97ba9336437a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrame.decEq._proof_1",
+      "typeSha256": "257fb2d065a13919a01f7d397c95db7e352607ba29a4e24b02ba6c8d0c1923f1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrame.decEq._proof_2",
+      "typeSha256": "c7e8f18a709b4c1c0e67d46bb42e23ebdd61b8c8ea69d5c6c3b732001094a8d9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrame.decEq._proof_3",
+      "typeSha256": "973060d02060a6425db446256ce4e7358651a053573e7dde011d84415690c77d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrame.decEq._proof_4",
+      "typeSha256": "ec49a6cf6b3b0b292d810c5d2df9109734553d00d2cc6f05689aea72dc985971"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrameResult.decEq._proof_1",
+      "typeSha256": "bac8d81aa143a4b5051667a69659ed4581dddad80af515fd31a54b9a857d0daa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrameResult.decEq._proof_2",
+      "typeSha256": "d2717e2bc8568e1190c2118d6b1b9145a6dd4d4812bc9c8944875610b922aef6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqFrameResult.decEq._proof_3",
+      "typeSha256": "5caff975964503182ea8d4f21aad1545739693b187ece5ad354214373906125e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_1",
+      "typeSha256": "98b7eae756d68ccbfd9b07a12e9e29cdc88a635d22edfec497d8b482b6ee8423"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_10",
+      "typeSha256": "4ae871827701f5bd0fb82c0f38c73dc251a91f37f519cd8704d890f4842f47f7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_11",
+      "typeSha256": "1fa4b4dc7e0c8a1ee4fdf623809ae0eb6266a7fcf6a55eabeebb56185e014983"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_12",
+      "typeSha256": "558ea67f8946fa6e9acacd9d8038cab15104b6276c21db223a1a9f2d6358f587"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_13",
+      "typeSha256": "a91d1dca5c85352b1c71d8a38cd2db79316b522a04f6b1ac8c0a9bde882a656a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_14",
+      "typeSha256": "1c367241653ffe769a0fef3ec48254ae5dff602de6c7864e798a9da29c2d3b12"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_15",
+      "typeSha256": "c021b9f216edb97e2d650412b5843667331b3acfdaf3f83fb03415eae70a10da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_16",
+      "typeSha256": "fc95b5d2ff07968351ca1eb41e112bbd53f5a370e5aac58fb13c721d3121202b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_17",
+      "typeSha256": "471db3121a2c7b68aad5e97e10627c0c43e347b72a3b8ebb6fd5dc7a6d430740"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_18",
+      "typeSha256": "a2cd2a0a26acc38988753e7384e39224f9e8bdef85ff0cfee2b2309b29849ee8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_19",
+      "typeSha256": "1541b3f027bbc37cf83c5305497fd2ab94d474eff0d0871c23f1694b816b267c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_2",
+      "typeSha256": "a39a01f82386f08a30a31d9c45d04f2d1bfa2805ed00aef2b99815e48d7cbbff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_20",
+      "typeSha256": "0ba6b34c4021684f2e98e8483511fed16fccf1fb772cf61ea374ecbae2fc01d6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_3",
+      "typeSha256": "97bdaaf6f65fffbcf521e66cf1149eb699eca07173911381c45917a4c16d66e2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_4",
+      "typeSha256": "091cfa2e40e233d5d01cf0e6a38d7b5f1d1e2c5856a6c059d1368df852751cc2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_5",
+      "typeSha256": "ad598d0aebd72be6853159be03ea8fd5b8e17bbe992010b446f0cd41ee4e09f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_6",
+      "typeSha256": "eef2e0637e8e9069c446318e1eae04e46ae1e64d16973da9f83899a451d6c041"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_7",
+      "typeSha256": "7e16eab3e0cb31396b97b661a6c86e17678c76ddbfef0745ce24b9f1f0ffc64f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_8",
+      "typeSha256": "3609ef82ea58ca98ed5f014917f8009124ac975d9584d4040f2dc7078b637141"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerEvent.decEq._proof_9",
+      "typeSha256": "a2aa1a39d58fb854931bf4930ddae0b89e42a9583f8cdaca9b81bee1a7d2daec"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerPlan.decEq._proof_1",
+      "typeSha256": "6a6facba29bc586c8fa7d1e8cd3fa41c3bb43239bafe2737d7fc56bcba86bcff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerPlan.decEq._proof_2",
+      "typeSha256": "655a8e04501e26c79aa7b5b918f27ae48390df08249e1fab5a7517b9c46c6346"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerPlan.decEq._proof_3",
+      "typeSha256": "9dc9dbf6b9286be43654005b583216cbe27a6772d38a66891eec14fca9034af9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerState.decEq._proof_1",
+      "typeSha256": "0879b0ac5b1d808471d0106a1da72f2d5d79e29bbca5e3683e2689ff422aa532"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerState.decEq._proof_2",
+      "typeSha256": "c3506d27c9f053ea2c6253e53e22effa7da24a5746a154455192d1a15a55b87c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHandlerState.decEq._proof_3",
+      "typeSha256": "6aeb6c7116e6158e1a140211609448221f31053557db9fe7aec2aace66e97438"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_1",
+      "typeSha256": "14ac7a88e9d7ff7db00e6a8d97abc2a2a28fe13f3ac6e193e15d87f75a6dd85e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_2",
+      "typeSha256": "484fe9728d83c4709812c650f938106eb6f57fcecf8bc75de1f0df468a793879"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_3",
+      "typeSha256": "73d95afaeb829d6438f92fd0780ef6d66e768e06ec51301b9d8ea865c19f616b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_4",
+      "typeSha256": "ebe7a84ffa7c683f74b9dcf11158e3722f860a98370bf549e1c8e0229f36063a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_5",
+      "typeSha256": "a1810616172c15f6aea6f81767bfd2bec7c3849274ce9ebba30e8b25b0bf9254"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_6",
+      "typeSha256": "3af8708c34734370a543c91fcb494459c6d969b5d07423f67d4adc6c9b6b058f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqHeaders.decEq._proof_7",
+      "typeSha256": "99caf79900add55e150f9fda9e18c4f01cbba856c997c38e359378045964146c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_1",
+      "typeSha256": "a0dbe4009cf136dfa5373730b7694340ba8966a022b239892fb0057781f9c9e8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_10",
+      "typeSha256": "0d416de7ad0f838e89043147abe8a45b0ce1b5ef16173c2d6a24a9d3a24f262f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_11",
+      "typeSha256": "e7bfdcbbedf81c8c16d3718ace34d5a0b7b93249f3ce94be2666ea9eb9dc826d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_12",
+      "typeSha256": "81e8718f8c4bb77873923efea5d971044bd9920d1e0cd475ba2e6791eacb28f6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_13",
+      "typeSha256": "daa8a7cb50149ca44959440905a3ad72c8126fb86543d42ba4cbe5d6ff0d0b07"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_14",
+      "typeSha256": "5ec99d00f3c9298050a560b99c2041baf7ede2abcbf4add0f4a26ff05c2f0bfb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_2",
+      "typeSha256": "73aea225e46a6eeb3f253d37e1992974940a85a513137e8d4a07d0a817b7dcf0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_3",
+      "typeSha256": "07f9b73b7bf0bd1e4aaff4b7d1be520712d559c2d422c0f66396659370ff4441"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_4",
+      "typeSha256": "6598e5f735287e96580d3787352464abef9f371a6fcf79af61898ec9269395aa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_5",
+      "typeSha256": "9a34478d1e87870f4781cfc25335b61624d5765ca2e2dba7882366b81fb8ea56"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_6",
+      "typeSha256": "27f8fd0174f282ed026f7eca413e469b3f20af10b40e85c7d3e2063e8dfb53dd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_7",
+      "typeSha256": "54fbf92058f624df9f1fb7a340c18ffd4b54a9a83aebe5c0727be1fdc60cccf5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_8",
+      "typeSha256": "a66bc01349b9701588f957b5bc60bcf10877dd30371e67b5db512025eb651bd8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressEvent.decEq._proof_9",
+      "typeSha256": "b5a589e2bf34d4ed6ac3a3d2a6f2ca247ce6d7c7177556708d98b1a71acf4c2c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressState.decEq._proof_1",
+      "typeSha256": "e694b93db9f694728e641d1d253c831f4169eb0e41c89b772d0300290bb79e38"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressState.decEq._proof_2",
+      "typeSha256": "c39f6bd255cdc0eb5c90533ca2b2d22e82b3a9c9ddc61df5698bd583cd8ee9b6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqIngressState.decEq._proof_3",
+      "typeSha256": "9acf1afe280ae07f270ab52ca68e6926104e8bd351f57e152e209e325a1f6aeb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqListenerProfile.decEq._proof_1",
+      "typeSha256": "018603160777d274913400ba176b807018273b3a7308f460632316f3874f472c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqListenerProfile.decEq._proof_2",
+      "typeSha256": "a9231a859994cf0529b8c45bddb23e2680cabbabb28d6138872f5a8f43cb2323"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqListenerProfile.decEq._proof_3",
+      "typeSha256": "65d0684436d2aea4069029d5cfddf88e4a8b22e627fdf514863103b8f6e01fb3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_1",
+      "typeSha256": "22b035245b20343a1d73fdcf4c38315bd3938f074d6fb17a489c84121a789c74"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_2",
+      "typeSha256": "48e60407de71250af6f7059d0448a32bb9f4a260cf6ded04ef5f1668a1fd2d2a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_3",
+      "typeSha256": "0eff3dfb180ab6a76a8eca4bc6c59dcff0b05dd8d1c8612c7cf41afb87addb54"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_4",
+      "typeSha256": "e1178ea207ba5b504300e354abc6a887f74fffacd9332469b8d9a59e9a196ad8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_5",
+      "typeSha256": "e00b85830461df08426a69eefeda75d4e3ca62594f541e2015c16f324133dcfc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_6",
+      "typeSha256": "f7734054b9510558d2af4e2a167e9cc283d30d7d727cd355ed887b7742f2162b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqMessage.decEq._proof_7",
+      "typeSha256": "9b9907e854724c86a38205c34d82e18700d2333310f75eb54654fdd18e5f26bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqReadWindow.decEq._proof_1",
+      "typeSha256": "302bd8528edc948573c458f566638fbddc3cbe50bcb1eeeb11795e2bdae9a808"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqReadWindow.decEq._proof_2",
+      "typeSha256": "9893bda41974b04b1997861bd2ac25ca9245f8e5d1a86955a97cf50f9ad6ce60"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqReadWindow.decEq._proof_3",
+      "typeSha256": "cd3244267fb84c09173cb44ef881d8925d508e722f7e97b57181cf34cea5e56a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqReadWindow.decEq._proof_4",
+      "typeSha256": "f5900f2d7aaa5adafec4a4d9a07259338627e3a3af571035d673f9ddcbe2eeca"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_1",
+      "typeSha256": "ff55fa17065593af6938bed21162fe7feb079b6a364a09cdd4bade75edc04d74"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_2",
+      "typeSha256": "1b4eafe0ef6059d05594c26887759feaf10fcfb950249e37d98c4ca01ce165b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_3",
+      "typeSha256": "bce5bb6a7fd592b3740dd21a18fd2e63d3ad38b51af24249e82085b8c8bb7a7a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_4",
+      "typeSha256": "8a132d4f0bdf96599a0594d05919eabb91e9311cde79a4f1b88be6133c7dcea9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_5",
+      "typeSha256": "306361c74316965e5468d80f22955b0677d89daac20b52e897f2982a3fa1fee2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRequestLimits.decEq._proof_6",
+      "typeSha256": "94e2549b08aba399391ff190f04749452b08d7b49458ab9dc8c32d7cd8f17350"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryIdentity.decEq._proof_1",
+      "typeSha256": "d481a3110c4fffc1a9de15269a361e6024e9600d7765a1dd1bc69b7a62e72ba3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryIdentity.decEq._proof_2",
+      "typeSha256": "433d2e4d91dbc3174654ac885d37f4ef1bb3b21f34ba76e47053297e4587c7e4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryIdentity.decEq._proof_3",
+      "typeSha256": "a832689377f58a512fb424f38a1415de3a8a71d39fd2a09bd8328652dd8ae4e1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryIdentity.decEq._proof_4",
+      "typeSha256": "efcb06580cd4a422bca15332e2f681c213da3dba0df9cccb1691fa4ac30eff2c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryState.decEq._proof_1",
+      "typeSha256": "42995180a3e6426492d0b7983829a36da2a80113a942911cd6521f0da703f2a2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryState.decEq._proof_2",
+      "typeSha256": "7c4404a17b41bc0bacbbe88ec4a199fe4ad2c6017dc2fd611f2fc204a99be42f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryState.decEq._proof_3",
+      "typeSha256": "50225c8ff4edf4b521c1e3611468be65255fac39a5aefea2612eb4c0ce19b01c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryState.decEq._proof_4",
+      "typeSha256": "e757e190e2188a7ff4e6dbb24102ac9724897ebe8f84c0bc744e7ac0ad4afc93"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqRetryState.decEq._proof_5",
+      "typeSha256": "1f55b06588338870923aa3cb6a3ae14748a4956eac8757fba9156e1339d28655"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqTicket.decEq._proof_1",
+      "typeSha256": "acfbebe77759b554d883c0d2b278ea23e5fad9005f9e66170285dd661d907b88"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqTicket.decEq._proof_2",
+      "typeSha256": "cfba66a8aeb1dda208d033407b39303498afd94dd16a2400ec54e74bea37c237"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqTicket.decEq._proof_3",
+      "typeSha256": "362b5ecf323a6120980bbbc31208fd9f0eb5e67571ec51458ab45fe3c197af82"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqTicket.decEq._proof_4",
+      "typeSha256": "1eede6dd3ec2f19bd44fde872d47c4dc3f196e058bef745fd6d0e6caa3dba74a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqTicket.decEq._proof_5",
+      "typeSha256": "7d1c7bff9c74945e5f00c9340d882fa1f86df587894cc82a0a1ee619cd65fd70"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_1",
+      "typeSha256": "bff944d3f77f8d0326a97fa49074c4e827e60c486c2115c82e1a64f2432b05e5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_2",
+      "typeSha256": "2c3dd39960486938189d9a808872e792637cb13710a721fe2aaa95d889d29dc3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_3",
+      "typeSha256": "49f9c634abbd6ec9a56a6015dbc857c6602bf72dc829392e51eed529ddd7cd83"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_4",
+      "typeSha256": "19a5333d772961118e36c20d052008b5fa86729610c16fa041e5b78f759d97a6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_5",
+      "typeSha256": "079ee6a511cf086810f9f87e9fe3181483a499a323f54bc1dd8d410a259ca849"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_6",
+      "typeSha256": "686e03fe7cf2f09f386a862c0b4f836e4b4d8385d5663cba2c94394020e45df7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_7",
+      "typeSha256": "698a9b5f9217f598339a617862fd0e3035b0f69de03c19179a6429c27470fe10"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_8",
+      "typeSha256": "2b8d8a9c4300df557c01198f3ccfe0ccddd76d963faa5a6597f73ddb526407d7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Ingress",
+      "name": "AlloyStudio.Traffic.Ingress.instDecidableEqWorkerPhase.decEq._proof_9",
+      "typeSha256": "abdbf096f0689bf88fa9730e2b500f4e0d4a906575effb1003c472b5352577b3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Charge.mk.sizeOf_spec",
+      "typeSha256": "1cd129a5857653e39216f436daa620649ed3b924ffbf71c63176d90cf9301489"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.EarlyReleaseState.mk.sizeOf_spec",
+      "typeSha256": "ee38e56775223672e99fdea22fb18c5c92c80ccfe0266e3925807b3ce6c1676a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Lane.admin.sizeOf_spec",
+      "typeSha256": "45b75ac0399a62f428e7aa11eb110900f889fc8be80175c10f53a3a18fa49a1a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Lane.behavior.sizeOf_spec",
+      "typeSha256": "8cb54c8fc09475c0c9391bf7fb14e77b8164c76aa554ae7e5b6cccb339f50b9f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Lane.feedback.sizeOf_spec",
+      "typeSha256": "24692bfd99de71cbb06da8641fa50c2a7890ca3d63b7ad049da6d3748b1d5b95"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.LedgerCommand.acquire.sizeOf_spec",
+      "typeSha256": "a152470b16a7fb46482c369a0c0b44375d2555b396b8ae9d8df3479555e4d597"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.LedgerCommand.release.sizeOf_spec",
+      "typeSha256": "902126b2b1bb62908b9ff5f9483b3f3693146a9f7eaeb5cc67c6756baed225f9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Limits.mk.sizeOf_spec",
+      "typeSha256": "ba335e6e35f6d71b09596159a7758cf81937ac8e9a8f444ec805deeda7b121f9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Phase.busy.sizeOf_spec",
+      "typeSha256": "3bf4deb87470ab65650fdcace6855f410fe0ca9296cb2b903c74d9f2f7ac6135"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Phase.idle.sizeOf_spec",
+      "typeSha256": "125d5becfdb281d01b2e0614187c2b78e19420540c9138c42b8291124126c6a4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Phase.starting.sizeOf_spec",
+      "typeSha256": "c9cd7d524eb7bb80d1c6012d13c1070a4dbc7bf189171048c28b470e8191dc07"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Phase.stopping.sizeOf_spec",
+      "typeSha256": "fa98102a96759ef9ebee25cc0b3a17cb5be47cf765e8ef70bc6f9dd114c13868"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Pool.mk.sizeOf_spec",
+      "typeSha256": "37464c25039e47dd8eaae4987a96aee2b0e254275474579a0f9007c7db48cf76"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.PoolCommand.reaped.sizeOf_spec",
+      "typeSha256": "207064cf633b875cc1eb95a8b66317083fce359fce13807a9278c573552ae1c8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.PoolCommand.reserve.sizeOf_spec",
+      "typeSha256": "6e616d144c325752d30866262abc83f0cf39890d2ead1be0a005239c5ec15a93"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.PoolCommand.worker.sizeOf_spec",
+      "typeSha256": "7a5f924c2a896b316df9fcf62fb5c256626b3ddc03740d84efe176badf6fa0b8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Ticket.mk.sizeOf_spec",
+      "typeSha256": "4e5d94745680ea9ccc64e7f19426a59d3e6a01fcac80fca50ac7ac4240e619a6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.Worker.mk.sizeOf_spec",
+      "typeSha256": "e30f03862e3e3bcaadc7dce1299e34a882008f6d914ed370e1cd56b7a60e3c1b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.WorkerCommand.complete.sizeOf_spec",
+      "typeSha256": "f7c0664734bffdd3dd42e633316127bc89e7220218cce550fd1c8b4be3ee8699"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.WorkerCommand.launch.sizeOf_spec",
+      "typeSha256": "6c09442d3a39f029268cafa2499f70a35dc3f2c9b2134eabc1792e393f67ada8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.WorkerCommand.start.sizeOf_spec",
+      "typeSha256": "979e1d669274898e4553b9f1eaa9597c4caa1c8e2a52f0316c6ae001f023db54"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.WorkerCommand.stop.sizeOf_spec",
+      "typeSha256": "a338aacbb709f1804fe269d1fe7c324c861397d3d7bdb228c5d8f2ea80361809"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqCharge.decEq._proof_1",
+      "typeSha256": "fbac5fafd583102d21b5e71434409e93a2b07f8191adf1a21403c84440012a9f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqCharge.decEq._proof_2",
+      "typeSha256": "787ac38f737afd3d72942110a1c97c33452794db6702d114d8a604e5b313b99a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqCharge.decEq._proof_3",
+      "typeSha256": "b4092da076d1751d840f1d79a6c1df1da6345e39ef66d321fe9ba02164304d85"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqCharge.decEq._proof_4",
+      "typeSha256": "ccae82b3fb2bc024dbbd3856974e6ae7c72b35232d7fd9af89fc3e41a7f80875"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqEarlyReleaseState.decEq._proof_1",
+      "typeSha256": "1b427969c5da38393a297af0395ee51d74d454033db161dcaba64fdb4b696981"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqEarlyReleaseState.decEq._proof_2",
+      "typeSha256": "03fa4b9006aee048930a664729f489d756f3d556b980e19e4222cbe0b0aeef3e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqEarlyReleaseState.decEq._proof_3",
+      "typeSha256": "5cf1cc844601ac67aba46481470e47c868fb02963e3a08ffd9ce5bdd6f27162e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_1",
+      "typeSha256": "656e9a879aeb4d57b6c01a1c06337b7e5c304d87aa9e5efc7886f5a13ee55f5b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_10",
+      "typeSha256": "4786cc44212326c50a065add72bf55a60531f3cf46d15d21f03e7e6e9fd1791b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_11",
+      "typeSha256": "d8b5f8c3fe38119b6719ae416f99a728c9203bfd56d569fa5463c718ad78dfa2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_12",
+      "typeSha256": "0bb982cd24ab5c5c17424303df3f4a649c7b7a6b57b35beac049bab208d4d596"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_13",
+      "typeSha256": "0ca3d263a975bbed835b64ce1b4f1b53881ef3890907c8375dea3ec84821eed9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_14",
+      "typeSha256": "aa034084126e8f4cba90573239d0655e43189d1086036929f2e3e3bf3824ae0e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_2",
+      "typeSha256": "9c4f4e7e30d4eca748e0955b861c8e621d7e5ba60f723e7ef553702475985b40"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_3",
+      "typeSha256": "cb07d84deeafb113ed09eaeefadbe9bc8d18618810b265392e2c722b52536920"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_4",
+      "typeSha256": "92aca23607b6d0a103d5d0bc36c94542f90557becc13428d16609f01ffaf03f6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_5",
+      "typeSha256": "10f6c27f853ec270daa0eddce55704e41298489643335975e066a6613f520c67"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_6",
+      "typeSha256": "88e28e37b1f8a7b18388cb4cfe2d5fad95c275d6a74aae30dee6f5dc7ead876f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_7",
+      "typeSha256": "c7160bb538f5db43c9e7bf4227c6dd194512628297b38fe7600f41e7b8a0b092"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_8",
+      "typeSha256": "bd95bf5687fc81c24a5e0a18cd3318258e81e5027a2c68cefdb31b91de41469a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPhase.decEq._proof_9",
+      "typeSha256": "11ca921fdcec6eca14f94a1c4e466dde2521a9a37645f374884663d9ed6f56a3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPool.decEq._proof_1",
+      "typeSha256": "acb4e78d05d00fdd56e140645fe3db5694c92e9d2a7c5c23c8e925030c520404"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPool.decEq._proof_2",
+      "typeSha256": "ae3f5472d1151531a6d218a2e45a30b7100aad8f726e58429d305b7706de2fcd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPool.decEq._proof_3",
+      "typeSha256": "4421b7bdd4927ab8c2c0d8919a6ec6c06c72b720cbbcba6e436936ca45b9fec7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqPool.decEq._proof_4",
+      "typeSha256": "3316e7897c1ac855b5072c18b60de29b744c577d84055d051e1e5b2af84191fd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqTicket.decEq._proof_1",
+      "typeSha256": "6196c41e66ff2548f658f803c6339b4f0a00c16a1d48318643c5bb65f911b50e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqTicket.decEq._proof_2",
+      "typeSha256": "4aa6b93bb744822268ba0274e124d8128fcad3dbe38c0db0ef98de1b1f01f850"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqTicket.decEq._proof_3",
+      "typeSha256": "9a461472319fd5f1cd2ba653e738a55cc3dd9af2b17bcba82f85844a99188cfc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqTicket.decEq._proof_4",
+      "typeSha256": "38e9669f829db9fda997fad7d1ed8eb03aa4cb27505883471f17d1da143e3940"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorker.decEq._proof_1",
+      "typeSha256": "8009999c0a82fff112b28804abc6404ec9b3e0f4155de63c04a3c6fb956d23b3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorker.decEq._proof_2",
+      "typeSha256": "9307b490c97d2b83158348731730c2a4e5daca06d011c181f63441a9c868e85e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorker.decEq._proof_3",
+      "typeSha256": "7f35a20bb00f588c2c727ff5e8b7311079bc2c20fb1cdf00b53f7c4911885cba"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorker.decEq._proof_4",
+      "typeSha256": "1ed8bf81442545b4948a70e87eddb66477427a900bb59eff67943a30043b0e83"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorker.decEq._proof_5",
+      "typeSha256": "365623908321d7ecab65bd02c0a4cb910e94fc0c6ed5b1416f312f234ab9bfde"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_1",
+      "typeSha256": "6e73c0268b0c5ffea464e9897ba231291031a604e96353aedfd1e810ff95e042"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_10",
+      "typeSha256": "c6a356ea9c6b193a2e6dc968a9a4dd74f0bbcfdd30be998ce24d43dbcdd72809"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_11",
+      "typeSha256": "953bcca0e25f7d631b904ccf2f7f160c26451ec353248084a974668e46b4e3d3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_12",
+      "typeSha256": "baa9fbaa0c277afaac5e5534f3cdae7f6df1ce2ec7b6be37cdc07ee1d0202851"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_13",
+      "typeSha256": "7d7fc4ea8223eaf9226765514e33c00dd0c144d92b3ef7e7e27dc0c2cb42915a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_14",
+      "typeSha256": "13e8f531c43781fcfab5d0dd1c5132c3a46cff14032be148bffd23f571895fa5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_15",
+      "typeSha256": "b0d7c231ec336b681b984af487520a771caf51067190290922d53fea886e052b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_16",
+      "typeSha256": "c59d8cea91dbe179df57d2f79ef71a5e52d34539102619bf90a093f8de780d8d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_2",
+      "typeSha256": "9c8416a5bf5a40991a4e88e63686ae07740c23d8e9ff378c686d336b62fdbdbc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_3",
+      "typeSha256": "d0c3a31ed5edb208b2d2f697f0fd9bdc370a8e669bcade71ee52316614e1ad0d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_4",
+      "typeSha256": "9e0b7385c607afaafdb7fbd3ed93c6ed31f9080ffca2b916823e560492dafc40"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_5",
+      "typeSha256": "c58bdbb9a7a12b2f93ccef524b62cc1529f31254da9ea6c3e14aa50911f0a9ef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_6",
+      "typeSha256": "b47c3ad88138f8e1af02a967e957fc9616921691c93223999b18735d3e7bfc6d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_7",
+      "typeSha256": "630a1a721c231555ab91e84000231238bdafac6c9d5ec436a08e141dcda08691"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_8",
+      "typeSha256": "7a83274adee433fc77710c6296a8eaf6221e644df349885c012f60bd94aea858"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Resources",
+      "name": "AlloyStudio.Traffic.Resources.instDecidableEqWorkerCommand.decEq._proof_9",
+      "typeSha256": "629f5ca2e097f0dfcd3ae39e51ce7dfbcd035cb120a2219dfcbc06f4fde1234e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Context.mk.sizeOf_spec",
+      "typeSha256": "3515333dffed2839e2eb50b75b4f338836dec62a2971e37d19f5b6936d211878"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Delivery.mk.sizeOf_spec",
+      "typeSha256": "ec5e963aa63391e8426a9890d1e27b1cebd30b7c8866f377e643fd006dad887d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Entry.mk.sizeOf_spec",
+      "typeSha256": "ecf90f89fe494e7c75e18a23352b0c33b26455500f0658a379ae1d88859deb6f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Envelope.mk.sizeOf_spec",
+      "typeSha256": "851904b28d5b44bc0584897d3fef3501a8839ba30da08f41440676de34de431f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Key.mk.sizeOf_spec",
+      "typeSha256": "bea3de5e8511c2bf21d961e462d1227838ecb1b76a7845f0021d657f444e1bd2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Kind.behavior.sizeOf_spec",
+      "typeSha256": "cad829f65ea366009381b9d840dd1569b9ddb07d1470e007d31b4344c73b989a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Kind.structural.sizeOf_spec",
+      "typeSha256": "5eee289a1e83a0d66a99b7b535691dc3450309abee8d55599a9b557aa069bb92"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Limits.mk.sizeOf_spec",
+      "typeSha256": "4be90bc50e65fab1636ea4dd9b6766dfbec3b7ca50d88fc6174a17c24cfdad8c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Metric.ast.sizeOf_spec",
+      "typeSha256": "8714187352630fbd9fae417ef4a9fff69cc4f5a968420804b562fbac1841cf19"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Metric.canonical.sizeOf_spec",
+      "typeSha256": "5976eb861d41b59ad01efb7604a70c0d078646c12758e4322a23d48b02cae1d6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Observation.mk.sizeOf_spec",
+      "typeSha256": "7df98af698dad94cf0f9c17a5e8ba057637e56a8e1e523a556816668a604ebd8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.RawDiagnostic.mk.sizeOf_spec",
+      "typeSha256": "75b0911455284ece439932bc1386f95997d5f034e8ca78af6b628265d470c14d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.State.mk.sizeOf_spec",
+      "typeSha256": "a5b41f9f095a4a94dcc470b7ee8dfcea69556babd1706176f1649ca9138dac2e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.Subscriber.mk.sizeOf_spec",
+      "typeSha256": "b23ff3f4897af63d7c5900cfe73add232909786057988456562eacfebc708dcc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_1",
+      "typeSha256": "c710b0eed465b7bda6ca206f112d296553197f78f48a939eb31e213e2e7b680b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_10",
+      "typeSha256": "7aa359ddc19c0a3f99cf93cb6a47db4b043a4537dc9620b58c1531e8aa50c5f2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_11",
+      "typeSha256": "bd3a4f87ab72ea98677c488f84867079d33310c101e485bdc55a8d08ce5b81cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_12",
+      "typeSha256": "8b43412c6eb19a06bbadaa242dd71234a4a082254970ea2a2b3432f6bf59fb1b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_13",
+      "typeSha256": "f96e06b04192ca0429cfab5c80ee33804b3e8be262ea46ba62fe50d81a2c8231"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_14",
+      "typeSha256": "cbea11e17d91a15b92e7cb2ef9cde5b73b7a6547f6cc8ba5b16f3afc569ff698"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_15",
+      "typeSha256": "40b1d249b0e7d0c8b49219356258b530912f285bdd48a57e5ca1bde2c1e644c1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_2",
+      "typeSha256": "aa4bd4cfadffea7a41ac1450144991294623b1066d968dc248c19a3542ff3842"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_3",
+      "typeSha256": "7fbc9f8f2e1fc2148c8b9727af6a0d809c0864338c298907dedbc45cf173b933"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_4",
+      "typeSha256": "17f81e5f4753c4f601e773f9e9df8ec5067db30d2e1ae600323c7995e3b5c25a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_5",
+      "typeSha256": "c8782ad78678a269eca74feee9bf58a026040cbe056b20a4fc85271e025ed414"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_6",
+      "typeSha256": "6d58a3e7f5f9d9cf351d199421bda4add255871b3f47f1d8c0f28d14d705fd13"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_7",
+      "typeSha256": "a08bd3be9600e16ae6726856daa0be5f612ff7734bed9ac5075817b9cd59911a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_8",
+      "typeSha256": "cc1db9280b24e38ebfaf93c9699ae69723f62ca3b001909bb39594cc3353c8e6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqContext.decEq._proof_9",
+      "typeSha256": "54479e930071ef7b32da043a504bba0c9c16a09ce2872fec0f5736131bfc48d7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_1",
+      "typeSha256": "ba9c5d947cdd093d05de641809ecb98405da90b1ad33b4cf6dc30478a7e5d811"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_2",
+      "typeSha256": "231356939b36ca535a96d61a792ee48a0de0530f3adec653ea4a6775a5e09436"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_3",
+      "typeSha256": "cb52b5dac80ee381633cbdfa6be22c3cafb78a14efb5df7b022619845b48ce4f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_4",
+      "typeSha256": "66aa46b65b53a76ab227166bceb73664123e78b58134fbab2b176c07c2731a61"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_5",
+      "typeSha256": "f588ed5b36b8e14bbd5d15e5252cba25792998fab8e758758672c965c428f32d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_6",
+      "typeSha256": "6a85a6a2b8abb29818483f9a6095cd0271fd2b7f6a9af7bfd011ec65a176efb1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_7",
+      "typeSha256": "31ef14c0ede7af2f17d53cd37e7a0d48cbd407c4e80f60191d533e495f6f6d70"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqDelivery.decEq._proof_8",
+      "typeSha256": "b09c38b904601b2328f58ca33151896974099323c7643c9d9e30e518836da345"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEntry.decEq._proof_1",
+      "typeSha256": "d19cc5c3458534df7141df55c7dc4ba958946244a8e85ba87aea6120beecb36c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEntry.decEq._proof_2",
+      "typeSha256": "789f7a9154113b0af8b61761493c70e576b62c89de209d22fc11d6f5fdd13395"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEntry.decEq._proof_3",
+      "typeSha256": "7bf336c8dc18b8d856d31aa8b9999c47e22ed98b38a31564ffabaf5246be0a1e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEnvelope.decEq._proof_1",
+      "typeSha256": "508bcaf4dddb6b1a003dc22f01a04ef37a030dd099de2c8491b318e216d34e59"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEnvelope.decEq._proof_2",
+      "typeSha256": "ec512644e4a594f228ec0011142dde35f432d49800db84b3e6af09130ce5e121"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqEnvelope.decEq._proof_3",
+      "typeSha256": "9bedd2b7d50b611bb34bf28dbbbf1630282122f219bf673b69c37217b54f1fdd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKey.decEq._proof_1",
+      "typeSha256": "45aa4934883ba396a0c5850ea6688b484b12ac1667b01c586382feba509d4fa6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKey.decEq._proof_2",
+      "typeSha256": "a5e5a218e946b1bf9c47bed54e4b3a2122c087c63e3bf5d34a87e10fd22a7f37"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKey.decEq._proof_3",
+      "typeSha256": "fa671405379c4084f63e2817820e7f3feec0d41dfda78e715bc7bb226c8a4638"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKey.decEq._proof_4",
+      "typeSha256": "0e42c4deaf846475ff598978b3b6de09a1f6acb26f37f8ceed1e8ea2d576a50d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKind.decEq._proof_1",
+      "typeSha256": "b2fb0d6a34bcc9856be8e9a5d9cd865c27a28547032b91426d4559f49c0f2fe8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKind.decEq._proof_2",
+      "typeSha256": "c9b83f95f8bcddd05962374956bb70d0beeaf96526ac48bd5a7cd82afc0e21b0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKind.decEq._proof_3",
+      "typeSha256": "c0c3b92ae61c5a3383fa80ccffce7f2ac1c394e12f9bef0fa4a55aaa49fda6da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqKind.decEq._proof_4",
+      "typeSha256": "09e4aca9e346812f760524a71f133d3b1d49c61d8db6a8469e6c2048257c32e0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqLimits.decEq._proof_1",
+      "typeSha256": "04860ebb1616d71845141a1f7c52be64f0d3070f1dafc20b89bbbf3196f7662c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqLimits.decEq._proof_2",
+      "typeSha256": "79871bacc6e61d923f8e013c638e8dc6b8ef0cd234ef35076d208e28e0b165fb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqLimits.decEq._proof_3",
+      "typeSha256": "17f2cb99ee3cc2a464d5216ca44afa5ab5b1ad845d91d785f430708d571aab80"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqLimits.decEq._proof_4",
+      "typeSha256": "d15edd92a84adb5f48277bd9a207cc9e5fd44745c3689b2a83776be2cb40ea0c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_1",
+      "typeSha256": "3d74429c5c94b430d22f08dd2e5a4835bf9c8cd0ce475847090508bedf087e2e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_2",
+      "typeSha256": "ae0559435873f9b36b2b867749332598883aa768f46507a642020bb98af27629"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_3",
+      "typeSha256": "9d83ecdf60ce014af937d20f154774de31ef514b4a7ccbfb0503d451ba35d545"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_4",
+      "typeSha256": "9463fa33d2097c1fc7fca33b2bc0f77dc4c9485512e2b77fd3897a1c3e4c81cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_5",
+      "typeSha256": "86c5222a9074c3cc22d7db8a2ebd173e6cf20f5865eb9195488286c4f1e434a0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqObservation.decEq._proof_6",
+      "typeSha256": "06f1a2ceda217810497f33ba10a0e0b80cad606ed4693b023ed38357143e68b3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqRawDiagnostic.decEq._proof_1",
+      "typeSha256": "476892a26570c0dd61f3b1e81997dfaf70de03fcd20c34b1ec8d6f18441a6c93"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqRawDiagnostic.decEq._proof_2",
+      "typeSha256": "f94222cf4fcf1f90342d27a928d37585483520e7f4fd13345bfac6e153fa95f7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqRawDiagnostic.decEq._proof_3",
+      "typeSha256": "87ca9c5006f99102f786245ba6d8b30c9e8d469e35ad1d2fe384e21078e2335d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqState.decEq._proof_1",
+      "typeSha256": "1fbc5a5eff0335b4fda357d78a9fae938ef521bb4980ab90f9a567dab1588411"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqState.decEq._proof_2",
+      "typeSha256": "f0e6b9268da605c1be73b47d209b07ef9b5a274f55ab5cd54055be55d88dcf1b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqState.decEq._proof_3",
+      "typeSha256": "3e251f2b3ac11a9f7a0daad758a7b1ab85bd03d209340344946b75d0ea7491ab"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqState.decEq._proof_4",
+      "typeSha256": "c86bc5975eb5a89390ab342cac4e633fe62f02c2520917edca3ca2fd5c837831"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqState.decEq._proof_5",
+      "typeSha256": "8c35649f5ac6b8a90845e2d7ed97c92dec740993746a66ca01a6bf64814759ed"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqSubscriber.decEq._proof_1",
+      "typeSha256": "7dc93121cf4943d41eceba2478791c051bb2e0ec141da2047dab6cdb61e675b8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqSubscriber.decEq._proof_2",
+      "typeSha256": "50cfabe3e2e113ea32b809a5dd0a333b5989dc272ab0fc15662232cede806580"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqSubscriber.decEq._proof_3",
+      "typeSha256": "cdb0661a26c67e764f5e02fe1207eb62b82f7a7e7ef5e32015ce6cfb5f9b89de"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Traffic.Reuse",
+      "name": "AlloyStudio.Traffic.Reuse.instDecidableEqSubscriber.decEq._proof_4",
+      "typeSha256": "a3541a01d70c43bfd110cb0413e31d7ca70793c65ad48e1527afc099a7c9733e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.alter.match_1.eq_1",
+      "typeSha256": "c435e0ed1797c1d8e1089b028d758292f24f495b94c2a6c63d1a8e78f2483d94"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.alter.match_1.eq_2",
+      "typeSha256": "8ac8fb1f44ca5d27bc7967404d4290e2dd6f5af3bac18f1c507f6648fb83a505"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.total.match_1.eq_1",
+      "typeSha256": "1ae51da810e0566dc8bc80f713408172a50e0a3583ac0a47bc21fb1dff0d7653"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Resources",
+      "name": "_private.Traffic.Resources.0.AlloyStudio.Traffic.Resources.total.match_1.eq_2",
+      "typeSha256": "d5789656c381538ae75a98836267db66624a03a1cc2d2e6726254dd966cc1129"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Reuse",
+      "name": "_private.Traffic.Reuse.0.AlloyStudio.Traffic.Reuse.acceptRequest.match_1.eq_1",
+      "typeSha256": "eb2eb8d38e480f5e604f5004cde171990710c19c2e8fd078b5b58bdf2edc1689"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "Traffic.Reuse",
+      "name": "_private.Traffic.Reuse.0.AlloyStudio.Traffic.Reuse.acceptRequest.match_1.eq_2",
+      "typeSha256": "f567f6f06b8107de7adb3a74247f28acb3b63a02f962817e0e9943836334e710"
+    }
+  ]
+}

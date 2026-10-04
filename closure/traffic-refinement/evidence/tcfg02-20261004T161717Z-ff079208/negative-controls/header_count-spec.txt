@@ -1,0 +1,29 @@
+TrafficProfile/Spec.lean:102:55: error: Application type mismatch: The argument
+  h24
+has type
+  ¬less 101 (integerValue p.header_count)
+but is expected to have type
+  ¬less 100 (integerValue p.header_count)
+in the application
+  (relation_iff (integerValue p.header_count) 100).mp h24
+TrafficProfile/Spec.lean:129:58: error: Application type mismatch: The argument
+  count
+has type
+  integerValue p.header_count ≤ 100
+but is expected to have type
+  integerValue p.header_count ≤ 101
+in the application
+  (relation_iff (integerValue p.header_count) 101).mpr count
+TrafficProfile/Spec.lean:365:88: error: Tactic `decide` proved that the proposition
+  ¬Extracted.accepted
+      (let __src := Extracted.defaults;
+      { public_handlers := __src.public_handlers, control_handlers := __src.control_handlers,
+        public_burst := __src.public_burst, public_rate := __src.public_rate, control_burst := __src.control_burst,
+        control_rate := __src.control_rate, peer_burst := __src.peer_burst, peer_rate := __src.peer_rate,
+        peer_entries := __src.peer_entries, peer_idle_seconds := __src.peer_idle_seconds, backlog := __src.backlog,
+        control_backlog := __src.control_backlog, line_bytes := __src.line_bytes, header_bytes := __src.header_bytes,
+        header_count := Scalar.integer 101, header_seconds := __src.header_seconds, body_seconds := __src.body_seconds,
+        write_seconds := __src.write_seconds, idle_seconds := __src.idle_seconds, json_depth := __src.json_depth,
+        response_bytes := __src.response_bytes, public_cache_bytes := __src.public_cache_bytes,
+        public_cache_entries := __src.public_cache_entries })
+is false

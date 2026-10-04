@@ -1,0 +1,17 @@
+import IngressDeadlines.Model
+
+/- Generated from the actual registered Python comparison and guard placements. -/
+namespace AlloyStudio.IngressDeadlines.Extracted
+open AlloyStudio.IngressDeadlines.Model
+
+def checkDeadline (now deadline : Int) : Bool :=
+  if now ≥ deadline then false else true
+
+def recvProgram : List Action := [.guard, .work, .guard, .deliver]
+def readlineProgram : List Action := [.guard, .work, .guard, .deliver]
+def read1Program : List Action := [.guard, .work, .guard, .deliver]
+def beginBodyProgram : List Action := [.guard, .reset]
+def parseProgram : List Action := [.work, .guard, .deliver]
+def bodyProgram : List Action := [.work, .guard, .work, .guard, .deliver]
+
+end AlloyStudio.IngressDeadlines.Extracted

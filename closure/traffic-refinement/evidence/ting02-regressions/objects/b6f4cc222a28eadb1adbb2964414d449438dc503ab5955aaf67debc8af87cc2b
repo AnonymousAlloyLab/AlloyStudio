@@ -1,0 +1,21 @@
+# B02 tier 3 advisory review — Astra B
+
+Verdict: `no_constructed_breach`; findings: `[]`. This is an adversarial advisory review, not proof authority or a closure verdict. I used the mechanical-closure-verification skill's boundary rules, read the frozen B02 manifest and Session model, inspected the bound browser identity/guidance/cache code and browser regressions, and read all four Luna/Sol JSON reviews and Markdown notes. The companion JSON binds all four lower-tier JSON files by SHA-256. All three frozen input hashes match.
+
+The independent probe `build/b02-astra-b/probe.lean` constructs accepted strict AST feedback and guidance, rejects each missing or mismatched successful feedback echo, and rejects guidance after individual changes to exercise, body, revision, selection, metric, disabled editor, education generation, current behavior token, abort state, and each response identity/metric/token field. The cases compile by `decide`, using the actual imported model. Neither capture freshness alone nor the token alone admits guidance from a different education generation. Exact token matching permits `none` when both capture and current evidence are absent; a requirement that evidence always exist is not among the claims. The probe explicitly demonstrates that accepted empty-token case to keep this boundary concrete.
+
+The two legacy witnesses are executable: legacy successful feedback lacking exercise/revision/requested-metric echoes renders, and legacy canonical guidance lacking the requested metric is accepted. The corresponding strict functions reject those same witnesses. They refute the stronger legacy contract, not any strict theorem. In the current browser, successful feedback must pass all four echo checks; successful guidance must pass exact exercise/revision/requested-metric echoes and token equality after education-object, source-context and abort checks. Its missing canonical metric fallback is restricted to non-success responses. The bound tests construct missing and mismatched echoes in both metrics and delayed old-metric feedback/guidance. I inspected these regressions but did not run the browser suite.
+
+The logical cache theorem quantifies only over distinct metrics in `(exerciseId, metric)` pairs. The probe demonstrates that distinct bodies/revisions/selections can have the same logical cache key; that is not a breach of the stated separation claim. The serialized browser key and actual cache correspondence are expressly unproved. AST canonical context evaluates to `none`; this does not certify source locations, AST edits, wire decoding, or semantic correctness of feedback. The manifest excludes JavaScript semantic refinement and says original obligations remain open.
+
+Inventory attack: I freshly ran the existing `AuditSession.lean` extractor against the supplied import path, then compared the complete declaration names, owner modules, level parameters, and SHA-256 hashes of serialized theorem types with B02. All 56 registered theorem declarations match exactly, including generated declarations. Every collected axiom list is empty; no project axiom row was emitted. I also checked the frozen Session source directly under the stipulated flags. These supplemental checks do not replace the registered clean-build verifier or claim a fresh isolated rebuild of imported dependencies.
+
+Commands, all exit 0, from the repository root:
+
+```sh
+python3 scripts/lean_offline.py --lean-path build/lean-session-check -- ../build/b02-astra-b/probe.lean --trust=0 -DwarningAsError=true -DgenInjectivity=false -j1
+python3 scripts/lean_offline.py --lean-path build/lean-session-check -- ../build/lean-session-check/AuditSession.lean --trust=0 -DwarningAsError=true -DgenInjectivity=false -j1
+python3 scripts/lean_offline.py --lean-path build/lean-session-check -- AlloyStudio/Session.lean --trust=0 -DwarningAsError=true -DgenInjectivity=false -j1
+```
+
+Probe SHA-256: `e03add4179d22544c6cb8c8f27348e86ebf659b9c8fbb919a57e87ddcef95685`. Fresh inventory SHA-256: `69e69f297729794f3719075a593e27903afb069c77e54f651de4a88fe0315fd2`. The probe, logs, inventory, and hash/check summary are under `build/b02-astra-b/`. No frozen source was changed; no internet, elan, installation, or new dependency was used. No executable counterexample to a frozen claim was constructed.

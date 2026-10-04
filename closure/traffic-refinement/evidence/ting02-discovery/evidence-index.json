@@ -1,0 +1,130 @@
+{
+  "files": {
+    "decoder/decode-witness-results.json": {
+      "sha256": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32",
+      "source": "build/trf-closure/trf01-discovery/decode-witness-results.json"
+    },
+    "decoder/decode-witness-run.txt": {
+      "sha256": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32",
+      "source": "build/trf-closure/trf01-discovery/decode-witness-run.txt"
+    },
+    "decoder/decode_witnesses.py": {
+      "sha256": "c84193ffe9e706770146622a93e1892d1dcb067b0df79004e17f1147236ec6f7",
+      "source": "build/trf-closure/trf01-discovery/decode_witnesses.py"
+    },
+    "delayed-bootstrap/admission-spec-v2.json": {
+      "sha256": "2fdfddaa9bc4e03b6f2bfb2cb608210f6ffc627120d5535a5f8a993ba1a7de4e",
+      "source": "build/trf-closure/trf01-delayed-bootstrap-discovery/admission-spec-v2.json"
+    },
+    "delayed-bootstrap/result.json": {
+      "sha256": "af1b3524c5a6798a5d03b2619fe8ce7f6a7b29f14b946a516ee8db015bb3a9e0",
+      "source": "build/trf-closure/trf01-delayed-bootstrap-discovery/result.json"
+    },
+    "delayed-bootstrap/traffic_http.py": {
+      "sha256": "f6b04faf11478abeba2f918af9e21464263eec800aa283d4780d1407709a7efb",
+      "source": "build/trf-closure/trf01-delayed-bootstrap-discovery/traffic_http.py"
+    },
+    "delayed-bootstrap/witness.py": {
+      "sha256": "1e119c2c5f9fb3b21747a0cdc53ecde7f0ca52bf9fa34bcab504e451daa19c0c",
+      "source": "build/trf-closure/trf01-delayed-bootstrap-discovery/witness.py"
+    },
+    "metadata-revision/block.json": {
+      "sha256": "109e16c9f5c469669a32fd3ed45da6c3531cf1465de89254fa8858b00a6bf02b",
+      "source": "build/trf-closure/ting02-review-metadata-revision/block.json"
+    },
+    "metadata-revision/luna-a.json": {
+      "sha256": "2eec3fa078990beb464978bbf19cd1d383ee3e049884dc44802783805e9fb19a",
+      "source": "build/trf-closure/ting02-review-metadata-revision/luna-a.json"
+    },
+    "metadata-revision/luna-a.md": {
+      "sha256": "02f110b231bf9bb99f3d955947eff228da12cffbbc09c88c631426212b1fbe2b",
+      "source": "build/trf-closure/ting02-review-metadata-revision/luna-a.md"
+    },
+    "metadata-revision/luna-b.json": {
+      "sha256": "7fa97ea846dad7fb57bf38843147d96c8c378164aad55ff0fe2ec4b50dec6433",
+      "source": "build/trf-closure/ting02-review-metadata-revision/luna-b.json"
+    },
+    "metadata-revision/luna-b.md": {
+      "sha256": "36e304dc9ffda690259ed4d6feed2a3515e627496cd6d23cdff7917e17e886fc",
+      "source": "build/trf-closure/ting02-review-metadata-revision/luna-b.md"
+    },
+    "review-counterexamples/IngressComposition.lean": {
+      "sha256": "4bf65bbd68faeaaec905de6930aec4d5739f3e7f5186a77ba4ad2cd39fc22d8d",
+      "source": "build/trf-closure/ting02-review-counterexample-1/IngressComposition.lean"
+    },
+    "review-counterexamples/IngressRouteExtracted.lean": {
+      "sha256": "0bdbdc0b8228ef3c132ea5dcd0433a7404767109986f18326ab488f308545b29",
+      "source": "build/trf-closure/ting02-review-counterexample-1/IngressRouteExtracted.lean"
+    },
+    "review-counterexamples/IngressRouteModel.lean": {
+      "sha256": "e5bcb30299fd5bc4d7932d0d952fb30fcd46648682dab6d7d407fba5c49acb72",
+      "source": "build/trf-closure/ting02-review-counterexample-1/IngressRouteModel.lean"
+    },
+    "review-counterexamples/Witness.lean": {
+      "sha256": "d12c5ab2d6533c9c81319523bcac735fc7b9f54a9df02c1118d86fb9301d9e75",
+      "source": "build/trf-closure/ting02-review-counterexample-1/Witness.lean"
+    },
+    "review-counterexamples/block.json": {
+      "sha256": "7fa31fe62a5f51603dfa01f67468734eb95c6e38db493ac62883838d7b0969a4",
+      "source": "build/trf-closure/ting02-review-counterexample-1/block.json"
+    },
+    "review-counterexamples/index.json": {
+      "sha256": "32490dbb942077bceaaa6b04e55b5787ffc013201e4ba71d0ebadc28bc715062",
+      "source": "build/trf-closure/ting02-review-counterexample-1/index.json"
+    },
+    "review-counterexamples/luna-a.json": {
+      "sha256": "c28adb6886f38a7292f6768a444cf08b1ef9be731633cc1ace2d6633254e22dc",
+      "source": "build/trf-closure/ting02-review-counterexample-1/luna-a.json"
+    },
+    "review-counterexamples/luna-a.md": {
+      "sha256": "89a460e4d9d9e7f5f46e8327c5a20eafd26c73e909b5c941b7a75da7d6a390b8",
+      "source": "build/trf-closure/ting02-review-counterexample-1/luna-a.md"
+    },
+    "review-counterexamples/luna-b.json": {
+      "sha256": "5f1551376ef2d7e3eb77a34b8f08a98957ab12940cb54528bb70a1f05143ee2d",
+      "source": "build/trf-closure/ting02-review-counterexample-1/luna-b.json"
+    },
+    "review-counterexamples/luna-b.md": {
+      "sha256": "467a0dc56db9a98acfda39c4bb74e260a35939c4c5740c3ad66d60be9db0f88f",
+      "source": "build/trf-closure/ting02-review-counterexample-1/luna-b.md"
+    },
+    "review-counterexamples/override-result.json": {
+      "sha256": "aaed3d4ddb4b096a393327fa0ed73cc644b202edfc97e63efb83860d2d0528fe",
+      "source": "build/trf-closure/ting02-review-counterexample-1/override-result.json"
+    },
+    "review-counterexamples/override-witness.py": {
+      "sha256": "1e064c8f36621488b1966e022a69b63263c2bd2a6dadbebd6f13279c7caa9351",
+      "source": "build/trf-closure/ting02-review-counterexample-1/override-witness.py"
+    },
+    "review-counterexamples/witness-check.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "build/trf-closure/ting02-review-counterexample-1/witness-check.txt"
+    },
+    "thread-teardown/admission-candidate-audit.lean": {
+      "sha256": "b70ad44f43f50455d0e132bbd00e2d28cf02efaedc58ea4823209216aaa372e7",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/admission-candidate-audit.lean"
+    },
+    "thread-teardown/admission-spec-v1.json": {
+      "sha256": "7d3851692ee0b304646fd482aee2e17bafc78f76e3b3cecad0e1c7b8f86d809e",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/admission-spec-v1.json"
+    },
+    "thread-teardown/lean-library-probe.lean": {
+      "sha256": "4619b48aac8c6d728260439c9d96b8f42cfd670b4e47053a6395203b380e8298",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/lean-library-probe.lean"
+    },
+    "thread-teardown/result.json": {
+      "sha256": "b69dddd9c217fb533dce4cfe5b4d12ae95aac291d5843845795daac6531127ff",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/result.json"
+    },
+    "thread-teardown/traffic_http.py": {
+      "sha256": "7825f64ee5160a6a6c37205b59cde399ce87e46dcebb2be42468270eda2a641c",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/traffic_http.py"
+    },
+    "thread-teardown/witness.py": {
+      "sha256": "0d718839aab38d83af7bbb7f5b15b801183d252839bdb6ccfa65b0fed4cc3e84",
+      "source": "build/trf-closure/trf01-thread-teardown-discovery/witness.py"
+    }
+  },
+  "interpretation": "Preserved failing candidates and constructed witnesses, not current VERIFIED claims. The final TING02 input root and report separately bind repairs. Metadata revision changes only report accounting, not production or mathematical definitions.",
+  "kind": "immutable-development-evidence-copy"
+}

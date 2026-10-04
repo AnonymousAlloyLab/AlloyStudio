@@ -1,0 +1,50 @@
+{
+  "availableReviewCopies": {
+    "luna-a.json": {
+      "sha256": "2f8c15cd1dfb48de89d710d485ea73b73680310d33e2d14057fbe46b4cd03c68",
+      "source": "formal/reviews/TING02/luna-a.json"
+    },
+    "luna-a.md": {
+      "sha256": "d516859636dc27d00480a3bfb00eee3154a35b961d8f9c77cc5b3bbda286ddfe",
+      "source": "formal/reviews/TING02/luna-a.md"
+    },
+    "luna-b.json": {
+      "sha256": "5ac7524a9af4669a890da6f4dc44683bec639839b0d73cdb9b008943a0a318f9",
+      "source": "formal/reviews/TING02/luna-b.json"
+    },
+    "luna-b.md": {
+      "sha256": "d9c1f83ea328d51d23e393694b546bc7d54e4f141bb6d2863fa8e529e8eaec1a",
+      "source": "formal/reviews/TING02/luna-b.md"
+    }
+  },
+  "block": "formal/ingress_admission/block.json",
+  "blockManifestSha256": "930e11c08283c102a44699af30b727820e17588b8686c94a243aa0c8da3ca339",
+  "blockedReviewers": [
+    {
+      "agent": "/root/ting02_sol_a",
+      "model": "gpt-6.1-sol",
+      "reason": "Automatic screening stopped the production correspondence review before a verdict."
+    },
+    {
+      "agent": "/root/ting02_sol_b",
+      "model": "gpt-6.1-sol",
+      "reason": "Automatic screening stopped both the original production review and the later mathematics-only task before a verdict."
+    }
+  ],
+  "completedTiers": [
+    {
+      "models": [
+        "gpt-6-luna",
+        "gpt-6-luna"
+      ],
+      "tier": 1
+    }
+  ],
+  "kind": "advisory-review-workflow-blocker",
+  "policy": "Do not fabricate reviewer records, bypass automatic screening, or manually promote a candidate report. Preserve original TRF-01 as OPEN.",
+  "release": "v0.0.4.f1-alpha not tagged, pushed or published.",
+  "source": "Tool error notifications and agent progress messages summarized by root; this is workflow provenance, not a registered proof result.",
+  "status": "BLOCKED",
+  "tier3": "Not started for this successor; waits for two valid tier2 records.",
+  "unconfirmedConcern": "Sol-A raised a possible CPython interrupted-join/liveness observation edge case before screening stopped execution. No completed source-bound witness or scope analysis was received; it is not recorded as a constructed invariant breach. It remains pending review."
+}

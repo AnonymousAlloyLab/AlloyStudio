@@ -1,0 +1,218 @@
+{
+  "baselineHashes": [
+    {
+      "path": "traffic_http.py",
+      "sha256": "ba059548aff70911e474cd8cd3cf84348f34e5b44bde4464c855af8cb7cbc51e"
+    },
+    {
+      "path": "traffic_limits.py",
+      "sha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c"
+    },
+    {
+      "path": "server.py",
+      "sha256": "6d471f0b5b350fcd1a6bd5cc0efa861607258e34ee2c0d89a25fe6072896abde"
+    },
+    {
+      "path": "traffic_scheduler.py",
+      "sha256": "5e84ef9a88d7e099e0aedf8001b214d995a3386341308077afd291ba261ea867"
+    },
+    {
+      "path": "engine_workers.py",
+      "sha256": "66e5d239301c285210a5b4dfbb4b2b7766fe1de6d54907e18f171a0dc8c36b7c"
+    },
+    {
+      "path": "runtime_dependencies.py",
+      "sha256": "2fe10b1c6aa7c5eadb53135e61e2487fd5d0861c81fb98a581276e4f7406b974"
+    },
+    {
+      "path": "docs/backend-performance-spec.md",
+      "sha256": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a"
+    },
+    {
+      "path": "docs/performance-implementation.md",
+      "sha256": "0d59e85d400560677481dfc3de3e74bf7d2633abdb0ea5d491bc12ab28c05577"
+    },
+    {
+      "path": "docs/traffic-obligation-progress.md",
+      "sha256": "ee5a2cf117af13e410bfb2bc12d6711946c017a8f1a108c24bd109d03a035d2c"
+    },
+    {
+      "path": "formal/traffic_config/block.json",
+      "sha256": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06"
+    },
+    {
+      "path": "closure/traffic-refinement/status.json",
+      "sha256": "5b730ba5ebf93024b9abeb90e545e67fa0882c98d485f7d69edcc53b1f327f7f"
+    }
+  ],
+  "boundary": {
+    "jvm": "none",
+    "network": "forbidden by audit hook",
+    "providerCalls": "none",
+    "stdio": "only synthetic public metadata",
+    "stdlibSocketInitialization": "mocked in BoundedHTTPServer witnesses"
+  },
+  "kind": "unregistered-concrete-baseline-witnesses",
+  "scope": "TCFG02 candidate: HTTP profile ingress, exact Boolean selector, clock and initial state",
+  "validInitialStates": {
+    "control": {
+      "accepted": 0,
+      "active": 0,
+      "anonymousOwners": 0,
+      "bucketCapacity": 4000000000,
+      "bucketCredit": 4000000000,
+      "bucketLast": 123456789,
+      "bucketLastType": "int",
+      "bucketRate": 2,
+      "controlType": "bool",
+      "limit": 2,
+      "owners": 0,
+      "peak": 0,
+      "peers": 0,
+      "rejected": 0
+    },
+    "public": {
+      "accepted": 0,
+      "active": 0,
+      "anonymousOwners": 0,
+      "bucketCapacity": 60000000000,
+      "bucketCredit": 60000000000,
+      "bucketLast": 123456789,
+      "bucketLastType": "int",
+      "bucketRate": 30,
+      "controlType": "bool",
+      "limit": 30,
+      "owners": 0,
+      "peak": 0,
+      "peers": 0,
+      "rejected": 0
+    }
+  },
+  "witnesses": [
+    {
+      "events": [
+        "construct BoundedHTTPServer with stdlib socket initialization mocked"
+      ],
+      "id": "HTTP-NS-PROFILE",
+      "input": {
+        "changes": {
+          "control_handlers": 0,
+          "line_bytes": 32769
+        },
+        "type": "SimpleNamespace"
+      },
+      "observed": {
+        "accepted": true,
+        "lineExceedsHeader": true,
+        "stdlibConstructorCalls": 1,
+        "zeroControlReserve": true
+      },
+      "violatedPostcondition": "A production constructor accepts only a validated 23-field HTTP profile."
+    },
+    {
+      "events": [
+        "construct TrafficProfile",
+        "corrupt frozen fields",
+        "construct BoundedHTTPServer with stdlib socket initialization mocked"
+      ],
+      "id": "HTTP-CORRUPTED-PROFILE",
+      "input": {
+        "changes": {
+          "control_handlers": 256,
+          "public_handlers": 31
+        },
+        "mutation": "object.__setattr__",
+        "type": "TrafficProfile"
+      },
+      "observed": {
+        "accepted": true,
+        "combinedHandlers": 287,
+        "stdlibConstructorCalls": 1
+      },
+      "violatedPostcondition": "Accepted profile satisfies the existing combined handler envelope <= 256."
+    },
+    {
+      "events": [
+        "construct BoundedHTTPServer with stdlib socket initialization mocked"
+      ],
+      "id": "HTTP-TRUTHY-CONTROL",
+      "input": {
+        "control": "false",
+        "controlType": "str"
+      },
+      "observed": {
+        "accepted": true,
+        "bucketRate": 2,
+        "handlerLimit": 2,
+        "selectedLane": "control",
+        "stdlibConstructorCalls": 1
+      },
+      "violatedPostcondition": "The public/control initial-state selector is an exact built-in Boolean."
+    },
+    {
+      "events": [
+        "construct Admission",
+        "attempt first reserve"
+      ],
+      "id": "HTTP-MALFORMED-CLOCK",
+      "input": {
+        "clockResult": "not-an-integer-tick",
+        "clockResultType": "str"
+      },
+      "observed": {
+        "accepted": true,
+        "constructorEventOrder": [
+          "lock",
+          "clock"
+        ],
+        "firstReserveError": "TypeError",
+        "initialState": {
+          "accepted": 0,
+          "active": 0,
+          "anonymousOwners": 0,
+          "bucketCapacity": 60000000000,
+          "bucketCredit": 60000000000,
+          "bucketLastType": "str",
+          "bucketRate": 30,
+          "controlType": "bool",
+          "limit": 30,
+          "owners": 0,
+          "peak": 0,
+          "peers": 0,
+          "rejected": 0
+        }
+      },
+      "violatedPostcondition": "Malformed initial clock is rejected before lock/state allocation."
+    },
+    {
+      "events": [
+        "initialize fresh Admission object"
+      ],
+      "id": "HTTP-RAISING-CLOCK-PARTIAL-STATE",
+      "input": {
+        "clock": "raises ValueError"
+      },
+      "observed": {
+        "accepted": false,
+        "allocatedStateFields": [
+          "accepted",
+          "active",
+          "anonymous_owners",
+          "clock",
+          "control",
+          "limit",
+          "lock",
+          "owners",
+          "peak",
+          "profile",
+          "rejected"
+        ],
+        "constructorEventOrder": [
+          "lock",
+          "clock"
+        ]
+      },
+      "violatedPostcondition": "Initial clock failure leaves no allocated Admission state or lock."
+    }
+  ]
+}

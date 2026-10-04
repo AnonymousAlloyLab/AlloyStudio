@@ -1,0 +1,666 @@
+{
+  "baselineRegistry": "closure/traffic-obligations.json",
+  "baselineRegistrySha256": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+  "formalClosureStatus": "NOT_ESTABLISHED",
+  "kind": "successor-progress-ledger",
+  "obligations": [
+    {
+      "blockingReasons": [],
+      "closureId": "tcfg03-20261004T170110Z-0c2dd9e4",
+      "dependsOn": [],
+      "evidenceClass": "FINITE_MECHANICAL_CLOSURE_UNDER_DECLARED_TCB",
+      "id": "TRF-00",
+      "inputRootHash": "0a865739ab334bc954132df3351d48471bb183dfc9e18e99ad1f81ce01a70aad",
+      "passConditionSha256": "458451815779f888000d9e00245718e9eb0ba5eef7297074f12cac8591ebebea",
+      "report": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json",
+      "reportSha256": "24642ba8bd6c7d171e2fab165af33eddc56613d0460582e2da34e7065dfc64e7",
+      "statementSha256": "b216b42e51f4565b17f84eec1b5949ca8311467ee2c2203e14a6ab4d46fb8bf2",
+      "status": "VERIFIED",
+      "subclaims": [
+        "TRF00-NUMERIC",
+        "TRF00-HTTP-PROFILE-INIT",
+        "TRF00-SERVICE-PROFILE-INIT"
+      ],
+      "title": "Freeze the baseline, independent observation semantics, finite profile and trust"
+    },
+    {
+      "blockingReasons": [],
+      "closureId": "ting02-20261004T192303Z-906f9fab",
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "FINITE_MECHANICAL_CLOSURE_UNDER_DECLARED_TCB",
+      "historicalAttempts": [
+        {
+          "candidateReport": "closure/traffic-refinement/evidence/ting02-20261004T182729Z-cd397804/report.json",
+          "finalGateAttempt": "closure/traffic-refinement/evidence/ting02-review-blocked/final-gate-report.json",
+          "reviewWorkflow": "closure/traffic-refinement/evidence/ting02-review-blocked/workflow.json"
+        }
+      ],
+      "id": "TRF-01",
+      "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+      "passConditionSha256": "dded6823bde45d40ad279fd5b0ea6dc4efabb06c63a8ad3417ed81db7877db47",
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
+      "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+      "statementSha256": "6e311abb5ec17596573b32cdc96aaeba9c3d6c13b6dda349e5a36658518f7d39",
+      "status": "VERIFIED",
+      "subclaims": [
+        "TRF01-DEADLINE-CUTS",
+        "TRF01-STRICT-INGRESS"
+      ],
+      "title": "Strict inbound admission before expensive allocation"
+    },
+    {
+      "blockingReasons": [
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-02",
+      "passConditionSha256": "56e5c20895e21d6118c833eafdfad770b4754c3f19bbc71e7c5b7ddb554281e3",
+      "statementSha256": "a3f05ad0239fa8cfd5f1b7881b902c7b5705256b53c94de7332ba8100ef81073",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Bound admission credits and rate registry"
+    },
+    {
+      "blockingReasons": [
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-03",
+      "passConditionSha256": "741a0ff0ac95dbcfd4c884f6e82c507e88c5bcfbcbb5e32c4d457a240f85a8b3",
+      "statementSha256": "d149aeda98f4294091abe2a0e25dc7117ce4a0ed58f3e15fe090710c1218c36b",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Account for all owned resources"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-08"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-04",
+      "passConditionSha256": "ce44de76e9936d795573c1f8967f44a7d6b00fc97fdc7c0921ab387a847b0070",
+      "statementSha256": "7a476a6250fe9cbe85ee9f4d98e48d30f98aa8bb8c2107b709e0cd19cf726cc0",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Share identical pending computation atomically"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-04"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-05",
+      "passConditionSha256": "dfc46cc438cc5929b44cf42c70e5088af3c7fe6010cddee2e44a87d72f820a65",
+      "statementSha256": "e7d74753a73bb1ddc318999fd1ba6fa36ff1f5b5339d6a1bd6433c552ad3e71d",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Latest queued request and subscriber isolation"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-03"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-06",
+      "passConditionSha256": "60671e8a7e16a3093c509027217bbd517c9be5f06be54826e45a74ed71534083",
+      "statementSha256": "f72e7cbd74b1450139447751ee33c5f8d60c3fb6917bb44f5f6c2bbae2cd1781",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Release reservations exactly once after terminal ownership"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-06",
+        "TRF-08"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-07",
+      "passConditionSha256": "314a39d04663b7a7aeabdb05c43a63acfdd3f65fb00edf68f902df938002d905",
+      "statementSha256": "470b2367d8158ce8a2cf1e7dfb7a384d980659cddb7b9a0835b47793764b6ef0",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Bound and bind every worker frame"
+    },
+    {
+      "blockingReasons": [
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-08",
+      "passConditionSha256": "2113df5e22e5dbf2d36adf115b9f57d616e0ffc97f9fee59d56f1692a2ffe4a3",
+      "statementSha256": "a8e7ffbdf08a747267fd1e9900fab51adca379f74d10ee8b28ec32d7866a7f86",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Context-complete reuse identity"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-04",
+        "TRF-08",
+        "TRF-11",
+        "TRF-15"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-09",
+      "passConditionSha256": "c7a3acf13845862a8e89754a7bc461b7e6debcba11b22f28dfb0866e18daa31a",
+      "statementSha256": "5691e3c3ed34d2c91a87be56c2cde9273639bce1d19a359cce0af357c41cc6eb",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Transparent result cache and joined delivery"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-08",
+        "TRF-11"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-10",
+      "passConditionSha256": "d88c8e302d07e62c0f1ee5057b7fdd766963f99f6b0aaebfc015bf01d493cf53",
+      "statementSha256": "d9650292ba6002fead32da1a752e8950f90c2b73f0f3b94b980ce648106c43ad",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Optional prepared-pool reuse preserves complete scan"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-06",
+        "TRF-08"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-11",
+      "passConditionSha256": "d6eb3fa35990e60c42f22799b40c99f7794cd8c2ae8266647f8a8ba236d3bc6d",
+      "statementSha256": "95490f60214d43e17868ed7b44172de975d3345212a09b46007e290c2a40781b",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Warm worker history independence and bounded parser lifetime"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-08",
+        "TRF-11"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-12",
+      "passConditionSha256": "9db4f7315263ff53551468e1cde5709022154822a62c897b6490fcbdd32af445",
+      "statementSha256": "734000d17c452fbf7c097d8fae86f07d3ee430f782bd22d8de2b0a6d1db70db4",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Behavioral score/category/evidence preservation"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-05",
+        "TRF-08"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-13",
+      "passConditionSha256": "c646c1a6c2e0fe7e14cfa98e59b80b37f8b605ace80089e3afe5d6dfd3d36d15",
+      "statementSha256": "07505e06fcc3dcb2061f336318756dffc22eeabe1a753324929708fa080fe5eb",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Publish only into the current editor context"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-08",
+        "TRF-13",
+        "TRF-15"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-14",
+      "passConditionSha256": "9d48719615ecad78e5932f84037ccb7c5e5eedc646e6d07b9f2090dd435865db",
+      "statementSha256": "e379907cafcd87857d074d23d532bcde2b4c97abef3d5b49e6b831dfa0f6770d",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Reuse bound evidence for per-step/instance guidance"
+    },
+    {
+      "blockingReasons": [
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-15",
+      "passConditionSha256": "7a691b8881273bac952a8361389a7a38361c4f948b1119018993df06774eb4e2",
+      "statementSha256": "6a89ea967c58a79cc4e306d6243ef08537dbbbd547ef49136e9fa7537563a915",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Preserve public disclosure projection"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-02",
+        "TRF-03",
+        "TRF-05",
+        "TRF-06",
+        "TRF-07"
+      ],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "id": "TRF-16",
+      "passConditionSha256": "e7f8e1e4d58688a146118b3deb8707a8ac316685f860486f650587e530743bc4",
+      "statementSha256": "8107407f50eaafbfce965ef2e8640e2e4ad9e94f1458e2cda029f95eeedb0855",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Deadlines, bounded retry/restart and shutdown"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-01",
+        "TRF-02",
+        "TRF-03",
+        "TRF-04",
+        "TRF-05",
+        "TRF-06",
+        "TRF-07",
+        "TRF-08",
+        "TRF-09",
+        "TRF-10",
+        "TRF-11",
+        "TRF-12",
+        "TRF-14",
+        "TRF-15",
+        "TRF-16"
+      ],
+      "evidenceClass": "PLANNED_IMPLEMENTATION_CORRESPONDENCE",
+      "id": "TRF-17",
+      "passConditionSha256": "0a8da1ce815504140ce9beadf0dbd1ff39d2cd15ee51ea5c2a2ad852f3a3bae4",
+      "statementSha256": "c8bf5088e0896399a1a89ac52552dcbd8fbe801d96435e6cbd3c8d8efb671447",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Concrete backend transition correspondence"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-01",
+        "TRF-07",
+        "TRF-08",
+        "TRF-13",
+        "TRF-15"
+      ],
+      "evidenceClass": "PLANNED_IMPLEMENTATION_CORRESPONDENCE",
+      "id": "TRF-18",
+      "passConditionSha256": "cb94a63c6511da51e7495d34bb5bd75e061d97766b1acac1a6f1acf628ad5d0a",
+      "statementSha256": "4c3d81a0e66c14ab57bb0346a358efab604b616f0849f905941d90fa54391b5e",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Concrete boundary and frontend correspondence"
+    },
+    {
+      "blockingReasons": [
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "id": "TRF-19",
+      "passConditionSha256": "eb94273c8634ab3a946133934cfc567e54a2305a41dcd87a0f3ea2782860b612",
+      "statementSha256": "ccc61b4ffb83c08fad8dea2379f6f4c9eca1b015b9052c02db3f3602b7a0d521",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Catalogue-wide differential regression"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-19"
+      ],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "id": "TRF-20",
+      "passConditionSha256": "5f4733f51d42797159b7eaeccee4210ded1b0ab8749924f467b81714eef47c0e",
+      "statementSha256": "4d1a07f999cc258de4f2edbf2a95d8af32e15a376a720ce152e6c9f85d96bb5d",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Traffic and performance acceptance"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-19",
+        "TRF-20"
+      ],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "id": "TRF-21",
+      "passConditionSha256": "a1cce13922c2c493e7cb19d0aa850f1d41f3d590ecc0439755a38329120b4e71",
+      "statementSha256": "1c4a3b45efe1aecca4b15bff08c8d8beaad69b9a1c3a1a2ba6d193fa4a0decc0",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Portable deployment and observable budgets"
+    },
+    {
+      "blockingReasons": [
+        "DEPENDENCIES_OPEN",
+        "ORIGINAL_PASS_CONDITION_NOT_DISCHARGED"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-17",
+        "TRF-18",
+        "TRF-19",
+        "TRF-20",
+        "TRF-21"
+      ],
+      "evidenceClass": "PLANNED_MECHANICAL_GATE",
+      "id": "TRF-22",
+      "passConditionSha256": "2641a190832e18ea9f482a72e2f32a3ab368b4e9308986dc6f30b3609cf18ae1",
+      "statementSha256": "31a6771ca8748f7154cf65d12750f2f58b51ffea181fab4054267a9e5dcd14ab",
+      "status": "OPEN",
+      "subclaims": [],
+      "title": "Offline proof and provenance gate"
+    }
+  ],
+  "policy": "Original statements and pass conditions remain unchanged; a verified child never closes its parent automatically.",
+  "schemaVersion": 1,
+  "subclaims": [
+    {
+      "block": "formal/traffic_config/block.json",
+      "blockManifestSha256": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06",
+      "classification": "PROVED_RESTRICTED_SCALAR_PROGRAM_UNDER_DECLARED_TCB",
+      "closesParent": false,
+      "closureId": "tcfg01-20261004T151737Z-7ab9b8eb",
+      "id": "TRF00-NUMERIC",
+      "inputRootHash": "6f492a657d251b98e7feb0667050db90bcffd2dc4409683b585bd93615607f82",
+      "provedTheorems": 55,
+      "report": "closure/traffic-refinement/evidence/tcfg01-20261004T151737Z-7ab9b8eb/report.json",
+      "reportSha256": "15017bb698eca74d12e85e70ae8c16c563a8cda709b05bfc1147aaa2218594ae",
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/python-regressions/report.json",
+      "status": "VERIFIED",
+      "verifier": "scripts/verify_traffic_config.py"
+    },
+    {
+      "advisoryReviewCoverage": {
+        "astra-b": "Mathematical artifacts and recorded proof evidence only; production-code review was blocked by automatic screening.",
+        "remainingFive": "Coverage recorded in each source-bound review; includes production correspondence."
+      },
+      "block": "formal/traffic_profile/block.json",
+      "blockManifestSha256": "c3876c829b5f027b61e05cf7dd7635e54b9814eff3102ffd8d81438fd0a4981c",
+      "classification": "PROVED_RESTRICTED_HTTP_PROFILE_AND_INITIAL_STATE_UNDER_DECLARED_TCB",
+      "closesParent": false,
+      "closureId": "tcfg02-20261004T161717Z-ff079208",
+      "id": "TRF00-HTTP-PROFILE-INIT",
+      "inputRootHash": "c5818c72dd393a93e8b19aa8db986553c4f49ab65dcf20b20193e81da3eff506",
+      "newTheorems": 40,
+      "provedTheorems": 95,
+      "report": "closure/traffic-refinement/evidence/tcfg02-20261004T161717Z-ff079208/report.json",
+      "reportSha256": "b471d436ab13be74406cb5d760a945dfe938e3f63b993e1014b80fbed88d57f2",
+      "reusedScalarTheorems": 55,
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/tcfg02-python-regressions/report.json",
+      "specification": "closure/traffic-refinement/http-profile-spec.json",
+      "status": "VERIFIED",
+      "verifier": "scripts/verify_http_profile.py"
+    },
+    {
+      "advisoryReviewCoverage": "Two GPT-6 Luna, two GPT-6.1 Sol and two GPT-6 Astra reviews completed in order against the frozen block; advisory, not proof authority.",
+      "block": "formal/service_profile/block.json",
+      "blockManifestSha256": "e1fc05d411a453ebba4ccb3be7f65d2d6ad731e565741db0c2b62653fa5519ca",
+      "classification": "PROVED_RESTRICTED_INITIAL_STATE_AND_CHECKED_PROFILE_OBSERVATIONS_UNDER_DECLARED_TCB",
+      "closesParent": true,
+      "closureId": "tcfg03-20261004T170110Z-0c2dd9e4",
+      "deliveryBoundary": "Optional delivery metadata is checked when present; comparison PASS does not certify field presence, authorization or capability binding.",
+      "excluded": [
+        "Nonselected configurations and reused process-global state; arbitrary Python/Java execution refinement.",
+        "Allocation failures/exception cleanup, startup prewarm, future scheduler/admission/worker histories and resource enforcement.",
+        "Solver truth, general worker-history equivalence, provider wording/guidance correctness and capability authorization.",
+        "Actual Windows/macOS/IIS/Cloudflare deployment, unrelated cohosted websites, future revisions and unlisted claims."
+      ],
+      "id": "TRF00-SERVICE-PROFILE-INIT",
+      "initialStateCells": 308,
+      "inputRootHash": "0a865739ab334bc954132df3351d48471bb183dfc9e18e99ad1f81ce01a70aad",
+      "mappedObjects": 33,
+      "newTheorems": 41,
+      "numericQuantities": 213,
+      "observationSpecification": "closure/traffic-refinement/observation-spec.json",
+      "provedTheorems": 136,
+      "report": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json",
+      "reportSha256": "24642ba8bd6c7d171e2fab165af33eddc56613d0460582e2da34e7065dfc64e7",
+      "reusedTheorems": 95,
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/tcfg03-python-regressions/report.json",
+      "specification": "closure/traffic-refinement/service-profile.json",
+      "status": "VERIFIED",
+      "verifier": "scripts/verify_service_profile.py"
+    },
+    {
+      "block": "formal/ingress_deadlines/block.json",
+      "blockManifestSha256": "64e860293b5a00c8cf4742daf88ec21295a037d42907ed0aeff95afef1eb46de",
+      "classification": "PROVED_SAMPLED_DEADLINE_CUTS_AND_CHECKED_RESTRICTED_CORRESPONDENCE_UNDER_DECLARED_TCB",
+      "closesParent": false,
+      "closureId": "ting01-20261004T172620Z-16bb5a5f",
+      "dependency": "TCFG03 is historical verified evidence for its frozen source root. TING01 binds its own successor source root; it does not relabel prior evidence.",
+      "excluded": [
+        "Complete original TRF-01 strict byte/request-line/header/JSON decoder, pre-handler allocation and composed public/control admission proof.",
+        "Unsampled elapsed wall time, CPU scheduling guarantees, total handler lifetime and asynchronous work after the accepted cut.",
+        "JSON semantic parser correctness, native Windows/macOS/IIS/Cloudflare deployment and future source revisions."
+      ],
+      "explicitTheorems": 33,
+      "generatedTheorems": 23,
+      "id": "TRF01-DEADLINE-CUTS",
+      "inputRootHash": "a8dcf1edc4506ba12754fdde3475b1b7a315eabe9d763211cf206dafe57d5da8",
+      "parentObligation": "TRF-01",
+      "provedTheorems": 56,
+      "registeredTests": 69,
+      "report": "closure/traffic-refinement/evidence/ting01-20261004T172620Z-16bb5a5f/report.json",
+      "reportSha256": "c12f69a876b43858754a47e7fd7af84897170b1b987244539045935611615cfb",
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/ting01-python-regressions/report.json",
+      "specification": "closure/traffic-refinement/ingress-deadline-spec.json",
+      "status": "VERIFIED",
+      "trust": [
+        {
+          "classification": "TRUSTED",
+          "components": [
+            "Pinned Lean 4.34.1 kernel/compiler/distribution and separately registered audit machinery; empty transitive axiom audit."
+          ],
+          "id": "TCB-LEAN"
+        },
+        {
+          "classification": "TRUSTED",
+          "components": [
+            "Closed AST bridge, admitted work/call-return interpretation, verifier and source mapping; not a verified arbitrary Python VM."
+          ],
+          "id": "TCB-TRANSLATION"
+        },
+        {
+          "classification": "TRUSTED",
+          "components": [
+            "Finite monotonic CPython float samples embedded by order in signed logical integers; the successful clock sample is the observation cut. No claim about scheduling delay after that cut."
+          ],
+          "id": "TCB-CLOCK"
+        },
+        {
+          "classification": "TRUSTED",
+          "components": [
+            "CPython, socket/JSON/stdlib semantics, successful ordinary execution, Linux process/filesystem/network namespace isolation, SHA-256 and hardware."
+          ],
+          "id": "TCB-HOST"
+        }
+      ],
+      "verifier": "scripts/verify_ingress_deadlines.py"
+    },
+    {
+      "block": "closure/traffic-refinement/evidence/ting02-20261004T182729Z-cd397804/inputs/formal/ingress_admission/block.json",
+      "blockManifestSha256": "930e11c08283c102a44699af30b727820e17588b8686c94a243aa0c8da3ca339",
+      "closesParent": false,
+      "closureId": "ting02-20261004T182729Z-cd397804",
+      "id": "TRF01-STRICT-INGRESS-CANDIDATE",
+      "inputRootHash": "4b64e56286d125abc36b3ecc1cdc87d25b2c9c52b99af1ad086a7da916f5faa5",
+      "interpretation": "Candidate proof, correspondence and finite witnesses passed; final closure is BLOCKED because required tier2 review records were not completed. No parent obligation or release is promoted.",
+      "mappedRoles": 52,
+      "parentObligation": "TRF-01",
+      "plannedParentClosure": true,
+      "provedTheorems": 303,
+      "registeredTests": 97,
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T182729Z-cd397804/report.json",
+      "reportSha256": "14cc4f9c75bd5d439e0014be1bd0270fbef378d67795de2ad9a3a14b03fc8819",
+      "reviewWorkflow": "closure/traffic-refinement/evidence/ting02-review-blocked/workflow.json",
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/ting02-final-regressions/artifacts/python-final/report.json",
+      "status": "BLOCKED",
+      "verifier": "scripts/verify_strict_ingress.py"
+    },
+    {
+      "block": "formal/ingress_admission/block.json",
+      "blockManifestSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+      "blockingReasons": [],
+      "closesParent": true,
+      "closureId": "ting02-20261004T192303Z-906f9fab",
+      "evidenceClass": "FINITE_MECHANICAL_CLOSURE_UNDER_DECLARED_TCB",
+      "excluded": [
+        "Future source revisions and unlisted properties; the other 21 traffic obligations.",
+        "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
+        "Whole-process RSS and kernel allocation sizes, arbitrary asynchronous cancellation of bookkeeping instructions, OS fairness and unsampled scheduling latency after a deadline observation."
+      ],
+      "id": "TRF01-STRICT-INGRESS",
+      "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+      "mappedRoles": 52,
+      "observationCounterexample": "closure/traffic-refinement/evidence/ting02-observation-interruption/evidence-index.json",
+      "parentObligation": "TRF-01",
+      "provedTheorems": 356,
+      "registeredTests": 103,
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
+      "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+      "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/ting02-v5-regressions/artifacts/python-final/report.json",
+      "specification": "closure/traffic-refinement/strict-ingress-spec.json",
+      "status": "VERIFIED",
+      "trust": [
+        {
+          "classification": "TRUSTED",
+          "description": "Pinned Lean 4.34.1 distribution/kernel, registered source-language restriction and all-project-definition/theorem transitive axiom auditor.",
+          "id": "TCB-LEAN"
+        },
+        {
+          "classification": "TRUSTED",
+          "description": "Closed source AST interpreters and per-operation correspondences; not a proof of an arbitrary Python virtual machine. No entire admission/decoder-validity predicate is trusted.",
+          "id": "TCB-TRANSLATION"
+        },
+        {
+          "classification": "TRUSTED",
+          "description": "CPython ASCII/UTF8/string/regex/JSON/IPv6 primitives, HTTP header raw-items and method dispatch, exceptions and sequential ordinary execution, socket recv bound, threading.start/bootstrap, current-thread identity, clean-history join/is_alive semantics with explicit failure transitions, lock mutual exclusion and normally completed protected bookkeeping, one serialized accept callback per listener, monotonic finite clock sample order.",
+          "id": "TCB-PRIMITIVES"
+        },
+        {
+          "classification": "TRUSTED",
+          "description": "Linux user/network namespaces, process/filesystem/socket semantics, SHA-256 implementation and collision resistance, hardware.",
+          "id": "TCB-HOST"
+        }
+      ],
+      "verifier": "scripts/verify_strict_ingress.py"
+    }
+  ],
+  "topologicalLayers": [
+    [
+      "TRF-00"
+    ],
+    [
+      "TRF-01",
+      "TRF-02",
+      "TRF-03",
+      "TRF-08",
+      "TRF-15",
+      "TRF-19"
+    ],
+    [
+      "TRF-04",
+      "TRF-06",
+      "TRF-20"
+    ],
+    [
+      "TRF-05",
+      "TRF-07",
+      "TRF-11",
+      "TRF-21"
+    ],
+    [
+      "TRF-09",
+      "TRF-10",
+      "TRF-12",
+      "TRF-13",
+      "TRF-16"
+    ],
+    [
+      "TRF-14",
+      "TRF-18"
+    ],
+    [
+      "TRF-17"
+    ],
+    [
+      "TRF-22"
+    ]
+  ]
+}

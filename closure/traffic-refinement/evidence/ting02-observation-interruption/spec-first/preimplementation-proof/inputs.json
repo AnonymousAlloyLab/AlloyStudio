@@ -1,0 +1,8 @@
+{
+  "closure/traffic-refinement/admission-source-contract.json": "9cf8e3f0d17569ed971ba7e7313e01bd3a1eb53853d1581ddaf437e55dfc746a",
+  "formal/ingress_admission/AdmissionExtracted.lean": "ff7c4a1a601d9c8dc06492d45e5ea1973a60649bf58a04353c32e8d26e6db3c4",
+  "formal/ingress_admission/AdmissionModel.lean": "2dff8bd48bc2c42736f0e7606969a452371d186201cf791d96948f5610e7daa8",
+  "formal/ingress_admission/AdmissionSpec.lean": "edf1c401697c9927098655567650c87a94ac34c680cb5d625b07a389e1ced517",
+  "scripts/admission_bridge.py": "77ba495cf5e488a40757a0a75526bf8a198f990a7c969bcc1a9e8d0d9a62f4ca",
+  "tests/test_admission_bridge.py": "4b19b79c38ab780f67dc33dbbb96d6118e077a60826e0c2f41424f3fbd4c64c2"
+}

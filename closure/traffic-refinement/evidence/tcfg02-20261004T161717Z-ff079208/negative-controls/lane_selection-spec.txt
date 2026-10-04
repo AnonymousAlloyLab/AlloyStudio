@@ -1,0 +1,248 @@
+TrafficProfile/Spec.lean:233:27: error: Application type mismatch: The argument
+  rfl
+has type
+  ?m.30 = ?m.30
+but is expected to have type
+  (Extracted.initial p false now).limit = selectedLimit p false
+in the application
+  And.intro rfl
+TrafficProfile/Spec.lean:233:27: error: Application type mismatch: The argument
+  rfl
+has type
+  ?m.30 = ?m.30
+but is expected to have type
+  (Extracted.initial p true now).limit = selectedLimit p true
+in the application
+  And.intro rfl
+TrafficProfile/Spec.lean:243:22: error: Tactic `rfl` failed: The left-hand side
+  {
+    limit :=
+      Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+        (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool false true),
+    capacity :=
+      match selectedBurst p false, 1000000000 with
+      | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+      | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+      | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+      | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+    rate :=
+      Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+        (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool false true),
+    credit :=
+      match selectedBurst p false, 1000000000 with
+      | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+      | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+      | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+      | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+    last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+    peers := [] }
+is not definitionally equal to the right-hand side
+  Extracted.initial p false
+    {
+        limit :=
+          Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+            (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool false true),
+        capacity :=
+          match selectedBurst p false, 1000000000 with
+          | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+          | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+          | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+          | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+        rate :=
+          Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+            (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool false true),
+        credit :=
+          match selectedBurst p false, 1000000000 with
+          | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+          | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+          | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+          | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+        last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+        peers := [] }.last
+
+case mk.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.false
+p : RawProfile
+last : Int
+⊢ {
+      limit :=
+        Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+          (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool false true),
+      capacity :=
+        match selectedBurst p false, 1000000000 with
+        | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+        | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+        | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+        | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+      rate :=
+        Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+          (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool false true),
+      credit :=
+        match selectedBurst p false, 1000000000 with
+        | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+        | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+        | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+        | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+      last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+      peers := [] } =
+    Extracted.initial p false
+      {
+          limit :=
+            Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+              (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool false true),
+          capacity :=
+            match selectedBurst p false, 1000000000 with
+            | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+            | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+            | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+            | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+          rate :=
+            Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+              (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool false true),
+          credit :=
+            match selectedBurst p false, 1000000000 with
+            | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+            | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+            | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+            | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+          last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+          peers := [] }.last
+TrafficProfile/Spec.lean:243:22: error: Tactic `rfl` failed: The left-hand side
+  {
+    limit :=
+      Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+        (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool true true),
+    capacity :=
+      match selectedBurst p true, 1000000000 with
+      | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+      | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+      | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+      | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+    rate :=
+      Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+        (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool true true),
+    credit :=
+      match selectedBurst p true, 1000000000 with
+      | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+      | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+      | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+      | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+    last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+    peers := [] }
+is not definitionally equal to the right-hand side
+  Extracted.initial p true
+    {
+        limit :=
+          Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+            (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool true true),
+        capacity :=
+          match selectedBurst p true, 1000000000 with
+          | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+          | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+          | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+          | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+        rate :=
+          Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+            (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool true true),
+        credit :=
+          match selectedBurst p true, 1000000000 with
+          | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+          | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+          | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+          | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+        last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+        peers := [] }.last
+
+case mk.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.refl.true
+p : RawProfile
+last : Int
+⊢ {
+      limit :=
+        Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+          (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool true true),
+      capacity :=
+        match selectedBurst p true, 1000000000 with
+        | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+        | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+        | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+        | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+      rate :=
+        Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+          (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool true true),
+      credit :=
+        match selectedBurst p true, 1000000000 with
+        | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+        | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+        | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+        | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+      last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+      peers := [] } =
+    Extracted.initial p true
+      {
+          limit :=
+            Decidable.rec (fun h => (fun x => integerValue p.public_handlers) h)
+              (fun h => (fun x => integerValue p.control_handlers) h) (instDecidableEqBool true true),
+          capacity :=
+            match selectedBurst p true, 1000000000 with
+            | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+            | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+            | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+            | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+          rate :=
+            Decidable.rec (fun h => (fun x => integerValue p.public_rate) h)
+              (fun h => (fun x => integerValue p.control_rate) h) (instDecidableEqBool true true),
+          credit :=
+            match selectedBurst p true, 1000000000 with
+            | Int.ofNat m, Int.ofNat n => Int.ofNat (m * n)
+            | Int.ofNat m, Int.negSucc n => Int.negOfNat (m * n.succ)
+            | Int.negSucc m, Int.ofNat n => Int.negOfNat (m.succ * n)
+            | Int.negSucc m, Int.negSucc n => Int.ofNat (m.succ * n.succ),
+          last := last, active := 0, peak := 0, accepted := 0, rejected := 0, owners := [], anonymous_owners := [],
+          peers := [] }.last
+TrafficProfile/Spec.lean:273:11: error: Application type mismatch: The argument
+  publicBounds.left
+has type
+  0 < integerValue p.public_handlers
+but is expected to have type
+  0 < (Extracted.initial p false now).limit
+in the application
+  And.intro publicBounds.left
+TrafficProfile/Spec.lean:273:27: error: Application type mismatch: The argument
+  publicBounds.right
+has type
+  integerValue p.public_handlers ≤ 256
+but is expected to have type
+  (Extracted.initial p false now).limit ≤ 256
+in the application
+  And.intro publicBounds.right
+TrafficProfile/Spec.lean:275:36: error: Application type mismatch: The argument
+  h0
+has type
+  IntegerInterval 1 67108864 p.public_handlers
+but is expected to have type
+  IntegerInterval 1 67108864 p.control_handlers
+in the application
+  count_nonnegative p.control_handlers h0
+TrafficProfile/Spec.lean:280:11: error: Application type mismatch: The argument
+  controlBounds.left
+has type
+  0 < integerValue p.control_handlers
+but is expected to have type
+  0 < (Extracted.initial p true now).limit
+in the application
+  And.intro controlBounds.left
+TrafficProfile/Spec.lean:280:28: error: Application type mismatch: The argument
+  controlBounds.right
+has type
+  integerValue p.control_handlers ≤ 256
+but is expected to have type
+  (Extracted.initial p true now).limit ≤ 256
+in the application
+  And.intro controlBounds.right
+TrafficProfile/Spec.lean:282:36: error: Application type mismatch: The argument
+  h1
+has type
+  IntegerInterval 1 67108864 p.control_handlers
+but is expected to have type
+  IntegerInterval 1 67108864 p.public_handlers
+in the application
+  count_nonnegative p.public_handlers h1

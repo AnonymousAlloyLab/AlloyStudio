@@ -1,0 +1,50 @@
+{
+  "files": {
+    "after.json": {
+      "sha256": "859c88004c0619205bf63a55e2265ec6aba34c5dedca5a177792a0a9f3b02e85",
+      "source": "build/trf-closure/ting02-ident-publication/after.json"
+    },
+    "before.json": {
+      "sha256": "b7654c0916717625e0f634e1fdacb3e1ab26f7d0419ca07d0e3362635db4f596",
+      "source": "build/trf-closure/ting02-ident-publication/before.json"
+    },
+    "block.json": {
+      "sha256": "e35601b9e7c63d0a9416c998512a9a048447f553eb27dbca5d36fd408c950381",
+      "source": "build/trf-closure/ting02-ident-publication/block.json"
+    },
+    "cicd-tests.txt": {
+      "sha256": "bb48b3813afc099b31c53a764fa8b53929b2f20d8d7a47258ab8255ff31583fd",
+      "source": "build/trf-closure/ting02-ident-publication/cicd-tests.txt"
+    },
+    "luna-a.json": {
+      "sha256": "9971fff3f7a599c4f8b0f1cc4fa6812156360716fdd23d6b2037a872563b4151",
+      "source": "build/trf-closure/ting02-ident-publication/luna-a.json"
+    },
+    "luna-a.md": {
+      "sha256": "e4926e9236ac865d3f44d88b3d79ba37514e5d2b815a81cb7d171111a2390e80",
+      "source": "build/trf-closure/ting02-ident-publication/luna-a.md"
+    },
+    "luna-b.json": {
+      "sha256": "2da8203848ae9a51bf0a20007a6e86a4f204c5d8c1aefec5994800681d7d9aad",
+      "source": "build/trf-closure/ting02-ident-publication/luna-b.json"
+    },
+    "luna-b.md": {
+      "sha256": "1cd005c4775064b2ae63abcc92d6678ed3401f4ebf48524c84157632ff13d8fd",
+      "source": "build/trf-closure/ting02-ident-publication/luna-b.md"
+    },
+    "tests.txt": {
+      "sha256": "dd1b258b1a9563efc65d91897ca0629058f49827f9ac7869d9cf2d89cd940eef",
+      "source": "build/trf-closure/ting02-ident-publication/tests.txt"
+    },
+    "traffic_http.py": {
+      "sha256": "24c53e150cec30bb44fe0763fbbee5b3f62b60703b0b5dcf6f573f8121ad4a80",
+      "source": "build/trf-closure/ting02-ident-publication/traffic_http.py"
+    },
+    "witness.py": {
+      "sha256": "f088a386088d4f7af9066d7db612ccdf26ea05d4fd682bd8d1d698c8d441bb36",
+      "source": "build/trf-closure/ting02-ident-publication/witness.py"
+    }
+  },
+  "interpretation": "Tier2 Sol-B identified a potential startup-publication mismatch but automatic screening stopped its reproduction. Root independently constructed and executed the local native-thread witness on CPython3.10.11; before and after results bind actual source bytes. Before: cap1 with2livehandlers; after zero-time-join guard: cap1 with1livehandler. No requests were sent to external systems. This evidence is not a universal host-runtime proof.",
+  "kind": "immutable-local-thread-scheduling-witness"
+}

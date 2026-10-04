@@ -1,0 +1,29 @@
+TrafficProfile/Spec.lean:102:28: error: Application type mismatch: The argument
+  h23
+has type
+  ¬lessEqual (integerValue p.header_bytes) (integerValue p.line_bytes)
+but is expected to have type
+  ¬less (integerValue p.header_bytes) (integerValue p.line_bytes)
+in the application
+  (relation_iff (integerValue p.line_bytes) (integerValue p.header_bytes)).mp h23
+TrafficProfile/Spec.lean:129:6: error: Application type mismatch: The argument
+  (relation_iff (integerValue p.line_bytes) (integerValue p.header_bytes)).mpr line
+has type
+  ¬less (integerValue p.header_bytes) (integerValue p.line_bytes)
+but is expected to have type
+  ¬lessEqual (integerValue p.header_bytes) (integerValue p.line_bytes)
+in the application
+  And.intro ((relation_iff (integerValue p.line_bytes) (integerValue p.header_bytes)).mpr line)
+TrafficProfile/Spec.lean:359:73: error: Tactic `decide` proved that the proposition
+  Extracted.accepted
+    (let __src := Extracted.defaults;
+    { public_handlers := __src.public_handlers, control_handlers := __src.control_handlers,
+      public_burst := __src.public_burst, public_rate := __src.public_rate, control_burst := __src.control_burst,
+      control_rate := __src.control_rate, peer_burst := __src.peer_burst, peer_rate := __src.peer_rate,
+      peer_entries := __src.peer_entries, peer_idle_seconds := __src.peer_idle_seconds, backlog := __src.backlog,
+      control_backlog := __src.control_backlog, line_bytes := Scalar.integer 32768, header_bytes := __src.header_bytes,
+      header_count := Scalar.integer 100, header_seconds := __src.header_seconds, body_seconds := __src.body_seconds,
+      write_seconds := __src.write_seconds, idle_seconds := __src.idle_seconds, json_depth := __src.json_depth,
+      response_bytes := __src.response_bytes, public_cache_bytes := __src.public_cache_bytes,
+      public_cache_entries := __src.public_cache_entries })
+is false

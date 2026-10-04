@@ -1,0 +1,21 @@
+{
+  "kind": "FINITE_DISCOVERY_WITNESS_ARCHIVE",
+  "files": {
+    "README.md": "5015374beb30d982474f5aa4387a2166a4089f9e93cc8117998e5d0f658b6906",
+    "decode-witness-results.json": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32",
+    "decode-witness-run.txt": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32",
+    "decode_witnesses.py": "c84193ffe9e706770146622a93e1892d1dcb067b0df79004e17f1147236ec6f7",
+    "frozen-sources/admin_auth.py": "8dd1218b98ed35a34451b36277082825ca7ba8a0cfec733949b76d0df32a2ea1",
+    "frozen-sources/closure/traffic-obligations.json": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+    "frozen-sources/docs/backend-performance-spec.md": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a",
+    "frozen-sources/server.py": "d5905160c0e5e9422590a1cf04c692146d4a7512809452c9d929377b4d27ad24",
+    "frozen-sources/traffic_http.py": "19227047c4d7df72e334bc36a4368074b4a86de938c0f4962966a36fb7a39189",
+    "frozen-sources/traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+    "initial-harness-result.json": "30464c6072c493f157ae8f8c8d1bc806a2f035680d76759db8b04404f628c633",
+    "post-repair-deadline-tests.json": "8666d261ad848924ff334130aac74205ce88ff389d70032b604eaea772f327e8",
+    "post-repair-deadline-tests.txt": "321703f75f1ed30558b015b2ec3d96c05c879c929e3ae88e426bb67f2710e2d1",
+    "pre-repair-deadline-tests-v2.txt": "2e8b43c5a1c2d3ef5312d18b9728221fbf7aba29e5fe5fdaf65408b6a953e737",
+    "pre-repair-deadline-tests.txt": "fb7fb1895ecaa3c55ce51c3ee539d6c8ee752c4889d745d637201dff0ba2b017"
+  },
+  "originalObligationSha256": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc"
+}

@@ -1,0 +1,19 @@
+test_anonymous_stack_and_nonborrowable_credits (test_ingress_admission.AdmissionOwnershipTests) ... ok
+test_simultaneous_reservation_linearization_and_exact_release (test_ingress_admission.AdmissionOwnershipTests) ... ok
+test_current_thread_is_skipped_without_creating_uncertainty (test_ingress_admission.ReclamationObservationTests) ... ok
+test_every_observation_exception_prevents_all_later_probes (test_ingress_admission.ReclamationObservationTests) ... ok
+test_installed_thread_status_interruption_cannot_reclaim_a_running_handler (test_ingress_admission.ReclamationObservationTests) ... ok
+test_normal_live_then_dead_observations_reclaim_without_retaining_markers (test_ingress_admission.ReclamationObservationTests) ... ok
+test_constructor_start_failure_and_started_then_raise_paths (test_ingress_admission.SocketAdmissionTests) ... ok
+test_enabled_pair_actual_saturation_control_health_and_limits (test_ingress_admission.SocketAdmissionTests) ... ok
+test_failed_attempt_without_bootstrap_retains_bounded_capacity (test_ingress_admission.SocketAdmissionTests) ... ok
+test_handler_failure_retained_until_thread_exit_then_reaped (test_ingress_admission.SocketAdmissionTests) ... ok
+test_ident_published_before_started_is_not_a_terminated_thread (test_ingress_admission.SocketAdmissionTests) ... ok
+test_interrupted_start_before_ident_publication_retains_future_thread (test_ingress_admission.SocketAdmissionTests) ... ok
+test_live_thread_tail_retains_reservation_and_blocks_next_allocator (test_ingress_admission.SocketAdmissionTests) ... ok
+test_nonloopback_control_refused_before_listening (test_ingress_admission.SocketAdmissionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.045s
+
+OK

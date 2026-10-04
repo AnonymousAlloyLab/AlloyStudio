@@ -1,0 +1,404 @@
+{
+  "theorems": [
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.begin_body_completion_safe",
+      "typeSha256": "9907c439070bc095a8fb22ea74d9a59390e59263472b4c6bae910f6e905701ab"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.begin_body_program_guarded",
+      "typeSha256": "58a906a20387c68bb065fb1d40bcff28a91300d2c8959dfb29be3b430d423c46"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.body_completion_safe",
+      "typeSha256": "f299ba66c3d41d7d253d70079988054d8208b84f1fb52bed55b9e49fbc07e467"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.body_program_guarded",
+      "typeSha256": "ab2843cc16c72f44677ac5339c9a501660e9614aef1ca3ca2592b3e772f5bde6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.check_deadline_complete",
+      "typeSha256": "52886d7831164ef643cf9df2d70e3eabad84e6566ea419694ef71c11c6a28ea8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.check_deadline_sound",
+      "typeSha256": "e86e22b817e4fb04da46f88b61b5608a6f42f9c353f9dc2fb5961545c97bb7a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.cuts_safe_cons",
+      "typeSha256": "aaf048af4eb52d81b54f1ffe47e4214a3298b67023370a5b6d6ba57acb9c28f1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.deliver_step_safe",
+      "typeSha256": "8e400f80df600a6fdd8eff1d173288451393907907f0e0581fab62515ca1dcd4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.expired_boundary_guard_rejected",
+      "typeSha256": "bd16d830f2f1204f027fe316f4f3c96fa24cf7f9c51ca105bb67d721d690492f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.expired_phase_cannot_reset",
+      "typeSha256": "55b16be31a8ec7825fd6b86d0daf3f653ff2975472cc0325b05dca047864609a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.forget_fresh",
+      "typeSha256": "47867eb437ec1cfe2d2ff411bca4055ffb23bd1f112746928658fe0174793ecb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.guard_step_safe",
+      "typeSha256": "0cafea7a9c75e705b553df036aa67e7d70ef5ab9793c7da1cb2033255259b4da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.initial_run_safe",
+      "typeSha256": "8a6505c1ecfecca9f7c7224bc8d8de5f1cc26b479b156b91298815d029724d99"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.initial_safe",
+      "typeSha256": "69b5bb8fe652d63d88f3d9bd8d75e660fb51c76c4b41acbb0a46a72e3db296d8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.late_work_completion_rejected",
+      "typeSha256": "58c05c416d8b3aea2bccaa03adda28ea75c07c8dffa7d3108ef41f3be8a051f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.parse_completion_safe",
+      "typeSha256": "96beeb80c39f16e38223c4ac94d1097d87e4ed58af4303fb75be56327f79282e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.parse_program_guarded",
+      "typeSha256": "75904dcd00e8e5bbdead0e4795db7b43e0c2192310955ff97f7286958d9e30a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.read1_completion_safe",
+      "typeSha256": "7d01886483d5c664e1b107d53ec24285f33e3bf8d739e5bd4f8ff66bb5b777e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.read1_program_guarded",
+      "typeSha256": "9ecc5e24e04e52a5f1753f423a07bc95aaffd820680c36471e2b6348e87dac22"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.readline_completion_safe",
+      "typeSha256": "b535e700427bac476dd3633fd60a23d2b2eecd6a9e648ac514cb17a84889d7ff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.readline_program_guarded",
+      "typeSha256": "a0b6b42df3bc233ecaf79bd7baabef58ce077119e38875b4af28128a10fbb00f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.recv_completion_safe",
+      "typeSha256": "f7aa6b845287d781d749ceef24eda63f548f5679cd66a2ade1409c8b6805a7ac"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.recv_program_guarded",
+      "typeSha256": "ca38ee2d2d24acbd67fd85bd5929effa74a0aa1c52e684dfb3271e0de94d34be"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.reset_step_safe",
+      "typeSha256": "46058ff34ae8845616a8b7fc620aab4a7d21cc8f7ae2f72e0d2500518451f4bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.reset_uses_current_sample",
+      "typeSha256": "ec4570bc5015f568b2605ff224683ecfd2f9aacdfc0403dcfa653b768e0322af"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.run_safe",
+      "typeSha256": "a5855a66d5b8753e87a7dea5520f91d9b0416306c3e1a678cdbf216bd33a19d2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_executes",
+      "typeSha256": "2bc5e06c2f769e86d0df99455f078fcdd0fd89adda1f33532a5c359ce375620d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_unsafe",
+      "typeSha256": "ef62faa8320939a24eec75a35ef6a3a38bc7c6eeb384fa01244d84cea28af453"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_program_rejected",
+      "typeSha256": "10ef0cbc2353b1533764e85aa655d551fbfb8e0249b1795894ecb89e9e9eb18d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_reset_executes",
+      "typeSha256": "9a5d522c28a7554e8c7c100a9ae7d9fa7e537a2b64137b39069fadd37834cd26"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_deliver",
+      "typeSha256": "596c70996be698921e61024ebb3b0f9db2d01be83a27e35a031a0cd21ce91c9f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_reset",
+      "typeSha256": "9de0dd9ed96b0601a1945bd497414505b1cd253b09a403a1d27e3d06949843f2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_step_safe",
+      "typeSha256": "6a111d5e605389f5c80e2e4f22891445f5ad6492f3ad099354b19608a98f0078"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.ofNat_ctorIdx",
+      "typeSha256": "83901335e38dc2fbf59b3b123fb0c9ce662263e1db9a032df510a5fac544121e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_1",
+      "typeSha256": "2832fd5a404d760fecb0d21800730e44101bb12284fc0e66d348afeafa653241"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_2",
+      "typeSha256": "3f32fdeffecd0be1e6625e18ad1ecd0eb08bdb183872ebe772208c3ed20ada6d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Model.run.eq_def",
+      "typeSha256": "37d02d939ac6b663d137239271071e6ed9cde4bab52f3f01983f01e138304176"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.deliver.sizeOf_spec",
+      "typeSha256": "d175fe2d4888d68559ef7b98bd02165279e80996c30548dd0dbdbc34b350ba9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.guard.sizeOf_spec",
+      "typeSha256": "988f59f123b34aa252ccf8747ffa9fdc72fa279b4bf36f3a34c999ffed4686d0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.reset.sizeOf_spec",
+      "typeSha256": "193bbe1d09524349791a68d6c729929012ee64c2ecf74532c6d0bfc58994b098"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.work.sizeOf_spec",
+      "typeSha256": "f9d054f1649225362d1a9190050d031f4ccfa147b77cc1da9743bace305c96fb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Cut.mk.sizeOf_spec",
+      "typeSha256": "fb0988a376450e29c6f06b75be42f23dc0671b62500ecfaddf2645807e86ed00"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.State.mk.sizeOf_spec",
+      "typeSha256": "191c16ba6c5fe9564321aa542d2c409657d19dc18cfc6b1af0713c87a9035cd0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_1",
+      "typeSha256": "0ca5c3468e779377f61f197b5131fac9399847ac6cd1233c6d1dff22a42ffad6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_2",
+      "typeSha256": "8707c5a197d30fe9167136837d2d109bc78584eadb5a1e8abba36b40243d92f4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_3",
+      "typeSha256": "614c3a82098dd63e65b4036bd205781dc97431e3b1ee722757cb2723387e4af8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_1",
+      "typeSha256": "c8ff40f60da4861117d49655d5b3f77ca2a6382a17f0eaf5e694bc3b3c3d0c17"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_2",
+      "typeSha256": "dde04c559cc7558d5b673bcaad4b2763d2a0d5cc3de1029f7a4c60216812d801"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_3",
+      "typeSha256": "843393042f47cc032306d37a3de38a78b7ef9cd2193baca08aca7c3e47679034"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_4",
+      "typeSha256": "fe76f544ebb9974b132efc4f87e5c80b1ecb518230a37001f6b22c9ff026fc4f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_5",
+      "typeSha256": "adb14e3331d015b9dd3d09ab25bb724f16f604814a38ca9a75471851f6bc1c9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_6",
+      "typeSha256": "324bf1f6bbd617e5e1a03872fc60f425a42a6b557054bf81aff9a891eb463ea8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_1",
+      "typeSha256": "3aee4f4b74a3811dea8a2532369112bef739df85e0a2142e2ebfca875729790b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_2",
+      "typeSha256": "7416a00b546d5a1b6d0effa1fbc152f8429da91f4306eea094f696c69b4a5838"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_1",
+      "typeSha256": "61c7689718ac79cdc6939b58ea8c4b4ae69373a3ce35d5fcc112c5cedfb0c350"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_2",
+      "typeSha256": "6b6710613f4f6177f10a554ab226d3a7874f336a56627c432ae874aac28435bc"
+    }
+  ]
+}

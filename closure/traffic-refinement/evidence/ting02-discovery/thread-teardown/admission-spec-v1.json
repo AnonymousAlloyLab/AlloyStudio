@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "candidate": "TRF01-admission-v1",
+  "frozenBeforeImplementation": true,
+  "claims": [
+    {"id": "TRF01-A01", "predicate": "Closed source translation accounts for every statement of Admission reserve/release and initial ownership; actual capacity operator, owner mutation, count delta and lane selector generate the Lean executable."},
+    {"id": "TRF01-A02", "predicate": "From empty ownership, every serial lock-linearized reserve/release trace preserves active = owner cardinality, distinct owners and active <= selected lane limit; duplicate and rejected reservations do not acquire ownership."},
+    {"id": "TRF01-A03", "predicate": "Exact-owner release is idempotent, cannot remove another owner, and removes exactly one reservation when owned. Anonymous allocation uses a fresh owner and anonymous release uses the last anonymous owner, or no-op."},
+    {"id": "TRF01-A04", "predicate": "Extracted process_request reserves the accepted socket before the sole handler allocator, refuses without allocating, releases on allocator exception, and process_request_thread releases in finally."},
+    {"id": "TRF01-A05", "predicate": "The successful main startup topology has one public listener and zero or one literal-loopback control listener with equal normalized default profiles. Disabled control has zero handlers and no diagnostic availability claim. Enabled lanes have disjoint ownership, locks and credits; component bounds imply the combined cap, burst and rate sums."},
+    {"id": "TRF01-A06", "predicate": "Actual paired sockets demonstrate public saturation and independent enabled loopback health ingress, refusal before allocation, and release after normal and exceptional handler paths."},
+    {"id": "TRF01-A07", "predicate": "At the serialized listener callback cut there is at most one accepted-but-unreserved socket per listener, at most two in the enabled topology. Kernel backlogs are separate; accepted-before-reserve does not count as a handler reservation."},
+    {"id": "TRF01-A08", "predicate": "Every declaration and theorem in the admission Lean modules has an empty transitive axiom set, including no propext, sorryAx or Classical.choice."}
+  ],
+  "failurePolicy": "Any unsupported syntax, unmatched mutation, missing mapping, failed theorem, negative control escape or witness failure is BLOCKED.",
+  "representation": {
+    "owners": "List of injectively named live socket/object identities, with distinctness invariant; order is unobservable in the Python set.",
+    "active": "Natural number representation of Python exact integers on reachable nonnegative states; mutations are separately related to exact integer arithmetic.",
+    "credits": "Credit gates can nondeterministically refuse but cannot acquire or release ownership. Detailed refill and total admissions-over-time belong to TRF02.",
+    "concurrency": "Python lock linearizes the admitted reserve/release critical sections; no arbitrary external mutation of admission state.",
+    "threads": "Reserved handler execution through the final release cut. OS thread return/teardown after release is a separate stdlib lifecycle boundary, not an unconditional bound on every live native thread object."
+  },
+  "trustedPrimitives": ["CPython exact integer, list, set and object identity operations", "CPython Lock mutual exclusion and context-manager unwinding", "Closed AST adapter and its explicit ownership-erasing projection", "Lean 4.34.1 kernel", "socketserver serial accept-to-process_request callback per serving listener", "socketserver thread allocation and request cleanup semantics", "OS loopback bind, socket and backlog semantics"],
+  "excluded": ["Arbitrary extra server instances", "External mutation or monkey-patching", "Unconditional scheduling or health latency", "Kernel backlog equals advertised listen argument on every OS", "TRF02 refill accounting", "TRF03 whole-process RSS/native resource totals", "Post-release OS thread teardown"]
+}

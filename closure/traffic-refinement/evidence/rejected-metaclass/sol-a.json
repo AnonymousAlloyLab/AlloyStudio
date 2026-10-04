@@ -1,0 +1,30 @@
+{
+  "blockManifestSha256": "52cf7df36483365262f8e98c8310bf08ae0b694762914147bbfce5ee3e248c32",
+  "findings": [
+    {
+      "affectedClaim": "TRF00-NUMERIC",
+      "id": "TCFG01-SOL-A-001",
+      "location": "traffic_limits.py:23",
+      "observed": {
+        "acceptedUnsupportedObject": true,
+        "bridgeStatus": "PASS",
+        "exactBuiltinType": false
+      },
+      "replay": "python3 -I build/trf-closure/reviews/sol61-a/type_membership_witness.py",
+      "result": "build/trf-closure/reviews/sol61-a/type_membership_witness.json",
+      "resultSha256": "904fc7a1e34a5ccb5ce64a1ed209a39cbd290b14facea4e468ec7754743ae340",
+      "severity": "blocking",
+      "summary": "Tuple membership invokes custom metaclass equality and admits unsupported duration objects outside the normalized scalar classification.",
+      "witness": "build/trf-closure/reviews/sol61-a/type_membership_witness.py",
+      "witnessSha256": "22497ecf1db742106319a0da88b0d421571e246c0c366a7c78624c419843fcdc"
+    }
+  ],
+  "notesSha256": "ec19cdb50e2675ac41b2b1f4a193e756bde722c18f19a37cfd60bb684b8f6ada",
+  "priorReviews": {
+    "formal/reviews/TCFG01/luna-a.json": "c067d1affa85f1b9b0dc9d3763b657b388a34fea3dde1146fbcf83f58f11c9e3",
+    "formal/reviews/TCFG01/luna-b.json": "5a171193c5dd21ed54c6f888441d79a39bcd6eb2914b6eb0278739ff403e3e1d"
+  },
+  "reviewerModel": "gpt-6.1-sol",
+  "tier": 2,
+  "verdict": "constructed_breach"
+}

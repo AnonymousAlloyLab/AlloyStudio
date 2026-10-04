@@ -1,0 +1,19 @@
+{
+  "classification": "DEVELOPMENT_REJECTION_EVIDENCE",
+  "description": "Rejected development proof draft with transitive propext dependency; no such dependency appears in the accepted final theorem inventory.",
+  "files": {
+    "Audit.txt": {
+      "original": "build/trf-closure/service-profile-proof-draft/rejected-propext/Audit.log",
+      "sha256": "7c935840ea7a268e9474dd53a5c62de4d421d2857b0fc3f37ab1b8c3c3b748c8"
+    },
+    "Model.lean": {
+      "original": "build/trf-closure/service-profile-proof-draft/rejected-propext/Model.lean",
+      "sha256": "46c16c83bf472118a6d5cd1fb7194a173976e08f45a44161d4c141e39e20bd68"
+    },
+    "Spec.lean": {
+      "original": "build/trf-closure/service-profile-proof-draft/rejected-propext/Spec.lean",
+      "sha256": "146b6eab3090b12ce0cad2533f8b6cfb938040e64ab2de65612c528296eae374"
+    }
+  },
+  "schemaVersion": 1
+}

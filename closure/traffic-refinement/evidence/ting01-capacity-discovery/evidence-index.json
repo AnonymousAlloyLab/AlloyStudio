@@ -1,0 +1,18 @@
+{
+  "classification": "FINITE_DISCOVERY_AND_REGRESSION_EVIDENCE_NOT_CLOSURE",
+  "files": {
+    "findings.md": {
+      "original": "build/trf-closure/trf01-capacity-discovery/findings.md",
+      "sha256": "8eb60e6b39570e4b370268de13e10143c46bd8b15ea3194c0be915ec1416ec4c"
+    },
+    "result.json": {
+      "original": "build/trf-closure/trf01-capacity-discovery/result.json",
+      "sha256": "14202bc10aab8f76326d4ef73cea2156634685ba61026bea38520f0b52eef799"
+    },
+    "witness.py": {
+      "original": "build/trf-closure/trf01-capacity-discovery/witness.py",
+      "sha256": "2979363d68fb6b002bd95b091e215da80c0906f19a67432b10a22f2e72b1ff0f"
+    }
+  },
+  "notes": "Original source snapshots and witness outputs remain unchanged. Temporary harness/prerepair logs retain their draft labels; source-bound final gate and regression records determine accepted evidence."
+}

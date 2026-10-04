@@ -1,0 +1,12 @@
+{
+  "affectedClaim": "HP-PRESERVATION",
+  "files": {
+    "after-test.txt": "4822318429aa8cfce046b713972bd7a943705978c9f751496be3beefa266e44d",
+    "before-test.txt": "3d2e8c4402d1379f1c36e6bbda040599a1b332682f106af2947a0090a01bd101",
+    "result.json": "f41f46c451f458857891586cef940d35bfb0b3bfb2a2b37d899b9c50e4dbffdf",
+    "traffic_profile.py": "5666b214cc5434d17c0aaf4769bdf8764ed06cde481ec4c24e1c716a830e7fcb",
+    "witness.py": "8cc1102a8e7f45aba14b96813029d071b5dc1bc4d26302ae7f506221c5500e12"
+  },
+  "kind": "constructed-preservation-breach-and-regression",
+  "sourceDirectory": "build/trf-closure/profile-copy-breach"
+}

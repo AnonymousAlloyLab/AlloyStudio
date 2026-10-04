@@ -1,0 +1,729 @@
+{
+  "schemaVersion": 1,
+  "descriptions": {
+    "classroom_fol-inv1": {
+      "description": "Every person is a student.",
+      "sourceSha256": "8be67d767e38a396af5d3f0709e0a0d8bb69e0a646e13240a139e37741f612a8"
+    },
+    "classroom_fol-inv2": {
+      "description": "There are no teachers.",
+      "sourceSha256": "2eb2824e3235cb7558fd2022985a74598db0ff7cd64d4d80c32e972046d01484"
+    },
+    "classroom_fol-inv3": {
+      "description": "No person is both a student and a teacher.",
+      "sourceSha256": "48655a8c47d1fa3ad7b21c39c9f91358ba14974d4c535b018b129b7920dc936a"
+    },
+    "classroom_fol-inv4": {
+      "description": "Every person is a student, a teacher, or both.",
+      "sourceSha256": "da9c67eb72398ff114b851262687f1fa3458c0b6690a1d224a885a60bdf20ec4"
+    },
+    "classroom_fol-inv5": {
+      "description": "At least one teacher teaches at least one class.",
+      "sourceSha256": "2f650c89dbc212c001081200c9c136c1df67dcf75ab8676a99554313cc472866"
+    },
+    "classroom_fol-inv6": {
+      "description": "Every teacher teaches at least one class. This does not require any teachers to exist.",
+      "sourceSha256": "99f927598cc93e3925c2dcf51fb0ff3da3f4ddfe665431bd3ff31eb29479dd02"
+    },
+    "classroom_fol-inv7": {
+      "description": "Every class is taught by at least one teacher.",
+      "sourceSha256": "5de6f602e30424cfdfffeb83180f33ce01fd401041c4a316031a8d0d7544b311"
+    },
+    "classroom_fol-inv8": {
+      "description": "Each teacher teaches at most one class; teaching no classes is allowed.",
+      "sourceSha256": "7cfc57eb987ea6ac64d1402def15c05182bcba16c4990edca6a307e249064d25"
+    },
+    "classroom_fol-inv9": {
+      "description": "Each class is taught by at most one teacher; having no teacher is allowed. People outside the teacher set are not counted for this limit.",
+      "sourceSha256": "9c586dcb21980ee30c1b06ee7a6b05f016ff19fe9efd3af87042d5eabea60d1a"
+    },
+    "classroom_fol-inv10": {
+      "description": "In every class, every student is assigned to at least one group.",
+      "sourceSha256": "f809fe1db263ced1e793ae25d3c49ba665dbc8a584b52a61d5fb4c3396cc6841"
+    },
+    "classroom_fol-inv11": {
+      "description": "If a class has any person assigned to a group, at least one teacher teaches that class.",
+      "sourceSha256": "07218142244dcf208d5a5d3155975f891b31e849c5a5589ba9f454297a47e7f0"
+    },
+    "classroom_fol-inv12": {
+      "description": "Every teacher teaches at least one class in which at least one person is assigned to a group.",
+      "sourceSha256": "d44c884f030440d1205420dfca3ac06c45617369b1d975f3b0374684457b131d"
+    },
+    "classroom_fol-inv13": {
+      "description": "Every tutoring link goes from a teacher to a student. No tutoring links are required to exist.",
+      "sourceSha256": "62026966db69627ed0ef8a7a797382ebc91a3d740f491f935fecb023bae4c776"
+    },
+    "classroom_fol-inv14": {
+      "description": "Everyone who teaches a class must tutor every person assigned to a group in that class. This applies to everyone who teaches it, even if they are not in the teacher set.",
+      "sourceSha256": "5dd4190ba17ebd56af87191b7f99fbc7d5b313e2dfe090c1bc1ca4c2583ba52e"
+    },
+    "classroom_fol-inv15": {
+      "description": "Every person must be reachable from some teacher through one or more tutoring links, following each link from tutor to tutee. This also applies to people who are themselves teachers.",
+      "sourceSha256": "f66e2ca94e47461fda41066fc17d9c013fd8b888f6376b31e4488c586ed87e99"
+    },
+    "classroom_rl-inv1": {
+      "description": "Every person is a student.",
+      "sourceSha256": "2731478975a507eba2d32c6f25c940f75f1232d3a9994862b4ae857279e0cbbe"
+    },
+    "classroom_rl-inv2": {
+      "description": "There are no teachers.",
+      "sourceSha256": "fe88ef61873987ba84df87edc4e6045274b7dcad9fedb3a0eb8ca33cc91817c0"
+    },
+    "classroom_rl-inv3": {
+      "description": "No person is both a student and a teacher.",
+      "sourceSha256": "d37f2bdb03ab0802d85c2c3015245a3ca1c8c6ccc1101ef64795477aa92f47f1"
+    },
+    "classroom_rl-inv4": {
+      "description": "Every person is a student, a teacher, or both.",
+      "sourceSha256": "1f6ee3276af49c0f8737bf158c0661ff2bd51c5d55f859878f2862461fcf9f3d"
+    },
+    "classroom_rl-inv5": {
+      "description": "At least one teacher teaches at least one class.",
+      "sourceSha256": "1e40fee5638ee27c4678b6b3459ef70dad7b8c18eb268facce5fb26c2eeb6360"
+    },
+    "classroom_rl-inv6": {
+      "description": "Every teacher teaches at least one class. This does not require any teachers to exist.",
+      "sourceSha256": "4ff75c273f12c6372065ec8f912aeefab83c0d6f56b5bc03ac1eb5c710493393"
+    },
+    "classroom_rl-inv7": {
+      "description": "Every class is taught by at least one teacher.",
+      "sourceSha256": "df7c3ae303250a0d929f14022f985a365a516e818375f81ff7505d89a6704253"
+    },
+    "classroom_rl-inv8": {
+      "description": "Each teacher teaches at most one class; teaching no classes is allowed.",
+      "sourceSha256": "c38570af34ff73243533206171245a9b781e74a8e8311d89a231370a734960c0"
+    },
+    "classroom_rl-inv9": {
+      "description": "Each class is taught by at most one teacher; having no teacher is allowed. People outside the teacher set are not counted for this limit.",
+      "sourceSha256": "6a4403c012d7d9de931ef0be17923e17976654a0b03f17b260e126a2e1ae1f5e"
+    },
+    "classroom_rl-inv10": {
+      "description": "In every class, every student is assigned to at least one group.",
+      "sourceSha256": "113bdf2337a015aec7e9d47870376e2cda838fd6b9846625b2c42ef734c87cda"
+    },
+    "classroom_rl-inv11": {
+      "description": "If a class has any person assigned to a group, at least one teacher teaches that class.",
+      "sourceSha256": "ac9237d7c58a12476f666ffc40228d5d4656894a06ae310d155d80174af1c786"
+    },
+    "classroom_rl-inv12": {
+      "description": "Every teacher teaches at least one class in which at least one person is assigned to a group.",
+      "sourceSha256": "2c7114d7b59fbcba1342c45313f91630e1fa79a1a5efcd5802681d23e35789c5"
+    },
+    "classroom_rl-inv13": {
+      "description": "Every tutoring link goes from a teacher to a student. No tutoring links are required to exist.",
+      "sourceSha256": "6364e40d9f2eb18037e7e21008d1747441db7d9ffe8c39f6a986ffdfeecc6cf7"
+    },
+    "classroom_rl-inv14": {
+      "description": "Everyone who teaches a class must tutor every person assigned to a group in that class. This applies to everyone who teaches it, even if they are not in the teacher set.",
+      "sourceSha256": "12698504e772d4871ba46534a97717ff635846e57728c11e588f248a5f2770b1"
+    },
+    "classroom_rl-inv15": {
+      "description": "Every person must be reachable from some teacher through one or more tutoring links, following each link from tutor to tutee. This also applies to people who are themselves teachers.",
+      "sourceSha256": "76927290e55403ceb3f16b41af8af48feeda786564dfcc0130e70e7589b3ad19"
+    },
+    "coursesNew-inv1": {
+      "description": "Only students may be enrolled in courses. Students are allowed to have no enrollments.",
+      "sourceSha256": "4648547c077f537c03cba62a42ca39fc7490d93352a94ea3d0174ba7feda982a"
+    },
+    "coursesNew-inv2": {
+      "description": "Only professors may teach courses. Professors are allowed to teach no courses.",
+      "sourceSha256": "2304933cba5a113eafe0b28a266634036da9219a9eea35c4828bc47760861ac0"
+    },
+    "coursesNew-inv3": {
+      "description": "Every course is taught by at least one person. This requirement alone does not require that person to be a professor.",
+      "sourceSha256": "ca79f4afcd59d932a4b2c5703d4a2a53229f8494e20337ea688f5f6fa8e69732"
+    },
+    "coursesNew-inv4": {
+      "description": "Every project belongs to exactly one course.",
+      "sourceSha256": "43b1c1b3baab2d2ecc03588f2ab5953392c8d1a330a8bd544c8e8877193ecc1f"
+    },
+    "coursesNew-inv5": {
+      "description": "Every project has at least one person working on it, and everyone working on a project is a student.",
+      "sourceSha256": "a9438ab440320d662ecbf8940122d90f7746c8e597b5815b398415a5751b1b3f"
+    },
+    "coursesNew-inv6": {
+      "description": "Every project a person works on must belong to at least one course in which that person is enrolled.",
+      "sourceSha256": "c980f11f092b2e95fb6caa7e022965b77967dcccdcc6e6cf3b0018c60c795d37"
+    },
+    "coursesNew-inv7": {
+      "description": "For each course, a person works on at most one of its projects. Working on none of a course's projects is allowed.",
+      "sourceSha256": "4845d65c4d71fbeb32aa7870e23de11e84f668a68c86a9f6955a85f02367b0c1"
+    },
+    "coursesNew-inv8": {
+      "description": "Nobody is enrolled in a course that they themselves teach.",
+      "sourceSha256": "919a1ae3eb03e7c049a044ad45ca5f7aaf06eb6cca57cdb867c075cadfe29871"
+    },
+    "coursesNew-inv9": {
+      "description": "If two distinct people teach a common course, neither may be enrolled in any course taught by the other. The enrollment need not be in the course that they teach together for this restriction to apply.",
+      "sourceSha256": "2c81b3bcccba6d8b76b98e7caa937b091df7b76232f6ac3100a6b6485e8043fd"
+    },
+    "coursesNew-inv10": {
+      "description": "Only students may receive grades in courses.",
+      "sourceSha256": "21774bcec9784d56f8600f5b8ee6509b7a0465d8f496472c5f0d1d182ff29d7c"
+    },
+    "coursesNew-inv11": {
+      "description": "A person may receive a grade in a course only if they are enrolled in that course.",
+      "sourceSha256": "2466b99e858210490519df02a3a7a3c4956f6f93b0b4f31723a3229557b4d592"
+    },
+    "coursesNew-inv12": {
+      "description": "Each person has at most one grade in each course. Having no grade is allowed.",
+      "sourceSha256": "26af8edc48999cf748b879dae773a336bed331610fa2cd3d11d3a99df9c2bb4d"
+    },
+    "coursesNew-inv13": {
+      "description": "Anyone who receives the highest grade in a course must work on at least one project belonging to that course.",
+      "sourceSha256": "beff147e8a92e3e39b9564a518b0f7ef9f95c6c7e46dc49d3ec3c46a8bbbd3a0"
+    },
+    "coursesNew-inv14": {
+      "description": "No two distinct people may work together on more than one project.",
+      "sourceSha256": "a225e2245e9060de4504417eb17645331654d67282ee10f096b785e9f4f494c8"
+    },
+    "coursesNew-inv15": {
+      "description": "When two distinct people work on the same project in a course and both have grades in that course, every grade of either person must equal or be immediately adjacent to at least one grade of the other in the grade ordering. If either person has no grade in the course, this requirement imposes no comparison on that pair.",
+      "sourceSha256": "3ff894f31b47d61ad6db32225c6e33c779b7d4615fcd57c723fc34d75b5432be"
+    },
+    "coursesOld-inv1": {
+      "description": "Only students may be enrolled in courses. Students are allowed to have no enrollments.",
+      "sourceSha256": "3910b023ca70585348d5de85e5e9c6234287c24fbfa1a1acddeb91e4f75c26ef"
+    },
+    "coursesOld-inv2": {
+      "description": "Only professors may teach courses. Professors are allowed to teach no courses.",
+      "sourceSha256": "dc1f453626ec45cae6926db2f286ee18d9f0a1a3f87d4feadd8ef5a159c37e39"
+    },
+    "coursesOld-inv3": {
+      "description": "Every course is taught by at least one person. This requirement alone does not require that person to be a professor.",
+      "sourceSha256": "643f0f79cf6d9a7137be05f53cdf3a40dc6c4141973006b25ab379b197447f8d"
+    },
+    "coursesOld-inv4": {
+      "description": "Every project belongs to exactly one course.",
+      "sourceSha256": "ab7bbfe445dc83c33cc6c52d6cdd799ec67306229c00069f6b532a63b0344897"
+    },
+    "coursesOld-inv5": {
+      "description": "Every project has at least one person working on it, and everyone working on a project is a student.",
+      "sourceSha256": "7192f42224752caea6cfb8687a1e3e59ce3a480f1eb5e25c3f35c49cb0fc34d5"
+    },
+    "coursesOld-inv6": {
+      "description": "Every project a person works on must belong to at least one course in which that person is enrolled.",
+      "sourceSha256": "eea6354c7806a142437108c5ac68ee61c7a457df8c3fed93e1540ce0caaa327b"
+    },
+    "coursesOld-inv7": {
+      "description": "For each course, a person works on at most one of its projects. Working on none of a course's projects is allowed.",
+      "sourceSha256": "ebb0db64efdf1835012a6657c506b617e94f4cadb5004504c07b8acbfd9438f5"
+    },
+    "coursesOld-inv8": {
+      "description": "Nobody is enrolled in a course that they themselves teach.",
+      "sourceSha256": "0d0cc528917b77302647bebd8d2b1149c213017f528caf20f574fa151798a389"
+    },
+    "coursesOld-inv9": {
+      "description": "If two distinct people teach a common course, neither may be enrolled in any course taught by the other. The enrollment need not be in the course that they teach together for this restriction to apply.",
+      "sourceSha256": "a196cc72e307509894760f57b0917567e656d4bdeb6ae61219dba8a22544d7d1"
+    },
+    "coursesOld-inv10": {
+      "description": "Only students may receive grades in courses.",
+      "sourceSha256": "2805d692cfd404cb6cc8987f26925c43cfb289ba7bc053119ff09da4581aa280"
+    },
+    "coursesOld-inv11": {
+      "description": "A person may receive a grade in a course only if they are enrolled in that course.",
+      "sourceSha256": "ad8ccf5cc6905ef9da154899721dd1029e5a7ba744062c4d62b5134b803f2f8b"
+    },
+    "coursesOld-inv12": {
+      "description": "Each person has at most one grade in each course. Having no grade is allowed.",
+      "sourceSha256": "7ac4de608a5030214973f3da9bc5d3e4f43d181d6a21dd901111009904b0a6a7"
+    },
+    "coursesOld-inv13": {
+      "description": "Anyone who receives the highest grade in a course must work on at least one project belonging to that course.",
+      "sourceSha256": "371fece60377638c09426c14e93c66ec2219f28e9eeca6ab37c35dea6378577c"
+    },
+    "coursesOld-inv14": {
+      "description": "No two distinct people may work together on more than one project.",
+      "sourceSha256": "d289b35e53079b9597faf9a969d26dadffee5766c20845c26486a30a1b14de02"
+    },
+    "coursesOld-inv15": {
+      "description": "When two distinct people work on the same project in a course and both have grades in that course, every grade of either person must equal or be immediately adjacent to at least one grade of the other in the grade ordering. If either person has no grade in the course, this requirement imposes no comparison on that pair.",
+      "sourceSha256": "c5c62f31c89d8fc6d26c896514ce44c6ff1cc3723431ea26ee4b52728a8e3a1c"
+    },
+    "cv_v1-inv1": {
+      "description": "Every work a user makes visible must belong to that user's profile.",
+      "sourceSha256": "c58e82b0a72847574182778e51e6344ce439d5b324c34166e4269bdfaf74eccb"
+    },
+    "cv_v1-inv2": {
+      "description": "Every work in a user's profile must have been supplied either by an institution or by that same user.",
+      "sourceSha256": "daa00ac550e829a99f581d7244b60d61c3ff5e1422a107bb5dd406393f894f94"
+    },
+    "cv_v1-inv3": {
+      "description": "Within any user's profile, two distinct works supplied by the same source must not share an identifier.",
+      "sourceSha256": "87da7beb394dac71b7df88c2b26ebb6effbac734b6ae99bd57d4eec5642c55ba"
+    },
+    "cv_v1-inv4": {
+      "description": "No two distinct works that the same user makes visible may be connected by a chain of works in which consecutive works share an identifier. The chain may pass through any works, including works outside that user's profile.",
+      "sourceSha256": "81a0221fc728737ae986f8e9c5f9739add73763b791c7334950e864460b72b15"
+    },
+    "cv_v2-inv1": {
+      "description": "Every work a user makes visible must belong to that user's profile.",
+      "sourceSha256": "eae53e97118fefb53efb80c041b6e27497b1acf5d725dc47c9e17ccdca7ca622"
+    },
+    "cv_v2-inv2": {
+      "description": "Every work in a user's profile must have been supplied either by an institution or by that same user.",
+      "sourceSha256": "b7cdca098c30f863651d3e89418f98b5ccfdb24f0c1b4625892a5f6cb7de746c"
+    },
+    "cv_v2-inv3": {
+      "description": "Within any user's profile, two distinct works supplied by the same source must not share an identifier.",
+      "sourceSha256": "2ace8cbf8f11195b808f0a8cf5129d40f4fc1c11f320ebce6cb36b77b8c7217b"
+    },
+    "cv_v2-inv4": {
+      "description": "No two distinct works that the same user makes visible may be connected by a chain of works in which consecutive works share an identifier and every work in the chain belongs to that user's profile. Works outside that profile do not connect visible works for this requirement.",
+      "sourceSha256": "d36312f8c838cc210255727309662a14c9a3356e04a0825883a89a2686a1f02c"
+    },
+    "graphs-inv1": {
+      "description": "Every directed edge must have an edge in the reverse direction as well. Self-loops are permitted.",
+      "sourceSha256": "44a958428dd41d6037bfce70bf7a312ee02ff5a6821161658f859e59366ad3a9"
+    },
+    "graphs-inv2": {
+      "description": "No pair of nodes may have edges in both directions between them. Self-loops are also forbidden.",
+      "sourceSha256": "dbc6f4cb65fdfcbad9f29349911cebed5f8ed2c8190c7d677b1bd3542d2bba0e"
+    },
+    "graphs-inv3": {
+      "description": "There must be no directed cycles: no node may reach itself by following one or more edges.",
+      "sourceSha256": "5289fc36142a4a8830eed9a80ec68dee8ae24af4623a3cad0590d6d4fc3da1a7"
+    },
+    "graphs-inv4": {
+      "description": "There must be a directed edge from every node to every node, including an edge from each node to itself.",
+      "sourceSha256": "a82ac34d5ad8eba14f91c5d4a12e34e45eec3364518e52b431fa28dc2793dd6f"
+    },
+    "graphs-inv5": {
+      "description": "No node may have an edge to itself.",
+      "sourceSha256": "9ff438cfd05a69d72a5867c1d61aaa254569578724279230d86551537dbc2dc2"
+    },
+    "graphs-inv6": {
+      "description": "Ignoring edge directions, every node must be reachable from every other node. A node is considered reachable from itself without taking an edge.",
+      "sourceSha256": "1bccb5a56a6a727f163d1c9c796cc842cb7cbaaceffb830bc5f47b412c820590"
+    },
+    "graphs-inv7": {
+      "description": "Following edge directions, every node must be reachable from every other node. A node is considered reachable from itself without taking an edge.",
+      "sourceSha256": "0182cf3586a44a38347f9813c811b44979fe93201135563a6c113a6fc7b6e5b7"
+    },
+    "graphs-inv8": {
+      "description": "Whenever one node can reach another by following one or more directed edges, there must also be a direct edge from the first node to the second. In particular, any node on a directed cycle must have a self-loop.",
+      "sourceSha256": "cf686f60aab53d0d3a2547eb794b7c41ce96aab7def2992659e26f7dd1f559a2"
+    },
+    "lts-inv1": {
+      "description": "Every state must have at least one outgoing transition, labelled by some event and leading to some state.",
+      "sourceSha256": "bebb12c7c74ad34d4d4ad79e6df2979f3f840cd178b571fc160674ab681b9a3d"
+    },
+    "lts-inv2": {
+      "description": "There must be exactly one initial state.",
+      "sourceSha256": "54c7dad1e25e710a98ec16f7cd34973be4170e7d2c18fe3c2fe14b2921f0e838"
+    },
+    "lts-inv3": {
+      "description": "For any state and event, there may be at most one destination state for a transition with that event. An event need not be enabled at every state.",
+      "sourceSha256": "5e73324c5908ca491da224b013200f1029cbc7940f9406547eecf5eb0d519215"
+    },
+    "lts-inv4": {
+      "description": "Every state must be reachable from at least one initial state by following one or more transitions. This includes initial states themselves; a zero-transition path does not count.",
+      "sourceSha256": "87ce9abc10e6c3a8bc372a1f66bafaaa73cbdd09b04d3b05a7fb36bcfc382ec1"
+    },
+    "lts-inv5": {
+      "description": "All states must enable exactly the same set of events. Their transition destinations may differ, and the shared set of enabled events may be empty.",
+      "sourceSha256": "21768fe7f25c956dbd4a8b1ae14aef466e5b7e6836523059495346d9fab729d2"
+    },
+    "lts-inv6": {
+      "description": "Every event must label at least one transition somewhere in the system.",
+      "sourceSha256": "ed0fad089ae5275ca203a07732604cc896fc36c5c7c2f158cdebd8499ac7c47b"
+    },
+    "lts-inv7": {
+      "description": "Every state reachable from an initial state by one or more transitions must be able to reach some initial state by one or more transitions. The return destination need not be the initial state where the first path began.",
+      "sourceSha256": "ee0be7a0fcd08aec076ecc7d24f87bf15dca4156ff7d84b67cb4ac8e7ff5a5f5"
+    },
+    "productionLineNew-inv1": {
+      "description": "Every worker must be either a human or a robot.",
+      "sourceSha256": "72193afd348685e610908bb3c21a9fb8dfb561488f34bc98a755f86354d22af2"
+    },
+    "productionLineNew-inv2": {
+      "description": "Every workstation must have at least one worker, and every worker must be assigned to exactly one workstation.",
+      "sourceSha256": "a08e73a47c852767552b30fe7c551210530272c158d82194114f1f3d28f56a50"
+    },
+    "productionLineNew-inv3": {
+      "description": "Every component must be assigned to exactly one workstation.",
+      "sourceSha256": "cdfc53dc6a012069791a31c0669da547ef6038e1a0ac362e7b9f60fa0c2e5c43"
+    },
+    "productionLineNew-inv4": {
+      "description": "Every component must have at least one direct part, and materials must have no parts.",
+      "sourceSha256": "92394888535e1536ee61fa6584c688090e051e972f171eb6557a4d85bcfb66a7"
+    },
+    "productionLineNew-inv5": {
+      "description": "A workstation must not have both human workers and robot workers assigned to it. A workstation with no workers satisfies this requirement.",
+      "sourceSha256": "0d4d0338278efe302648ecf01dbc55679bc5cae04a0bd80fe2f7e0bb6218d645"
+    },
+    "productionLineNew-inv6": {
+      "description": "No component may contain itself as a part, either directly or through a chain of one or more part relationships.",
+      "sourceSha256": "85e3bcfef54cec7761cd8ed1c177a656aff43d94d6035f9cbebabf5c15f17b0b"
+    },
+    "productionLineNew-inv7": {
+      "description": "A component with at least one dangerous direct part must itself be marked dangerous.",
+      "sourceSha256": "525fe072d7d13b12ae9150a3533e6a184d5bb24d9c888fa03f6e730b2ca67b1e"
+    },
+    "productionLineNew-inv8": {
+      "description": "No human may work at any workstation assigned to a dangerous component.",
+      "sourceSha256": "ec27fcd67bbb2ae430f34111c75e6f2b8ee98b8e5f2faec57a50cd2f0f100cf2"
+    },
+    "productionLineNew-inv9": {
+      "description": "Every workstation except end must have exactly one immediate successor, and end must have none. Starting at begin and taking zero or more successor steps must reach every workstation.",
+      "sourceSha256": "2d2d5cb59e5caff629cd76d9b5e575ead8fe86a7301634821112e65847178f4f"
+    },
+    "productionLineNew-inv10": {
+      "description": "For every component, each workstation assigned to any of its direct parts that are themselves components must be able to reach a workstation assigned to the containing component by one or more successor steps. Parts with no assigned workstation impose no ordering requirement.",
+      "sourceSha256": "92376ccb0ae886e82c539f32f1472ed991c2ed48d220f5054b8deb0aff088669"
+    },
+    "productionLine_v1-inv1": {
+      "description": "Every component must have at least one direct part.",
+      "sourceSha256": "4ee63cd44ec69fa268f14b1763ed77071df5485de3c92883b555f3ddb37d5945"
+    },
+    "productionLine_v1-inv2": {
+      "description": "No component may contain itself as a part, either directly or through a chain of one or more part relationships.",
+      "sourceSha256": "c34c8996fa785022fcb73752df33cedfe5ab7301764b150d2ddd344cdea1bb66"
+    },
+    "productionLine_v1-inv3": {
+      "description": "Each component must have at least one robot at its position.",
+      "sourceSha256": "1c4a3d7e6312ecb7490a8308d884cc67a4528895f4177e322db97d5412636ea7"
+    },
+    "productionLine_v1-inv4": {
+      "description": "Every direct part that is itself a component must be positioned at or before the component that contains it in the ordering of positions. The two components may occupy the same position.",
+      "sourceSha256": "6b0d66bcf32492be2bbe0ad5c3ebb227c8819f2ffb7d2b56f367e34f3fb77019"
+    },
+    "productionLine_v2-inv1": {
+      "description": "Every worker must be either a human or a robot.",
+      "sourceSha256": "885b9b14de0fc1fb7594d9930a3c435d9e0a225f3a6a623455f2bb89cdd77269"
+    },
+    "productionLine_v2-inv2": {
+      "description": "Every workstation must have at least one worker, and every worker must be assigned to exactly one workstation.",
+      "sourceSha256": "1919b2825265b39161a1d5b07e0f7e235df6eabb3472d6a3d486a27dbcd89a55"
+    },
+    "productionLine_v2-inv3": {
+      "description": "Every component must be assigned to exactly one workstation.",
+      "sourceSha256": "f4d05420a623cf3af8ab98c2cc02392ec74ca6d4842037b17b353974c3d4f685"
+    },
+    "productionLine_v2-inv4": {
+      "description": "Every component must have at least one direct part, and materials must have no parts.",
+      "sourceSha256": "4c05cdc747adfc377c6df943802441c6da0493541d3b14f94181e7a888ec9e95"
+    },
+    "productionLine_v2-inv5": {
+      "description": "A workstation must not have both human workers and robot workers assigned to it. A workstation with no workers satisfies this requirement.",
+      "sourceSha256": "a6d9602a73916e263d92713631b8d2bf680a8aab5b9b8ab61af274e19fc915ed"
+    },
+    "productionLine_v2-inv6": {
+      "description": "No component may contain itself as a part, either directly or through a chain of one or more part relationships.",
+      "sourceSha256": "cd1f8a61db24fa1419bf6309ce9f12df276ac48383d76597b67ad4e7a642315b"
+    },
+    "productionLine_v2-inv7": {
+      "description": "A component with at least one dangerous direct part must itself be marked dangerous.",
+      "sourceSha256": "9db0e5a79bae29cc6fc327dc6b7ea60784833c0a6549a774399a362394cb1452"
+    },
+    "productionLine_v2-inv8": {
+      "description": "No human may work at any workstation assigned to a dangerous component.",
+      "sourceSha256": "e558a8cb6bc90b39c961c378516677af68356e49da753db848dfb8a596110e50"
+    },
+    "productionLine_v2-inv9": {
+      "description": "Every workstation except end must have exactly one immediate successor, and end must have none. Starting at begin and taking zero or more successor steps must reach every workstation.",
+      "sourceSha256": "decb85972dc276170126eec0577556059bad913da9b30e1a88cea50c3a50417d"
+    },
+    "productionLine_v2-inv10": {
+      "description": "For every component, each workstation assigned to any of its direct parts that are themselves components must be able to reach a workstation assigned to the containing component by one or more successor steps. Parts with no assigned workstation impose no ordering requirement.",
+      "sourceSha256": "bda26503bb2558cf2cafe17ba35f55e40a1342156120d5ab3325f8a8d214d68e"
+    },
+    "socialMedia-inv1": {
+      "description": "Every photo must be posted by exactly one user.",
+      "sourceSha256": "f68aeef4dcfaa05c2694cd0b3e6e13abc6896ed91133bb87994419e64a1b8732"
+    },
+    "socialMedia-inv2": {
+      "description": "No user may follow themselves.",
+      "sourceSha256": "ef0941a21c444bb0a54f9b54b585cb8702eb9cee9cadd298e9f6bb9a7481bffb"
+    },
+    "socialMedia-inv3": {
+      "description": "Every non-advertisement photo a user sees must have been posted by someone that user follows. Advertisements are unrestricted by this requirement.",
+      "sourceSha256": "f6a341c773c4b36c237e0f8b3bee8c72c4432cd98f916f1468919f9b71c5402f"
+    },
+    "socialMedia-inv4": {
+      "description": "Any user who posts at least one advertisement must post only advertisements.",
+      "sourceSha256": "02ea94fe3e856dc63fe51f9534155dc81e52ffee5e97035cfb1669c5a5fc6ce8"
+    },
+    "socialMedia-inv5": {
+      "description": "Every influencer must be followed by all other users and must not follow themselves.",
+      "sourceSha256": "071370cfecbc017cbebac481651d3696b4cfcb68700fafabd499b5891d0d0637"
+    },
+    "socialMedia-inv6": {
+      "description": "Every influencer must post at least one photo dated on each day in the model.",
+      "sourceSha256": "80987f646d65b2113ded07f497728666dca363e6d9f53d27c602e1684343f848"
+    },
+    "socialMedia-inv7": {
+      "description": "A user's suggested users must be exactly the users followed by someone that user follows, excluding the user themselves and anyone they already follow.",
+      "sourceSha256": "357520ec49190ace8ef3f6595f74f63f29e58811eb4eff6dda79628cd75a751a"
+    },
+    "socialMedia-inv8": {
+      "description": "Every advertisement a user sees must have been posted by someone they follow or someone suggested to them.",
+      "sourceSha256": "19f666927b4656c09f71f4fcfd53a5957ff51fdf062543c71b7d232c2086c2cc"
+    },
+    "trainStationNew-inv1": {
+      "description": "The station must have at least one entry track and at least one exit track.",
+      "sourceSha256": "fd4458bae96b2341bc873d6458035560ea3b354266e47ebebcfe5ff0c83f8c78"
+    },
+    "trainStationNew-inv2": {
+      "description": "Every signal must be assigned to exactly one track.",
+      "sourceSha256": "6ce83eb7eb8c2f3ea86ce24c97af4eba2eb7e220425ff990b1b3caeb51655c0f"
+    },
+    "trainStationNew-inv3": {
+      "description": "The exit tracks must be exactly those tracks with no immediate successor.",
+      "sourceSha256": "46a7cf40f30aef8a4bd886025c23faec96b6bd3cf4078c8a00f5806fbba7b342"
+    },
+    "trainStationNew-inv4": {
+      "description": "The entry tracks must be exactly those tracks with no immediate predecessor.",
+      "sourceSha256": "152da7b33326064883ed1482845db2c2304ede4ee61d85c2f1b46e6d740f2c3c"
+    },
+    "trainStationNew-inv5": {
+      "description": "A track must be a junction exactly when it has at least two immediate predecessors.",
+      "sourceSha256": "4d4eff5943cef81a6ccefeff20c8fae632afb156583131d2295ea22d2199c194"
+    },
+    "trainStationNew-inv6": {
+      "description": "Every entry track must have at least one speed signal.",
+      "sourceSha256": "ac96be4027c03095451899ba35e00145a527d00d2e6215ef3245baa4b2fe612c"
+    },
+    "trainStationNew-inv7": {
+      "description": "The successor connections must contain no directed cycles, including self-loops.",
+      "sourceSha256": "effa5066a97a344dc0c9c9d01aff264b219bcf192a4446eca924fec9386086a0"
+    },
+    "trainStationNew-inv8": {
+      "description": "Every exit track must be reachable from every entry track by following zero or more successor connections.",
+      "sourceSha256": "0a21df74e061b91bd6a0a08477ed356fbadfd46ed83801fb53718fc667b22513"
+    },
+    "trainStationNew-inv9": {
+      "description": "A track may have a semaphore signal only if at least one of its immediate successors is a junction.",
+      "sourceSha256": "19343f178fec702e9934595a94df47afa327d9352b2843642005469cc4dc365e"
+    },
+    "trainStationNew-inv10": {
+      "description": "Every track that leads directly into a junction must have at least one semaphore signal.",
+      "sourceSha256": "193ef9e32f6652ad0620c001e58c4d955f55cd6dd7ee3ffb5158d8539d65480e"
+    },
+    "trainStationOld-inv1": {
+      "description": "Initially, no signal may be green.",
+      "sourceSha256": "3b60a7fc15fa9c03f2afc1e8b60247b5c7aeea9e74b3547977fb30ae62b8a065"
+    },
+    "trainStationOld-inv2": {
+      "description": "Every signal must be green at least once, either initially or at a later state.",
+      "sourceSha256": "3f6653607017cbc489c6c651ed5adc0bfd2e9854b8e12061a20ad42da4db073e"
+    },
+    "trainStationOld-inv3": {
+      "description": "Each train must keep its initial position forever. A train initially outside the station must remain outside forever.",
+      "sourceSha256": "522745689c945b0d5f3635a1ec631c166aff9bf7f7cb17e44c4342a0db60ae78"
+    },
+    "trainStationOld-inv4": {
+      "description": "At every state, each track may be occupied by at most one train.",
+      "sourceSha256": "b0e1422658c5ca510df2b53b4636f11809155a964df1cde53db373066acc2846"
+    },
+    "trainStationOld-inv5": {
+      "description": "At every step, a train already in the station may stay on its current track; otherwise, it must leave the station if on an exit track, or move to an immediate successor if on any other track. This requirement places no restriction on a train that is currently outside the station.",
+      "sourceSha256": "dfd518700a342f1cc1298463ed817f1fae41f221e4cfec23ae2673a15d758ba3"
+    },
+    "trainStationOld-inv6": {
+      "description": "Every signal must be green infinitely often and non-green infinitely often.",
+      "sourceSha256": "7538161648b457b3375619f6ebef839f5b35b71d69f4e46fd3d074dacba3c9b9"
+    },
+    "trainStationOld-inv7": {
+      "description": "Whenever a train is in the station, it must eventually be outside the station again.",
+      "sourceSha256": "f6ad7d7e2d9dca7ee5b1067d9f3e3cf1924c129271066fd79f7f1e4b16294ee3"
+    },
+    "trainStationOld-inv8": {
+      "description": "Whenever a train occupies a track with a non-green signal, it must stay on that track through the first state in which the signal becomes green. If the signal never becomes green, the train must stay there forever.",
+      "sourceSha256": "b1727ce4bdfbabb5b22fb4712ff39b714024c3e2d1bcfb3a72e1bf0a0f402a97"
+    },
+    "trainStationOld-inv9": {
+      "description": "Every train must eventually occupy an entry track and must be outside the station in every preceding state. Occupying an entry track in the initial state is allowed.",
+      "sourceSha256": "00c5bacc139da7deaea6795a2e719ef5e839b19c5265dd4bf294453cf56341ea"
+    },
+    "trainStationOld-inv10": {
+      "description": "At every state, at most one signal on the tracks leading directly into any given junction may be green.",
+      "sourceSha256": "1cf862264a18ae8011461386e73b27eb4242d503155ca66154900cfed833dfed"
+    },
+    "trainStationOld-inv11": {
+      "description": "Whenever a train is in the station, it must have occupied an entry track in the current state or in an earlier state.",
+      "sourceSha256": "c25ff7695aa439985b628ce1abd89cd3f5ef496d8562f1a4a070b6e51a11ffdc"
+    },
+    "trainStationOld-inv13": {
+      "description": "Once a train is outside the station after having been inside, it must remain outside forever.",
+      "sourceSha256": "7ed321f81e4f735c7385050daf64e39126f63fb79ebc886dfd2ea046514a9157"
+    },
+    "trainStationOld-inv14": {
+      "description": "Whenever a train leaves a track whose signal is green, that signal must be non-green in the next state.",
+      "sourceSha256": "ed11815a48a7f8ca50c53b78dd44e4e8022855ddc51a7f469d62338705ff0a20"
+    },
+    "trainStationOld-inv15": {
+      "description": "No train may eventually remain on one particular track forever. A train may remain outside the station forever.",
+      "sourceSha256": "ab8197973a2eed1496074027e8239e2fc5b960e6b64ee173b730f88675ef9155"
+    },
+    "trainStationOld-inv16": {
+      "description": "Whenever a train occupies an exit track, it must have occupied an entry track in an earlier or current state and remained continuously inside the station since that state.",
+      "sourceSha256": "257bf35225ba55eb77cd8acb7098160ff59dac2a18af28680a63f314c03b0926"
+    },
+    "trainStationOld-inv17": {
+      "description": "Whenever a train is in the station and no other train has been inside at any earlier or current state, that train must eventually occupy an exit track. No train may occupy any exit track before it does.",
+      "sourceSha256": "caba38d97ac3a1276c65befc3d0a1bcd59e545edf50d8bc3177eecba638903eb"
+    },
+    "trash_fol-inv1": {
+      "description": "The trash must be empty.",
+      "sourceSha256": "99933495897c7260f9adf5b45790f21d06628b8f4894a46a64916a87cb1fb159"
+    },
+    "trash_fol-inv2": {
+      "description": "Every file must be in the trash.",
+      "sourceSha256": "13ce342321a167d99f7f0f4a25aeb78378520458fa32f6576d595bff36643bc9"
+    },
+    "trash_fol-inv3": {
+      "description": "The trash must contain at least one file.",
+      "sourceSha256": "fe246fea6459a0cf55cbf6b517eeb9d7c699eaa3ebcb2f6dd81df44d6f46be88"
+    },
+    "trash_fol-inv4": {
+      "description": "No protected file may be in the trash.",
+      "sourceSha256": "ab8a2b4af51f8b5ef867db78c9a82a00fdf373862c6fb2d92547cd7af9d9fb2a"
+    },
+    "trash_fol-inv5": {
+      "description": "Every file must be in the trash, protected, or both.",
+      "sourceSha256": "ee4dadab96c9f89b94b2c1ae503e17f4079c61d133945b10569bd2259abf3d9e"
+    },
+    "trash_fol-inv6": {
+      "description": "Each file may link directly to at most one file.",
+      "sourceSha256": "af55dabb78323a42d2feb76c11b170c2706552568b1474a2fc8d0fa9bbe85c24"
+    },
+    "trash_fol-inv7": {
+      "description": "No file may link directly to a file in the trash.",
+      "sourceSha256": "08207ef16fe430377776ec55041fdf67c9310bfc32fb39f0e0dc6390a39932a2"
+    },
+    "trash_fol-inv8": {
+      "description": "There must be no links between files.",
+      "sourceSha256": "2c8f24e3f58859b25c4bd02f1e6e2beed61bbe014d6d53dcfdf0d8f5ccc7869b"
+    },
+    "trash_fol-inv9": {
+      "description": "Following a link from any file must never lead to a file that itself has an outgoing link.",
+      "sourceSha256": "092f3b28a0824c0b2fdd00b242582dcbad5963c3d316b1b248cf6fea8ee24f27"
+    },
+    "trash_fol-inv10": {
+      "description": "Every file linked to directly by a file in the trash must also be in the trash.",
+      "sourceSha256": "aa7e58f5b9b585c73eff9ec80d2329950c5c353732ef934759aa0d6b277bdd07"
+    },
+    "trash_ltl-inv1": {
+      "description": "Initially, the trash must be empty and no file may be protected.",
+      "sourceSha256": "906038459251e052432a7dca087d38c34e7a0d19f008d18ec076057b8dff51da"
+    },
+    "trash_ltl-inv2": {
+      "description": "Initially, no files may exist; in the next state, at least one file must exist.",
+      "sourceSha256": "0f0d0a6eb48c586c569e3736c2637c10fb7835070202c8e10163df4c57e14ff9"
+    },
+    "trash_ltl-inv3": {
+      "description": "At every state, at least one file must exist.",
+      "sourceSha256": "b04458b50bda63ba3d1b1d2b7d16c944806498edb7a3b4a1721195eae3c68dd8"
+    },
+    "trash_ltl-inv4": {
+      "description": "At some state, possibly the initial state, the trash must contain at least one file.",
+      "sourceSha256": "ac224c8517176ad5c38938401c0a19c0f467f6a889fa22340d022008f7560a73"
+    },
+    "trash_ltl-inv5": {
+      "description": "At some point, a file that exists in one state must no longer exist in the next state.",
+      "sourceSha256": "7a965e2e7938d36783c297ac1d5b12e931d84b69580caea374d3e42d87f9b1c8"
+    },
+    "trash_ltl-inv6": {
+      "description": "Once a file is in the trash, it must remain there forever.",
+      "sourceSha256": "05a0edf90583ad87924676683039774d3489c5a26159fc3e8082751695f2775b"
+    },
+    "trash_ltl-inv7": {
+      "description": "At some state, possibly the initial state, at least one file must be protected.",
+      "sourceSha256": "d47728174297d5d9626df94218859d7be562996ef64ff8de7a8b5fe7e45f407c"
+    },
+    "trash_ltl-inv8": {
+      "description": "Whenever a file has an outgoing link, that file must be in the trash in the current state or at some later state.",
+      "sourceSha256": "598d34f9ee51410e9498c92ee0435c817d3c6f57ab095ee07da57aed080397ee"
+    },
+    "trash_ltl-inv9": {
+      "description": "At every state, no protected file may be in the trash.",
+      "sourceSha256": "2bb0a8cdcd9e92380a061baeb2b999bdc4820caf99e38bb6aa72e1491a57688f"
+    },
+    "trash_ltl-inv10": {
+      "description": "The set of protected files must remain exactly the same throughout the entire trace.",
+      "sourceSha256": "fc9114fb80bdcc6fd52e8be34864d9bea05207c2a81a72700681dc545547ca1a"
+    },
+    "trash_ltl-inv11": {
+      "description": "At every step, each currently existing unprotected file must be protected in the next state.",
+      "sourceSha256": "b4ecc700a868c113e8ad856cf07b09a6ced5d2bb02bccf7fe9ff103932c8dca0"
+    },
+    "trash_ltl-inv12": {
+      "description": "Eventually, there must be a file that remains in the trash from that state onward forever.",
+      "sourceSha256": "a1401ccf07d16bd1801caf5d72bac98a0183e70cd635572461ea754e474da30d"
+    },
+    "trash_ltl-inv13": {
+      "description": "Whenever a file is in the trash, there must have been an earlier state in which it was not in the trash. That earlier state may precede the file's existence.",
+      "sourceSha256": "97bb0bc506b91fb0207e0301ba5fecee86211bd7bbf30dd111a2909ebbbcae82"
+    },
+    "trash_ltl-inv14": {
+      "description": "Whenever a file is both protected and in the trash, it must no longer be protected in the next state.",
+      "sourceSha256": "7dd5626fc04131cebf05e48ef177446ebeac2c10835b026aa64993c2602ebded"
+    },
+    "trash_ltl-inv15": {
+      "description": "Every file that exists at any state must be in the trash in that state or at some later state.",
+      "sourceSha256": "4b605dfbad92d2dfef7dae8f348e362b5046a5865cf1cbdb551f08ad23ae6dfc"
+    },
+    "trash_ltl-inv16": {
+      "description": "Whenever a file is protected, it must have been protected in every state from the beginning of the trace through the current state.",
+      "sourceSha256": "0500a83b5412784e57b6aa479c0eb59da7c2c21f15a6735fe138d6861adb2d7c"
+    },
+    "trash_ltl-inv17": {
+      "description": "Every file in the trash must cease to exist in the very next state.",
+      "sourceSha256": "da0be22941193d2a3a469a19b0cd9c332dea1f5e545a65510667bfebddafb758"
+    },
+    "trash_ltl-inv18": {
+      "description": "Whenever a file is protected, it must stay protected through the first state at or after that point in which it is in the trash, including that state. If it never enters the trash, it must stay protected forever.",
+      "sourceSha256": "316d157ecf4b146c576778d1f8f922726ec28704e51ff841202a436584ee1fc3"
+    },
+    "trash_ltl-inv19": {
+      "description": "Whenever a file is protected, it must be in the trash in the current state or at some later state, and it must remain protected in every intervening state before then.",
+      "sourceSha256": "c15b7bbe7593d7925e4a6028645c9b82689b0b2102e6af7b242ecfc3e9f36cc0"
+    },
+    "trash_ltl-inv20": {
+      "description": "Whenever a file is in the trash, there must be a current or past state in which it was unprotected. The file must have been continuously in the trash in every state after that state up to the present.",
+      "sourceSha256": "d622001945c3663b5e6fd0fa7584530e434dbfbeb068dd0d5aaa24e10f5f9a8b"
+    },
+    "trash_rl-inv1": {
+      "description": "The trash must be empty.",
+      "sourceSha256": "39543aa7e8f9db12fcdf060f31d16c21d2ab45148f4a23efa9541162bda5c4cf"
+    },
+    "trash_rl-inv2": {
+      "description": "Every file must be in the trash.",
+      "sourceSha256": "33c945e4e204e557fabc46949e67835b4c9dfa0d4f1817c3e9edc188f8978591"
+    },
+    "trash_rl-inv3": {
+      "description": "The trash must contain at least one file.",
+      "sourceSha256": "b25522b3c42c8aea9667749b1517c851da3c9387b60a2df512a8c20420214fdd"
+    },
+    "trash_rl-inv4": {
+      "description": "No protected file may be in the trash.",
+      "sourceSha256": "c1480a51862ea42d7a906773329f7edcd6713f3f2affc39abc302efdbaa7bff2"
+    },
+    "trash_rl-inv5": {
+      "description": "Every file must be in the trash, protected, or both.",
+      "sourceSha256": "a0fcd7e18aaccbb69d7d862b32137dae9153ec9ecd31011a8b99ebcadcb75330"
+    },
+    "trash_rl-inv6": {
+      "description": "Each file may link directly to at most one file.",
+      "sourceSha256": "b9c95bc3904349223d94e556a3f59c559bd6e92647168204d02f7a51cf00b069"
+    },
+    "trash_rl-inv7": {
+      "description": "No file may link directly to a file in the trash.",
+      "sourceSha256": "14513e40c398334cf71a2b03822b21b1bed63e8b73922a7164975e6265015c12"
+    },
+    "trash_rl-inv8": {
+      "description": "There must be no links between files.",
+      "sourceSha256": "91ea5c31d6ab93eb2dce3f28174ac554e6d60911fedcf70588c86c1015edfd63"
+    },
+    "trash_rl-inv9": {
+      "description": "Following a link from any file must never lead to a file that itself has an outgoing link.",
+      "sourceSha256": "dbf03300dd11280d4518e6daff9b5047c5dde1c3ca86c5401faf4e5993436db6"
+    },
+    "trash_rl-inv10": {
+      "description": "Every file linked to directly by a file in the trash must also be in the trash.",
+      "sourceSha256": "732f5f63013aa23261e2d4a667a0799bbcb6b2e4772fc25a021c9f1199ecaa9e"
+    }
+  }
+}

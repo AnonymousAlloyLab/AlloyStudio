@@ -1,0 +1,8 @@
+{
+  "reviewerModel": "gpt-6-luna",
+  "tier": 1,
+  "blockManifestSha256": "8bff978d57d73b089c65a27487a64784c54464c0bd86fae8ea10188d366d268f",
+  "priorReviews": {},
+  "verdict": "no_constructed_breach",
+  "findings": []
+}

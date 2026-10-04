@@ -1,0 +1,2151 @@
+{
+  "theorems": [
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.eq.sizeOf_spec",
+      "typeSha256": "f3eafac93ca36d1002d10dffa8f18dd81497d59ab9c70f043849ef1befa9ed58"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.ge.sizeOf_spec",
+      "typeSha256": "7caf5b380458159202692dbf6df991d2eebfa7b019c7c48d282cabe1265d7e1d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.gt.sizeOf_spec",
+      "typeSha256": "39ed0d6bef35ef9100674941614e83130839d0419652e7130d404a069ca6b6a1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.le.sizeOf_spec",
+      "typeSha256": "9868ee9c7d1921040cefc3398847fa00bb0192d6af568d91fb908e31669bccb2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.lt.sizeOf_spec",
+      "typeSha256": "d50e68096b372d79eba25e00829e77ab2930ccfce6ddff34040716d56767360d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.ne.sizeOf_spec",
+      "typeSha256": "f96d015cbd2dccd79b4f869dad1d1bafcbc201dd4d78a432cf06b21ab104eac9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Comparison.ofNat_ctorIdx",
+      "typeSha256": "ec361458443aa9a844c0ec7912b6bad4e080e4bff2429e45d9b5a0e8073a10c1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.JoinObservation.ofNat_ctorIdx",
+      "typeSha256": "28e586035aa2604fbc4c4589aa9f8a537f60f67b6cc2ef9b325fa16f4bd14e0d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.JoinObservation.refused.sizeOf_spec",
+      "typeSha256": "427cc3b58cf26d4c5657133145a29d3540eff3f13696c6af833a59de3040fcf1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.JoinObservation.returned.sizeOf_spec",
+      "typeSha256": "7b466902be96e98155ef0bef7456b5fc872ba031d530c61fb7c657c9e5bf50c8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Life.mk.sizeOf_spec",
+      "typeSha256": "ded674463a2f6038af3abdc317f137d576c696023aa682f3fd9f5cf0e430cd9b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.allocate.sizeOf_spec",
+      "typeSha256": "59201651de71becad562f5583a490f1e18731d5825c91143c985138508a98a98"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.attempt.sizeOf_spec",
+      "typeSha256": "527c271bcbafdf30a3d449a17d97c01d6e33593d3f876de2e96cbe9c5dec676f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.close.sizeOf_spec",
+      "typeSha256": "cd2fba06bb78843564d63bb95bb9f296ad10eb55177f2fb1ae90f443045ee6fb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.identify.sizeOf_spec",
+      "typeSha256": "b1ccaf1f910f351211288742c8ab58d3678348b23c4302de4be2475a0220f8b4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.joinRefused.sizeOf_spec",
+      "typeSha256": "393c53ff5f09f3e54ffbb8d7925c2ebd411ed1c804e4de94a7a73bab6b32e02a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.joinReturned.sizeOf_spec",
+      "typeSha256": "56f1a26945806beea301781f051adba9f56964bef6a53017c6e02649de985f09"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.ofNat_ctorIdx",
+      "typeSha256": "740d09e5adefd5b17e12e0147725fb4b85905c88b6b43b5dac700afc1cd6d6ba"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.refuse.sizeOf_spec",
+      "typeSha256": "77e3d0d5ffe22ca162fe2a5f2ff3548ae366c778dffd3a1b6f7d3f18f1c071c5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.register.sizeOf_spec",
+      "typeSha256": "b9e0a82ba993515ac091e867d5f5628b36f1b1cefca37da9ef53c32b27bd194f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.release.sizeOf_spec",
+      "typeSha256": "13380169bff7a1c95b499376381b738976daefc52e96b8599aa8028259630134"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.reserve.sizeOf_spec",
+      "typeSha256": "72100965c9a43f1135e6b62c3b8a47d104f4b071b61a2735dbdc453a72cdc283"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.start.sizeOf_spec",
+      "typeSha256": "2f3015ca8d1a37da15b909dee3006c962e9c1e9e9d35b2b860caa1898016cbf6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.terminate.sizeOf_spec",
+      "typeSha256": "c5c4941b9e5a782e4151f5252b0595f07b0943040bf41047a74f6dfc3bb5b238"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.LifeAction.unregister.sizeOf_spec",
+      "typeSha256": "4587d68b7ded6f517d7a15af0308e048891f91bb365e95a7919e5a43b9d9b54c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ListenerState.mk.sizeOf_spec",
+      "typeSha256": "547632a94fbfc0cd84dae5083b45d9719db8fcb50516b789569bdcfb032c4976"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Outcome.accepted.sizeOf_spec",
+      "typeSha256": "6a09d2b560c0b6f3ec4b8718191255ecfb9937b76c265d618273239f45e5a6d4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Outcome.capacity.sizeOf_spec",
+      "typeSha256": "e1578ea6e6edcadaf3be6edd3946c7750973eb1d5109fb0e4968363a319a7ecd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Outcome.duplicate.sizeOf_spec",
+      "typeSha256": "b31a67e39fd253132264dff269114a9eaa362c96b43d6463ec8714385b0daa38"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Outcome.ofNat_ctorIdx",
+      "typeSha256": "54805368eb2853c4ff1498ac6485ccea618d18b5e4138a826d70d0da73693a56"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Outcome.rate.sizeOf_spec",
+      "typeSha256": "f0f1a3c8e1094111aac6902e8774d20009572e90967dcf980d567e84a2df6b06"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.allocated.sizeOf_spec",
+      "typeSha256": "eeb804b6f38508b0941115ad2019ff9d818cf0b3fe9c2629a1317aa78cc5a56b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.attempted.sizeOf_spec",
+      "typeSha256": "829349a385ea60f8934bdfdaaa960fb66486a76abfbafcb9733b258aa23f3134"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.dead.sizeOf_spec",
+      "typeSha256": "d0a50ffac0520d4d9ef891067181d3590adb1df922e1e02531d4767be8f210fa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.identified.sizeOf_spec",
+      "typeSha256": "6426edad5aaa1432b101319459b87e250fcb520fd35620142340f8634e43ff3d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.ofNat_ctorIdx",
+      "typeSha256": "a6915c6f09bbb6497898c7188224c88212d2a8ce6dc180197636c3c20e3172b0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.reserved.sizeOf_spec",
+      "typeSha256": "96c50716f89a35c3c03492045706a47a4f025330a3d9a34a1c9fcf28e5128f96"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Phase.running.sizeOf_spec",
+      "typeSha256": "268db3edfa631c5f6e81e59ede20f29454a2d904761ac5e1036508026e24ed2d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ReapCheck.identityOnly.sizeOf_spec",
+      "typeSha256": "aae30aefcda139efff41defb3d93281562bc9e8eedb0f88fe803928845b5ea0b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ReapCheck.joined.sizeOf_spec",
+      "typeSha256": "e5bf6942567cf13eca5fe6cc06c8234eec79f15c52d623ac324c8f4ef6198e73"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ReapCheck.ofNat_ctorIdx",
+      "typeSha256": "8ae7310e9cce1e8b3a3f000bf24ac69ead598244defa51ab0f36cd9f1a09b0bd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ResourceEvent.failedBeforeAttempt.sizeOf_spec",
+      "typeSha256": "70f7fbd0aa9cf6047205354f62666e17504ec9c0814e89f52665f560b4ae0064"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ResourceEvent.phase.sizeOf_spec",
+      "typeSha256": "0c38abd79829ffdac1eef634ea81cdf9df432997ec196bfc087ad26c1759ee61"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ResourceEvent.reapDead.sizeOf_spec",
+      "typeSha256": "24a57c57fae36d989711a24628bed4de35ddafdc9533db2ff34a27454442965b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ResourceEvent.reserve.sizeOf_spec",
+      "typeSha256": "ed0001305f04cee03e8dc58b51619397e4104b817d3855be58735d68c0aaa7d8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Resources.mk.sizeOf_spec",
+      "typeSha256": "bd17d4331380c6be76c0be35ac3c0e875661db8d659ba7530ff60cbbafd9c1e2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Result.mk.sizeOf_spec",
+      "typeSha256": "7b3f075622b3f8404b76bb1387c78e1dddf30489c4aa56a1e112a7c53ca4e02e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.Event.release.sizeOf_spec",
+      "typeSha256": "f713e6474bd1f03f277d5ddc1e1115e5e3ac195bb68166fb295b83192b54a199"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.Event.reserve.sizeOf_spec",
+      "typeSha256": "04187376406b8de3c3f0e51d1f0522ce774d405e9af791d4899416cb3e3810b3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.admitted_charge_capacity",
+      "typeSha256": "407538915ef35adaf52ea4275bf11d6c76dc0365d7c3edac67c5cf884e4fc214"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.admitted_charge_exact",
+      "typeSha256": "2543537eec08234dcc1c484d8d22b57140728b910eff63587563547ad55d95e9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.admitted_credit_enough",
+      "typeSha256": "ea26b19c7b608a8bfaa62c40de9413c2442779ba1de96dde338195d46a70722e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.all_live_threads_bounded",
+      "typeSha256": "f5e444f0e9d9d2b0738740ae84b36e1027d80b7a3b4715eea44e484037e93ff1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.all_reachable_count_and_capacity",
+      "typeSha256": "31092e5f4bbe4f38f32ddbe3bd4bd0a9abcca752b33dadc91b16ea2ce6ff0a72"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.allocated_owns_before_start",
+      "typeSha256": "5da1b4204e4be2a186adb21f0e7d013c45421fe46fb6ba77bd043b931bfbb593"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.allocation_prefix_safe",
+      "typeSha256": "40ed3952889893cf6e84d643b55521b07bcbe8456a3d54f2e2354d82774a34bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.ambiguous_start_prefix_safe",
+      "typeSha256": "85636ab475e6d6e43c26f799a24d3ba578cbdba1da02bdff02d677fa59857f3a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.attempted_reap_is_noop",
+      "typeSha256": "f46d2dbf6205aa73c30df4ba138e453578cb0c337a20ff7def98fdcb074d47ca"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.combined_credit_bound",
+      "typeSha256": "6eb693f19b4cebc663bcaa0d38d7d1435b719e32fe157915a04bfbb2ec5b805d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.combined_remaining_credit",
+      "typeSha256": "32dfeb554555e48f1042a5f52c19261eea4e29d772333f846d02057972f7eb18"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.control_cannot_borrow_public",
+      "typeSha256": "927012d11ba9811dffe8e9d635aa0aedbc126cf0252928cddba049f07ef8914e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.credit_refill_le_capacity",
+      "typeSha256": "ecfe676b189ffe7f7892444922329cf2925781e29c12bb819e5ff2d1e74a1e7f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.default_burst_total",
+      "typeSha256": "9ec57daab19c201e6dc0c0bd3af7de2b5efb42e6b6cb4f15cc082c79cfccdeb3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.default_control_disabled",
+      "typeSha256": "09e89da7d9b7fb30bd5039679cc15f68748cb9e00f3556b038a641b1ddaa1e0f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.default_handler_total",
+      "typeSha256": "8948a3fe9fd125e2be345bd9f5e5ab94586c091ae47be91595dbd24bbffc67e7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.default_rate_total",
+      "typeSha256": "bd8d07bb9a6151d25f36121a61e7052c0ea97b337d8673a5b1dcfd04dc7e1a62"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.disabled_combined_capacity",
+      "typeSha256": "7350262b2413891b0e1bc25bcee6ccc377cd433b8931872735eb5091936a0902"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.enabled_combined_capacity",
+      "typeSha256": "bf5dc54893638109a0359296a71e421e0e2cce5080ee44e2bb97e0f6e9ef8cf5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.erase_absent",
+      "typeSha256": "5b4919aca51bbffa3a1c3bea4a7dcd9d183140aa33bb65047eabc10d12e32725"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.erase_length",
+      "typeSha256": "d0c98925a05c999ea69502befa36fa711f665a8ca956f8534e3623a00adcf840"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.erase_other",
+      "typeSha256": "dfd7a3a63f715bceeff465eafdf3ab1d6e24538f85180773edfc46cdbd5dd4e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.erase_subset",
+      "typeSha256": "916bbfe127b5b1c0b877cfe732f91e95d32737d76a7e34ed2dd0cdc671c319d4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.erase_unique",
+      "typeSha256": "6295facad96ec309f2484a89b7d6cd14a972b5ffd3d05fc3635f98cf6efb064c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.failed_constructor_prefix_safe",
+      "typeSha256": "5e74c1bb68862baa806b95f721e2fb6e84aa993447eebb8a11eea31b45e722af"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.findPhase_owned",
+      "typeSha256": "ace0f50b09b51f7e7f2ba765b319b36ce3ed1e39e1860c8e1c7409c318eed305"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identified_join_refuses",
+      "typeSha256": "9da1bb2ff3abf088c51fa411821d934c4739472a08efd1a5d590400040a79169"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identified_native_thread_not_started",
+      "typeSha256": "0dee4bcc130c0233971916232c5a1c11d97bd09d992e17ed304437361b23ab8e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identified_reap_is_noop",
+      "typeSha256": "2a0b97d3c7cb71642b748ece82ce1a99f8ab75963dae5abc4bd0d622858e516e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identified_release_counterexample",
+      "typeSha256": "9dd83706de05ff0595f790f3852fcac2af57e024b45018d3f3efa78ecf84fab7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identified_reports_not_alive",
+      "typeSha256": "867f74608d10ba001975e7ec71872531ee816f06685f00678c9ebba44fafc4b8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.identity_only_reaps_unstarted_counterexample",
+      "typeSha256": "a96054d5d156ec34d6cd5cdc004c02fedf03455c4583ba5e7cddb895d4b84d7e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.initial_valid",
+      "typeSha256": "7c23849047def6f9f26c88a6287cc48ae75605133160fd7bac938b2cea364a01"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.joined_reaping_only_dead",
+      "typeSha256": "c085e0e63b1c927e029e4797fc21803ee97239a23531a1a7baa5f8216729c83e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.live_join_return_prefix_safe",
+      "typeSha256": "8e971dbc9c5e9e5c4a4b7ecaa2ac9b9dfb5d23c093abdb40e1a3327ea11495cf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.live_le_registry",
+      "typeSha256": "4e4ffa00e83b015d9334fa1dd0904548fa671a1b4a8d390aaa067ee81464528e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.live_release_counterexample",
+      "typeSha256": "11c06a1deb63564cea006b58acd728aa54a1b9bb1565e9d52ebe4084e78771a7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.one_pending_per_listener",
+      "typeSha256": "84454152b5ffe1508598a653e9af1bc2b3d721f005e78eb40c2a65f3076ff59a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.pair_pending_at_most_two",
+      "typeSha256": "cf16b946a295d213d474ae633a81e11d97e1dec94c330cdbc17f807db5ffb280"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.preattempt_failure_prefix_safe",
+      "typeSha256": "ef885d1b143eed4614468c06a356d8b97583db10e54680eb75eacf7ac130a66e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.public_cannot_borrow_control",
+      "typeSha256": "fc30185ffdef68db95da30eb228861d5a194c0136cfbd69b1e7d65b69023f831"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.reachable_registry_exact",
+      "typeSha256": "3bd471c43bdec986848a9d3d85f5753ba4bb49d77ee77526c3b90b641cde82b8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.reaping_prefix_safe",
+      "typeSha256": "ee4a302e48ddd9846e76f87899c0af170bf8ce76d0c17965769c1cc09c981238"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.refusal_prefix_safe",
+      "typeSha256": "8c6101d03e29acdf9082b02668cb8ed24cc62a555bc888ddf7431ac517963ba0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.refused_join_retains",
+      "typeSha256": "3411f502c18a1ac579ebf91a50c2a0892ffca07d40956fb72b301e34bcfa7f2b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.registered_length",
+      "typeSha256": "d54371ff6426fe145367ecf4d36f1f4dcb454074a38bad6a69b0fe9c6d3ad5e7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.registered_removeThread",
+      "typeSha256": "5614b0865db851dadee73106f9d094d2a79efbadd9c5d61bdcdeb2ac79db4c00"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.registered_setPhase",
+      "typeSha256": "7d413afb1c120f900e01712b297799d110ce179d9b9b168a29a691e06d0705da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.registry_cardinality_bounded",
+      "typeSha256": "ecfed94fa0aea6203e7594f0d2205585df12d5e0cb31463062088fe7b2786065"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.rejection_unchanged",
+      "typeSha256": "a70f9462875d2e03d0923ea9325b6bd9022945d6c71bc2032ca3a57027166ea2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.release_idempotent",
+      "typeSha256": "34cf8072923f64ab3177fde1cf28713e5ebf8d4ecf075887122880889c9e3a0f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.release_other_preserved",
+      "typeSha256": "355baace1eddeb4dd0059259c23cc12c22cef7946e05b82dacb3ecb6d8876ecb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.release_valid",
+      "typeSha256": "583e30dfbfc2bbe83f073225357b14544ca3b1fcebf8a6af138e2e0c66c7beef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.released_thread_is_dead",
+      "typeSha256": "888eda0462099661471fdfc1215696433c8f7011d4e81a952e37a0cac8f9c1c4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.reserve_valid",
+      "typeSha256": "5710867ff254cc0e65c3070ae78bc7ab928fbcf757a0e9d0a2867dbb5e58c897"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.resource_step_valid",
+      "typeSha256": "19070116761435a3504fc3ab78343e06a12f55d61884d08dca76855e73b4084a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.resource_trace_valid",
+      "typeSha256": "6bfb481665b94743cfd6126feb668c12796a769d7ff7c5fd675b14d8bd418f99"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.retained_threads_bounded",
+      "typeSha256": "b594fc9f14e7acac4eacc006020aed5b604707fdb998f641ae39d7977b282a65"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.retire_valid",
+      "typeSha256": "4c0569e375fda6c52c2945a4a76ad6888e2af67acf68641f86d7b4f25572b00c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.selected_control_limit",
+      "typeSha256": "497d42dc5a2594a4206080d035d49d349f5b7a202ad1eb3d96b2d3c9e322e958"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.selected_public_limit",
+      "typeSha256": "36aa6bb55b8720e982d6b4515890d840757068ad07df51fff8830d211e860b45"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.subtract_then_add",
+      "typeSha256": "bdef7477a7932e1d67ca2a66b713b73181eaca236db3f1a81f604ea2eaf5b68f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.successful_join_can_still_be_alive",
+      "typeSha256": "baccd15e252fdebe4d5c8b162c0887c8dd127ab26927829254635ff496431636"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.terminated_join_reclaims",
+      "typeSha256": "33c9cc9b37e6033c147158408e253da76dfec378599ee7c7eb049382bf611411"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.trace_valid",
+      "typeSha256": "eac9cda68064314055542fcbbfc974ebda05a67524425ed7a704188401ad2ae6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.unstarted_join_refusal_prefix_safe",
+      "typeSha256": "c94180b0def69b80a2342ee968b18a8b9c2416240b3d81bea1275739a9e6bef9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.witness_bad_guard",
+      "typeSha256": "11bcc8f3493d446d5642513bb8f96347e1d621b17f5e0274142b403dcbed797b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.Spec.witness_public_full",
+      "typeSha256": "706508842e6fb6ab6da424a52bb364f98d01e734c549d40fdb0f1a719aaeba50"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.State.mk.sizeOf_spec",
+      "typeSha256": "14a61613b27a507c7659ef03ce5e96a874709b79f70e12d3c173bbe40f3cca41"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.ThreadEntry.mk.sizeOf_spec",
+      "typeSha256": "a7699f21a74954183e2b3b7e587cda2a7bc54ab65c6eed6a2fcdddf48f892885"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.Topology.mk.sizeOf_spec",
+      "typeSha256": "accc0212856550ad9b4f7e8fb16d8e93e5fd188aac20c65e833f5e5c87de6055"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.erase.eq_def",
+      "typeSha256": "f29f0af6cb3eacf30e206a995f649b20441cdcb3f0a7e01a8bfdc884d454e7e4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.findPhase.eq_def",
+      "typeSha256": "0874dfe294f622aff221b2846831cb45ef5fd043245deae6d6bcba7cb1b94b95"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqComparison._proof_1",
+      "typeSha256": "7a41c83e446cf2f85ff1db020be3e3f1873ce682970af397a65d8e85829c4b8b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqComparison._proof_2",
+      "typeSha256": "29cbd36afeefc57bafa89a8100dd8ead3441d904f5e89cedde22f39fcc3838ee"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqJoinObservation._proof_1",
+      "typeSha256": "773ad255dfb5f840e26a84710ba811b174e07dad26bc51cfca623b4c42d78b68"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqJoinObservation._proof_2",
+      "typeSha256": "a7fb4660f198cf53aa410fa31c7988afcf30ce1f209c68c70c991ebb98e1326e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_1",
+      "typeSha256": "043e801dcf367bd0481560a18fc4862604b97aec91d39df32523747b3ab320cf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_2",
+      "typeSha256": "a76d33db38872dd1c6c8ff6a881b22e17fccac847d910deb93d4e76992f2fa5f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_3",
+      "typeSha256": "e0958c679c6f9ea652bd47fd078d6ed21cbb0a4f649bcde4e00e23ce3c499f66"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_4",
+      "typeSha256": "7ab30588a0cb9292ef32bf4ccd47786de68fbda180c23347092fb60891f166ca"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_5",
+      "typeSha256": "5acd8486a40960bcfc252ef7d24541a1a8e84d05155042a5a53da4c5034ab04a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_6",
+      "typeSha256": "cbe24025435d3ac5861d9359d125bfc3d73cb48172d7c76fc4753af195bc2214"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_7",
+      "typeSha256": "12b4ee431c08facb4f454de502c4aef0cb46d960b3f93c1dcc0650a6bcda17ea"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLife.decEq._proof_8",
+      "typeSha256": "d6cf5e20d02b3eb613915cfc1a90d5d0d622d3bd514a5b68a9b620f669f7b7bf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLifeAction._proof_1",
+      "typeSha256": "129ce3075582390a37a45d5d86b35b77488c42cc2547e7ac359326a2bda068b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqLifeAction._proof_2",
+      "typeSha256": "21510c09173b22757f8fd0e5defd115cae9889c684221f320abd62df848f25e1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqOutcome._proof_1",
+      "typeSha256": "c972f548112f698aa0e28efb7ff07bb4e811df26d4a38ceee2f2ef78450b69fa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqOutcome._proof_2",
+      "typeSha256": "0170a748fc886dc20692f27763565ace088b240926f188a56d79c95f8ac9d0e6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqPhase._proof_1",
+      "typeSha256": "c2abdbcb30cc29d3b62dc26222597d7cd24e586e1e9702d3047e42bae01196c3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqPhase._proof_2",
+      "typeSha256": "a2406316f0ee4ba5835530cd9bc8747e22835552befb574b26207f43e53b951f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqReapCheck._proof_1",
+      "typeSha256": "56d9cf22676705454ea3d070c136b28154d4ad18704686400d40aaee7d8b77eb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqReapCheck._proof_2",
+      "typeSha256": "52c974bde3a8efea1568d5784ded179d183187a666143d3242ddd3f39f7c85b6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqResult.decEq._proof_1",
+      "typeSha256": "9772174415652e76a8403007c9ba508462c616a494d57788edfd52f3ccf8fa60"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqResult.decEq._proof_2",
+      "typeSha256": "34350524c899d229debc63ff3f005f04103d20b38ffbaec6f3404f86aa8ad8ec"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqResult.decEq._proof_3",
+      "typeSha256": "3966eff7e9ad8204f24a94225c7dc26ed971ea9603ecbe50553e6750af07146f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqState.decEq._proof_1",
+      "typeSha256": "b8d04e60c24e5b0e12fe7598e7d5f97fad05f8ed617a88a7a3a004f615cd168a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqState.decEq._proof_2",
+      "typeSha256": "f72c175d9e9332a8a2515cfdfa41398c168902843f6eee8a15899e221f3cf522"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqState.decEq._proof_3",
+      "typeSha256": "163764a8430dce7b718067306b8ef1dc1949ab82e3400d2c0783c9386c8d1313"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqThreadEntry.decEq._proof_1",
+      "typeSha256": "721588f25c4e9bbae6b4fad4ea089cb49d68bf63531627bac27c3c6cd46e2408"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqThreadEntry.decEq._proof_2",
+      "typeSha256": "1c64e91c39475b0a87a70fe7ce30dadf0b93a4c1e49800ecdd85f0d919e53e53"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionModel",
+      "name": "AlloyStudio.IngressAdmission.instDecidableEqThreadEntry.decEq._proof_3",
+      "typeSha256": "5ce3c9856b5260611778a8f7ecbe2bf4da0689d7fa6b0696718f4108eff3d902"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.liveCount.eq_def",
+      "typeSha256": "487c9dc36aa98979ef39e6c556de70965b0f55de804939f6fc85c585429fee3e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "AdmissionSpec",
+      "name": "AlloyStudio.IngressAdmission.setPhase.eq_def",
+      "typeSha256": "dee9f8f236f0556537e9701db017a527a19fcab67c93babebed2130cb83fbf45"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.deliver.sizeOf_spec",
+      "typeSha256": "d175fe2d4888d68559ef7b98bd02165279e80996c30548dd0dbdbc34b350ba9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.guard.sizeOf_spec",
+      "typeSha256": "988f59f123b34aa252ccf8747ffa9fdc72fa279b4bf36f3a34c999ffed4686d0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.ofNat_ctorIdx",
+      "typeSha256": "83901335e38dc2fbf59b3b123fb0c9ce662263e1db9a032df510a5fac544121e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.reset.sizeOf_spec",
+      "typeSha256": "193bbe1d09524349791a68d6c729929012ee64c2ecf74532c6d0bfc58994b098"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Action.work.sizeOf_spec",
+      "typeSha256": "f9d054f1649225362d1a9190050d031f4ccfa147b77cc1da9743bace305c96fb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.Cut.mk.sizeOf_spec",
+      "typeSha256": "fb0988a376450e29c6f06b75be42f23dc0671b62500ecfaddf2645807e86ed00"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.State.mk.sizeOf_spec",
+      "typeSha256": "191c16ba6c5fe9564321aa542d2c409657d19dc18cfc6b1af0713c87a9035cd0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_1",
+      "typeSha256": "2832fd5a404d760fecb0d21800730e44101bb12284fc0e66d348afeafa653241"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_2",
+      "typeSha256": "3f32fdeffecd0be1e6625e18ad1ecd0eb08bdb183872ebe772208c3ed20ada6d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_1",
+      "typeSha256": "0ca5c3468e779377f61f197b5131fac9399847ac6cd1233c6d1dff22a42ffad6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_2",
+      "typeSha256": "8707c5a197d30fe9167136837d2d109bc78584eadb5a1e8abba36b40243d92f4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_3",
+      "typeSha256": "614c3a82098dd63e65b4036bd205781dc97431e3b1ee722757cb2723387e4af8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_1",
+      "typeSha256": "c8ff40f60da4861117d49655d5b3f77ca2a6382a17f0eaf5e694bc3b3c3d0c17"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_2",
+      "typeSha256": "dde04c559cc7558d5b673bcaad4b2763d2a0d5cc3de1029f7a4c60216812d801"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_3",
+      "typeSha256": "843393042f47cc032306d37a3de38a78b7ef9cd2193baca08aca7c3e47679034"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_4",
+      "typeSha256": "fe76f544ebb9974b132efc4f87e5c80b1ecb518230a37001f6b22c9ff026fc4f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_5",
+      "typeSha256": "adb14e3331d015b9dd3d09ab25bb724f16f604814a38ca9a75471851f6bc1c9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Model",
+      "name": "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_6",
+      "typeSha256": "324bf1f6bbd617e5e1a03872fc60f425a42a6b557054bf81aff9a891eb463ea8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Model.run.eq_def",
+      "typeSha256": "37d02d939ac6b663d137239271071e6ed9cde4bab52f3f01983f01e138304176"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.begin_body_completion_safe",
+      "typeSha256": "9907c439070bc095a8fb22ea74d9a59390e59263472b4c6bae910f6e905701ab"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.begin_body_program_guarded",
+      "typeSha256": "58a906a20387c68bb065fb1d40bcff28a91300d2c8959dfb29be3b430d423c46"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.body_completion_safe",
+      "typeSha256": "f299ba66c3d41d7d253d70079988054d8208b84f1fb52bed55b9e49fbc07e467"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.body_program_guarded",
+      "typeSha256": "ab2843cc16c72f44677ac5339c9a501660e9614aef1ca3ca2592b3e772f5bde6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.check_deadline_complete",
+      "typeSha256": "52886d7831164ef643cf9df2d70e3eabad84e6566ea419694ef71c11c6a28ea8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.check_deadline_sound",
+      "typeSha256": "e86e22b817e4fb04da46f88b61b5608a6f42f9c353f9dc2fb5961545c97bb7a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.cuts_safe_cons",
+      "typeSha256": "aaf048af4eb52d81b54f1ffe47e4214a3298b67023370a5b6d6ba57acb9c28f1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.deliver_step_safe",
+      "typeSha256": "8e400f80df600a6fdd8eff1d173288451393907907f0e0581fab62515ca1dcd4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.expired_boundary_guard_rejected",
+      "typeSha256": "bd16d830f2f1204f027fe316f4f3c96fa24cf7f9c51ca105bb67d721d690492f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.expired_phase_cannot_reset",
+      "typeSha256": "55b16be31a8ec7825fd6b86d0daf3f653ff2975472cc0325b05dca047864609a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.forget_fresh",
+      "typeSha256": "47867eb437ec1cfe2d2ff411bca4055ffb23bd1f112746928658fe0174793ecb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.guard_step_safe",
+      "typeSha256": "0cafea7a9c75e705b553df036aa67e7d70ef5ab9793c7da1cb2033255259b4da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.initial_run_safe",
+      "typeSha256": "8a6505c1ecfecca9f7c7224bc8d8de5f1cc26b479b156b91298815d029724d99"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.initial_safe",
+      "typeSha256": "69b5bb8fe652d63d88f3d9bd8d75e660fb51c76c4b41acbb0a46a72e3db296d8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.late_work_completion_rejected",
+      "typeSha256": "58c05c416d8b3aea2bccaa03adda28ea75c07c8dffa7d3108ef41f3be8a051f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.parse_completion_safe",
+      "typeSha256": "96beeb80c39f16e38223c4ac94d1097d87e4ed58af4303fb75be56327f79282e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.parse_program_guarded",
+      "typeSha256": "75904dcd00e8e5bbdead0e4795db7b43e0c2192310955ff97f7286958d9e30a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.read1_completion_safe",
+      "typeSha256": "7d01886483d5c664e1b107d53ec24285f33e3bf8d739e5bd4f8ff66bb5b777e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.read1_program_guarded",
+      "typeSha256": "9ecc5e24e04e52a5f1753f423a07bc95aaffd820680c36471e2b6348e87dac22"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.readline_completion_safe",
+      "typeSha256": "b535e700427bac476dd3633fd60a23d2b2eecd6a9e648ac514cb17a84889d7ff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.readline_program_guarded",
+      "typeSha256": "a0b6b42df3bc233ecaf79bd7baabef58ce077119e38875b4af28128a10fbb00f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.recv_completion_safe",
+      "typeSha256": "f7aa6b845287d781d749ceef24eda63f548f5679cd66a2ade1409c8b6805a7ac"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.recv_program_guarded",
+      "typeSha256": "ca38ee2d2d24acbd67fd85bd5929effa74a0aa1c52e684dfb3271e0de94d34be"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.reset_step_safe",
+      "typeSha256": "46058ff34ae8845616a8b7fc620aab4a7d21cc8f7ae2f72e0d2500518451f4bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.reset_uses_current_sample",
+      "typeSha256": "ec4570bc5015f568b2605ff224683ecfd2f9aacdfc0403dcfa653b768e0322af"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.run_safe",
+      "typeSha256": "a5855a66d5b8753e87a7dea5520f91d9b0416306c3e1a678cdbf216bd33a19d2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_executes",
+      "typeSha256": "2bc5e06c2f769e86d0df99455f078fcdd0fd89adda1f33532a5c359ce375620d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_unsafe",
+      "typeSha256": "ef62faa8320939a24eec75a35ef6a3a38bc7c6eeb384fa01244d84cea28af453"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_program_rejected",
+      "typeSha256": "10ef0cbc2353b1533764e85aa655d551fbfb8e0249b1795894ecb89e9e9eb18d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.unguarded_reset_executes",
+      "typeSha256": "9a5d522c28a7554e8c7c100a9ae7d9fa7e537a2b64137b39069fadd37834cd26"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_deliver",
+      "typeSha256": "596c70996be698921e61024ebb3b0f9db2d01be83a27e35a031a0cd21ce91c9f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_reset",
+      "typeSha256": "9de0dd9ed96b0601a1945bd497414505b1cd253b09a403a1d27e3d06949843f2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressDeadlines.Spec",
+      "name": "AlloyStudio.IngressDeadlines.Spec.work_step_safe",
+      "typeSha256": "6a111d5e605389f5c80e2e4f22891445f5ad6492f3ad099354b19608a98f0078"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Grammar.mk.sizeOf_spec",
+      "typeSha256": "b9f41b0623e92364d3d39bf44bb4b0ad8dd4fbcefabb601fa2ed779d0d964e50"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Input.mk.sizeOf_spec",
+      "typeSha256": "5c1e3fd0835a8d5f7e3af0c3a940f60184d2a7639e299781a78dcaed043ac663"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree._sizeOf_2_eq",
+      "typeSha256": "b9e50bfdb05ff962afeb7aa3b5398323636409cbbb5af0814cf38d57bb0a8f6f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree._sizeOf_3_eq",
+      "typeSha256": "6551cc1fb6d37233f19fd55aa7339b622fe714c546a4b7fd8bbba2bacb779926"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.array.sizeOf_spec",
+      "typeSha256": "3ebc39cf4f8db46f348c6cd3e5f88b50dfd268f86f3a362f5a69a52879c708d0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u"
+      ],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.brecOn.eq",
+      "typeSha256": "c3aa920d5731fdcc8026c0591ebe18b243d1cb79ab0f61b1132e04b66ac0cc4e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u"
+      ],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.brecOn_1.eq",
+      "typeSha256": "ed40a3c9105ce5bef320efba6f25a82671d9d8b18b90a3ea56984f603633a9cd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u"
+      ],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.brecOn_2.eq",
+      "typeSha256": "58e08f0af3972d7cc1c52715f4cd01005f6951b74d027d0d597c3058996664e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u"
+      ],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.brecOn_3.eq",
+      "typeSha256": "7bde03dcd986ab5304bca4311f0605a76789552a15e1e1575442f4574a2c99e2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.object.sizeOf_spec",
+      "typeSha256": "d1b11375b66c9c585842b1426dc6c4596690c36c22441e94411a760886c09308"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.JsonTree.scalar.sizeOf_spec",
+      "typeSha256": "c621d719dc20de1de97cf1003298ef046f3dec53ad8d38ce6ce06a7e863232a1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.alt.sizeOf_spec",
+      "typeSha256": "e40607edfc3b290d8aac0b765a737e82238e148853d2fffc2f52fac0f1f949b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.atom.sizeOf_spec",
+      "typeSha256": "7313c35d823a9483ec8d5aca46268beb763312823fa03f131f66d3abdce1d124"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u"
+      ],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.brecOn.eq",
+      "typeSha256": "ec5933212af234c5ffe4a1f5ca56867a17df26338480efe080beccd43b9a705f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.empty.sizeOf_spec",
+      "typeSha256": "d9a1f96c1248708135847e554c5aa47d3b5d9a7096cb757f08177b8483cff052"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.eps.sizeOf_spec",
+      "typeSha256": "e8e0126a1afb982bf5a946b30ec3de911fb0c36a6fd3e95dfbcf23b44e061d42"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.seq.sizeOf_spec",
+      "typeSha256": "d5cde71c9d1202f45aa3014823c95e6266ec5c2862f12e2fef5ab3f7499fdfc4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Regex.star.sizeOf_spec",
+      "typeSha256": "1bed952e60d40040e77b27eb128cfe0b72c90f0def11e0d0de66dfb75dea6332"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.bodylessRead.sizeOf_spec",
+      "typeSha256": "f911ae3f6d29e6cd29820a224bf2fe0fb5dbcd158c2ec6dceb3e31e3ee99fbb7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.contentTypeGrammar.sizeOf_spec",
+      "typeSha256": "afbc74069756ee46474f38ce1ec358214e84d8733a245e4bfa5553a16777c24e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.contentTypeRequired.sizeOf_spec",
+      "typeSha256": "e5a734addef8fa321ca978bfc1918a7e91fbac759356d278a52f74df8ee72295"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.crlf.sizeOf_spec",
+      "typeSha256": "c33eed628dc36e9e7a0a42b3720d61e409045745b0319343a67f65d3a83b0a5b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.headerNames.sizeOf_spec",
+      "typeSha256": "e8e9c18bae8ff2e34ebbaeb9eef7fbab03b61b3477de3fcadfa173fc54c71f2f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.headerValues.sizeOf_spec",
+      "typeSha256": "9fe496b4db7306adc3bd8a9704ac0950e5f7a9e9e23d9bd68b96c2fb979cc152"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.headerVersion.sizeOf_spec",
+      "typeSha256": "381c0683a148d0ef6a49d04566e7d95a2f68afb03a16a0fc81392e8bfbe8aab0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.hostGrammar.sizeOf_spec",
+      "typeSha256": "7e20dfc1d921c3be61f47256f8b665b674730d11afc96c8943af684165666a46"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.hostRequired.sizeOf_spec",
+      "typeSha256": "b335a019ccafdb0c69291ca95b22d807fec1a3941f5e66cb244fe4632242708a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.identityEncoding.sizeOf_spec",
+      "typeSha256": "92e969058054c2081bfc1b5a6da744455b07e91e153f534aa49e0c903ae1a119"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.lengthGrammar.sizeOf_spec",
+      "typeSha256": "3332146354f4213ad44544cc95d930005e4f2e953976f848f48c35bcaacd0fae"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.methodToken.sizeOf_spec",
+      "typeSha256": "6a5a5c220db064811cd5821f3262b182efb23110fffe9806819ba698d5e484b1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.noEscapedControls.sizeOf_spec",
+      "typeSha256": "6f55542bdc7d621eef9230486b075014456a66c1503bb734a7d58a25fe2e60c1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.noExpect.sizeOf_spec",
+      "typeSha256": "6070054fb81c7ef2fdac02cf8698dc399fdce15f17421aad890deda2f254fcd0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.noTransferEncoding.sizeOf_spec",
+      "typeSha256": "49ce643127c80a0e7f64ec892b68d7a015108233729bbd3e7bddae8b098615b4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.ofNat_ctorIdx",
+      "typeSha256": "1272c22a89d5f594aebd57fc10ad321f2808da5e0686d54bd3221a1219903254"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.originOnly.sizeOf_spec",
+      "typeSha256": "0db3b1e03f94b0c0843d0d892cd33988a2aae686384e5b25ca2a9223672ad445"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.singletons.sizeOf_spec",
+      "typeSha256": "a38dae92ca3e4df0ba348dd657a736164e2973c0eb64f10451ab8bd6bb17cec0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.targetGrammar.sizeOf_spec",
+      "typeSha256": "00c94e57b48e06609c49cc87efdcdace93dfcc6f43d87c966cf95440184e73df"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.threeParts.sizeOf_spec",
+      "typeSha256": "8edadd71139949e4783c3e34e5304a7b48c99bd2a7d44dd62de658ba7ebf8721"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Rule.version.sizeOf_spec",
+      "typeSha256": "723900db75540e607785ad6970504e44043a10d6d5f17947757bb0e46b9b6e13"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.Scan.mk.sizeOf_spec",
+      "typeSha256": "e96d3b576bfe0540b48b4d17cda04059e457d2e2ecf325f22c9cd26d52ce6f05"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.all_rules_hold",
+      "typeSha256": "dcbde1d97b68abaeaaf170730b7b8f107b2491bdca62c53b2181f635d5191807"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.array_json_root_rejected",
+      "typeSha256": "bd1bb0338b1073a9995edfc2e98f245cfb7aef68cbcf26f7878f7b33c76a5131"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.decoder_matches_contract",
+      "typeSha256": "4e0803d5c30eb6a0655f0ae50b217baf4fbfa7925bbaa0ce649e212289e97b8c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.decoder_sound",
+      "typeSha256": "705f1d726777210191b21935f5e9a9cc94b69080c6a49c549040f9686081e888"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.duplicate_charset_rejected",
+      "typeSha256": "a8952dae55a3775cae1e517147518ffabc4a687fe10e94c3b6ebb4741261bc07"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.duplicate_decoded_json_key_rejected",
+      "typeSha256": "20ee102c8250175fd8b3e450ad3025e76d3dd9b09172fc192f2df542ba5e0e07"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.duplicate_host_rejected",
+      "typeSha256": "287d74aeda5f02e3366d7e58114a41e3d2cffb9c184b22db60822281e809e49d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.grammar_correspondence",
+      "typeSha256": "ba78865c00f3e24d4e5fd459947eb2428c264fbaac8bfbca7449fd957549642b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.header_rules_correspondence",
+      "typeSha256": "ab9549941cdd4a6e99aaad6d347f9a42a3b827d5be9256a1173df0cf2bffc758"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.http09_rejected",
+      "typeSha256": "79c180eae7b0ac81b408e7aa055d534d5a5000b3495d2ac8163764a1ee893fee"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.http10_host_optional",
+      "typeSha256": "b3fffc0d0106d9568625485c28e0c40c454af1406755902b0df3e6519af46924"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.instDecidableEqRule._proof_1",
+      "typeSha256": "5c27887b3154057d51d5c954599fe5434c63de42507a97f97867864c41abc86a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "DecoderModel",
+      "name": "AlloyStudio.IngressDecoder.instDecidableEqRule._proof_2",
+      "typeSha256": "60bbf0b78bb59a4df6162b1fae311e2101acb65aa2cf11c053b070ac5389fc9a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.json_acceptance_requires_all_policies",
+      "typeSha256": "7146de0bfca26d31ce7ae0946b9207e9d590bbae9046d5cefbde5abbc5785a8d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.json_depth_boundary_accepts",
+      "typeSha256": "ef569179bfa5f69a0a019372a22b08e1cf4386e764b26648c1c706fe74f1e1da"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.json_depth_overrun_rejects",
+      "typeSha256": "1d52fdb24ca3ea7d1a690f203ecfea9e5669788a9f2a27f7a3fa1cc161a98d1c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.json_string_braces_do_not_count",
+      "typeSha256": "2a042988327d72882ae6fd82867202e339d308049b67e7925fc5fe4dcbce4d00"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.line_rules_correspondence",
+      "typeSha256": "e3c47a79d5998b027646c82852a27367f6765caa6fd14e32d11340200247cc77"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.lone_surrogate_json_key_rejected",
+      "typeSha256": "b1513882bfe08362d57f89f8ba65887597c1ea7c720a65de965c4a576dd12809"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.missing_http11_host_rejected",
+      "typeSha256": "6461093594c5119db31c1b1483816bb55db23e8eeb5879d1e9c7cb4da0a027bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.network_path_rejected",
+      "typeSha256": "d539b2476043add84496b45bd3b1f37d647ff6ed6062dc855ea6fc8be13729c2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.nonserializable_json_scalar_rejected",
+      "typeSha256": "4f8bd793e3f9064590e82bf2bebf9db53044c59774976a9fe84ef226904d675e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.scalar_json_root_rejected",
+      "typeSha256": "f58ac8d0c4a39109f3d435b285d5f79362c3dd619d4e5e364b66e982abcf76b4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Decoder",
+      "name": "AlloyStudio.IngressDecoder.tab_separator_rejected",
+      "typeSha256": "18c3af9914c59a0c1bf46b95032940b038b3a31378b074a3cf24ad11958f0ad5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.BodyPrimitives.mk.sizeOf_spec",
+      "typeSha256": "2ac92a6c9b28d67ed8bf0cf7596c5abc5b03b04cdaedeb693386d63013ff70f7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.DecodedBody.mk.sizeOf_spec",
+      "typeSha256": "75a914b5774e3a3f145b1dd7a3d4af02b83eb7f7e407567f41699b41b1f15104"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.Wire.mk.sizeOf_spec",
+      "typeSha256": "6f9bf540207bbd55234392430c533b4ff6b69658ccd9bb854f46d94ca86ed3fa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.accepted_body_has_bound_parse",
+      "typeSha256": "f897b2b2c25d2dc4937bc8bc7baff2a4cb8f381b8db4395622a694e1fbfd88a6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.actual_post_requires_mutation",
+      "typeSha256": "b163578d9dba5943d7f55ffbb1eb6b4d5ee1c19081f828cf1d958c9887ff78cf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.actual_request_binding",
+      "typeSha256": "8e54c96ba15a8c59216e56887ec04bd61120ec1e6a4a2c02548cdae926df7ec5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.body_length_is_received_bytes",
+      "typeSha256": "daa150b1ab1bb56aef5dd91561f1e8a9aa63a5ea0a28685e672cafdc14417d51"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.declared_length_is_parsed_header",
+      "typeSha256": "332fe2ce60c6c86cf0e35841c9d75f1bd8cf6148d21b7ff7f3caa79bcc1ce86d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.decoded_body_binding",
+      "typeSha256": "dc4aad5cae5ad85b5fe71ab4fdd25161720fae0c09c794bf85ea5a65e9f0e443"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.early_terminator_rejected",
+      "typeSha256": "d83ee17815a6212f6c88fa5a160e215e40fb87307076229edb6af29a09c0f447"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.folded_header_rejected",
+      "typeSha256": "e22763963ea7b1c17215db30699514e15015935992b5a2e28382698c9cdd25cb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.header_lengths_are_received_bytes",
+      "typeSha256": "440337c551df8c661482d7970c50f9171a49c3347ae44722d039061e24384d25"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.header_without_crlf_rejected",
+      "typeSha256": "3c1dcfa04938e3a4f0eacab8551190cf63fa6dcc64aab449e8cb18a44511ddda"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.luna_header_lengths_cannot_be_empty",
+      "typeSha256": "22a10679887931e94a045868b8972cd6077051427feeec3ddc9212ce1ffa23bc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.luna_post_is_a_mutation",
+      "typeSha256": "a38a56513bf852ea8a75a429ce0475206a91ccd1048c99a50d79d5087f39cb8a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.missing_terminator_rejected",
+      "typeSha256": "86ced8b96b636f5bde26768054ee46dddca4011e4804b3aee20dbfb217607507"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressWire",
+      "name": "AlloyStudio.IngressWire.post_false_mutation_impossible",
+      "typeSha256": "aac11e9a3edb767ef3f7be2bb8059550d1094f934371afb643bf241b006272b6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressRouteModel",
+      "name": "AlloyStudio.Traffic.Inbound.mk.sizeOf_spec",
+      "typeSha256": "df94e2a6da54d6c011e212ec28a1d1f8f66c4c5f6b8f9435c6d1a461f3944c97"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.admitted_is_validated",
+      "typeSha256": "ab6f1797c78139b3cc4af68a947ad9f1410d4f9e58015f6c9d5f1790a038b6f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.admitted_with_reachable_capacity",
+      "typeSha256": "bb79dea13f2e597baae9be12e9352899354483f47a9481a728dd203bef7d61af"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.all_lengths_bounded",
+      "typeSha256": "f35eb311bab0f6e6558818c5d5a8b7feccb572ebb4376f92ecb80bf4e7fda599"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.body_exact_and_bounded",
+      "typeSha256": "51ad092d0c5065800abec3747a5793558cf2d1ccb03a3b59e36c69a08c2cfa47"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.bool_and_parts",
+      "typeSha256": "c2f5ba908f81618bf7ec8ab6ae91e7d421d2092f1e2dec748b0b04e641cef057"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.completed_body_validated",
+      "typeSha256": "2928564a2c3d496bc31f71d7bc48396a918c3653be66ed55852e134101cbff89"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.received_headers_bounded",
+      "typeSha256": "d1a33f2379992ae5687353b2f14ad1ac8aafb3b80193fea3fb4b2761b7955477"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "IngressComposition",
+      "name": "AlloyStudio.Traffic.reviewer_post_rejected",
+      "typeSha256": "242c823cf81cb49cf80bc84c08a3fb74b335ea195d3eb172485f914dab7add46"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "AdmissionSpec",
+      "name": "_private.AdmissionSpec.0.AlloyStudio.IngressAdmission.Owns.match_1.eq_1",
+      "typeSha256": "43557a1c5ad7a1e5c744fabcbef1387c356a900087db4b53cfaa51127497e017"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "AdmissionSpec",
+      "name": "_private.AdmissionSpec.0.AlloyStudio.IngressAdmission.Owns.match_1.eq_2",
+      "typeSha256": "be69ebf203326b5c86ed1aa5f41e484a23f6159d6fd60fc831561991a779cf24"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "AdmissionSpec",
+      "name": "_private.AdmissionSpec.0.AlloyStudio.IngressAdmission.registered.match_1.eq_1",
+      "typeSha256": "a6346ca352646b66f673532528f8d1cf6f8471fe0bc61d9d9590bb99bb14c912"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "AdmissionSpec",
+      "name": "_private.AdmissionSpec.0.AlloyStudio.IngressAdmission.registered.match_1.eq_2",
+      "typeSha256": "8e519ab290e6ce6489b593e62e49586b2ff610e7b97e991c2d6a8f5a2b049b11"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_1",
+      "typeSha256": "3aee4f4b74a3811dea8a2532369112bef739df85e0a2142e2ebfca875729790b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_2",
+      "typeSha256": "7416a00b546d5a1b6d0effa1fbc152f8429da91f4306eea094f696c69b4a5838"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_1",
+      "typeSha256": "61c7689718ac79cdc6939b58ea8c4b4ae69373a3ce35d5fcc112c5cedfb0c350"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "IngressDeadlines.Spec",
+      "name": "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_2",
+      "typeSha256": "6b6710613f4f6177f10a554ab226d3a7874f336a56627c432ae874aac28435bc"
+    }
+  ]
+}

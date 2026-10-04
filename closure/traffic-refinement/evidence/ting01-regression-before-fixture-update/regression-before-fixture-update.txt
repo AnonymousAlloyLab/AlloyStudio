@@ -1,0 +1,17 @@
+................................................................................................................................................................................................................................................................................................................................................................................................E...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+ERROR: test_exact_source_schema_and_three_constructor_bindings (test_http_profile_bridge.ProfileBridgeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_http_profile_bridge.py", line 20, in test_exact_source_schema_and_three_constructor_bindings
+    result = bridge.check(ROOT)
+  File "/home/augustus/Live_Programming/scripts/http_profile_bridge.py", line 248, in check
+    mappings = linkage(root, (root / 'traffic_http.py').read_text())
+  File "/home/augustus/Live_Programming/scripts/http_profile_bridge.py", line 228, in linkage
+    raise BridgeRejected('Runtime class/import/member layout changed.')
+http_profile_bridge.BridgeRejected: Runtime class/import/member layout changed.
+
+----------------------------------------------------------------------
+Ran 980 tests in 299.765s
+
+FAILED (errors=1)

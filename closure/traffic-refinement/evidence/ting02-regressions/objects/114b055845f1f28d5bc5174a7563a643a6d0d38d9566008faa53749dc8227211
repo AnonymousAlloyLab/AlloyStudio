@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "status": "prospective_protocol_not_result",
+  "expected_cohort": {
+    "source_files": 66080,
+    "excluded_raw_ast_identical": 4482,
+    "eligible": 61598,
+    "incorrect": 42386,
+    "correct": 19212
+  },
+  "core_timeout_seconds": 60,
+  "tar_primary_depth": 2,
+  "fm24_variants": [
+    "history_only",
+    "history_plus_one_mutation"
+  ],
+  "headline_denominator": "all_eligible_incorrect",
+  "holdout": {
+    "paper_fraction_train": 0.7,
+    "unit": "complete_learner_trajectory",
+    "required_history": "training_only",
+    "fallback": "explicitly_labeled_nonreplication"
+  },
+  "required_shared_context": [
+    "target_predicate",
+    "environment",
+    "facts",
+    "oracle",
+    "scope",
+    "bitwidth",
+    "max_sequence",
+    "trace_bounds"
+  ],
+  "luna_core_runtime_included": false,
+  "full_corpus_incomplete_results_must_be_labeled": true,
+  "primary_metrics": [
+    "native_hint_hit_rate_micro",
+    "native_hint_hit_rate_macro_exercise",
+    "wall_mean_all_observed",
+    "wall_p50_all_observed",
+    "wall_p95_all_observed",
+    "timeout_rate"
+  ],
+  "secondary_metrics": [
+    "support_fraction",
+    "support_conditional_hit_rate",
+    "timely_hint_curve",
+    "localization_fraction",
+    "correct_nonempty_hint_rate",
+    "offline_preprocessing_time",
+    "peak_memory"
+  ],
+  "quality_metrics_require_extra_evidence": [
+    "bounded_full_repair_success",
+    "executable_first_edit",
+    "behavioral_progress",
+    "expert_educational_quality"
+  ],
+  "prohibited_inferences": [
+    "precomputed_distance_equals_hint_success",
+    "self_metric_progress_equals_semantic_progress",
+    "historical_paper_runtime_equals_local_runtime",
+    "partial_pilot_equals_full_corpus",
+    "correct_hint_nonempty_equals_unsound"
+  ],
+  "source_files": [
+    "/home/augustus/lp_baselines/SEFM22.pdf",
+    "/home/augustus/lp_baselines/FM24.pdf",
+    "/home/augustus/ACGN/README.md",
+    "/home/augustus/ACGN/alloy4fun-augmented/index.json"
+  ],
+  "implementation_url": "https://github.com/anaines14/Alloy4Fun"
+}

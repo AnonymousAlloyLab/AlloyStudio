@@ -1,0 +1,358 @@
+class Handler:
+    def setup(self):
+        super().setup()
+        self.rfile.close()
+        self.rfile = DeadlineReader(self.connection, self.server.traffic_profile)
+    def parse_request(self):
+        self.request_version = 'HTTP/1.0'
+        expected = strict_request_line(self.raw_requestline)
+        parsed = super().parse_request()
+        if parsed:
+            if (self.command, self.path, self.request_version) != expected:
+                raise HTTPInputError(400, 'Ambiguous request line.')
+            self.request_headers(mutation=self.command == 'POST')
+            self.rfile.check_deadline()
+        return parsed
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except HTTPInputError as error:
+            if not hasattr(self, 'request_version'):
+                self.request_version = 'HTTP/1.0'
+            if not hasattr(self, 'requestline'):
+                self.requestline = ''
+            if not hasattr(self, 'command'):
+                self.command = None
+            if not hasattr(self, 'path'):
+                self.path = ''
+            self.close_connection = True
+            self.reply(error.status, {'error': error.message})
+        except (OSError, ValueError):
+            self.close_connection = True
+        finally:
+            self.close_connection = True
+    def request_headers(self, *, mutation=False, admin=False):
+        return strict_request_headers(self.headers.raw_items(), self.request_version, mutation=mutation, admin=admin)
+    def read_json_body(self, length, limit, *, admin=False):
+        if not 0 < length <= limit:
+            raise HTTPInputError(413, 'Administrator request exceeds its byte limit.' if admin else 'Request must be at most 16 KiB.')
+        self.rfile.begin_body()
+        (remaining, chunks) = (length, [])
+        try:
+            while remaining:
+                chunk = self.rfile.read1(min(65536, remaining))
+                if not chunk:
+                    raise ValueError()
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            self.rfile.check_deadline()
+            data = bounded_json(b''.join(chunks), self.server.traffic_profile.json_depth)
+            self.rfile.check_deadline()
+            return data
+        except (OSError, ValueError, RecursionError):
+            raise HTTPInputError(400, 'Invalid, incomplete or timed-out JSON request.') from None
+    def public_body(self):
+        return self.read_json_body(self.request_headers(mutation=True), MAX_REQUEST_BYTES)
+    def admin_headers(self, *, mutation=False):
+        try:
+            return self.request_headers(mutation=mutation, admin=True)
+        except HTTPInputError as error:
+            raise AdminError(error.status, error.message) from None
+    def admin_body(self, length, limit):
+        try:
+            return self.read_json_body(length, limit, admin=True)
+        except HTTPInputError as error:
+            raise AdminError(error.status, error.message) from None
+    def admin_GET(self, path):
+        try:
+            self.admin_headers()
+            auth = self.server.admin_auth
+            if path == '/api/admin/session':
+                (state, cookies) = auth.bootstrap(self.headers, self.client_address)
+                return self.reply(200, state, cookies=cookies)
+            principal = auth.authorize(self.headers, self.client_address, mutation=False)
+            match = re.fullmatch('/api/admin/drafts/([A-Za-z0-9_-]{43})', path)
+            if not match:
+                raise AdminError(404, 'Not found.')
+            result = self.server.admin.view(principal, match.group(1))
+            with auth.guard(principal):
+                auth.touch(principal)
+            return self.reply(200, result)
+        except Exception as error:
+            return self.admin_failure(error)
+    def admin_POST(self, path):
+        try:
+            length = self.admin_headers(mutation=True)
+            auth = self.server.admin_auth
+            login = path == '/api/admin/login'
+            principal = auth.authorize(self.headers, self.client_address, preauth=login)
+            limit = 2 * 1048576 if path == '/api/admin/prepare' else 131072
+            if login:
+                limit = 8192
+            data = self.admin_body(length, limit)
+            if login:
+                if set(data) != {'password'}:
+                    raise AdminError(400, 'Provide only the password.')
+                (result, cookies) = auth.login(principal, data['password'])
+                return self.reply(200, result, cookies=cookies)
+            if path == '/api/admin/logout':
+                if data:
+                    raise AdminError(400, 'Unexpected sign-out fields.')
+                cookies = auth.logout(principal)
+                return self.reply(200, {'status': 'signed_out'}, cookies=cookies)
+            if path == '/api/admin/prepare':
+                result = self.server.admin.prepare(principal, data)
+                status = 202
+            elif path == '/api/admin/suggest':
+                if set(data) != {'id', 'revision', 'questionSeed'}:
+                    raise AdminError(400, 'Provide draft ID, revision and questionSeed.')
+                result = self.server.admin.request_suggestion(principal, data['id'], data['revision'], data['questionSeed'])
+                status = 202
+            elif path == '/api/admin/discard':
+                if set(data) != {'id'}:
+                    raise AdminError(400, 'Provide a draft ID.')
+                result = self.server.admin.discard(principal, data['id'])
+                status = 200
+            elif path == '/api/admin/commit':
+                if set(data) != {'id', 'revision', 'exercises'}:
+                    raise AdminError(400, 'Provide draft ID, revision and reviewed exercises.')
+                result = self.server.admin.commit(principal, data['id'], data['revision'], data['exercises'])
+                return self.reply(200, result)
+            else:
+                raise AdminError(404, 'Not found.')
+            with auth.guard(principal):
+                auth.touch(principal)
+            return self.reply(status, result)
+        except Exception as error:
+            return self.admin_failure(error)
+    def do_GET(self):
+        try:
+            self.request_headers()
+            raw_path = urlsplit(self.path).path
+            path = unquote(raw_path)
+            if self.server.control_listener:
+                if path != '/api/health':
+                    return self.reply(404, {'error': 'Not found.'})
+                app = self.server.shared_app
+                return self.reply(200, {'status': 'ok', 'exercises': len(app.exercises), 'engine': 'ACGN / CanDis Fast Rewrite IR'})
+            if path.startswith('/api/admin/') and path != raw_path:
+                return self.reply(404, {'error': 'Not found.'})
+            if path.startswith('/api/admin/'):
+                return self.admin_GET(path)
+            if path in ('/dashboard', '/admin'):
+                self.connection.settimeout(self.server.traffic_profile.write_seconds)
+                self.send_response(308)
+                self.send_header('Location', path[1:] + '/')
+                self.send_header('Content-Length', '0')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Connection', 'close')
+                self.end_headers()
+                return
+            if path == '/api/health':
+                return self.reply(200, {'status': 'ok', 'exercises': len(self.server.exercises), 'engine': 'ACGN / CanDis Fast Rewrite IR'})
+            snapshot = self.server.snapshot
+            if path == '/api/exercises':
+                return self.public_reply(('catalogue',), lambda : {'exercises': [project(e, SUMMARY_FIELDS) for e in snapshot.exercises.values()]}, generation=snapshot)
+            if path.startswith('/api/exercises/'):
+                record = snapshot.exercises.get(path[len('/api/exercises/'):])
+                if record:
+                    return self.public_reply(('exercise', record['id']), lambda : project(record, PUBLIC_FIELDS), generation=snapshot)
+            if path in STATIC:
+                (name, mime) = STATIC[path]
+                target = self.server.root / 'web' / name
+                try:
+                    stat = target.stat()
+    
+                    def contents():
+                        with target.open('rb') as stream:
+                            return stream.read(self.server.traffic_profile.response_bytes + 1)
+                    if path.startswith('/admin/'):
+                        return self.reply(200, contents(), mime)
+                    return self.public_reply(('static', name, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_ino, stat.st_size), contents, mime, generation=snapshot)
+                except FileNotFoundError:
+                    pass
+            self.reply(404, {'error': 'Not found.'})
+        except HTTPInputError as error:
+            self.reply(error.status, {'error': error.message})
+    def do_POST(self):
+        path = urlsplit(self.path).path
+        if self.server.control_listener:
+            return self.reply(405, {'error': 'Method not allowed.'})
+        if path.startswith('/api/admin/'):
+            return self.admin_POST(path)
+        try:
+            self.request_headers(mutation=True)
+            if path not in ('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel'):
+                return self.reply(404, {'error': 'Not found.'})
+            origin = self.headers.get('Origin')
+            if origin:
+                try:
+                    allowed = self.server.public_origins or frozenset((normalize_origin(scheme + self.headers.get('Host', '')) for scheme in ('http://', 'https://')))
+                    accepted = normalize_origin(origin) in allowed
+                except ValueError:
+                    accepted = False
+                if not accepted:
+                    return self.reply(403, {'error': 'Cross-origin requests are not allowed.'})
+            data = self.public_body()
+        except HTTPInputError as error:
+            return self.reply(error.status, {'error': error.message})
+        if path == '/api/channel':
+            if data:
+                return self.reply(400, {'error': 'No channel fields are accepted.'})
+            try:
+                channel = self.server.scheduler.issue_channel(self.client_address[0])
+                return self.reply(200, {'status': 'ok', 'channel': channel})
+            except CapacityError:
+                return self.reply(429, {'status': 'busy', 'code': 'capacity', 'retryable': True, 'dispatched': False})
+        if path == '/api/cancel':
+            if set(data) != {'channel', 'revision'} or not isinstance(data.get('channel'), str) or re.fullmatch('[A-Za-z0-9_-]{43}', data['channel']) is None or (type(data.get('revision')) is not int) or (not 0 <= data['revision'] <= 2 ** 53 - 1):
+                return self.reply(400, {'error': 'Expected channel and revision.'})
+            try:
+                self.server.scheduler.observe(data['channel'], data['revision'])
+            except ChannelExpired:
+                return self.reply(410, {'status': 'expired', 'code': 'channel_expired'})
+            except Superseded:
+                pass
+            return self.reply(200, {'status': 'ok'})
+        expected = {'exerciseId', 'body', 'revision'}
+        optional = {'metric', 'channel'} | ({'behaviorToken', 'evidenceToken'} if path == '/api/explain' else set())
+        fields = set(data)
+        if not expected <= fields or not fields <= expected | optional or (not isinstance(data['exerciseId'], str)) or (type(data['revision']) is not int) or (not 0 <= data['revision'] <= 2 ** 53 - 1) or ('metric' in data and (not isinstance(data['metric'], str) or data['metric'] not in METRICS)) or ('channel' in data and (not isinstance(data['channel'], str) or re.fullmatch('[A-Za-z0-9_-]{43}', data['channel']) is None)) or any((name in data and (not isinstance(data[name], str) or re.fullmatch('[0-9a-f]{64}', data[name]) is None) for name in ('behaviorToken', 'evidenceToken'))):
+            return self.reply(400, {'error': 'Expected exerciseId, body, and a nonnegative integer revision.'})
+        (snapshot, generation) = self.server.capture()
+        record = snapshot.exercises.get(data['exerciseId'])
+        if not record:
+            return self.reply(404, {'error': 'Exercise not found.'})
+        (metric, channel, revision) = (data.get('metric', 'canonical'), data.get('channel'), data['revision'])
+        error = validate_body(data['body'])
+        if not error:
+            try:
+                self.server.scheduler.observe(channel, revision, (generation, record['id'], data['body'], metric))
+            except ChannelExpired:
+                return self.reply(410, {'status': 'expired', 'code': 'channel_expired'})
+            except Superseded:
+                return self.reply(200, {'status': 'superseded', 'exerciseId': record['id'], 'revision': revision})
+        selected = SimpleNamespace(correct_pools={record['id']: snapshot.correct_pools[record['id']]})
+        snapshot = None
+        context = dict(snapshot=selected, generation=generation, channel=channel, revision=revision)
+        identity = self.server.evidence_identity(record, data['body'], metric, generation, channel)
+        behavior_identity = self.server.evidence_identity(record, data['body'], metric, generation, channel, 'behavior')
+        if path == '/api/behavior':
+            result = {'status': 'invalid', 'message': error} if error else self.server.evaluate_behavior(record, data['body'], **context)
+            if result.get('status') == 'ok':
+                token = behavior_token(record['id'], data['body'], result)
+                if channel is not None:
+                    self.server.evidence.pin(behavior_identity, result)
+                result = dict(result, behaviorToken=token)
+        else:
+            evidence_token = data.get('evidenceToken')
+            if error:
+                result = {'status': 'invalid', 'diagnostics': [{'message': error}]}
+            elif path == '/api/explain' and evidence_token is not None:
+                result = self.server.evidence.get(evidence_token, identity)
+                if result is None:
+                    result = {'status': 'expired'}
+            else:
+                result = self.server.evaluate(record, data['body'], metric, **context)
+            if path == '/api/feedback' and result.get('status') == 'ok':
+                result = dict(result, evidenceToken=self.server.evidence.pin(identity, result))
+            if path == '/api/explain':
+                token = data.get('behaviorToken')
+                evidence = None
+                if token is not None:
+                    if channel is not None:
+                        evidence = self.server.evidence.find(behavior_identity, lambda value: behavior_token(record['id'], data['body'], value) == token)
+                    if evidence is None and channel is None:
+                        key = self.server._key('behavior', self.server.behavior_payload(record, data['body']), generation)
+                        with self.server.cache_lock:
+                            evidence = self.server.behavior_cache.get(key)
+                        if evidence is not None and behavior_token(record['id'], data['body'], evidence) != token:
+                            evidence = None
+                if result.get('status') != 'ok' or (token is not None and evidence is None):
+                    result = {'status': 'unavailable', 'model': 'gpt-6-luna', 'message': 'These hints or examples have expired. Check your predicate again to refresh guidance.'}
+                else:
+                    with self.server.scheduler.lock:
+                        current = self.server.scheduler.current(channel, revision)
+                    if not current:
+                        result = {'status': 'superseded'}
+                    else:
+                        result = self.server.explainer.explain(result, student_body=data['body'], behavior=evidence)
+                        if token is not None:
+                            result = dict(result, behaviorToken=token)
+        with self.server.scheduler.lock:
+            if not error and (not self.server.scheduler.current(channel, revision)):
+                result = {'status': 'superseded'}
+        status = 503 if result.get('code') == 'capacity' and result.get('dispatched') is False else 200
+        delivery = {'exerciseId': record['id'], 'revision': revision}
+        if path != '/api/behavior':
+            delivery['requestedMetric'] = metric
+        self.reply(status, dict(result, **delivery))
+
+class DeadlineReader:
+    def readline(self, limit=-1):
+        self.check_deadline()
+        limit = min(limit if limit >= 0 else self.profile.line_bytes + 1, self.profile.line_bytes + 1)
+        while True:
+            newline = self.buffer.find(b'\n')
+            count = min(newline + 1 if newline >= 0 else len(self.buffer), limit)
+            if newline >= 0 or len(self.buffer) >= limit:
+                result = bytes(self.buffer[:count])
+                del self.buffer[:count]
+                break
+            chunk = self._recv(min(4096, limit - len(self.buffer)))
+            if not chunk:
+                result = bytes(self.buffer)
+                self.buffer.clear()
+                break
+            self.buffer.extend(chunk)
+        if self.headers_mode:
+            self.header_remaining -= len(result)
+            self.header_lines += 1
+            if len(result) > self.profile.line_bytes or self.header_remaining < 0 or self.header_lines > self.profile.header_count + 2:
+                raise HTTPInputError(431, 'Request headers exceed their limit.')
+            if self.header_lines > 1 and result[:1] in (b' ', b'\t'):
+                raise HTTPInputError(400, 'Folded request headers are not supported.')
+            if result and (not result.endswith(b'\r\n')):
+                raise HTTPInputError(400, 'Request lines must use CRLF.')
+            if self.header_lines > 1 and result != b'\r\n':
+                (name, colon, value) = result[:-2].partition(b':')
+                if not colon or re.fullmatch(b"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name) is None or any((byte < 32 and byte != 9 or byte == 127 for byte in value)):
+                    raise HTTPInputError(400, 'Malformed request header.')
+        self.check_deadline()
+        return result
+    def _recv(self, count):
+        self.check_deadline()
+        remaining = self.deadline - self.clock()
+        if remaining <= 0:
+            raise TimeoutError('HTTP read deadline exceeded.')
+        self.connection.settimeout(min(remaining, self.profile.idle_seconds))
+        chunk = self.connection.recv(min(count, 4096))
+        self.check_deadline()
+        return chunk
+    def read1(self, count):
+        self.check_deadline()
+        if count <= 0:
+            result = b''
+        elif self.buffer:
+            result = bytes(self.buffer[:count])
+            del self.buffer[:count]
+        else:
+            result = self._recv(count)
+        self.check_deadline()
+        return result
+    def read(self, count=-1):
+        if count < 0:
+            raise ValueError('Unbounded HTTP reads are forbidden.')
+        chunks = []
+        while count:
+            chunk = self.read1(count)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            count -= len(chunk)
+        return b''.join(chunks)
+    def begin_headers(self):
+        self.deadline = self.clock() + self.profile.header_seconds
+        self.header_remaining = self.profile.header_bytes
+        self.header_lines = 0
+        self.headers_mode = True

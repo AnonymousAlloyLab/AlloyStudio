@@ -1,0 +1,205 @@
+{
+  "methods": {
+    "Admission.__init__": "def __init__(self, profile, *, control=False, clock=time.monotonic_ns):\n    (profile, state) = initial_admission(profile, control, clock)\n    (self.profile, self.control, self.clock) = (profile, control, clock)\n    self.lock = threading.Lock()\n    (self.active, self.peak) = (state['active'], state['peak'])\n    (self.accepted, self.rejected) = (state['accepted'], state['rejected'])\n    (self.owners, self.anonymous_owners) = (state['owners'], state['anonymous_owners'])\n    self.limit = state['limit']\n    self.bucket = TokenBucket.from_initial(state)\n    self.peers = state['peers']",
+    "BoundedHTTPServer.__init__": "def __init__(self, address, handler, *, traffic_profile=None, control=False, shared_app=None):\n    profile = normalized_profile(TrafficProfile() if traffic_profile is None else traffic_profile)\n    if type(control) is not bool:\n        raise ValueError('The control lane selector must be a Boolean.')\n    self.traffic_profile = profile\n    self.control_listener = control\n    self.shared_app = shared_app\n    if control:\n        try:\n            if not ipaddress.ip_address(address[0]).is_loopback:\n                raise ValueError()\n        except ValueError:\n            raise ValueError('Control listener must bind a literal loopback address.') from None\n    self.request_queue_size = self.traffic_profile.control_backlog if control else self.traffic_profile.backlog\n    self.http_admission = Admission(self.traffic_profile, control=control)\n    self.http_public_views = PublicViews(self.traffic_profile)\n    super().__init__(address, handler)",
+    "TokenBucket.from_initial": "@classmethod\ndef from_initial(cls, state):\n    bucket = cls.__new__(cls)\n    (bucket.capacity, bucket.rate) = (state['capacity'], state['rate'])\n    (bucket.credit, bucket.last) = (state['credit'], state['last'])\n    return bucket"
+  },
+  "moduleLayout": [
+    "ImportFrom(module='collections', names=[alias(name='OrderedDict')], level=0)",
+    "Import(names=[alias(name='hashlib')])",
+    "ImportFrom(module='http.server', names=[alias(name='ThreadingHTTPServer')], level=0)",
+    "Import(names=[alias(name='ipaddress')])",
+    "Import(names=[alias(name='json')])",
+    "Import(names=[alias(name='re')])",
+    "Import(names=[alias(name='socket')])",
+    "Import(names=[alias(name='sys')])",
+    "Import(names=[alias(name='threading')])",
+    "Import(names=[alias(name='time')])",
+    "ImportFrom(module='traffic_profile', names=[alias(name='TrafficProfile'), alias(name='normalized_profile'), alias(name='initial_admission')], level=0)",
+    {
+      "bases": [
+        "Name(id='ValueError', ctx=Load())"
+      ],
+      "class": "HTTPInputError",
+      "decorators": [],
+      "members": [
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='status'), arg(arg='message')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        }
+      ]
+    },
+    {
+      "bases": [],
+      "class": "TokenBucket",
+      "decorators": [],
+      "members": [
+        "Expr(value=Constant(value='Integer nanocredits; backward clock observations never create tokens.'))",
+        "Assign(targets=[Name(id='UNIT', ctx=Store())], value=Constant(value=1000000000))",
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='capacity'), arg(arg='rate'), arg(arg='now')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='cls'), arg(arg='state')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [
+            "Name(id='classmethod', ctx=Load())"
+          ],
+          "method": "from_initial"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='now')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "refill"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "available"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "charge"
+        }
+      ]
+    },
+    {
+      "bases": [],
+      "class": "Admission",
+      "decorators": [],
+      "members": [
+        "Expr(value=Constant(value='Atomic count and total/source credit ownership for one listener.'))",
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='profile')], kwonlyargs=[arg(arg='control'), arg(arg='clock')], kw_defaults=[Constant(value=False), Attribute(value=Name(id='time', ctx=Load()), attr='monotonic_ns', ctx=Load())], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='peer')], kwonlyargs=[arg(arg='owner')], kw_defaults=[Constant(value=None)], defaults=[])",
+          "decorators": [],
+          "method": "reserve"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='owner')], kwonlyargs=[], kw_defaults=[], defaults=[Constant(value=None)])",
+          "decorators": [],
+          "method": "release"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "statistics"
+        }
+      ]
+    },
+    {
+      "bases": [],
+      "class": "PublicViews",
+      "decorators": [],
+      "members": [
+        "Expr(value=Constant(value='A bounded cache containing only serialized allowlisted public bytes.'))",
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='profile')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='generation'), arg(arg='key'), arg(arg='produce')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "get"
+        }
+      ]
+    },
+    {
+      "bases": [
+        "Name(id='ThreadingHTTPServer', ctx=Load())"
+      ],
+      "class": "BoundedHTTPServer",
+      "decorators": [],
+      "members": [
+        "Assign(targets=[Name(id='daemon_threads', ctx=Store())], value=Constant(value=True))",
+        "Assign(targets=[Name(id='allow_reuse_address', ctx=Store())], value=Constant(value=True))",
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='address'), arg(arg='handler')], kwonlyargs=[arg(arg='traffic_profile'), arg(arg='control'), arg(arg='shared_app')], kw_defaults=[Constant(value=None), Constant(value=False), Constant(value=None)], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='request'), arg(arg='client_address')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "process_request"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='request'), arg(arg='client_address')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "process_request_thread"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='request'), arg(arg='client_address')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "handle_error"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "traffic_stats"
+        }
+      ]
+    },
+    {
+      "bases": [],
+      "class": "DeadlineReader",
+      "decorators": [],
+      "members": [
+        "Expr(value=Constant(value='Small explicit socket buffer with an absolute deadline on every recv.\\n\\n    Socket.makefile().readline() can keep receiving trickled bytes indefinitely\\n    under an inactivity timeout. Here each raw recv observes the same deadline.\\n    '))",
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='connection'), arg(arg='profile')], kwonlyargs=[arg(arg='clock')], kw_defaults=[Attribute(value=Name(id='time', ctx=Load()), attr='monotonic', ctx=Load())], defaults=[])",
+          "decorators": [],
+          "method": "__init__"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "begin_headers"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "begin_body"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='count')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "_recv"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='limit')], kwonlyargs=[], kw_defaults=[], defaults=[UnaryOp(op=USub(), operand=Constant(value=1))])",
+          "decorators": [],
+          "method": "readline"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='count')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "read1"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self'), arg(arg='count')], kwonlyargs=[], kw_defaults=[], defaults=[UnaryOp(op=USub(), operand=Constant(value=1))])",
+          "decorators": [],
+          "method": "read"
+        },
+        {
+          "arguments": "arguments(posonlyargs=[], args=[arg(arg='self')], kwonlyargs=[], kw_defaults=[], defaults=[])",
+          "decorators": [],
+          "method": "close"
+        }
+      ]
+    },
+    {
+      "arguments": "arguments(posonlyargs=[], args=[arg(arg='raw'), arg(arg='depth_limit')], kwonlyargs=[], kw_defaults=[], defaults=[Constant(value=32)])",
+      "decorators": [],
+      "function": "bounded_json"
+    }
+  ]
+}

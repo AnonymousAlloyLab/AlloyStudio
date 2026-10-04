@@ -1,0 +1,35 @@
+{
+  "classification": "FINITE_DISCOVERY_NOT_CLOSURE",
+  "controlBoundary": {
+    "controlCurrentlyStartedByDefault": false,
+    "productionCliDefault": 0,
+    "requiresActiveTopologyWitnessToCloseActualControlIngress": true,
+    "trf00FrozenControlPort": 0
+  },
+  "finiteTests": {
+    "allocatorFailureRelease": true,
+    "capacityRejectionNoStdlibAllocator": true,
+    "combinedActive": 3,
+    "combinedCapacity": 3,
+    "handlerFailureRelease": true,
+    "publicAccepted": 2,
+    "publicCapacityRejected": 14,
+    "releaseIdempotence": true,
+    "reservationBeforeStdlibAllocator": true,
+    "separateCreditsNoBorrowing": true,
+    "simultaneousPublicAttempts": 16
+  },
+  "schemaVersion": 1,
+  "sourceInputs": {
+    "closure/traffic-refinement/service-profile.json": "9a6da7f4480a3ed753fe71c1f4678a33483db6c6d0b1066a46fb86b2d90ffead",
+    "server.py": "d5905160c0e5e9422590a1cf04c692146d4a7512809452c9d929377b4d27ad24",
+    "traffic_http.py": "19227047c4d7df72e334bc36a4368074b4a86de938c0f4962966a36fb7a39189",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd"
+  },
+  "trust": [
+    "CPython locks serialize critical sections",
+    "socketserver callback contract",
+    "one public plus at most one control listener share one specified profile",
+    "finite test executions are not proofs for all schedules"
+  ]
+}

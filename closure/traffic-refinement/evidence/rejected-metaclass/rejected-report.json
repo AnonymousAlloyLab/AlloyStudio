@@ -1,0 +1,13 @@
+{
+  "blockId": "TCFG01",
+  "blockingReasons": [
+    "Rejected: Unresolved constructed review finding: formal/reviews/TCFG01/sol-a.json"
+  ],
+  "builds": [],
+  "id": "tcfg01-20261004T150611Z-68b33815",
+  "infrastructureErrors": [],
+  "schemaVersion": 1,
+  "scope": "normalized-numeric-configuration",
+  "status": "BLOCKED",
+  "umbrellaObligationsClosed": []
+}

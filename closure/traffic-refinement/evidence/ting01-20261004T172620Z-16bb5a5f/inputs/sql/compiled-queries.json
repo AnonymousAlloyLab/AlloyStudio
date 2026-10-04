@@ -1,0 +1,271 @@
+{
+  "boundary": "Generation-time parsing/type checking; runtime bound parameters.",
+  "inputs": {
+    "sql/queries.json": "8c0b39f879137939fe653d55c5822cacfe3c103b242d5a33189307fb1d79e435",
+    "sql/schema.json": "3a534942cea24e6fe9434d61384c7f0fad5b9eb1d93984758fa64a369de17746",
+    "vendor/sqlean/provenance.json": "7ff723b346bfda65d335b07d8a6f11853497366781cb860141a210af3e9746b9"
+  },
+  "parser": "SQLeanParser",
+  "queries": [
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"metadata\",\n    projection := SQLean.Projection.expressions [SQLean.Expr.column \"key\", SQLean.Expr.column \"value\"],\n    whereClause := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"key\", descending := false }],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"key\", \"value\" FROM \"metadata\" ORDER BY \"key\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, TEXT",
+      "id": "select_metadata",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"key\", \"value\" FROM \"metadata\" ORDER BY \"key\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"exercises\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"id\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"origin\",\n                     SQLean.Expr.column \"title\",\n                     SQLean.Expr.column \"model_group\",\n                     SQLean.Expr.column \"predicate_name\",\n                     SQLean.Expr.column \"description\",\n                     SQLean.Expr.column \"environment_before\",\n                     SQLean.Expr.column \"environment_after\",\n                     SQLean.Expr.column \"predicate_header\",\n                     SQLean.Expr.column \"starter\",\n                     SQLean.Expr.column \"original_source\",\n                     SQLean.Expr.column \"primary_token\",\n                     SQLean.Expr.column \"metadata\",\n                     SQLean.Expr.column \"validation\"],\n    whereClause := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"ordinal\", descending := false }],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"id\", \"ordinal\", \"origin\", \"title\", \"model_group\", \"predicate_name\", \"description\", \"environment_before\", \"environment_after\", \"predicate_header\", \"starter\", \"original_source\", \"primary_token\", \"metadata\", \"validation\" FROM \"exercises\" ORDER BY \"ordinal\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT",
+      "id": "select_exercises",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"id\", \"ordinal\", \"origin\", \"title\", \"model_group\", \"predicate_name\", \"description\", \"environment_before\", \"environment_after\", \"predicate_header\", \"starter\", \"original_source\", \"primary_token\", \"metadata\", \"validation\" FROM \"exercises\" ORDER BY \"ordinal\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"solutions\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"exercise_id\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"kind\",\n                     SQLean.Expr.column \"body\",\n                     SQLean.Expr.column \"original_source\",\n                     SQLean.Expr.column \"token_hash\",\n                     SQLean.Expr.column \"metadata\"],\n    whereClause := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"exercise_id\", descending := false },\n                { expr := SQLean.Expr.column \"ordinal\", descending := false }],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"exercise_id\", \"ordinal\", \"kind\", \"body\", \"original_source\", \"token_hash\", \"metadata\" FROM \"solutions\" ORDER BY \"exercise_id\" ASC, \"ordinal\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT, TEXT, TEXT, TEXT",
+      "id": "select_solutions",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"exercise_id\", \"ordinal\", \"kind\", \"body\", \"original_source\", \"token_hash\", \"metadata\" FROM \"solutions\" ORDER BY \"exercise_id\" ASC, \"ordinal\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"auxiliary\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"kind\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"payload\",\n                     SQLean.Expr.column \"original_source\"],\n    whereClause := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"kind\", descending := false },\n                { expr := SQLean.Expr.column \"ordinal\", descending := false }],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" ORDER BY \"kind\" ASC, \"ordinal\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT",
+      "id": "select_auxiliary",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" ORDER BY \"kind\" ASC, \"ordinal\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.insert\n  { table := \"metadata\",\n    columns := some [\"key\", \"value\"],\n    rows := [[SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_METADATA_KEY__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_METADATA_VALUE__\")]] }",
+      "canonical": "INSERT INTO \"metadata\" (\"key\", \"value\") VALUES ('__SQL_BIND_METADATA_KEY__', '__SQL_BIND_METADATA_VALUE__');",
+      "certificate": "Valid INSERT statement.",
+      "id": "insert_metadata",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "key",
+          "sentinel": "__SQL_BIND_METADATA_KEY__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "value",
+          "sentinel": "__SQL_BIND_METADATA_VALUE__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "INSERT INTO \"metadata\" (\"key\", \"value\") VALUES (?, ?);"
+    },
+    {
+      "ast": "SQLean.Statement.insert\n  { table := \"exercises\",\n    columns := some [\"id\", \"ordinal\", \"origin\", \"title\", \"model_group\", \"predicate_name\", \"description\",\n                \"environment_before\", \"environment_after\", \"predicate_header\", \"starter\", \"original_source\",\n                \"primary_token\", \"metadata\", \"validation\"],\n    rows := [[SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_ID__\"),\n              SQLean.Expr.literal (SQLean.Value.int 9000000000000004),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_ORIGIN__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_TITLE__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_MODEL_GROUP__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_PREDICATE_NAME__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_DESCRIPTION__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_ENVIRONMENT_BEFORE__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_ENVIRONMENT_AFTER__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_PREDICATE_HEADER__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_STARTER__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_ORIGINAL_SOURCE__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_PRIMARY_TOKEN__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_METADATA__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_EXERCISES_VALIDATION__\")]] }",
+      "canonical": "INSERT INTO \"exercises\" (\"id\", \"ordinal\", \"origin\", \"title\", \"model_group\", \"predicate_name\", \"description\", \"environment_before\", \"environment_after\", \"predicate_header\", \"starter\", \"original_source\", \"primary_token\", \"metadata\", \"validation\") VALUES ('__SQL_BIND_EXERCISES_ID__', 9000000000000004, '__SQL_BIND_EXERCISES_ORIGIN__', '__SQL_BIND_EXERCISES_TITLE__', '__SQL_BIND_EXERCISES_MODEL_GROUP__', '__SQL_BIND_EXERCISES_PREDICATE_NAME__', '__SQL_BIND_EXERCISES_DESCRIPTION__', '__SQL_BIND_EXERCISES_ENVIRONMENT_BEFORE__', '__SQL_BIND_EXERCISES_ENVIRONMENT_AFTER__', '__SQL_BIND_EXERCISES_PREDICATE_HEADER__', '__SQL_BIND_EXERCISES_STARTER__', '__SQL_BIND_EXERCISES_ORIGINAL_SOURCE__', '__SQL_BIND_EXERCISES_PRIMARY_TOKEN__', '__SQL_BIND_EXERCISES_METADATA__', '__SQL_BIND_EXERCISES_VALIDATION__');",
+      "certificate": "Valid INSERT statement.",
+      "id": "insert_exercises",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_EXERCISES_ID__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000004,
+          "type": "int"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "origin",
+          "sentinel": "__SQL_BIND_EXERCISES_ORIGIN__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "title",
+          "sentinel": "__SQL_BIND_EXERCISES_TITLE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "model_group",
+          "sentinel": "__SQL_BIND_EXERCISES_MODEL_GROUP__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "predicate_name",
+          "sentinel": "__SQL_BIND_EXERCISES_PREDICATE_NAME__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "description",
+          "sentinel": "__SQL_BIND_EXERCISES_DESCRIPTION__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "environment_before",
+          "sentinel": "__SQL_BIND_EXERCISES_ENVIRONMENT_BEFORE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "environment_after",
+          "sentinel": "__SQL_BIND_EXERCISES_ENVIRONMENT_AFTER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "predicate_header",
+          "sentinel": "__SQL_BIND_EXERCISES_PREDICATE_HEADER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "starter",
+          "sentinel": "__SQL_BIND_EXERCISES_STARTER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_EXERCISES_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "primary_token",
+          "sentinel": "__SQL_BIND_EXERCISES_PRIMARY_TOKEN__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "metadata",
+          "sentinel": "__SQL_BIND_EXERCISES_METADATA__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "validation",
+          "sentinel": "__SQL_BIND_EXERCISES_VALIDATION__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "INSERT INTO \"exercises\" (\"id\", \"ordinal\", \"origin\", \"title\", \"model_group\", \"predicate_name\", \"description\", \"environment_before\", \"environment_after\", \"predicate_header\", \"starter\", \"original_source\", \"primary_token\", \"metadata\", \"validation\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+    },
+    {
+      "ast": "SQLean.Statement.insert\n  { table := \"solutions\",\n    columns := some [\"exercise_id\", \"ordinal\", \"kind\", \"body\", \"original_source\", \"token_hash\", \"metadata\"],\n    rows := [[SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_EXERCISE_ID__\"),\n              SQLean.Expr.literal (SQLean.Value.int 9000000000000019),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_KIND__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_BODY__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_ORIGINAL_SOURCE__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_TOKEN_HASH__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_SOLUTIONS_METADATA__\")]] }",
+      "canonical": "INSERT INTO \"solutions\" (\"exercise_id\", \"ordinal\", \"kind\", \"body\", \"original_source\", \"token_hash\", \"metadata\") VALUES ('__SQL_BIND_SOLUTIONS_EXERCISE_ID__', 9000000000000019, '__SQL_BIND_SOLUTIONS_KIND__', '__SQL_BIND_SOLUTIONS_BODY__', '__SQL_BIND_SOLUTIONS_ORIGINAL_SOURCE__', '__SQL_BIND_SOLUTIONS_TOKEN_HASH__', '__SQL_BIND_SOLUTIONS_METADATA__');",
+      "certificate": "Valid INSERT statement.",
+      "id": "insert_solutions",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "exercise_id",
+          "sentinel": "__SQL_BIND_SOLUTIONS_EXERCISE_ID__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000019,
+          "type": "int"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_SOLUTIONS_KIND__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "body",
+          "sentinel": "__SQL_BIND_SOLUTIONS_BODY__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_SOLUTIONS_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "token_hash",
+          "sentinel": "__SQL_BIND_SOLUTIONS_TOKEN_HASH__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "metadata",
+          "sentinel": "__SQL_BIND_SOLUTIONS_METADATA__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "INSERT INTO \"solutions\" (\"exercise_id\", \"ordinal\", \"kind\", \"body\", \"original_source\", \"token_hash\", \"metadata\") VALUES (?, ?, ?, ?, ?, ?, ?);"
+    },
+    {
+      "ast": "SQLean.Statement.insert\n  { table := \"auxiliary\",\n    columns := some [\"kind\", \"ordinal\", \"payload\", \"original_source\"],\n    rows := [[SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_AUXILIARY_KIND__\"),\n              SQLean.Expr.literal (SQLean.Value.int 9000000000000026),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_AUXILIARY_PAYLOAD__\"),\n              SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_AUXILIARY_ORIGINAL_SOURCE__\")]] }",
+      "canonical": "INSERT INTO \"auxiliary\" (\"kind\", \"ordinal\", \"payload\", \"original_source\") VALUES ('__SQL_BIND_AUXILIARY_KIND__', 9000000000000026, '__SQL_BIND_AUXILIARY_PAYLOAD__', '__SQL_BIND_AUXILIARY_ORIGINAL_SOURCE__');",
+      "certificate": "Valid INSERT statement.",
+      "id": "insert_auxiliary",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_AUXILIARY_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000026,
+          "type": "int"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "payload",
+          "sentinel": "__SQL_BIND_AUXILIARY_PAYLOAD__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_AUXILIARY_ORIGINAL_SOURCE__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "INSERT INTO \"auxiliary\" (\"kind\", \"ordinal\", \"payload\", \"original_source\") VALUES (?, ?, ?, ?);"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"sqlite_schema\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"type\", SQLean.Expr.column \"name\", SQLean.Expr.column \"tbl_name\"],\n    whereClause := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"type\", descending := false },\n                { expr := SQLean.Expr.column \"name\", descending := false }],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"type\", \"name\", \"tbl_name\" FROM \"sqlite_schema\" ORDER BY \"type\" ASC, \"name\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, TEXT, TEXT",
+      "id": "select_schema",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"type\", \"name\", \"tbl_name\" FROM \"sqlite_schema\" ORDER BY \"type\" ASC, \"name\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.relational\n  { source := { name := \"sqlite_schema\", alias := none, derived := none },\n    selectList := [SQLean.SelectItem.expression (SQLean.RelExpr.column none \"type\") none,\n                   SQLean.SelectItem.expression (SQLean.RelExpr.column none \"name\") none,\n                   SQLean.SelectItem.expression (SQLean.RelExpr.column none \"tbl_name\") none,\n                   SQLean.SelectItem.expression (SQLean.RelExpr.column none \"sql\") none],\n    joins := [],\n    whereClause := some (SQLean.RelExpr.isNull (SQLean.RelExpr.column none \"sql\") true),\n    groupBy := [],\n    having := none,\n    distinct := false,\n    orderBy := [{ expr := SQLean.RelExpr.column none \"type\", descending := false },\n                { expr := SQLean.RelExpr.column none \"name\", descending := false }],\n    limit := none,\n    offset := none,\n    ctes := [] }",
+      "canonical": "SELECT \"type\", \"name\", \"tbl_name\", \"sql\" FROM \"sqlite_schema\" WHERE (\"sql\" IS NOT NULL) ORDER BY \"type\" ASC, \"name\" ASC;",
+      "certificate": "Valid query. Output types: TEXT, TEXT, TEXT, TEXT",
+      "id": "select_schema_sql",
+      "parameters": [],
+      "roundTrip": true,
+      "sql": "SELECT \"type\", \"name\", \"tbl_name\", \"sql\" FROM \"sqlite_schema\" WHERE (\"sql\" IS NOT NULL) ORDER BY \"type\" ASC, \"name\" ASC;"
+    }
+  ],
+  "schemaVersion": 1
+}

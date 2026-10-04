@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "reviewerModel": "gpt-6-luna",
+  "tier": 1,
+  "blockManifestSha256": "e8cdff342aeba6687f88e3e52faa32c98a8a8b5acfdf435f28baa3eac6ddb2e6",
+  "priorReviews": {},
+  "verdict": "no_constructed_breach",
+  "findings": []
+}

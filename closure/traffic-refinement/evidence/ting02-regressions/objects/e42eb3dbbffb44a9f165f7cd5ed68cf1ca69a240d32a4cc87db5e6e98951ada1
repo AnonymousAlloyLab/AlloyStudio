@@ -1,0 +1,11 @@
+{
+  "reviewerModel": "gpt-6-sol",
+  "tier": 2,
+  "blockManifestSha256": "1a6859e2908249b11716d0fa17c214c9979aa66e663a36470540980bc8514610",
+  "priorReviews": {
+    "formal/reviews/B03/luna-a.json": "2bc0526d28c3b6033e4181751e5392dd2ebf9ff046867e0a4b6f437edcb4daf6",
+    "formal/reviews/B03/luna-b.json": "caf52c1f014ea2d9fdb09ed040550c5a7f3eb22bddacfc0a3931b9cf55d6b45b"
+  },
+  "verdict": "no_constructed_breach",
+  "findings": []
+}

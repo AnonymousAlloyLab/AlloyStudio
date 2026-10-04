@@ -1,0 +1,429 @@
+{
+  "blockId": "TING01",
+  "blockingReasons": [],
+  "builds": [
+    {
+      "artifacts": {
+        "IngressDeadlines.Extracted": "b909b4f31e93847a542ce53d1043aa035b123d6acfbf727767df10ddbf455f6a",
+        "IngressDeadlines.Model": "3c204d7843d781a116198a5b7e808469c6e22fc00e49b7772e7df4937d9de091",
+        "IngressDeadlines.Spec": "46b0cb603b779f2eaff5b0b611fb8cacefadc0d3dccb59f06defb73890d72c0c"
+      },
+      "axioms": [],
+      "bridge": {
+        "consumerAstSha256": {
+          "DeadlineReader.__init__": "98ef87413927a60ccb85fb4750cf03a6be2b8bc614d724ded367b566416a1fd4",
+          "DeadlineReader._recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+          "DeadlineReader.begin_body": "6845961b1f1d69c2de47647ec1f7ca73ca61a066f9168cd810694c1030969616",
+          "DeadlineReader.begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+          "DeadlineReader.close": "1c80cc58b8c3fb588bf31618fd9369e1cbb144b8b585f1a97fe04bfcb261c2bf",
+          "DeadlineReader.read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+          "DeadlineReader.read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+          "DeadlineReader.readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d",
+          "Handler.admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+          "Handler.handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+          "Handler.parse_request": "3eb6161c97a8e96f4e56056994585a3a507e5d14f626972a7f4133c95b2e65b8",
+          "Handler.public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+          "Handler.read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+          "Handler.setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+        },
+        "excluded": [
+          "complete TRF-01",
+          "full byte/JSON decoder proof",
+          "pre-handler allocation and lane composition",
+          "wall-clock time after sampled cuts"
+        ],
+        "generatedSha256": "407aaaa88174df0ba956c9ef1cd9e43ac74474d798efcebc622974f3ac272b2f",
+        "kind": "CHECKED_RESTRICTED_SUCCESSFUL_PATH_ABSTRACTION_UNDER_DECLARED_TCB",
+        "primitiveSha256": "41ce45f6eb164189eb201935182e7313d0cd2c272e5c5248a15527a6e30f4299",
+        "programs": {
+          "beginBodyProgram": [
+            "guard",
+            "reset"
+          ],
+          "bodyProgram": [
+            "work",
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "parseProgram": [
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "read1Program": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "readlineProgram": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "recvProgram": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ]
+        },
+        "status": "PASS",
+        "trust": "Frozen work/call interpretations, ordinary Python and stdlib dispatch, finite-clock order embedding. Work may advance time arbitrarily; no virtual safety check is inserted at delivery."
+      },
+      "inventorySha256": "65e4e4eeda8e732f0e724752e960fb345d4c886989fc0784062193307a432fdd",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "proofSourceLanguage": "PASS",
+      "status": "PASS",
+      "theorems": 56
+    },
+    {
+      "artifacts": {
+        "IngressDeadlines.Extracted": "b909b4f31e93847a542ce53d1043aa035b123d6acfbf727767df10ddbf455f6a",
+        "IngressDeadlines.Model": "3c204d7843d781a116198a5b7e808469c6e22fc00e49b7772e7df4937d9de091",
+        "IngressDeadlines.Spec": "46b0cb603b779f2eaff5b0b611fb8cacefadc0d3dccb59f06defb73890d72c0c"
+      },
+      "axioms": [],
+      "bridge": {
+        "consumerAstSha256": {
+          "DeadlineReader.__init__": "98ef87413927a60ccb85fb4750cf03a6be2b8bc614d724ded367b566416a1fd4",
+          "DeadlineReader._recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+          "DeadlineReader.begin_body": "6845961b1f1d69c2de47647ec1f7ca73ca61a066f9168cd810694c1030969616",
+          "DeadlineReader.begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+          "DeadlineReader.close": "1c80cc58b8c3fb588bf31618fd9369e1cbb144b8b585f1a97fe04bfcb261c2bf",
+          "DeadlineReader.read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+          "DeadlineReader.read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+          "DeadlineReader.readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d",
+          "Handler.admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+          "Handler.handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+          "Handler.parse_request": "3eb6161c97a8e96f4e56056994585a3a507e5d14f626972a7f4133c95b2e65b8",
+          "Handler.public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+          "Handler.read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+          "Handler.setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+        },
+        "excluded": [
+          "complete TRF-01",
+          "full byte/JSON decoder proof",
+          "pre-handler allocation and lane composition",
+          "wall-clock time after sampled cuts"
+        ],
+        "generatedSha256": "407aaaa88174df0ba956c9ef1cd9e43ac74474d798efcebc622974f3ac272b2f",
+        "kind": "CHECKED_RESTRICTED_SUCCESSFUL_PATH_ABSTRACTION_UNDER_DECLARED_TCB",
+        "primitiveSha256": "41ce45f6eb164189eb201935182e7313d0cd2c272e5c5248a15527a6e30f4299",
+        "programs": {
+          "beginBodyProgram": [
+            "guard",
+            "reset"
+          ],
+          "bodyProgram": [
+            "work",
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "parseProgram": [
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "read1Program": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "readlineProgram": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ],
+          "recvProgram": [
+            "guard",
+            "work",
+            "guard",
+            "deliver"
+          ]
+        },
+        "status": "PASS",
+        "trust": "Frozen work/call interpretations, ordinary Python and stdlib dispatch, finite-clock order embedding. Work may advance time arbitrarily; no virtual safety check is inserted at delivery."
+      },
+      "inventorySha256": "65e4e4eeda8e732f0e724752e960fb345d4c886989fc0784062193307a432fdd",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "proofSourceLanguage": "PASS",
+      "status": "PASS",
+      "theorems": 56
+    }
+  ],
+  "claims": [
+    {
+      "classification": "PROVED_SAMPLED_DEADLINE_CUTS_UNDER_DECLARED_TCB",
+      "closesParent": false,
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/bridge.json"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=4096",
+          "-DmaxHeartbeats=2000000"
+        ],
+        "network": "fresh isolated user+network namespace per subprocess; only local loopback enabled for registered socket regressions",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-DEADLINE-CUTS",
+      "inputRootHash": "a8dcf1edc4506ba12754fdde3475b1b7a315eabe9d763211cf206dafe57d5da8",
+      "parentObligation": "TRF-01",
+      "status": "PASS",
+      "theorems": [
+        "AlloyStudio.IngressDeadlines.Model.Action.deliver.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.Action.guard.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.Action.ofNat_ctorIdx",
+        "AlloyStudio.IngressDeadlines.Model.Action.reset.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.Action.work.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.Cut.mk.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.State.mk.sizeOf_spec",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_1",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqAction._proof_2",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_1",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_2",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqCut.decEq._proof_3",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_1",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_2",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_3",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_4",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_5",
+        "AlloyStudio.IngressDeadlines.Model.instDecidableEqState.decEq._proof_6",
+        "AlloyStudio.IngressDeadlines.Model.run.eq_def",
+        "AlloyStudio.IngressDeadlines.Spec.begin_body_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.begin_body_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.body_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.body_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.check_deadline_complete",
+        "AlloyStudio.IngressDeadlines.Spec.check_deadline_sound",
+        "AlloyStudio.IngressDeadlines.Spec.cuts_safe_cons",
+        "AlloyStudio.IngressDeadlines.Spec.deliver_step_safe",
+        "AlloyStudio.IngressDeadlines.Spec.expired_boundary_guard_rejected",
+        "AlloyStudio.IngressDeadlines.Spec.expired_phase_cannot_reset",
+        "AlloyStudio.IngressDeadlines.Spec.forget_fresh",
+        "AlloyStudio.IngressDeadlines.Spec.guard_step_safe",
+        "AlloyStudio.IngressDeadlines.Spec.initial_run_safe",
+        "AlloyStudio.IngressDeadlines.Spec.initial_safe",
+        "AlloyStudio.IngressDeadlines.Spec.late_work_completion_rejected",
+        "AlloyStudio.IngressDeadlines.Spec.parse_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.parse_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.read1_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.read1_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.readline_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.readline_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.recv_completion_safe",
+        "AlloyStudio.IngressDeadlines.Spec.recv_program_guarded",
+        "AlloyStudio.IngressDeadlines.Spec.reset_step_safe",
+        "AlloyStudio.IngressDeadlines.Spec.reset_uses_current_sample",
+        "AlloyStudio.IngressDeadlines.Spec.run_safe",
+        "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_executes",
+        "AlloyStudio.IngressDeadlines.Spec.unguarded_late_delivery_unsafe",
+        "AlloyStudio.IngressDeadlines.Spec.unguarded_program_rejected",
+        "AlloyStudio.IngressDeadlines.Spec.unguarded_reset_executes",
+        "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_deliver",
+        "AlloyStudio.IngressDeadlines.Spec.work_after_guard_cannot_reset",
+        "AlloyStudio.IngressDeadlines.Spec.work_step_safe",
+        "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_1",
+        "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_1.eq_2",
+        "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_1",
+        "_private.IngressDeadlines.Spec.0.AlloyStudio.IngressDeadlines.Model.run.match_3.eq_2"
+      ],
+      "verifier": {
+        "id": "V-TING01",
+        "sha256": "3d0c96fb36e846a48ce133fe3a3bda21210b6a541b6ec2458a8f18f0ebb1873a"
+      }
+    }
+  ],
+  "closesParent": false,
+  "correspondence": {
+    "ambiguous": 0,
+    "classification": "CHECKED_RESTRICTED_SUCCESSFUL_PATH_ABSTRACTION_UNDER_DECLARED_TCB",
+    "coverageBoundary": "Only the registered guard primitive and closed consumer-method inventory; not arbitrary Python or complete ingress semantics.",
+    "evidence": [
+      "build-a/bridge.json",
+      "build-b/bridge.json"
+    ],
+    "generatedPrograms": 6,
+    "mandatoryMappings": 15,
+    "mapped": 15,
+    "registeredConsumerMethodAsts": 14,
+    "registeredPrimitiveComparisons": 1,
+    "unmapped": 0
+  },
+  "dependency": {
+    "blockSha256": "e1fc05d411a453ebba4ccb3be7f65d2d6ad731e565741db0c2b62653fa5519ca",
+    "id": "TCFG03",
+    "interpretation": "Historical frozen TRF-00 closure only; current successor application sources are separately frozen and no current whole-profile closure is inferred.",
+    "report": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json",
+    "reportSha256": "24642ba8bd6c7d171e2fab165af33eddc56613d0460582e2da34e7065dfc64e7"
+  },
+  "determinism": "PASS",
+  "excluded": [
+    "Complete original TRF-01 strict byte/request-line/header/JSON decoder, pre-handler allocation and composed public/control admission proof.",
+    "Unsampled elapsed wall time, CPU scheduling guarantees, total handler lifetime and asynchronous work after the accepted cut.",
+    "JSON semantic parser correctness, native Windows/macOS/IIS/Cloudflare deployment and future source revisions."
+  ],
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-j1",
+      "-DmaxRecDepth=4096",
+      "-DmaxHeartbeats=2000000"
+    ],
+    "network": "fresh isolated user+network namespace per subprocess; only local loopback enabled for registered socket regressions",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+    "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+  },
+  "id": "ting01-20261004T172620Z-16bb5a5f",
+  "infrastructureErrors": [],
+  "inputRootHash": "a8dcf1edc4506ba12754fdde3475b1b7a315eabe9d763211cf206dafe57d5da8",
+  "negativeControlEvidence": [
+    "negative-controls/Audit.lean",
+    "negative-controls/Placeholder.lean",
+    "negative-controls/equality_guard-extract.log",
+    "negative-controls/equality_guard-program.txt",
+    "negative-controls/equality_guard-spec.log",
+    "negative-controls/missing_json_postguard-extract.log",
+    "negative-controls/missing_json_postguard-program.txt",
+    "negative-controls/missing_json_postguard-spec.log",
+    "negative-controls/placeholder.log",
+    "negative-controls/restore-extracted.log",
+    "negative-controls/rogue-axiom-audit.jsonl",
+    "negative-controls/rogue-axiom-build.log"
+  ],
+  "negativeControls": {
+    "equality_guard": "REJECTED_BY_INDEPENDENT_SPEC",
+    "missing_json_postguard": "REJECTED_BY_INDEPENDENT_SPEC",
+    "placeholder_compiler": "REJECTED_BY_WARNING_AS_ERROR",
+    "placeholder_language": "REJECTED_BY_REGISTERED_LANGUAGE_GATE",
+    "rogue_axiom_audit": "REJECTED_BY_TRANSITIVE_AUDIT",
+    "rogue_axiom_language": "REJECTED_BY_REGISTERED_LANGUAGE_GATE"
+  },
+  "parentObligation": "TRF-01",
+  "provedTheorems": 56,
+  "provenance": {
+    "blockManifestSha256": "64e860293b5a00c8cf4742daf88ec21295a037d42907ed0aeff95afef1eb46de",
+    "claimId": "TRF01-DEADLINE-CUTS",
+    "originalRegistrySha256": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+    "publicClaims": [
+      "docs/ingress-deadline-obligation.md",
+      "formal/ingress_deadlines/README.md"
+    ],
+    "sourceManifest": "closure/traffic-refinement/ingress-deadline-sources.json",
+    "specification": "closure/traffic-refinement/ingress-deadline-spec.json"
+  },
+  "schemaVersion": 1,
+  "scope": "TRF-01-sampled-phase-deadline-cuts",
+  "status": "VERIFIED",
+  "toolchain": {
+    "pin": "leanprover/lean4:v4.34.1",
+    "rootHash": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "version": "Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)"
+  },
+  "trust": [
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Pinned Lean 4.34.1 kernel/compiler/distribution and separately registered audit machinery; empty transitive axiom audit."
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Closed AST bridge, admitted work/call-return interpretation, verifier and source mapping; not a verified arbitrary Python VM."
+      ],
+      "id": "TCB-TRANSLATION"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Finite monotonic CPython float samples embedded by order in signed logical integers; the successful clock sample is the observation cut. No claim about scheduling delay after that cut."
+      ],
+      "id": "TCB-CLOCK"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "CPython, socket/JSON/stdlib semantics, successful ordinary execution, Linux process/filesystem/network namespace isolation, SHA-256 and hardware."
+      ],
+      "id": "TCB-HOST"
+    }
+  ],
+  "umbrellaObligationsClosed": [],
+  "verifier": {
+    "id": "V-TING01",
+    "sha256": "3d0c96fb36e846a48ce133fe3a3bda21210b6a541b6ec2458a8f18f0ebb1873a"
+  },
+  "verifierTestCount": 69,
+  "verifierTestEvidence": [
+    {
+      "evidence": "test_ingress_deadlines.py.log",
+      "module": "test_ingress_deadlines.py",
+      "sha256": "3a23405a755a7d6d9ad22267d1635b62fbc421d698b4ebf041393d18ba32585f",
+      "status": "PASS",
+      "tests": 19
+    },
+    {
+      "evidence": "test_ingress_deadline_bridge.py.log",
+      "module": "test_ingress_deadline_bridge.py",
+      "sha256": "0369be0b17a807d54b6c44d404cb838ea910ef84f40cc7fdceab1baf205f9b0f",
+      "status": "PASS",
+      "tests": 13
+    },
+    {
+      "evidence": "test_ingress_deadline_gate.py.log",
+      "module": "test_ingress_deadline_gate.py",
+      "sha256": "de7143e604c9b3d7a269da45aa7a9892516cc7d1326d842f26ea8ded1a0dbef9",
+      "status": "PASS",
+      "tests": 13
+    },
+    {
+      "evidence": "test_review_ladder.py.log",
+      "module": "test_review_ladder.py",
+      "sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255",
+      "status": "PASS",
+      "tests": 5
+    },
+    {
+      "evidence": "test_traffic_http.py.log",
+      "module": "test_traffic_http.py",
+      "sha256": "b1005bf609d94715d8775e83e27a6f2e203e0ec51c17a577d42ba9547092662b",
+      "status": "PASS",
+      "tests": 19
+    }
+  ],
+  "verifierTests": "PASS"
+}

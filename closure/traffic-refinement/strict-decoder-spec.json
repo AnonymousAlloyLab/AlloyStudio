@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "id": "TDEC01",
+  "parent": "TRF-01",
+  "writtenBeforeImplementation": true,
+  "claim": "Every supported request reaching route dispatch has one exact CRLF request line, unambiguous bounded origin-form target, HTTP/1.0 or HTTP/1.1 version, strict raw header pairs and framing; mutation bodies pass UTF-8, JSON and route-specific schema validation before application dispatch.",
+  "requestLine": {
+    "separator": "exactly one ASCII SP between each of method, target and version",
+    "methods": "nonempty HTTP token; supported dispatch methods GET, POST; HEAD remains a valid token with its existing 501 rejection",
+    "versions": [
+      "HTTP/1.0",
+      "HTTP/1.1"
+    ],
+    "target": "origin form beginning with exactly one slash, ASCII URI characters or complete percent escapes; no raw fragments, backslash, controls, space, non-ASCII or escaped C0/DEL/backslash",
+    "termination": "exactly CRLF, no embedded CR or LF",
+    "normalization": "no stdlib double-slash rewriting; target is preserved exactly"
+  },
+  "headers": {
+    "input": "ordered raw_items pairs, retaining duplicate occurrences; DeadlineReader has already enforced line, aggregate, count, CRLF and no-fold bounds",
+    "syntax": "nonempty ASCII token name; values contain HTAB or codepoints 32..126 or 128..255; no CR/LF/NUL/DEL",
+    "singleton": [
+      "origin",
+      "host",
+      "content-length",
+      "content-type",
+      "content-encoding",
+      "x-csrf-token",
+      "sec-fetch-site",
+      "if-none-match",
+      "expect",
+      "authorization",
+      "cookie"
+    ],
+    "host": "exactly one for HTTP/1.1; optional singleton for HTTP/1.0; DNS/reg-name ASCII letters/digits/dot/hyphen/underscore/tilde or bracketed IPv6; optional decimal port 0..65535, at most five digits; no credentials, path, whitespace or comma",
+    "transferEncoding": "any occurrence rejected",
+    "contentEncoding": "absent or case-insensitive identity",
+    "expect": "any occurrence rejected",
+    "contentType": "if present application/json with optional unique charset=utf-8 or utf8 (case insensitive), optionally quoted; no unknown, empty or duplicate parameter; required on mutations",
+    "contentLength": "absent means zero; otherwise 0 or 1..8 canonical decimal digits without sign or leading zero; nonzero rejected on nonmutations"
+  },
+  "json": {
+    "bodyBytes": "positive and <= route byte limit; exact read length before decode",
+    "encoding": "strict UTF-8, no BOM or lone surrogate",
+    "grammar": "CPython json.loads grammar with duplicate decoded object keys rejected at every depth, nonfinite constants and floating overflow rejected",
+    "depth": "container nesting <= normalized json_depth (root object counts as depth one), strings and escaped quotes do not add depth",
+    "topLevel": "object only",
+    "schema": "existing public/admin route schema validation precedes service/engine dispatch; unknown-field policy is route-specific"
+  },
+  "requiredWitnesses": [
+    "six baseline socket breaches reject after repair without route dispatch",
+    "valid HTTP1.0 without Host and HTTP1.1 browser GET/HEAD/JSON POST preserve behavior",
+    "raw and encoded control, fragment, bad escape, absolute and authority targets reject",
+    "Host missing/duplicate/empty/invalid port and credentials reject",
+    "duplicate/unknown/empty charset parameters reject",
+    "nested duplicate JSON keys, depth overrun, malformed UTF8, surrogates, nonfinite values and top-level arrays reject",
+    "source guard removal, regex widening and primitive substitution are rejected by bridge or independent proof"
+  ],
+  "trust": [
+    "CPython ordinary exceptions and primitive bytes/string/list/dict/int operations",
+    "CPython re.fullmatch implements the extracted closed regular-expression language; no extension or callback regex features are admitted",
+    "CPython ipaddress IPv6Address implements literal IPv6 recognition only",
+    "CPython strict UTF8/json parsing and JSON serialization primitives; application duplicate/depth/finite/top-object policies are source-bound separately",
+    "stdlib raw_items retains field multiplicity after the source-bound raw-line lexical checks",
+    "bounded exact socket reads and sampled deadlines are separate source-bound obligations"
+  ],
+  "excluded": [
+    "HTTP2/3, proxy absolute-form, CONNECT authority-form, OPTIONS asterisk-form, HTTP0.9",
+    "deployment proxy transformations",
+    "arbitrary Python monkeypatching or hostile runtime replacement"
+  ],
+  "grammar": {
+    "METHOD_PATTERN": "[!#$%&'*+.^_`|~0-9A-Za-z-]+",
+    "TARGET_PATTERN": "/(?:[!$&'()*+,./0-9:;=?@A-Z_\\[\\]a-z~-]|%[0-9A-Fa-f]{2})*",
+    "ESCAPED_FORBIDDEN_PATTERN": ".*%(?:0[0-9a-f]|1[0-9a-f]|7f|5c).*",
+    "HEADER_NAME_PATTERN": "[!#$%&'*+.^_`|~0-9A-Za-z-]+",
+    "HEADER_VALUE_PATTERN": "[\\t\\x20-\\x7e\\x80-\\xff]*",
+    "HOST_PATTERN": "(?:[A-Za-z0-9._~-]+|\\[[0-9A-Fa-f:.]+\\])(?::[0-9]{1,5})?",
+    "CONTENT_TYPE_PATTERN": "application/json(?:[ \\t]*;[ \\t]*charset[ \\t]*=[ \\t]*(?:utf-8|utf8|\"utf-8\"|\"utf8\"))?[ \\t]*",
+    "CONTENT_LENGTH_PATTERN": "0|[1-9][0-9]{0,7}"
+  },
+  "lineRules": [
+    "crlf",
+    "threeParts",
+    "methodToken",
+    "version",
+    "targetGrammar",
+    "originOnly",
+    "noEscapedControls"
+  ],
+  "headerRules": [
+    "headerVersion",
+    "headerNames",
+    "headerValues",
+    "singletons",
+    "hostRequired",
+    "hostGrammar",
+    "noTransferEncoding",
+    "identityEncoding",
+    "noExpect",
+    "contentTypeRequired",
+    "contentTypeGrammar",
+    "lengthGrammar",
+    "bodylessRead"
+  ],
+  "singletonHeaders": [
+    "origin",
+    "host",
+    "content-length",
+    "content-type",
+    "content-encoding",
+    "x-csrf-token",
+    "sec-fetch-site",
+    "if-none-match",
+    "expect",
+    "authorization",
+    "cookie"
+  ],
+  "versions": [
+    "HTTP/1.0",
+    "HTTP/1.1"
+  ]
+}

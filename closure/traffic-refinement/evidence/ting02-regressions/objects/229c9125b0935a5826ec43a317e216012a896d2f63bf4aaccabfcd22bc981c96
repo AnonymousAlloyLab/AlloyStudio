@@ -1,0 +1,10 @@
+name = "alloy_studio"
+version = "0.0.1"
+defaultTargets = ["AlloyStudio"]
+
+[leanOptions]
+genInjectivity = false
+warningAsError = true
+
+[[lean_lib]]
+name = "AlloyStudio"

@@ -1,0 +1,46 @@
+# v0.0.4-alpha
+
+This release removes JVM startup from ordinary live edits by reusing a bounded
+pool of Java workers. Canonical stays the default; Canonical and raw AST still
+compare against the complete correct pool, including the oracle. Behavioral
+scores, four example categories, source locators and redacted hints retain their
+existing analysis logic.
+
+Identical analyses share pending work or reuse exact-context results. Browser
+channels cancel superseded subscriptions, keep another user's shared work intact,
+and reject stale results. Retained evidence lets Luna explain displayed hints
+and instances without repeating analysis after result-cache eviction. Duplicate
+explanation requests also share work. Expired evidence is reported explicitly.
+
+HTTP admission now has finite connection, thread, byte, nesting and deadline
+bounds before analysis dispatch. Catalogue/detail APIs support conditional ETag
+revalidation. An optional loopback-only health listener has separate capacity.
+Worker framing is bounded and identity checked; timeouts/fatal failures retire
+workers, and graceful shutdown drains administrator validation and reaps workers.
+Public responses and diagnostics continue to exclude credentials and private
+reference expressions.
+
+The [implementation report](../performance-implementation.md) records numerical
+limits, catalogue differential checks, reproducible commands, deployment details
+and proof boundaries. The real browser reuse witness uses three startup JVMs for
+two distinct edits and a revisit, with four computations and two cache hits.
+All 1,086 fresh/warm feedback comparisons matched across the 181 exercises and
+both metrics, including correct-draft zero distances and invalid-input diagnostics.
+Local gates passed 378 engine checks, 796 Python tests, 77 browser scenarios and
+the additional shutdown, dashboard and administrator checks; release evidence
+records final clean-checkout CI and behavioral qualification separately.
+Linux/macOS launchers and the private IIS package include the new runtime modules.
+Rebuild and install the timestamped IIS ZIP to update an existing deployment;
+publishing this source release does not update a production server automatically.
+
+The offline TB01 traffic model gate passes 560 theorem declarations, two clean
+builds and 22 witnesses with no admitted proofs or introduced axioms. Production
+semantic refinement remains unproved, and the 23 end-to-end traffic obligations
+remain formally open. Parsed-reference caching is deferred; whole-process RSS,
+OS scheduling and actual IIS deployment acceptance are outside the finite test
+claims. Provider tests use disabled or mocked Luna, not paid live API calls.
+
+Public release evidence contains safe aggregate reports and checksums. Deployment
+archives, private configuration, credentials and raw reference data are not
+published as release assets. Existing `v0.0.2-alpha` and `v0.0.3-alpha` features
+and their documented limits remain described in the README.

@@ -1,0 +1,39 @@
+IngressDeadlines/Spec.lean:14:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  if now ≥ deadline then ?m.18 else ?m.19
+in the target expression
+  (if now > deadline then false else true) = true
+
+case pos
+now deadline : Int
+accepted : (if now > deadline then false else true) = true
+expired : now ≥ deadline
+⊢ Before now deadline
+IngressDeadlines/Spec.lean:22:6: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  if now ≥ deadline then ?m.11 else ?m.12
+in the target expression
+  (if now > deadline then false else true) = true
+
+now deadline : Int
+before : Before now deadline
+unexpired : ¬now ≥ deadline
+⊢ (if now > deadline then false else true) = true
+IngressDeadlines/Spec.lean:239:0: error: Not a definitional equality: the left-hand side
+  run Extracted.checkDeadline 5 [Action.guard, Action.deliver] (initial 5 0 [5])
+is not definitionally equal to the right-hand side
+  none
+IngressDeadlines/Spec.lean:240:81: error: Type mismatch
+  rfl
+has type
+  ?m.17 = ?m.17
+but is expected to have type
+  run Extracted.checkDeadline 5 [Action.guard, Action.deliver] (initial 5 0 [5]) = none
+IngressDeadlines/Spec.lean:246:0: error: Not a definitional equality: the left-hand side
+  run Extracted.checkDeadline 5 [Action.guard, Action.reset] (initial 5 0 [5])
+is not definitionally equal to the right-hand side
+  none
+IngressDeadlines/Spec.lean:247:79: error: Type mismatch
+  rfl
+has type
+  ?m.17 = ?m.17
+but is expected to have type
+  run Extracted.checkDeadline 5 [Action.guard, Action.reset] (initial 5 0 [5]) = none

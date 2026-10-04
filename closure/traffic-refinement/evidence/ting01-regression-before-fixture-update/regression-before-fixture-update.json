@@ -1,0 +1,10 @@
+{
+  "elapsedSeconds": 299.765,
+  "errors": 1,
+  "inputHashesUnchanged": true,
+  "inputs": "regression-before-fixture-update-inputs.json",
+  "log": "regression-before-fixture-update.txt",
+  "reason": "Historical TCFG02 verifier correctly rejects the successor DeadlineReader class layout; its positive and mutation tests need their archived source fixture.",
+  "status": "FAIL",
+  "tests": 980
+}

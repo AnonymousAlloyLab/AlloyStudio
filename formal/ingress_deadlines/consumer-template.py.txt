@@ -1,0 +1,148 @@
+class DeadlineReader:
+
+    def __init__(self, connection, profile, *, clock=time.monotonic):
+        (self.connection, self.profile, self.clock) = (connection, profile, clock)
+        self.buffer = bytearray()
+        self.closed = False
+        self.begin_headers()
+
+    def begin_headers(self):
+        self.deadline = self.clock() + self.profile.header_seconds
+        self.header_remaining = self.profile.header_bytes
+        self.header_lines = 0
+        self.headers_mode = True
+
+    def begin_body(self):
+        now = self.check_deadline()
+        self.deadline = now + self.profile.body_seconds
+        self.headers_mode = False
+
+    def _recv(self, count):
+        self.check_deadline()
+        remaining = self.deadline - self.clock()
+        if remaining <= 0:
+            raise TimeoutError('HTTP read deadline exceeded.')
+        self.connection.settimeout(min(remaining, self.profile.idle_seconds))
+        chunk = self.connection.recv(min(count, 4096))
+        self.check_deadline()
+        return chunk
+
+    def readline(self, limit=-1):
+        self.check_deadline()
+        limit = min(limit if limit >= 0 else self.profile.line_bytes + 1, self.profile.line_bytes + 1)
+        while True:
+            newline = self.buffer.find(b'\n')
+            count = min(newline + 1 if newline >= 0 else len(self.buffer), limit)
+            if newline >= 0 or len(self.buffer) >= limit:
+                result = bytes(self.buffer[:count])
+                del self.buffer[:count]
+                break
+            chunk = self._recv(min(4096, limit - len(self.buffer)))
+            if not chunk:
+                result = bytes(self.buffer)
+                self.buffer.clear()
+                break
+            self.buffer.extend(chunk)
+        if self.headers_mode:
+            self.header_remaining -= len(result)
+            self.header_lines += 1
+            if len(result) > self.profile.line_bytes or self.header_remaining < 0 or self.header_lines > self.profile.header_count + 2:
+                raise HTTPInputError(431, 'Request headers exceed their limit.')
+            if self.header_lines > 1 and result[:1] in (b' ', b'\t'):
+                raise HTTPInputError(400, 'Folded request headers are not supported.')
+            if result and (not result.endswith(b'\r\n')):
+                raise HTTPInputError(400, 'Request lines must use CRLF.')
+            if self.header_lines > 1 and result != b'\r\n':
+                (name, colon, value) = result[:-2].partition(b':')
+                if not colon or re.fullmatch(b"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name) is None or any((byte < 32 and byte != 9 or byte == 127 for byte in value)):
+                    raise HTTPInputError(400, 'Malformed request header.')
+        self.check_deadline()
+        return result
+
+    def read1(self, count):
+        self.check_deadline()
+        if count <= 0:
+            result = b''
+        elif self.buffer:
+            result = bytes(self.buffer[:count])
+            del self.buffer[:count]
+        else:
+            result = self._recv(count)
+        self.check_deadline()
+        return result
+
+    def read(self, count=-1):
+        if count < 0:
+            raise ValueError('Unbounded HTTP reads are forbidden.')
+        chunks = []
+        while count:
+            chunk = self.read1(count)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            count -= len(chunk)
+        return b''.join(chunks)
+
+    def close(self):
+        self.closed = True
+        self.buffer.clear()
+
+class Handler:
+
+    def setup(self):
+        super().setup()
+        self.rfile.close()
+        self.rfile = DeadlineReader(self.connection, self.server.traffic_profile)
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except HTTPInputError as error:
+            if not hasattr(self, 'request_version'):
+                self.request_version = 'HTTP/1.0'
+            if not hasattr(self, 'requestline'):
+                self.requestline = ''
+            if not hasattr(self, 'command'):
+                self.command = None
+            if not hasattr(self, 'path'):
+                self.path = ''
+            self.close_connection = True
+            self.reply(error.status, {'error': error.message})
+        except (OSError, ValueError):
+            self.close_connection = True
+        finally:
+            self.close_connection = True
+
+    def parse_request(self):
+        parsed = super().parse_request()
+        if parsed:
+            self.rfile.check_deadline()
+        return parsed
+
+    def read_json_body(self, length, limit, *, admin=False):
+        if not 0 < length <= limit:
+            raise HTTPInputError(413, 'Administrator request exceeds its byte limit.' if admin else 'Request must be at most 16 KiB.')
+        self.rfile.begin_body()
+        (remaining, chunks) = (length, [])
+        try:
+            while remaining:
+                chunk = self.rfile.read1(min(65536, remaining))
+                if not chunk:
+                    raise ValueError()
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            self.rfile.check_deadline()
+            data = bounded_json(b''.join(chunks), self.server.traffic_profile.json_depth)
+            self.rfile.check_deadline()
+            return data
+        except (OSError, ValueError, RecursionError):
+            raise HTTPInputError(400, 'Invalid, incomplete or timed-out JSON request.') from None
+
+    def public_body(self):
+        return self.read_json_body(self.request_headers(mutation=True), MAX_REQUEST_BYTES)
+
+    def admin_body(self, length, limit):
+        try:
+            return self.read_json_body(length, limit, admin=True)
+        except HTTPInputError as error:
+            raise AdminError(error.status, error.message) from None

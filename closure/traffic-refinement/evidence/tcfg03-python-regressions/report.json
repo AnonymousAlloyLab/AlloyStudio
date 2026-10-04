@@ -1,0 +1,39 @@
+{
+  "classification": "TESTED",
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_*.py"
+  ],
+  "covers": [
+    "Portal, worker, scheduler, SQL, administration and package regressions",
+    "all-181 exercise packaging and relocated/fresh-clone setup",
+    "Restricted initialization bridge and real constructor witness",
+    "Independent observation and numeric selector controls",
+    "Windows build/dependency fixtures"
+  ],
+  "elapsedSeconds": 301.247,
+  "environment": {
+    "OPENAI_DISABLED": "1",
+    "TMPDIR": "build/trf-closure/tmp",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+  },
+  "exitCode": 0,
+  "inputCount": 583,
+  "inputs": "inputs.json",
+  "inputsSha256": "faa953fa274ec7f64877779509b23faf684a74815a247034608f728d1fad2f44",
+  "log": "unittest.txt",
+  "logSha256": "0845a8d6dffd481f9c5b581cc198aad23af98105081ea9d7a672c99caa496445",
+  "nativeWindowsMacOSExecution": false,
+  "originalLog": "build/trf-closure/tcfg03-final-full-python.log",
+  "scope": "Finite Linux regression evidence; not arbitrary execution refinement or native Windows/macOS deployment.",
+  "sourceHashesUnchanged": true,
+  "status": "PASS",
+  "tests": 935
+}

@@ -1,0 +1,73 @@
+{
+  "files": [
+    {
+      "path": "Main.lean",
+      "sha256": "7e9701b35362f8291168a4614c16a82c3ae5de502c1979f0a12db22b08a3d185"
+    },
+    {
+      "path": "SQLean.lean",
+      "sha256": "c653d590eb4a9c537f4d3fcc5ed0ad04bc9688020ebcea1515e549a441b285c6"
+    },
+    {
+      "path": "lean-toolchain",
+      "sha256": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632"
+    },
+    {
+      "path": "lakefile.toml",
+      "sha256": "ff13f8f3a3b4a6b41fa02cdf587cdda18589bb42feff85a5459f8e2e0314ad91"
+    },
+    {
+      "path": "README.md",
+      "sha256": "18686c4c1a6c152a0b298eadd3fd71ebdfd502799fbd22cc1120ece7c33706df"
+    },
+    {
+      "path": "SQLean/API.lean",
+      "sha256": "0c377189462a1e7c609dfd78fae8ca57c3548ce8dde2a372ba43c7425192b65c"
+    },
+    {
+      "path": "SQLean/AST.lean",
+      "sha256": "92bb544c831ca2b23258ca4d556b9245b2ba599d15c4f3c0b7095e32d0524273"
+    },
+    {
+      "path": "SQLean/CRUDValidation.lean",
+      "sha256": "8dba0f5661e82007d49982e2a91fbe6628b0728f2c05f8e4cd1913d02ef21dde"
+    },
+    {
+      "path": "SQLean/Lexer.lean",
+      "sha256": "ea9ac81a9b4df73ea6482bae17d2584ae96792bfd33fa4d9fb67b563b6ac9c94"
+    },
+    {
+      "path": "SQLean/NestedValidation.lean",
+      "sha256": "d022a0a49db708f40032b0f7942dc21d2b9b2681944870c2db81d16213637712"
+    },
+    {
+      "path": "SQLean/Parser.lean",
+      "sha256": "21d6f9392bc3fff9d4d22aacd8358dcb84e14499e1780aa2ca045f6951af1d22"
+    },
+    {
+      "path": "SQLean/Pretty.lean",
+      "sha256": "bbf039e3c08b0cfa6080ec934bcf2f5fcf5e7b1a45340b84936735cbfcde5c8e"
+    },
+    {
+      "path": "SQLean/RelationalValidation.lean",
+      "sha256": "7ee83719e53da5f52086a5399ee6139afd170ebe6a9375e5e1750d9d29ac1e7e"
+    },
+    {
+      "path": "SQLean/SchemaJson.lean",
+      "sha256": "f8f0b8437562dc6ac106822e30d91a1b18ca69ca5604314d27571f8750b92ea8"
+    },
+    {
+      "path": "SQLean/Validation.lean",
+      "sha256": "dc10f7fa9531f23c3ff04054fcccbd7f1aa9b220cd4adf067475601161794c60"
+    }
+  ],
+  "leanToolchain": "leanprover/lean4:v4.34.0",
+  "parserBinary": {
+    "bytes": 122460360,
+    "platform": "linux-x86_64",
+    "sha256": "5568ce3a173b8490215c35f0cc065e5df93ef400e0dc4d89f026453dddd65922"
+  },
+  "schemaVersion": 1,
+  "scope": "Actual source parser and static schema checker; no SQL execution proof; upstream standard Lean axioms remain outside portal empty-axiom proof blocks.",
+  "upstreamCommit": "6da54ef2874cbe7e0069bf8c192f12de3a8644f9"
+}

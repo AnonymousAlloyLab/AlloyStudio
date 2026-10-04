@@ -1,0 +1,64 @@
+'AlloyStudio.ServiceProfile.Model.Inputs' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.Cell' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.Quantity' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.State' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.quantityValid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.quantitiesValid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.namesUnique' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.profileNames' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.profileValid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.lookupCell' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.cellMatches' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.cellValueMatches' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.sameReference' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Model.bytePrefix' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.pathPrefix' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.emptyContainer' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Model.graphPathsUnique' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.allCellsMatch' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.allValuesMatch' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.allReferencesMatch' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Model.allTargetsMatch' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.classCount' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Model.handleCount' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.true_and_left' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.true_and_right' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.quantity_domain' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.quantities_member_valid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.InitialRelation' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.StartedThreadsValid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.InitialValid' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.extracted_profile_exact' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.extracted_graph_exact' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.profile_wellFormed' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.profile_quantities_valid' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.profile_rational_domain' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_graph_unique_paths' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_empty_owned_collections' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.initial_zero_counters' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_open_flags' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_absent_configuration' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_scalar_configuration' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_shared_references' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.initial_reference_targets' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_external_inputs' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_started_thread_count' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_started_thread_bindings' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_bound_listener_count' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_no_worker_process' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_administrator_idle' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_relation' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_valid' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.initial_unique' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_exists_unique' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.related_state_valid' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.related_states_equal' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_preserves_explicit_inputs' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_public_clock' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_http_count_bounds' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_public_full_credit' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_public_empty_ownership' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.witnessInput' does not depend on any axioms
+'AlloyStudio.ServiceProfile.Spec.initial_witness' depends on axioms: [propext]
+'AlloyStudio.ServiceProfile.Spec.negative_clock_witness' depends on axioms: [propext]
+'AlloyStudio.Traffic.profile_wellFormed' depends on axioms: [propext]

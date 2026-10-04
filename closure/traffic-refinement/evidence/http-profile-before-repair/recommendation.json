@@ -1,0 +1,52 @@
+{
+  "baselineWitnesses": {
+    "count": 5,
+    "reproduce": "python3 -B build/trf-closure/next-profile-audit/witness.py",
+    "results": "witness-results.json",
+    "resultsSha256": "be368500496a2938724d249cb6d27a2227926825b58609553bbfcd601e0ff3f6",
+    "script": "witness.py",
+    "scriptSha256": "6c2b5046caf46a1e9c66854f9db2015a4b7e8135a206baef8196f525f3b0d567",
+    "sourceManifest": "baseline-hashes.json"
+  },
+  "finiteScope": [
+    "All 23 existing TrafficProfile fields: independently specified exact scalar acceptance with count/byte intervals, duration intervals and unchanged field values.",
+    "Existing profile relationships: line_bytes <= header_bytes; header_count <= 100; public_handlers + control_handlers <= 256.",
+    "Exact built-in Boolean public/control selector and explicit admissible initial integer clock tick.",
+    "Deterministic initial Admission projection: zero active, peak, accepted and rejected counts; empty owned, anonymous-owned and peer collections; selected limit, full bucket credit, capacity/rate and explicit last tick.",
+    "Profile and initial-clock failure before Admission/HTTP runtime lock, ownership collection or stdlib socket-bearing allocation, with lock and host effects explicitly abstracted."
+  ],
+  "implementationPlan": [
+    "Keep traffic_limits.py and all frozen TCFG01/TB01 packages and evidence unchanged. Add a new production pure profile/initial-state projection and use it at HTTP constructor ingress.",
+    "Reject arbitrary namespaces, invalid exact-type profiles, corrupted field values and non-Boolean listener selectors. Validate initial clock before writing Admission fields or allocating its lock.",
+    "Mechanically bind every projected field and constructor assignment to the production path; re-check profile values rather than assuming dataclass(frozen=True) prevents corruption.",
+    "Use a detached validated profile snapshot when retaining values. If caller mutation after construction remains excluded, declare that exclusion instead of claiming runtime immutable profile correctness.",
+    "Represent lock construction, stdlib socket initialization and Python built-in operations in the declared TCB or explicit effects abstraction."
+  ],
+  "kind": "candidate-scope-recommendation-not-closure-status",
+  "preservation": {
+    "modifiedFrozenEvidence": [],
+    "modifiedProductionFiles": [],
+    "ownedOutputDirectory": "build/trf-closure/next-profile-audit"
+  },
+  "proofPlan": [
+    "Define independent 23-field specification and exact public/control initial-state function before extracting the concrete guard/projection.",
+    "Prove acceptance iff the independent scalar and relationship predicate; preservation; rejection witnesses; lane-selecting projection correspondence; empty/full-credit deterministic initial-state uniqueness for explicit profile/selector/tick.",
+    "Use a restricted, fail-closed AST translation of the actual new production predicates and projection, with uniquely mapped output assignments. Reject unknown operations rather than treating mere source hashes or regression tests as semantic refinement.",
+    "Freeze claims, manifest, translator, kernel/audit verifiers, trust and provenance. Run registered empty-axiom audit and two clean offline deterministic builds.",
+    "Require mutation controls for missing profile revalidation, weakened handler relationship, inverted public/control selection, wrong initial credit/counter/collection, and moving clock validation after lock allocation. Label finite constructor effects tests TESTED unless formally included in the bridge."
+  ],
+  "remainingParentGaps": [
+    "No complete whole-service executable profile exists: RSS/native-memory, admin, explanation, scheduler queue/subscriber/channel, retained generations, snapshot and all byte/age relationships remain outside this HTTP-only block.",
+    "The specification candidate envelope 30+2 handlers and 60+4 burst/30+2 rate is not the same as all currently admissible custom HTTP configurations (existing max handler sum is 256, burst/rate sums lack explicit envelope relations). This block proves the existing selected envelope only, not the candidate production capacity.",
+    "Scheduler defaults/documented implementation use 32 global jobs, 64 subscribers and 512 channels; the candidate specification describes per-lane queues 8/2/1, 128 global subscribers and 64 channels. Choosing/reconciling those values is outside TCFG02.",
+    "Control deployment is optional (--control-port=0 disables it), so nonzero profile control_handlers does not establish an actual running diagnostic listener.",
+    "No global initial-state theorem for random service generations, shared process-budget ownership, OS handles or prewarmed workers is established by the isolated Admission projection.",
+    "Independent observation schemas, disclosure semantics, full backend/worker refinement, deadlines after floating-point clock arithmetic, reachability/event lifecycle and deployment/proxy/host bounds remain OPEN."
+  ],
+  "selectedSubclaim": {
+    "block": "TCFG02",
+    "closesParent": false,
+    "id": "TRF00-HTTP-PROFILE-INIT",
+    "parent": "TRF-00"
+  }
+}

@@ -1,0 +1,3 @@
+# Preserve exact source/corpus/vendor bytes, including snapshot hashes, on every OS.
+# Git must not turn Bash scripts or hash-bound license files into CRLF on Windows.
+* -text

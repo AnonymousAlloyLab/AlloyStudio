@@ -1,0 +1,104 @@
+{
+  "kind": "CONSTRUCTED_TRF01_DECODE_COUNTEREXAMPLES",
+  "claims": "TESTED finite witnesses, not formal proof",
+  "pythonVersion": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+  "sourceHashes": {
+    "server.py": "d5905160c0e5e9422590a1cf04c692146d4a7512809452c9d929377b4d27ad24",
+    "traffic_http.py": "19227047c4d7df72e334bc36a4368074b4a86de938c0f4962966a36fb7a39189",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+    "admin_auth.py": "8dd1218b98ed35a34451b36277082825ca7ba8a0cfec733949b76d0df32a2ea1",
+    "closure/traffic-obligations.json": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+    "docs/backend-performance-spec.md": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a"
+  },
+  "stdlibHashes": {
+    "/home/augustus/anaconda3/lib/python3.10/http/server.py": "a28516ba22083b40e7fa135b63964eeb8a77bef3c5ee5f954e19ae5911aae48e",
+    "/home/augustus/anaconda3/lib/python3.10/http/client.py": "1d724c7d2242957dc789eeb6a446c31294db4747be5d4cbad562fbfa6475fb7d"
+  },
+  "results": [
+    {
+      "id": "missing_header_terminator",
+      "requestHex": "474554202f6170692f6865616c746820485454502f312e310d0a486f73743a206c6f63616c686f73740d0a",
+      "requestBytes": 43,
+      "responseFirstLine": "HTTP/1.0 400 Bad Request",
+      "responseSha256": "2b68d2e25f35106ec353b9e54b63c529d34baa3823345b6480f6503f45d6ef99",
+      "successfulHealth": false
+    },
+    {
+      "id": "missing_host_http11",
+      "requestHex": "474554202f6170692f6865616c746820485454502f312e310d0a0d0a",
+      "requestBytes": 28,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "644dfdac736eb9ce96b5c29cd59cfb1befec6da65393e05fb3fad00d0c3a2c51",
+      "successfulHealth": true
+    },
+    {
+      "id": "tab_separated_request_line",
+      "requestHex": "474554092f6170692f6865616c746809485454502f312e310d0a486f73743a206c6f63616c686f73740d0a0d0a",
+      "requestBytes": 45,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "644dfdac736eb9ce96b5c29cd59cfb1befec6da65393e05fb3fad00d0c3a2c51",
+      "successfulHealth": true
+    },
+    {
+      "id": "embedded_request_line_carriage_return",
+      "requestHex": "4745540d202f6170692f6865616c746820485454502f312e310d0a486f73743a206c6f63616c686f73740d0a0d0a",
+      "requestBytes": 46,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "644dfdac736eb9ce96b5c29cd59cfb1befec6da65393e05fb3fad00d0c3a2c51",
+      "successfulHealth": true
+    },
+    {
+      "id": "absolute_target_host_mismatch",
+      "requestHex": "47455420687474703a2f2f6f746865722e6578616d706c652f6170692f6865616c746820485454502f312e310d0a486f73743a206c6f63616c686f73740d0a0d0a",
+      "requestBytes": 65,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "644dfdac736eb9ce96b5c29cd59cfb1befec6da65393e05fb3fad00d0c3a2c51",
+      "successfulHealth": true
+    },
+    {
+      "id": "http09_request",
+      "requestHex": "474554202f6170692f6865616c74680d0a0d0a",
+      "requestBytes": 19,
+      "responseFirstLine": "{\"status\": \"ok\", \"exercises\": 0, \"engine\": \"ACGN / CanDis Fast Rewrite IR\"}",
+      "responseSha256": "c5b90c39220af112002c9a1c52ea81d1eb2251dc607ab766d6c436ca965bddec",
+      "successfulHealth": true
+    },
+    {
+      "id": "ambiguous_charset_parameters",
+      "requestHex": "504f5354202f6170692f6368616e6e656c20485454502f312e310d0a486f73743a206c6f63616c686f73740d0a436f6e74656e742d547970653a206170706c69636174696f6e2f6a736f6e3b20636861727365743d7574662d383b20636861727365743d6c6174696e2d310d0a436f6e74656e742d4c656e6774683a20320d0a0d0a7b7d",
+      "requestBytes": 132,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "63c54ac5557ef6b2d9c4890ef8072a9d090f061f5c6965bf30b3196d53590b10",
+      "businessDispatches": 1
+    },
+    {
+      "id": "buffered_readline_after_deadline",
+      "deadline": 5.0,
+      "now": 6.0,
+      "returnedLine": "Host: localhost\r\n",
+      "acceptedExpiredHeader": true
+    },
+    {
+      "id": "header_dispatch_after_deadline",
+      "requestHex": "474554202f6170692f6865616c746820485454502f312e310d0a486f73743a206c6f63616c686f73740d0a0d0a",
+      "requestBytes": 45,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "644dfdac736eb9ce96b5c29cd59cfb1befec6da65393e05fb3fad00d0c3a2c51",
+      "schedulingPauseSeconds": 0.08,
+      "headerBudgetSeconds": 0.04,
+      "elapsed": 0.08044128000074124,
+      "successfulHealth": true
+    },
+    {
+      "id": "business_dispatch_after_json_deadline",
+      "requestHex": "504f5354202f6170692f6368616e6e656c20485454502f312e310d0a486f73743a206c6f63616c686f73740d0a436f6e74656e742d547970653a206170706c69636174696f6e2f6a736f6e0d0a436f6e74656e742d4c656e6774683a20320d0a0d0a7b7d",
+      "requestBytes": 100,
+      "responseFirstLine": "HTTP/1.0 200 OK",
+      "responseSha256": "63c54ac5557ef6b2d9c4890ef8072a9d090f061f5c6965bf30b3196d53590b10",
+      "schedulingPauseSeconds": 0.08,
+      "bodyBudgetSeconds": 0.04,
+      "businessDispatches": 1,
+      "delayBeforeDispatch": 0.08010382700012997
+    }
+  ]
+}

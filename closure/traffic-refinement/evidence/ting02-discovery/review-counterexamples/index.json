@@ -1,0 +1,15 @@
+{
+  "candidate": "build/trf-closure/ting02-20261004T180128Z-08bdd67f/report.json",
+  "files": {
+    "IngressComposition.lean": "4bf65bbd68faeaaec905de6930aec4d5739f3e7f5186a77ba4ad2cd39fc22d8d",
+    "IngressRouteExtracted.lean": "0bdbdc0b8228ef3c132ea5dcd0433a7404767109986f18326ab488f308545b29",
+    "IngressRouteModel.lean": "e5bcb30299fd5bc4d7932d0d952fb30fcd46648682dab6d7d407fba5c49acb72",
+    "block.json": "7fa31fe62a5f51603dfa01f67468734eb95c6e38db493ac62883838d7b0969a4",
+    "luna-a.json": "c28adb6886f38a7292f6768a444cf08b1ef9be731633cc1ace2d6633254e22dc",
+    "luna-a.md": "89a460e4d9d9e7f5f46e8327c5a20eafd26c73e909b5c941b7a75da7d6a390b8",
+    "luna-b.json": "5f1551376ef2d7e3eb77a34b8f08a98957ab12940cb54528bb70a1f05143ee2d",
+    "luna-b.md": "467a0dc56db9a98acfda39c4bb74e260a35939c4c5740c3ad66d60be9db0f88f"
+  },
+  "reason": "METHOD_MUTATION_UNLINKED",
+  "state": "BLOCKED"
+}

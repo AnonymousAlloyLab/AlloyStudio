@@ -1,0 +1,106 @@
+{
+  "allowlistedAxioms": [],
+  "claims": [
+    {
+      "closesParent": false,
+      "id": "TRF00-HTTP-PROFILE-INIT",
+      "parentObligation": "TRF-00",
+      "passPredicate": "independent_profile_spec_and_constructor_AST_linkage_and_all_registered_empty_axiom_theorems_in_two_identical_offline_builds_and_registered_runtime_mutation_controls",
+      "publicClaims": [
+        "docs/http-profile-obligation.md",
+        "formal/traffic_profile/README.md"
+      ],
+      "statement": "The admitted 23-field HTTP profile accepts exactly its independent scalar domains and three relations; accepted scalars are preserved and the consumed admission initial state is uniquely valid for the explicit lane and clock sample."
+    }
+  ],
+  "excluded": [
+    "Complete TRF-00 service/deployment profile, independent observation contract and whole Portal initialization.",
+    "Subsequent admission histories, clocks, ownership/resource/liveness invariants, RSS containment and actual platform deployment.",
+    "Arbitrary Python execution, allocation success, concrete lock/container identities and future source revisions."
+  ],
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-j1",
+    "-DmaxRecDepth=4096"
+  ],
+  "id": "TCFG02",
+  "inputs": {
+    "closure/traffic-refinement/http-profile-spec.json": "5d731272704c023f98cc0f6ce9f5485e0d5f092d5273fb2872c21d90575fb7af",
+    "docs/http-profile-obligation.md": "bc7d3fbbee1549f8bc0248199c220188c8759439f0e82d6995a283b60a47ae31",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/traffic_config/TrafficConfig/Extracted.lean": "54eb68f363572f86b5f14b01243992e2722ca2ac550c26ce96704ace7cd605d0",
+    "formal/traffic_config/TrafficConfig/Scalar.lean": "cf0dad1219e0abdc93b288c7b211842d10de80cad603825db9559d054cf8e744",
+    "formal/traffic_config/TrafficConfig/Spec.lean": "d78263a69a3e9b23f6aef5b41b5f9b2d8fa385e3778bf569643281146c1dc386",
+    "formal/traffic_config/block.json": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06",
+    "formal/traffic_profile/Audit.lean": "54d9d60871b79466c4d6477a115c14ce41b144dc1aad4548621833db07fa508a",
+    "formal/traffic_profile/README.md": "0bab9b8e978c871a5ee447689bf9fbc4d2974d72b7f134f5dc79e9649e659d12",
+    "formal/traffic_profile/TrafficProfile/Extracted.lean": "b050c4cb3804f00138379d607a3d022902576b1c4888c69e74e4994f7e165a8d",
+    "formal/traffic_profile/TrafficProfile/Model.lean": "498f9e957b4e9879a0b45b9a88b4b9ba441f5cfe9b0fdfee2e183f22eb34f37e",
+    "formal/traffic_profile/TrafficProfile/Spec.lean": "7d878bc7d3ca2bb57a4e2d0c919512580fe6c1dd967888ee14df6d1d7a6e2576",
+    "formal/traffic_profile/profile-template.py.txt": "721747f8575cd5428f32e72fb828f1af6ed664cf1f6514b9b83fcda84eca6333",
+    "formal/traffic_profile/runtime-linkage.json": "fb7a5178ac14574ecafaa985bf0cab7ff797446b4eff7609d6e37925438e3344",
+    "formal/traffic_profile/theorems.json": "5e1991166eab9e22ce14d2d6ef076a3ff1f81ce664046740e48f0f74795eb9cf",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/http_profile_bridge.py": "d7cb30ff902984c4b2f24c2b4d7e355a57c6936e80b6b40fc0340f57f54dfc65",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/review_ladder.py": "583e38ccb665ecb8107c169f41bda0639805e8c8aa9ae24d4b445c162a8f477a",
+    "scripts/verify_http_profile.py": "e39cb2efd68b5d0a682c5395d7514ea82f3c17be6b25b8974ee0abba59e92af8",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_traffic_proofs.py": "fcfb38b4487e06d9e5c23287fa24fef34ca0499aef95f6090310fea0a0c630dd",
+    "tests/test_http_profile_bridge.py": "df69caed3ef3551a8a77b0c437dfb64c7f4594302888783c0c600167a9e8a540",
+    "tests/test_http_profile_gate.py": "fea6b5f58ff28aa62aeb9c93799eb2f72830d326b51d4632a4075e0327f580d2",
+    "tests/test_http_profile_initialization.py": "235f5332522bc53ad9c7f33621ad3b4ecdcdd6f6e115d7be3ccf28ea704de0ff",
+    "tests/test_review_ladder.py": "041b1e8abe7dd31daf3e910b074b6f59822e60bded2f9312548aae9b6368b4de",
+    "traffic_http.py": "19227047c4d7df72e334bc36a4368074b4a86de938c0f4962966a36fb7a39189",
+    "traffic_limits.py": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd"
+  },
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "modules": [
+    "TrafficConfig.Scalar",
+    "TrafficConfig.Extracted",
+    "TrafficConfig.Spec",
+    "TrafficProfile.Model",
+    "TrafficProfile.Extracted",
+    "TrafficProfile.Spec"
+  ],
+  "requiredCleanBuilds": 2,
+  "requiredReviews": 6,
+  "reviewPolicy": "2 GPT-6 Luna, then 2 GPT-6.1 Sol, then 2 GPT-6 Astra; cumulative prior-tier hashes; constructed counterexample required for breaches; reviews advisory only.",
+  "schemaVersion": 1,
+  "scope": "http-profile-and-initial-state",
+  "trust": [
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Pinned Lean kernel/compiler/distribution; empty transitive axiom audit."
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Frozen restricted AST translator, constructor correspondence templates, audit and verifier scripts."
+      ],
+      "id": "TCB-TRANSLATION"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Exact built-in type/arithmetic/ratio semantics; dataclass copy, ordinary attributes and empty collection/lock allocation; one successful callback supplies explicit signed clock sample."
+      ],
+      "id": "TCB-PYTHON"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Python standard library, hashing, namespace/process/filesystem isolation and hardware; no monkey-patched dependencies, hostile trusted code or concurrent normalization mutation."
+      ],
+      "id": "TCB-HOST"
+    }
+  ],
+  "umbrellaObligationsClosed": []
+}

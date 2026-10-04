@@ -1,0 +1,30 @@
+{
+  "kind": "FINITE_TING01_DEADLINE_REGRESSIONS",
+  "status": "PASS",
+  "tests": 19,
+  "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+  "command": [
+    "/home/augustus/anaconda3/bin/python3",
+    "-m",
+    "unittest",
+    "tests.test_ingress_deadlines",
+    "-v"
+  ],
+  "environment": {
+    "OPENAI_DISABLED": "1"
+  },
+  "beforeAfterSourceHashesEqual": true,
+  "sourceHashes": {
+    "server.py": "956c8c092703de059a6ba1b4d17a151cfee932661d0a12d1b0f4c608c032a8cf",
+    "traffic_http.py": "7825f64ee5160a6a6c37205b59cde399ce87e46dcebb2be42468270eda2a641c",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+    "tests/test_ingress_deadlines.py": "411d432c1b62ad38a21a6e378a6094afc105dd123b21a0c6d13d39a8b7dfd15b"
+  },
+  "logSha256": "321703f75f1ed30558b015b2ec3d96c05c879c929e3ae88e426bb67f2710e2d1",
+  "notClaimed": [
+    "formal closure",
+    "full strict decoder",
+    "full admission proof",
+    "native Windows or macOS execution"
+  ]
+}

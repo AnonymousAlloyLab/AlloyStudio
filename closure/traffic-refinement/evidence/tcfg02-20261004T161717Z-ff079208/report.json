@@ -1,0 +1,293 @@
+{
+  "blockId": "TCFG02",
+  "blockingReasons": [],
+  "builds": [
+    {
+      "artifacts": {
+        "TrafficConfig.Extracted": "255eb1a7665d52052b38a4e10326cf9c827c5fb6e667aa22209cfbcaba92712a",
+        "TrafficConfig.Scalar": "d7cddcb5b0e3288e6c3857f3b2af5a207e8c91c2e955930539dd9f85c571d0a2",
+        "TrafficConfig.Spec": "95742756c8fe7eee39b004666f1e1d39edb1fd52046e8950c9b5e81494eb4db9",
+        "TrafficProfile.Extracted": "3423c074cd042e1dd20b027188fea74bc72a3f3e329865445f9419eff5c62a64",
+        "TrafficProfile.Model": "4cc2d5dc7dd379825a10913f940c0047d03991275e1215397901ac5b1a2d48bb",
+        "TrafficProfile.Spec": "1a00e66a55baf878de02f1abf5b9c2d1d51a983afe619403ab16fceb2023b4cd"
+      },
+      "axioms": [],
+      "bridge": {
+        "constructors": {
+          "Admission.__init__": "75799ed6c5bf962985ef793a19644ef06b8cbcd6640a3d12b4432e6b4d09ba14",
+          "BoundedHTTPServer.__init__": "1dd26d17c0ae191c1762ece5242b50d7625aa1d0248362547ab68934f78a6b1f",
+          "TokenBucket.from_initial": "7490a78770f3d730f275924cddd149fc3ab40aeb99aee3b130d810530e3c922d"
+        },
+        "excluded": [
+          "all future admission histories",
+          "whole Portal initialization",
+          "complete TRF-00 closure"
+        ],
+        "fields": 23,
+        "generatedSha256": "b050c4cb3804f00138379d607a3d022902576b1c4888c69e74e4994f7e165a8d",
+        "kind": "restricted_profile_AST_and_constructor_correspondence",
+        "normalization": "exact type, defensive dataclass copy, strict Boolean, one exact-integer clock sample",
+        "profileSourceSha256": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+        "relations": 3,
+        "status": "PASS",
+        "trust": "Frozen translator; exact Python, dataclass and initial-container/lock semantics; no hostile trusted-code mutation."
+      },
+      "inventorySha256": "1dd997cfdf8fcc5de9f073a8c8c65a969f38cae7411a2a1a3d78f3f5450e7731",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 95
+    },
+    {
+      "artifacts": {
+        "TrafficConfig.Extracted": "255eb1a7665d52052b38a4e10326cf9c827c5fb6e667aa22209cfbcaba92712a",
+        "TrafficConfig.Scalar": "d7cddcb5b0e3288e6c3857f3b2af5a207e8c91c2e955930539dd9f85c571d0a2",
+        "TrafficConfig.Spec": "95742756c8fe7eee39b004666f1e1d39edb1fd52046e8950c9b5e81494eb4db9",
+        "TrafficProfile.Extracted": "3423c074cd042e1dd20b027188fea74bc72a3f3e329865445f9419eff5c62a64",
+        "TrafficProfile.Model": "4cc2d5dc7dd379825a10913f940c0047d03991275e1215397901ac5b1a2d48bb",
+        "TrafficProfile.Spec": "1a00e66a55baf878de02f1abf5b9c2d1d51a983afe619403ab16fceb2023b4cd"
+      },
+      "axioms": [],
+      "bridge": {
+        "constructors": {
+          "Admission.__init__": "75799ed6c5bf962985ef793a19644ef06b8cbcd6640a3d12b4432e6b4d09ba14",
+          "BoundedHTTPServer.__init__": "1dd26d17c0ae191c1762ece5242b50d7625aa1d0248362547ab68934f78a6b1f",
+          "TokenBucket.from_initial": "7490a78770f3d730f275924cddd149fc3ab40aeb99aee3b130d810530e3c922d"
+        },
+        "excluded": [
+          "all future admission histories",
+          "whole Portal initialization",
+          "complete TRF-00 closure"
+        ],
+        "fields": 23,
+        "generatedSha256": "b050c4cb3804f00138379d607a3d022902576b1c4888c69e74e4994f7e165a8d",
+        "kind": "restricted_profile_AST_and_constructor_correspondence",
+        "normalization": "exact type, defensive dataclass copy, strict Boolean, one exact-integer clock sample",
+        "profileSourceSha256": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+        "relations": 3,
+        "status": "PASS",
+        "trust": "Frozen translator; exact Python, dataclass and initial-container/lock semantics; no hostile trusted-code mutation."
+      },
+      "inventorySha256": "1dd997cfdf8fcc5de9f073a8c8c65a969f38cae7411a2a1a3d78f3f5450e7731",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 95
+    }
+  ],
+  "claims": [
+    {
+      "classification": "PROVED_RESTRICTED_HTTP_PROFILE_AND_INITIAL_STATE",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/bridge.json"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=4096"
+        ],
+        "network": "isolated user+network namespace for every proof subprocess",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF00-HTTP-PROFILE-INIT",
+      "inputRootHash": "c5818c72dd393a93e8b19aa8db986553c4f49ab65dcf20b20193e81da3eff506",
+      "status": "PASS",
+      "theorems": [
+        "AlloyStudio.HttpProfile.Model.InitialState.mk.sizeOf_spec",
+        "AlloyStudio.HttpProfile.Model.RawProfile.mk.sizeOf_spec",
+        "AlloyStudio.HttpProfile.Spec.accepted_iff",
+        "AlloyStudio.HttpProfile.Spec.accepted_initial_valid",
+        "AlloyStudio.HttpProfile.Spec.boolean_handlers_witness",
+        "AlloyStudio.HttpProfile.Spec.capacity_bounds",
+        "AlloyStudio.HttpProfile.Spec.capacity_nonnegative",
+        "AlloyStudio.HttpProfile.Spec.count_as_nat",
+        "AlloyStudio.HttpProfile.Spec.count_boundary_witness",
+        "AlloyStudio.HttpProfile.Spec.count_bounds",
+        "AlloyStudio.HttpProfile.Spec.count_excess_witness",
+        "AlloyStudio.HttpProfile.Spec.count_nonnegative",
+        "AlloyStudio.HttpProfile.Spec.default_burst_total",
+        "AlloyStudio.HttpProfile.Spec.default_control_negative_clock_witness",
+        "AlloyStudio.HttpProfile.Spec.default_handler_total",
+        "AlloyStudio.HttpProfile.Spec.default_public_witness",
+        "AlloyStudio.HttpProfile.Spec.default_rate_total",
+        "AlloyStudio.HttpProfile.Spec.defaults_accepted",
+        "AlloyStudio.HttpProfile.Spec.defaults_exact",
+        "AlloyStudio.HttpProfile.Spec.defaults_normalize",
+        "AlloyStudio.HttpProfile.Spec.defaults_wellFormed",
+        "AlloyStudio.HttpProfile.Spec.duration_boundary_witness",
+        "AlloyStudio.HttpProfile.Spec.duration_excess_witness",
+        "AlloyStudio.HttpProfile.Spec.handler_boundary_witness",
+        "AlloyStudio.HttpProfile.Spec.handler_bounds",
+        "AlloyStudio.HttpProfile.Spec.handler_excess_witness",
+        "AlloyStudio.HttpProfile.Spec.header_boundary_witness",
+        "AlloyStudio.HttpProfile.Spec.header_excess_witness",
+        "AlloyStudio.HttpProfile.Spec.initial_exists_unique",
+        "AlloyStudio.HttpProfile.Spec.initial_last",
+        "AlloyStudio.HttpProfile.Spec.initial_relation",
+        "AlloyStudio.HttpProfile.Spec.initial_unique",
+        "AlloyStudio.HttpProfile.Spec.initial_valid",
+        "AlloyStudio.HttpProfile.Spec.integer_isSome_iff",
+        "AlloyStudio.HttpProfile.Spec.line_excess_witness",
+        "AlloyStudio.HttpProfile.Spec.normalize_iff",
+        "AlloyStudio.HttpProfile.Spec.normalize_preserves",
+        "AlloyStudio.HttpProfile.Spec.relation_iff",
+        "AlloyStudio.HttpProfile.Spec.seconds_isSome_iff",
+        "AlloyStudio.HttpProfile.Spec.zero_handlers_witness",
+        "AlloyStudio.TrafficConfig.Extracted.validatedInt.eq_def",
+        "AlloyStudio.TrafficConfig.Extracted.validatedSeconds.eq_def",
+        "AlloyStudio.TrafficConfig.InvalidKind.boolean.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.nan.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.negativeInfinity.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.ofNat_ctorIdx",
+        "AlloyStudio.TrafficConfig.InvalidKind.other.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.positiveInfinity.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.floating.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.integer.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.invalid.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.default_huge_integer_rejected",
+        "AlloyStudio.TrafficConfig.default_maximum_admitted",
+        "AlloyStudio.TrafficConfig.default_negative_rejected",
+        "AlloyStudio.TrafficConfig.default_oversized_rejected",
+        "AlloyStudio.TrafficConfig.default_zero_rejected",
+        "AlloyStudio.TrafficConfig.floating_int_rejected",
+        "AlloyStudio.TrafficConfig.fractional_seconds_admitted",
+        "AlloyStudio.TrafficConfig.guarded_accept_iff",
+        "AlloyStudio.TrafficConfig.guarded_preserves",
+        "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_2",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_10",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_11",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_12",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_13",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_2",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_3",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_4",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_5",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_6",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_7",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_8",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_9",
+        "AlloyStudio.TrafficConfig.instDecidableLess._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableLess._proof_2",
+        "AlloyStudio.TrafficConfig.integer_guard_iff",
+        "AlloyStudio.TrafficConfig.invalid_denominator_rejected",
+        "AlloyStudio.TrafficConfig.invalid_int_rejected",
+        "AlloyStudio.TrafficConfig.invalid_seconds_rejected",
+        "AlloyStudio.TrafficConfig.lessEqual_iff_standard",
+        "AlloyStudio.TrafficConfig.less_iff_standard",
+        "AlloyStudio.TrafficConfig.less_iff_successor_lessEqual",
+        "AlloyStudio.TrafficConfig.nat_sub_zero_of_le",
+        "AlloyStudio.TrafficConfig.nonnegative_subNatNat_iff",
+        "AlloyStudio.TrafficConfig.not_lessEqual_iff_less",
+        "AlloyStudio.TrafficConfig.not_less_iff_lessEqual",
+        "AlloyStudio.TrafficConfig.optional_zero_admitted",
+        "AlloyStudio.TrafficConfig.positive_iff_nonnegative_nonzero",
+        "AlloyStudio.TrafficConfig.seconds_guard_iff",
+        "AlloyStudio.TrafficConfig.validated_int_iff",
+        "AlloyStudio.TrafficConfig.validated_int_preserves",
+        "AlloyStudio.TrafficConfig.validated_seconds_iff",
+        "AlloyStudio.TrafficConfig.validated_seconds_preserves"
+      ],
+      "verifier": {
+        "id": "V-TCFG02",
+        "sha256": "e39cb2efd68b5d0a682c5395d7514ea82f3c17be6b25b8974ee0abba59e92af8"
+      }
+    }
+  ],
+  "determinism": "PASS",
+  "excluded": [
+    "Complete TRF-00 service/deployment profile, independent observation contract and whole Portal initialization.",
+    "Subsequent admission histories, clocks, ownership/resource/liveness invariants, RSS containment and actual platform deployment.",
+    "Arbitrary Python execution, allocation success, concrete lock/container identities and future source revisions."
+  ],
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-j1",
+      "-DmaxRecDepth=4096"
+    ],
+    "network": "isolated user+network namespace for every proof subprocess",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+    "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+  },
+  "id": "tcfg02-20261004T161717Z-ff079208",
+  "infrastructureErrors": [],
+  "inputRootHash": "c5818c72dd393a93e8b19aa8db986553c4f49ab65dcf20b20193e81da3eff506",
+  "negativeControls": {
+    "handler_total": "REJECTED_BY_INDEPENDENT_SPEC",
+    "header_count": "REJECTED_BY_INDEPENDENT_SPEC",
+    "initial_occupancy": "REJECTED_BY_INDEPENDENT_SPEC",
+    "introducedAxiom": "REJECTED_BY_AUDITOR",
+    "lane_selection": "REJECTED_BY_INDEPENDENT_SPEC",
+    "line_relation": "REJECTED_BY_INDEPENDENT_SPEC",
+    "placeholder": "REJECTED_BY_COMPILER",
+    "token_unit": "REJECTED_BY_INDEPENDENT_SPEC"
+  },
+  "provedTheorems": 95,
+  "schemaVersion": 1,
+  "scope": "http-profile-and-initial-state",
+  "status": "VERIFIED",
+  "toolchain": {
+    "pin": "leanprover/lean4:v4.34.1",
+    "rootHash": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "version": "Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)"
+  },
+  "trust": [
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Pinned Lean kernel/compiler/distribution; empty transitive axiom audit."
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Frozen restricted AST translator, constructor correspondence templates, audit and verifier scripts."
+      ],
+      "id": "TCB-TRANSLATION"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Exact built-in type/arithmetic/ratio semantics; dataclass copy, ordinary attributes and empty collection/lock allocation; one successful callback supplies explicit signed clock sample."
+      ],
+      "id": "TCB-PYTHON"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Python standard library, hashing, namespace/process/filesystem isolation and hardware; no monkey-patched dependencies, hostile trusted code or concurrent normalization mutation."
+      ],
+      "id": "TCB-HOST"
+    }
+  ],
+  "umbrellaObligationsClosed": [],
+  "verifier": {
+    "id": "V-TCFG02",
+    "sha256": "e39cb2efd68b5d0a682c5395d7514ea82f3c17be6b25b8974ee0abba59e92af8"
+  },
+  "verifierTests": "PASS"
+}

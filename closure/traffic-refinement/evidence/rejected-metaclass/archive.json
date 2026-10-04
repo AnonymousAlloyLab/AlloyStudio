@@ -1,0 +1,22 @@
+{
+  "files": {
+    "block.json": "52cf7df36483365262f8e98c8310bf08ae0b694762914147bbfce5ee3e248c32",
+    "candidate-report.json": "dd2404b03338583a0c1baf689a11ff848bbd7c3339cbd135e55c49f765cfadef",
+    "luna-a.json": "c067d1affa85f1b9b0dc9d3763b657b388a34fea3dde1146fbcf83f58f11c9e3",
+    "luna-a.md": "e9d086daeb6ffea7ffb1d1a75c3169438eed3340a95813e29d2bbfb816922617",
+    "luna-b.json": "5a171193c5dd21ed54c6f888441d79a39bcd6eb2914b6eb0278739ff403e3e1d",
+    "luna-b.md": "8e3dbe2e8690e07523b4878d46fbb694315d3ca4783148db24f798ce5b6f00c1",
+    "rejected-report.json": "fc91695fbdfc16f84d5c071733ca520f62928d8744c76e307f08b959374ea9d1",
+    "sol-a.json": "fefe9a8c94c417b81b82593d700cf7625fb1dc95797f11b387a82b2500a680e3",
+    "sol-a.md": "ec19cdb50e2675ac41b2b1f4a193e756bde722c18f19a37cfd60bb684b8f6ada",
+    "sol-b.json": "0d70d7eb0822f338f814c88cc7af040204d5d3dbb2f654c7a746bf901850145b",
+    "sol-b.md": "a6ed5c2db816c75ba4fc69cbe193b4df96db44e197d28b06e59046604b3d27fa",
+    "traffic_config_bridge.py": "149793257ac6052b248f1309dfd8c89afa54ce281b609df5f42c6d701d5942bd",
+    "traffic_limits.py": "0339bc237e8f10fe29a4862fe3bdf621a31c5e3dbf0d54bb3f12cf28ebc30307",
+    "witness-result.json": "904fc7a1e34a5ccb5ce64a1ed209a39cbd290b14facea4e468ec7754743ae340",
+    "witness.py": "22497ecf1db742106319a0da88b0d421571e246c0c366a7c78624c419843fcdc"
+  },
+  "kind": "immutable-copy-of-rejected-candidate-evidence",
+  "scope": "Historical metaclass-equality breach; does not certify current sources.",
+  "sourceDirectory": "build/trf-closure/reviews/metaclass-breach"
+}

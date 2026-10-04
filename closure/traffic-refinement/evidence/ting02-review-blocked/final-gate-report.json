@@ -1,0 +1,56 @@
+{
+  "blockId": "TING02",
+  "blockingReasons": [
+    "Rejected: Missing or linked input: formal/reviews/TING02/sol-a.json"
+  ],
+  "buildSummary": {
+    "passed": 0,
+    "required": 2
+  },
+  "builds": [],
+  "claimSummary": {
+    "blocked": 0,
+    "passed": 0,
+    "total": 6,
+    "unresolved": 6
+  },
+  "closesParent": true,
+  "closureBoundary": {
+    "excludedSurface": [
+      "Future source revisions and unlisted properties; the other 21 traffic obligations.",
+      "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
+      "Whole-process RSS and kernel allocation sizes, OS fairness and unsampled scheduling latency after a deadline observation."
+    ],
+    "interpretation": "VERIFIED is finite closure for these hashed inputs and registered interpreters under the explicit TCB, not universal or assumption-free Python/OS correctness.",
+    "trustedSurface": [
+      {
+        "classification": "TRUSTED",
+        "description": "Pinned Lean 4.34.1 distribution/kernel, registered source-language restriction and all-project-definition/theorem transitive axiom auditor.",
+        "id": "TCB-LEAN"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "Closed source AST interpreters and per-operation correspondences; not a proof of an arbitrary Python virtual machine. No entire admission/decoder-validity predicate is trusted.",
+        "id": "TCB-TRANSLATION"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "CPython ASCII/UTF8/string/regex/JSON/IPv6 primitives, HTTP header raw-items and method dispatch, exceptions and sequential ordinary execution, socket recv bound, threading.start/join/is_alive/lock mutual exclusion, one serialized accept callback per listener, monotonic finite clock sample order.",
+        "id": "TCB-PRIMITIVES"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "Linux user/network namespaces, process/filesystem/socket semantics, SHA-256 implementation and collision resistance, hardware.",
+        "id": "TCB-HOST"
+      }
+    ],
+    "verifiedSurface": []
+  },
+  "closureInvariantFailures": 1,
+  "id": "ting02-20261004T183422Z-6bb43986",
+  "infrastructureErrors": [],
+  "parentObligation": "TRF-01",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "umbrellaObligationsClosed": []
+}

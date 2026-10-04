@@ -34,6 +34,14 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Maintenance alpha `v0.0.4.f1-alpha`** closes TRF-01 for the frozen ingress
+implementation under its declared trust boundary. It repairs strict HTTP
+decoding, sampled deadlines and thread-lifetime accounting, including interrupted
+thread-status observations. Validation includes 1,053 Python regressions, 378
+engine checks, 77 portal and 7 dashboard checks, and 69 bounded functional
+comparisons. Persistent JVM reuse and the hint algorithms are preserved.
+See the [release notes](docs/releases/v0.0.4.f1-alpha.md).
+
 **Alpha v0.0.4** (`v0.0.4-alpha`) reuses a bounded pool of JVM workers across edits,
 shares identical pending analyses, and caches exact-context results. Browser
 channels discard superseded work and reuse retained evidence for Luna. Bounded
@@ -72,9 +80,25 @@ The frozen [backend performance specification](docs/backend-performance-spec.md)
 persistent JVM workers, duplicate-request sharing and bounded inbound traffic
 without changing analysis logic. The [TB01 traffic models](formal/traffic/README.md)
 and [proof-to-implementation handoff](docs/traffic-proof-handoff.md) supply the
-separate offline proof surface. Its [23 end-to-end obligations](closure/traffic-obligations.json)
-remain OPEN as formal end-to-end claims: model proofs and the implementation's
-finite tests do not establish semantic refinement of production code.
+separate offline proof surface. Of its [23 original obligations](closure/traffic-obligations.json),
+**TRF-00 and TRF-01 are VERIFIED at their recorded source roots; 21 remain OPEN**.
+The [obligation progress report](docs/traffic-obligation-progress.md) records the
+numeric guards, HTTP initialization and complete service-profile closure: 213
+configuration quantities, 308 initial-state cells, 136 empty-axiom Lean theorems,
+two identical offline builds and 935 passing Python regressions. The registered
+[source-bound report](closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json)
+is authoritative under its explicit translation, Python, allocation, kernel and
+host trust boundary. Future traffic transitions, runtime RSS enforcement and
+native deployment remain separate open obligations.
+TRF-01's [read-deadline child](docs/ingress-deadline-obligation.md) remains verified
+at its historical source root. The final [strict ingress refinement](docs/strict-ingress-closure.md)
+has a [VERIFIED source-bound report](closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json):
+two identical offline builds, 356 empty-axiom theorem declarations, 52 mappings
+and 103 registered checks. The proof derives reliable thread-status observations
+from execution history; a failed observation retains its bounded slot until
+restart. Earlier candidates, counterexamples and regression results are preserved.
+New proof blocks use two GPT-6 Luna, two GPT-6.1 Sol and two GPT-6 Astra reviewers
+in that order, with source-bound records and constructed breach witnesses.
 
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
 From a new clone, run:

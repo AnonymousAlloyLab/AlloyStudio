@@ -1,0 +1,11 @@
+{
+  "classification": "INFRASTRUCTURE_FAILURE",
+  "files": {
+    "manifest.json": "0fbd4e44e341b0895312cfef01cbc2943d87aecc682706b4436468a7ad03c8dc",
+    "rejected-verifier.py.txt": "fe94cbd3e7e5442a20c229e8f682ae4e17bdcc31edf955b9dc9553cda17a5234",
+    "report.json": "fc66c61e31b9ea7a1c4a568e4bf4a8d94de2aeb77877c017f50736a06f9f0377"
+  },
+  "original": "build/trf-closure/tcfg03-20261004T165056Z-64d638ee",
+  "reason": "Readonly copied proof source prevented mutation controls. Repaired scratch copies are writable; immutable frozen inputs remain readonly. Final run rebuilt everything.",
+  "schemaVersion": 1
+}

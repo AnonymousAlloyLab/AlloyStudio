@@ -1,0 +1,68 @@
+# v0.0.4.f1-alpha — unreleased candidate
+
+**Release held: TRF-01 remains OPEN.** A new local interruption regression has
+been repaired; its refined history proof and a fresh review ladder are pending.
+No tag, push or GitHub release has been created. The earlier
+[workflow record](../../closure/traffic-refinement/evidence/ting02-review-blocked/workflow.json)
+and [final gate attempt](../../closure/traffic-refinement/evidence/ting02-review-blocked/final-gate-report.json)
+preserve the previous candidate's incomplete reviews.
+
+This maintenance release retains persistent JVM reuse and the existing analysis
+algorithms while repairing configuration, HTTP decoding, deadline and connection
+accounting defects found during production-to-Lean verification. Canonical stays
+the default. Both metrics still compare against the complete correct pool,
+including the oracle; behavioral scores, four instance categories, locators,
+redacted edits, administrator uploads and Luna guidance keep their existing logic.
+
+Raw request validation now rejects ambiguous separators, HTTP/0.9, missing or
+conflicting HTTP/1.1 Host fields, invalid targets and repeated JSON charset
+parameters before a business route runs. Header and body deadlines are checked
+at completion, including buffered reads and JSON decoding. Public and loopback
+control listeners retain independent admission budgets.
+
+Three scheduling counterexamples showed two live request threads under a limit of
+one. Reservations now survive handler return and are released only after a
+zero-time join succeeds and the thread is no longer alive. Identification alone
+is insufficient because it can precede startup publication. If a start attempt fails without
+publishing an identity, its bounded slot remains occupied until restart; freeing
+that slot earlier could admit another thread while the first is still starting.
+Configuration guards also reject nonfinite, fractional or unsupported values
+before allocating runtime resources and preserve accepted values exactly.
+
+The [candidate report](../../closure/traffic-refinement/evidence/ting02-20261004T182729Z-cd397804/report.json)
+records two identical clean offline Lean 4.34.1 builds, 303 theorem declarations
+with empty transitive axiom sets, 52 registered correspondence mappings and 97
+passing registered checks. That final six-review gate did not pass. The subsequent
+local witness confirmed that an interrupted CPython liveness probe can report
+termination while its native handler still runs. The current repair marks a probe
+uncertain before either status call and permanently retains that slot if a call
+fails. Ordinary successful observations still reclaim completed threads. The
+new candidate must pass its own proof and review gate. The original obligation registry is
+unchanged: TRF-00 is VERIFIED at its historical root, while TRF-01 and 21 later
+obligations remain OPEN. The proof does not claim correctness of the OS, arbitrary
+Python, external proxy normalization or future source revisions.
+
+The [preserved regression evidence](../../closure/traffic-refinement/evidence/ting02-final-regressions/index.json)
+records these local results:
+
+- 1,047 Python regressions on the repaired production sources, with no input
+  mutation during the run, and 378 Java engine checks.
+- 77 portal browser scenarios and 7 dashboard checks in an isolated staged build.
+- 23 cases in three arms (69 results): archived HTTP/projector behavior, current
+  one-shot mode and current persistent mode. All compared semantic results
+  matched, including both metrics, a nonprimary correct pool member, behavior,
+  Unicode and invalid drafts, catalogue/detail routes, revalidation and reuse.
+- A newly assembled private IIS package with all 181 exercises, 7,731 candidate
+  predicates, seven dependency JARs, 178 class files and the new runtime modules.
+
+This is finite local Linux evidence. Native Windows/macOS, a real IIS or
+Cloudflare deployment, whole-process RSS and arbitrary execution histories are
+outside this verification. Provider tests used disabled or mocked Luna; no paid
+provider calls were required. Previously valid evidence and rejected candidates
+are preserved with hashes.
+
+The Git release tag is `v0.0.4.f1-alpha`; npm metadata uses the SemVer-compatible
+`0.0.4-f1-alpha`. The preflight checks their exact documented correspondence.
+Rebuild and install a timestamped IIS ZIP to update an existing deployment;
+publishing a source release does not redeploy the website. Deployment ZIPs and
+private configuration are not public release assets.

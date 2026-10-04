@@ -1,0 +1,100 @@
+"""Validated HTTP configuration and its detached admission initial state."""
+from collections import OrderedDict
+from dataclasses import dataclass, fields, replace
+from traffic_limits import validated_int, validated_seconds
+
+
+@dataclass(frozen=True)
+class TrafficProfile:
+    public_handlers: int = 30
+    control_handlers: int = 2
+    public_burst: int = 60
+    public_rate: int = 30
+    control_burst: int = 4
+    control_rate: int = 2
+    peer_burst: int = 60
+    peer_rate: int = 30
+    peer_entries: int = 1024
+    peer_idle_seconds: int = 120
+    backlog: int = 32
+    control_backlog: int = 2
+    line_bytes: int = 8192
+    header_bytes: int = 32768
+    header_count: int = 64
+    header_seconds: float = 5.0
+    body_seconds: float = 5.0
+    write_seconds: float = 5.0
+    idle_seconds: float = 5.0
+    json_depth: int = 32
+    response_bytes: int = 8 * 1024 * 1024
+    public_cache_bytes: int = 16 * 1024 * 1024
+    public_cache_entries: int = 512
+
+    def __post_init__(self):
+        values = {
+            'public_handlers': self.public_handlers,
+            'control_handlers': self.control_handlers,
+            'public_burst': self.public_burst,
+            'public_rate': self.public_rate,
+            'control_burst': self.control_burst,
+            'control_rate': self.control_rate,
+            'peer_burst': self.peer_burst,
+            'peer_rate': self.peer_rate,
+            'peer_entries': self.peer_entries,
+            'peer_idle_seconds': self.peer_idle_seconds,
+            'backlog': self.backlog,
+            'control_backlog': self.control_backlog,
+            'line_bytes': self.line_bytes,
+            'header_bytes': self.header_bytes,
+            'header_count': self.header_count,
+            'header_seconds': self.header_seconds,
+            'body_seconds': self.body_seconds,
+            'write_seconds': self.write_seconds,
+            'idle_seconds': self.idle_seconds,
+            'json_depth': self.json_depth,
+            'response_bytes': self.response_bytes,
+            'public_cache_bytes': self.public_cache_bytes,
+            'public_cache_entries': self.public_cache_entries,
+        }
+        if {field.name for field in fields(self)} != set(values):
+            raise ValueError('Unregistered HTTP profile field.')
+        for name, value in values.items():
+            if name.endswith('_seconds') and name != 'peer_idle_seconds':
+                try:
+                    validated_seconds(value, maximum=300)
+                except ValueError:
+                    raise ValueError('HTTP deadlines must be positive, finite and at most 300 seconds.') from None
+            else:
+                try:
+                    validated_int(value)
+                except ValueError:
+                    raise ValueError('HTTP bounds must be positive, finite integers.') from None
+        if self.line_bytes > self.header_bytes or self.header_count > 100:
+            raise ValueError('Invalid HTTP header profile.')
+        if self.public_handlers + self.control_handlers > 256:
+            raise ValueError('HTTP handler profile exceeds the supported envelope.')
+
+
+
+def normalized_profile(profile):
+    if type(profile) is not TrafficProfile:
+        raise ValueError('An exact HTTP traffic profile is required.')
+    return replace(profile)
+
+
+def initial_admission(profile, control, clock):
+    profile = normalized_profile(profile)
+    if type(control) is not bool:
+        raise ValueError('The control lane selector must be a Boolean.')
+    now = clock()
+    if type(now) is not int:
+        raise ValueError('The initial clock sample must be an integer.')
+    limit = profile.control_handlers if control else profile.public_handlers
+    burst = profile.control_burst if control else profile.public_burst
+    rate = profile.control_rate if control else profile.public_rate
+    capacity = burst * 1000000000
+    return profile, {
+        'limit': limit, 'capacity': capacity, 'rate': rate, 'credit': capacity,
+        'last': now, 'active': 0, 'peak': 0, 'accepted': 0, 'rejected': 0,
+        'owners': set(), 'anonymous_owners': [], 'peers': OrderedDict(),
+    }

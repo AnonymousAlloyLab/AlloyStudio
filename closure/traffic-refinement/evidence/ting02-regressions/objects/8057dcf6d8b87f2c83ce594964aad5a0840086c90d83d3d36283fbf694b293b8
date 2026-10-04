@@ -1,0 +1,86 @@
+# v0.0.3-alpha
+
+This release makes concrete Alloy instances easier to inspect and expands the
+evidence for comparing Canonical, raw AST, TAR, and FM24 hints.
+
+## Instance diagrams
+
+Each available behavioral example now has an interactive SVG showing its actual
+objects and ordered relations. Relation filters, selectable details, temporal
+state switching, and exact-data tables support inspection. Measured text space
+and obstacle-aware connection routes reduce overlap in complex models, including
+`productionLineNew · inv3`. Large drawings disclose their display limits.
+The renderer uses no external graph service, image model, or runtime dependency.
+
+The [complete catalogue image audit](../instance-audit-v003.md) checks real solver
+responses for all 181 invariants, every returned example and temporal state,
+and both desktop and mobile widths. It records geometry and tuple-preservation
+checks, screenshots, and the limits of this finite audit. See also the
+[diagram reading guide](../instance-visualization.md).
+
+The final audit passed **2,878 state/viewport checks** for **1,342 instances**
+and **1,439 states**, with no geometry or tuple-preservation failures. Of these,
+1,413 states contain drawable objects or values and 26 are empty. The normal
+starters cover 177 invariants; four empty starters were rejected and separately
+tested using an explicit `no none` learner draft. This is not a claim that empty
+starters generated images or hints.
+
+IIS archives include the renderer and hash-version its module import, application
+script, and public assets. Existing deployments must install the refreshed
+package; a source release does not automatically update an IIS server.
+
+## Hint-quality evidence
+
+The [completed Alloy4Fun comparison](../alloy4fun-comparison.md) covers 61,598
+models with five deterministic arms: Canonical, Zhang–Shasha AST, TAR depth 2,
+FM24 history, and FM24 history with mutation. Each arm completed the same cohort.
+The [181-invariant quality report](../alloy4fun-181-hint-quality.md) separates
+hint availability on incorrect submissions from measured guidance properties.
+The [ten-exercise pilot](../alloy4fun-hint-quality.md) includes literal-edit
+probes and separate Luna reviews, with their disagreement retained.
+
+These are adapted baseline experiments, not exact paper replications or human
+learning studies. Current portal hints use full correct pools; saved benchmark
+hints use held-out submission paths. Worker configurations also differ. Neither
+native hint availability nor source localization proves that an individual edit
+is executable, improves semantics, or teaches a learner successfully.
+
+## Engine and proof-boundary corrections
+
+The release includes the canonical quantified-body display correction, owned
+JVM scratch directories with worker cleanup, two documented legacy corpus-label
+corrections for evaluation, and the completed guarded benchmark recovery. Original
+source data and valid prior results are preserved. The
+[diagnostic report](../hint-diagnostics.md) describes remaining normalization and
+matching limitations and TAR validation failures.
+
+The image audit also exposed a host `/tmp` directory-index exhaustion affecting
+Chromium. Browser-audit and CI child-process scratch files now use owned build
+directories. Failed attempts and the filesystem diagnosis are retained in the
+audit evidence; the renderer was not changed to disguise the infrastructure failure.
+
+The SQL production bridge now checks parsed AST identity, and the proof reports
+distinguish **PROVED** model properties, **CHECKED** production correspondence,
+**TESTED** finite regressions, and **TRUSTED** runtime components. The
+[SQL proof boundary](../sql-injection-proof.md) applies to its frozen inputs;
+this release does not claim universal SQL immunity or whole-portal formal closure.
+The 24 general portal proof obligations remain open.
+
+## Deployment and publication
+
+The catalogue audit reports and their hashed inputs are linked above. The
+published prerelease also supplies a public evidence archive, checksum, and
+verification summary with the release commit and CI run links. The usual release
+gates rebuild the engine and IIS package, check all dependency hashes, run the
+Python and browser regressions, and check native Windows and macOS builds.
+These checks do not replace acceptance testing on an actual IIS installation.
+
+Linux/macOS startup and Windows/IIS builds remain supported. The README now
+records both this release and the SQLite, upload administration, navigation,
+SQL proof, and portability additions in `v0.0.2-alpha`.
+
+Public release assets contain only allowlisted reports and verification summaries.
+Private IIS packages, configured administrator credentials, OpenAI keys, and
+raw benchmark responses are excluded. Credentials are supplied separately per
+deployment. Bundled public source exercise data remains inspectable in the
+repository; learner-interface redaction is not repository secrecy.

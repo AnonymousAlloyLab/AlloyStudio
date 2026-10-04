@@ -1,0 +1,94 @@
+{
+  "classification": "FINITE_DISCOVERY_AND_REGRESSION_EVIDENCE_NOT_CLOSURE",
+  "files": {
+    "README.md": {
+      "original": "build/trf-closure/trf01-discovery/README.md",
+      "sha256": "5015374beb30d982474f5aa4387a2166a4089f9e93cc8117998e5d0f658b6906"
+    },
+    "archive.json": {
+      "original": "build/trf-closure/trf01-discovery/archive.json",
+      "sha256": "2a11ace3cbd22e4b2dde8f77401c3dda72c175d554260588d8848ddc7593ac56"
+    },
+    "decode-witness-results.json": {
+      "original": "build/trf-closure/trf01-discovery/decode-witness-results.json",
+      "sha256": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32"
+    },
+    "decode-witness-run.txt": {
+      "original": "build/trf-closure/trf01-discovery/decode-witness-run.txt",
+      "sha256": "149b8d2bee47b6114d098c92349d1a0186e826f2f5166bfa02a87d56b8e6af32"
+    },
+    "decode_witnesses.py": {
+      "original": "build/trf-closure/trf01-discovery/decode_witnesses.py",
+      "sha256": "c84193ffe9e706770146622a93e1892d1dcb067b0df79004e17f1147236ec6f7"
+    },
+    "frozen-sources/admin_auth.py": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/admin_auth.py",
+      "sha256": "8dd1218b98ed35a34451b36277082825ca7ba8a0cfec733949b76d0df32a2ea1"
+    },
+    "frozen-sources/closure/traffic-obligations.json": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/closure/traffic-obligations.json",
+      "sha256": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc"
+    },
+    "frozen-sources/docs/backend-performance-spec.md": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/docs/backend-performance-spec.md",
+      "sha256": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a"
+    },
+    "frozen-sources/server.py": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/server.py",
+      "sha256": "d5905160c0e5e9422590a1cf04c692146d4a7512809452c9d929377b4d27ad24"
+    },
+    "frozen-sources/traffic_http.py": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/traffic_http.py",
+      "sha256": "19227047c4d7df72e334bc36a4368074b4a86de938c0f4962966a36fb7a39189"
+    },
+    "frozen-sources/traffic_profile.py": {
+      "original": "build/trf-closure/trf01-discovery/frozen-sources/traffic_profile.py",
+      "sha256": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd"
+    },
+    "ingress-gate-tests.txt": {
+      "original": "build/trf-closure/trf01-discovery/ingress-gate-tests.txt",
+      "sha256": "94af5275a54618fea6eb27b9762c5e095e1bf66c9e15024f10b5f99ab26fd226"
+    },
+    "initial-harness-result.json": {
+      "original": "build/trf-closure/trf01-discovery/initial-harness-result.json",
+      "sha256": "30464c6072c493f157ae8f8c8d1bc806a2f035680d76759db8b04404f628c633"
+    },
+    "post-repair-deadline-tests.json": {
+      "original": "build/trf-closure/trf01-discovery/post-repair-deadline-tests.json",
+      "sha256": "8666d261ad848924ff334130aac74205ce88ff389d70032b604eaea772f327e8"
+    },
+    "post-repair-deadline-tests.txt": {
+      "original": "build/trf-closure/trf01-discovery/post-repair-deadline-tests.txt",
+      "sha256": "321703f75f1ed30558b015b2ec3d96c05c879c929e3ae88e426bb67f2710e2d1"
+    },
+    "pre-repair-deadline-tests-v2.txt": {
+      "original": "build/trf-closure/trf01-discovery/pre-repair-deadline-tests-v2.txt",
+      "sha256": "2e8b43c5a1c2d3ef5312d18b9728221fbf7aba29e5fe5fdaf65408b6a953e737"
+    },
+    "pre-repair-deadline-tests.txt": {
+      "original": "build/trf-closure/trf01-discovery/pre-repair-deadline-tests.txt",
+      "sha256": "fb7fb1895ecaa3c55ce51c3ee539d6c8ee752c4889d745d637201dff0ba2b017"
+    },
+    "test_ingress_deadline_bridge.py.isolated.txt": {
+      "original": "build/trf-closure/trf01-discovery/test_ingress_deadline_bridge.py.isolated.txt",
+      "sha256": "9709d39ec49ecac0ddfccf5cfd31fa68a534cd2a43114dba418c8d029da9c168"
+    },
+    "test_ingress_deadline_gate.py.isolated.txt": {
+      "original": "build/trf-closure/trf01-discovery/test_ingress_deadline_gate.py.isolated.txt",
+      "sha256": "fdb508f290a015b5c0b1870d7aebbfb7a7580586474613c7378a2dc08142c157"
+    },
+    "test_ingress_deadlines.py.isolated.txt": {
+      "original": "build/trf-closure/trf01-discovery/test_ingress_deadlines.py.isolated.txt",
+      "sha256": "3a23405a755a7d6d9ad22267d1635b62fbc421d698b4ebf041393d18ba32585f"
+    },
+    "test_review_ladder.py.isolated.txt": {
+      "original": "build/trf-closure/trf01-discovery/test_review_ladder.py.isolated.txt",
+      "sha256": "1f11b6e880045ee35de832b81b45d06257342e13b5c79bbf0034379d4ca220b9"
+    },
+    "test_traffic_http.py.isolated.txt": {
+      "original": "build/trf-closure/trf01-discovery/test_traffic_http.py.isolated.txt",
+      "sha256": "80c5a5d0da09fa53d607f4d0b3cd48c6d3c53b48b3db856d8ad20f9cedc5a3f4"
+    }
+  },
+  "notes": "Original source snapshots and witness outputs remain unchanged. Temporary harness/prerepair logs retain their draft labels; source-bound final gate and regression records determine accepted evidence."
+}

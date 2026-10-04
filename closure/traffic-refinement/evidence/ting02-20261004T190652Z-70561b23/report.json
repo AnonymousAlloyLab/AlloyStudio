@@ -1,0 +1,1316 @@
+{
+  "blockId": "TING02",
+  "blockingReasons": [
+    "CANDIDATE_ONLY_REVIEWS_NOT_CHECKED"
+  ],
+  "buildSummary": {
+    "passed": 2,
+    "required": 2
+  },
+  "builds": [
+    {
+      "artifacts": {
+        "AdmissionExtracted": "f9dcc1a83cc528c0a78f8864c569fc757f6006d58902aa4135f0c3f3dcc849ab",
+        "AdmissionModel": "fa450945e96add6da35eec24cf66c58452b73add078621b5289a885c64b6794f",
+        "AdmissionSpec": "d0b8c67aae47c52911c57cf1f1637f201fcec5ede0a7eae2db1dba1c233ded3c",
+        "Decoder": "d9594c50f0b5412d78efae3e4159a4f74aafb3020b2fee9a16df824044dcad3d",
+        "DecoderContract": "54a1a0b8da629f2441d93ea380a770834a85ed05dda4ba0f477b495b8b17be96",
+        "DecoderExtracted": "c0e6d037d7aec20f3e57ca4529baba1c67ff03644de4fe2cb0dc3649d92ee8b2",
+        "DecoderModel": "5f04eda0a3fda756d07791890cd8696ad8722a8330296357d3fec6a27730f45c",
+        "IngressComposition": "e615b0857e08c57086be6aa1f1928ca229c32213484a536d10ce12b50dc536f2",
+        "IngressDeadlines.Extracted": "b909b4f31e93847a542ce53d1043aa035b123d6acfbf727767df10ddbf455f6a",
+        "IngressDeadlines.Model": "3c204d7843d781a116198a5b7e808469c6e22fc00e49b7772e7df4937d9de091",
+        "IngressDeadlines.Spec": "46b0cb603b779f2eaff5b0b611fb8cacefadc0d3dccb59f06defb73890d72c0c",
+        "IngressRouteExtracted": "baa3fc2550309b16d7af0e532832f365b6d3e78f235680d4c98e90012ed50c90",
+        "IngressRouteModel": "39674ceb79379e2464b04aa8948cfee6a1f9a44d8619c0dc626c8aa78d49bf79",
+        "IngressWire": "4ed6cfe7ac3d5397aa2508c63e95084eb91b2cbc0f310002f751a94687f679c6"
+      },
+      "axioms": [],
+      "bridges": {
+        "admission_bridge": {
+          "ambiguousObjects": 0,
+          "generatedSha256": "d5fb28761f6f7847ee0ab86c8f483c86e1747312b1a8c90970410430311fcc68",
+          "mappedObjects": 9,
+          "projection": {
+            "capacityOperator": "ge",
+            "controlPortDefault": 0,
+            "correspondence": [
+              {
+                "semanticTransition": "Fresh empty owner set, empty anonymous list, active=0; lane limit comes from actual conditional; normalization and lock initialization are fully matched.",
+                "source": "Admission.__init__ + initial_admission",
+                "target": "initial; Spec.initial_valid"
+              },
+              {
+                "semanticTransition": "Duplicate check maps identity membership; actual count comparison and arithmetic delta are lowered. Every rate refusal maps creditAllowed=false; success maps true. Closed token/peer block only mutates buckets, peers, local variables and diagnostic counts. Set.add on fresh owner maps list cons modulo order.",
+                "source": "Admission.reserve lock critical section",
+                "target": "reserve; Spec.reserve_valid; Spec.all_reachable_count_and_capacity"
+              },
+              {
+                "semanticTransition": "Missing anonymous owner returns unchanged; selected explicit/socket or popped anonymous owner membership controls set.remove and exact subtraction. Anonymous object() produces fresh identity. Projection models each resolved owner; unused anonymous stack contents cannot mutate ownership.",
+                "source": "Admission.release lock critical section",
+                "target": "release; Spec.release_idempotent; Spec.release_other_preserved"
+              },
+              {
+                "semanticTransition": "Separate Admission, normalized profile and fresh lock/empty registry per successful constructor. Literal-loopback control guard and selected backlog checked in complete AST. Fresh empty uncertain-owner set; its members are projected from marked registered owner entries.",
+                "source": "BoundedHTTPServer.__init__",
+                "target": "initial; lifeInitial"
+              },
+              {
+                "semanticTransition": "Accepted socket reserves before Thread constructor; under registry lock assign entry before start. Only pre-attempt failure pops/releases; every attempted-start failure retains, even before ident is published. Refusal emits constant bounded packet, closes socket and returns without allocation. Native bootstrap explicitly separates ident publication from the later started event; failure retention covers either interval.",
+                "source": "BoundedHTTPServer.process_request",
+                "target": "Extracted.allocation, refusal, constructorFailure, preAttemptFailure, retainedOnAmbiguousStart; Spec.allocation_prefix_safe"
+              },
+              {
+                "semanticTransition": "Under registry lock, skip marked/current-thread owners before any observation. Mark existing registered owner before join and is_alive. RuntimeError continues marked; any other exception exits marked. Only both normal returns clear the marker, before optional exact-owner removal/release. Failed observation may poison status metadata, but its owner remains permanently marked and cannot be probed again. Ghost reliability follows initial state and these same transitions; no clean-state premise is inserted.",
+                "source": "BoundedHTTPServer._reap_request_threads + service_actions + traffic_stats",
+                "target": "Extracted.failObservation; resourceStep observation events; reachable_reliable_history; reachable_observation_certifies_dead; reachable_uncertainty_bounded"
+              },
+              {
+                "semanticTransition": "Main constructs one Portal using default normalized TrafficProfile, conditionally one loopback BoundedHTTPServer using equal default values; control default0 disables second constructor. Port validation and successful binds ensure distinct endpoints.",
+                "source": "server.main + Portal.__init__",
+                "target": "Topology; Extracted.laneLimit; Spec.enabled_combined_capacity; Spec.disabled_combined_capacity"
+              },
+              {
+                "semanticTransition": "One serialized accept/callback execution per server. The single pending slot models already accepted socket before ownership, independently of kernel listen backlog.",
+                "source": "socketserver.BaseServer._handle_request_noblock (trusted stdlib primitive)",
+                "target": "ListenerState; Spec.one_pending_per_listener; Spec.pair_pending_at_most_two"
+              },
+              {
+                "semanticTransition": "Distinct object construction keeps lane state disjoint; combined scalar envelope follows sum. Interval refill/charge theorem remains TRF02.",
+                "source": "independent per-instance Admission.bucket and profile public/control values",
+                "target": "Spec.public_cannot_borrow_control; Spec.control_cannot_borrow_public; Spec.combined_credit_bound; default_burst_total/default_rate_total"
+              }
+            ],
+            "credit": {
+              "charge": "tokenUnit",
+              "refill": "(clip capacity (credit + (elapsed * rate)))",
+              "unit": 1000000000
+            },
+            "decrement": 1,
+            "increment": 1,
+            "laneReversed": false,
+            "paths": {
+              "allocation": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start"
+              ],
+              "constructorFailure": [
+                "reserve",
+                "unregister",
+                "release"
+              ],
+              "preAttemptFailure": [
+                "reserve",
+                "allocate",
+                "unregister",
+                "release"
+              ],
+              "reaping": [
+                "markObservation",
+                "joinReturned",
+                "terminate",
+                "clearObservation",
+                "unregister",
+                "release"
+              ],
+              "refusal": [
+                "refuse",
+                "close"
+              ],
+              "retainedOnAmbiguousStart": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start"
+              ],
+              "retainedOnLiveJoin": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start",
+                "markObservation",
+                "joinReturned",
+                "clearObservation"
+              ],
+              "retainedOnUnstartedJoin": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "markObservation",
+                "joinRefused"
+              ]
+            },
+            "profile": {
+              "control_burst": 4,
+              "control_handlers": 2,
+              "control_rate": 2,
+              "public_burst": 60,
+              "public_handlers": 30,
+              "public_rate": 30
+            },
+            "reapCheck": "joined",
+            "shapes": {
+              "Admission": "59e26043f5ed38431416886315ce5996b3b8db9e9ef663d9da74f02c88791a50",
+              "BoundedHTTPServer": "c548915f27090caea0d621ad10b6d540ea1a9c194526ef893820ef117bc71c4f",
+              "Portal": "36680320b9141cf29f1a4b1cf64af9a8ecf6f76a9e9df78bcbce62c65efc04bd",
+              "Portal.__init__": "bed5e1c2f443ea43fa9fccded29752356e3b3f1f14402fd65a96fb36599faff9",
+              "TokenBucket": "29003c0e3da91df649becbee6871e47b4d25e6e481d5a23aed2d7bc1184a181a",
+              "TrafficProfile": "1771d41761eb76b474544f0e2e1c0af2827238afd9f75c96eddcc988d27e8bd7",
+              "initial_admission": "4e87059fdb8360e925e198fb304686816b06ba2e3c9172219ca9dfcc98c5d9e5",
+              "main": "80cef46c026ce6aa7f4fc1b4919552fa6b130b4d57982404875a37db00ee4a91",
+              "normalized_profile": "eba9a6cd017e28c2d1e8708984cfcca7e63f8f5db630e46637cefcc55e134cf1",
+              "server.envelope": "ce14f511589d3b82403e298012fd2022ddd29de34a37de682b591da6be22e219",
+              "traffic_http.envelope": "ecd3344631b1037841840033f201ea4580eec46c6dfb873e77ae63ae0d5a0a72",
+              "traffic_http.imports": "c1a374c2788e13dc514f859529c01bfca94eba6a9823280990a040f247a03ff9",
+              "traffic_profile.envelope": "c0fd7843c7863172161f8362377f5818cd9a5726924e9a0ede0785237981517a",
+              "traffic_profile.imports": "fd3617de8b7fd26ff707b78a26b1a5af19d3db457e5f32331f1b0fc4c9296925"
+            },
+            "stickyObservationFailure": true,
+            "trust": [
+              "Closed AST projection implements declared Python primitive semantics; hashes close all non-hole executable syntax but do not by themselves prove CPython.",
+              "CPython object identity/set/list/arithmetic semantics and no adversarial external mutation.",
+              "CPython lock-serialized set/dict/count bookkeeping is modeled as atomic actions; source order is checked. Exceptions at either join/is_alive primitive boundary are included and may poison metadata. Normal returns are interpreted as accurate only when reachable observation history remains reliable. Arbitrary asynchronous cancellation at every bookkeeping bytecode is not claimed.",
+              "Socketserver serial accept/process_request and inherited process_request_thread cleanup.",
+              "OS successful literal-loopback binding, sockets and separately bounded kernel backlog."
+            ]
+          },
+          "status": "PASS",
+          "unmappedObjects": 0
+        },
+        "decoder_bridge": {
+          "contractSha256": "13a0821671d4f95423d8a687762f0df078d8253ef4262eab6e654644f7a87fe8",
+          "generatedSha256": "593799f3d9fd97d97ca34536730941f515d0c8c6adea4413b42fe541452618c9",
+          "headerRules": [
+            "headerVersion",
+            "headerNames",
+            "headerValues",
+            "singletons",
+            "hostRequired",
+            "hostGrammar",
+            "noTransferEncoding",
+            "identityEncoding",
+            "noExpect",
+            "contentTypeRequired",
+            "contentTypeGrammar",
+            "lengthGrammar",
+            "bodylessRead"
+          ],
+          "jsonAstSha256": "6e202a5b9336e318fb2ba4c4a85296615a94cc62a5b3c1668c4fbfec10b1d77d",
+          "kind": "CHECKED_CLOSED_RAW_INPUT_REGEX_AND_RULE_INTERPRETATION",
+          "lineRules": [
+            "crlf",
+            "threeParts",
+            "methodToken",
+            "version",
+            "targetGrammar",
+            "originOnly",
+            "noEscapedControls"
+          ],
+          "mappings": {
+            "_host_valid": "5e7b473ba4b45945d229f1ccf1220abf1151c0986b44ee77d5c2052fc9c699c9",
+            "_require": "86edd7a2700f486144c0589bbf5db767a30f42bc571ba001eae0d03a0149780f",
+            "strict_request_headers": "c4616ee284a511a42738a6bb6d2a607c0a61d7d41a2375a0254f77ee47e75689",
+            "strict_request_line": "aba256312b47aef1fc2ac07435deb10bfb17488f710636fdee297ecba27ef442"
+          },
+          "primitiveTCB": [
+            "CPython ASCII/UTF8 decode and raw_items multiplicity",
+            "CPython re.fullmatch equals extracted derivative regular language",
+            "IPv6Address literal recognition",
+            "CPython JSON syntax, parse_constant rejection and finite Unicode serialization",
+            "ordinary Python statement/exception and recorded closed-loop interpretation"
+          ],
+          "semanticInterpretation": {
+            "_host_valid": "extracted host regex then IPv6 literal primitive and decimal port <=65535",
+            "bounded_json": "decoded text scanner, ordered object-pairs duplicate rejection at every object, rejected named constants, serialization finiteness/Unicode, exact dict root",
+            "strict_request_headers": "lexical guards under all raw pairs, lower-case grouping and OWS stripping, guard conjunction before canonical integer return",
+            "strict_request_line": "ASCII decode, exact split, guarded fields, unchanged tuple return"
+          },
+          "status": "PASS"
+        },
+        "strict_ingress_bridge": {
+          "ambiguous": 0,
+          "bodyLengthGuard": "0 < length <= limit",
+          "mappings": {
+            "admin_POST:self.admin_body": 1,
+            "admin_POST:self.admin_headers": 1,
+            "admin_body:self.read_json_body": 1,
+            "do_GET:self.request_headers": 1,
+            "do_POST:self.admin_POST": 1,
+            "do_POST:self.public_body": 1,
+            "parse_request:self.request_headers": 1,
+            "parse_request:self.rfile.check_deadline": 1,
+            "parse_request:strict_request_line": 1,
+            "parse_request:super().parse_request": 1,
+            "public_body:self.read_json_body": 1,
+            "public_body:self.request_headers": 1,
+            "read_json_body:bounded_json": 1,
+            "read_json_body:self.rfile.begin_body": 1,
+            "read_json_body:self.rfile.check_deadline": 2,
+            "read_json_body:self.rfile.read1": 1,
+            "request_headers:strict_request_headers": 1
+          },
+          "methodAstSha256": {
+            "admin_GET": "c56c8bbaddaa7ec5ce96ef6324b3d4db3625b0fed9c1ac031c3953c6e1397440",
+            "admin_POST": "848894b9096fb676426fbb25d7adc527e8c6b25e0431be8b977e00c8422499da",
+            "admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "admin_headers": "0be04416546832f6cde839943203079b87aefe9c8fc4a36ae61a88f63d87e370",
+            "do_GET": "722effb603adcc25f0bd722d34187e0f21424d102f3f338b024f4f57e42606ae",
+            "do_POST": "f9d790272f932ca95679bbe9d712c392bf4ddcddd2c40fd06bacc310e2991a0f",
+            "handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "request_headers": "ea1a335e5707fc121c86b8ba116929527fd32e2822901dfaa805181d96ec16e4",
+            "setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "readerAstSha256": {
+            "_recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+            "begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+            "read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+            "read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+            "readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d"
+          },
+          "routeProgramSha256": "30f373bf7cfce00534c432a7167b0c56977afeb275b037a0c420b3d61599d8ee",
+          "sourceSemantics": "Frozen interprocedural ordinary-execution/exception interpretation, one request per reserved connection; successful GET dispatch follows strict line+headers+header cut; successful public/admin POST business dispatch additionally follows exact-length bounded JSON and body completion cut. Rejected routes do not constitute business dispatch.",
+          "status": "PASS",
+          "unmapped": 0
+        },
+        "strict_ingress_deadline_bridge": {
+          "consumerAstSha256": {
+            "DeadlineReader.__init__": "98ef87413927a60ccb85fb4750cf03a6be2b8bc614d724ded367b566416a1fd4",
+            "DeadlineReader._recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+            "DeadlineReader.begin_body": "6845961b1f1d69c2de47647ec1f7ca73ca61a066f9168cd810694c1030969616",
+            "DeadlineReader.begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+            "DeadlineReader.close": "1c80cc58b8c3fb588bf31618fd9369e1cbb144b8b585f1a97fe04bfcb261c2bf",
+            "DeadlineReader.read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+            "DeadlineReader.read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+            "DeadlineReader.readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d",
+            "Handler.admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "Handler.handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "Handler.parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "Handler.public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "Handler.read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "Handler.setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "excluded": [
+            "complete TRF-01",
+            "full byte/JSON decoder proof",
+            "pre-handler allocation and lane composition",
+            "wall-clock time after sampled cuts"
+          ],
+          "generatedSha256": "407aaaa88174df0ba956c9ef1cd9e43ac74474d798efcebc622974f3ac272b2f",
+          "kind": "CHECKED_RESTRICTED_SUCCESSFUL_PATH_ABSTRACTION_UNDER_DECLARED_TCB",
+          "primitiveSha256": "41ce45f6eb164189eb201935182e7313d0cd2c272e5c5248a15527a6e30f4299",
+          "programs": {
+            "beginBodyProgram": [
+              "guard",
+              "reset"
+            ],
+            "bodyProgram": [
+              "work",
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "parseProgram": [
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "read1Program": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "readlineProgram": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "recvProgram": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ]
+          },
+          "status": "PASS",
+          "trust": "Frozen work/call interpretations, ordinary Python and stdlib dispatch, finite-clock order embedding. Work may advance time arbitrarily; no virtual safety check is inserted at delivery."
+        },
+        "wire_ingress_bridge": {
+          "ambiguous": 0,
+          "bindings": {
+            "IngressWire.actualRequest": "strict_request_line(raw_requestline) tuple equals stdlib command/path/version; raw_items is the standard first-colon nonfolded field parse; mutation is command == POST",
+            "IngressWire.declaredLength": "strict_request_headers canonical Content-Length integer from the same ordered header occurrences",
+            "IngressWire.decodedBody": "bounded_json joins those exact chunks, UTF8-decodes them, then passes that same text to json.loads; returned tree is the standard decoded ordered-pair tree",
+            "IngressWire.headerLengths": "request line plus every actually returned field/terminator length; header_remaining -= len(result)",
+            "IngressWire.headerPairs": "DeadlineReader.readline CRLF, first-colon, token, control and no-fold checks; exact terminal blank line must be received",
+            "IngressWire.receivedLength": "remaining starts at declared length, decreases only by len(chunk), and successful exact-read loop returns its joined chunks"
+          },
+          "jsonAstSha256": "6e202a5b9336e318fb2ba4c4a85296615a94cc62a5b3c1668c4fbfec10b1d77d",
+          "modelSha256": "7be05a1aa8254294ed75647d327506da2f7342dc54555a7e159e929806f600f2",
+          "primitiveTCB": [
+            "CPython ordinary sequential/exceptions and bounded recv semantics",
+            "email raw_items first-colon/OWS interpretation on lexically valid nonfolded CRLF lines",
+            "Strict UTF8 decode and standard ordered-pair JSON parse of the resulting codepoints; finite/Unicode serialization at scalar leaves"
+          ],
+          "routeMethodAstSha256": {
+            "admin_GET": "c56c8bbaddaa7ec5ce96ef6324b3d4db3625b0fed9c1ac031c3953c6e1397440",
+            "admin_POST": "848894b9096fb676426fbb25d7adc527e8c6b25e0431be8b977e00c8422499da",
+            "admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "admin_headers": "0be04416546832f6cde839943203079b87aefe9c8fc4a36ae61a88f63d87e370",
+            "do_GET": "722effb603adcc25f0bd722d34187e0f21424d102f3f338b024f4f57e42606ae",
+            "do_POST": "f9d790272f932ca95679bbe9d712c392bf4ddcddd2c40fd06bacc310e2991a0f",
+            "handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "request_headers": "ea1a335e5707fc121c86b8ba116929527fd32e2822901dfaa805181d96ec16e4",
+            "setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "status": "PASS",
+          "theorems": [
+            "AlloyStudio.IngressWire.actual_request_binding",
+            "AlloyStudio.IngressWire.post_false_mutation_impossible",
+            "AlloyStudio.IngressWire.declared_length_is_parsed_header",
+            "AlloyStudio.IngressWire.decoded_body_binding",
+            "AlloyStudio.IngressWire.accepted_body_has_bound_parse"
+          ],
+          "unmapped": 0
+        }
+      },
+      "inventorySha256": "9308ebe788c84cbe00a5b206e139688a5fdd4be517d9a98cf1a8fbe2bfd2016e",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 356
+    },
+    {
+      "artifacts": {
+        "AdmissionExtracted": "f9dcc1a83cc528c0a78f8864c569fc757f6006d58902aa4135f0c3f3dcc849ab",
+        "AdmissionModel": "fa450945e96add6da35eec24cf66c58452b73add078621b5289a885c64b6794f",
+        "AdmissionSpec": "d0b8c67aae47c52911c57cf1f1637f201fcec5ede0a7eae2db1dba1c233ded3c",
+        "Decoder": "d9594c50f0b5412d78efae3e4159a4f74aafb3020b2fee9a16df824044dcad3d",
+        "DecoderContract": "54a1a0b8da629f2441d93ea380a770834a85ed05dda4ba0f477b495b8b17be96",
+        "DecoderExtracted": "c0e6d037d7aec20f3e57ca4529baba1c67ff03644de4fe2cb0dc3649d92ee8b2",
+        "DecoderModel": "5f04eda0a3fda756d07791890cd8696ad8722a8330296357d3fec6a27730f45c",
+        "IngressComposition": "e615b0857e08c57086be6aa1f1928ca229c32213484a536d10ce12b50dc536f2",
+        "IngressDeadlines.Extracted": "b909b4f31e93847a542ce53d1043aa035b123d6acfbf727767df10ddbf455f6a",
+        "IngressDeadlines.Model": "3c204d7843d781a116198a5b7e808469c6e22fc00e49b7772e7df4937d9de091",
+        "IngressDeadlines.Spec": "46b0cb603b779f2eaff5b0b611fb8cacefadc0d3dccb59f06defb73890d72c0c",
+        "IngressRouteExtracted": "baa3fc2550309b16d7af0e532832f365b6d3e78f235680d4c98e90012ed50c90",
+        "IngressRouteModel": "39674ceb79379e2464b04aa8948cfee6a1f9a44d8619c0dc626c8aa78d49bf79",
+        "IngressWire": "4ed6cfe7ac3d5397aa2508c63e95084eb91b2cbc0f310002f751a94687f679c6"
+      },
+      "axioms": [],
+      "bridges": {
+        "admission_bridge": {
+          "ambiguousObjects": 0,
+          "generatedSha256": "d5fb28761f6f7847ee0ab86c8f483c86e1747312b1a8c90970410430311fcc68",
+          "mappedObjects": 9,
+          "projection": {
+            "capacityOperator": "ge",
+            "controlPortDefault": 0,
+            "correspondence": [
+              {
+                "semanticTransition": "Fresh empty owner set, empty anonymous list, active=0; lane limit comes from actual conditional; normalization and lock initialization are fully matched.",
+                "source": "Admission.__init__ + initial_admission",
+                "target": "initial; Spec.initial_valid"
+              },
+              {
+                "semanticTransition": "Duplicate check maps identity membership; actual count comparison and arithmetic delta are lowered. Every rate refusal maps creditAllowed=false; success maps true. Closed token/peer block only mutates buckets, peers, local variables and diagnostic counts. Set.add on fresh owner maps list cons modulo order.",
+                "source": "Admission.reserve lock critical section",
+                "target": "reserve; Spec.reserve_valid; Spec.all_reachable_count_and_capacity"
+              },
+              {
+                "semanticTransition": "Missing anonymous owner returns unchanged; selected explicit/socket or popped anonymous owner membership controls set.remove and exact subtraction. Anonymous object() produces fresh identity. Projection models each resolved owner; unused anonymous stack contents cannot mutate ownership.",
+                "source": "Admission.release lock critical section",
+                "target": "release; Spec.release_idempotent; Spec.release_other_preserved"
+              },
+              {
+                "semanticTransition": "Separate Admission, normalized profile and fresh lock/empty registry per successful constructor. Literal-loopback control guard and selected backlog checked in complete AST. Fresh empty uncertain-owner set; its members are projected from marked registered owner entries.",
+                "source": "BoundedHTTPServer.__init__",
+                "target": "initial; lifeInitial"
+              },
+              {
+                "semanticTransition": "Accepted socket reserves before Thread constructor; under registry lock assign entry before start. Only pre-attempt failure pops/releases; every attempted-start failure retains, even before ident is published. Refusal emits constant bounded packet, closes socket and returns without allocation. Native bootstrap explicitly separates ident publication from the later started event; failure retention covers either interval.",
+                "source": "BoundedHTTPServer.process_request",
+                "target": "Extracted.allocation, refusal, constructorFailure, preAttemptFailure, retainedOnAmbiguousStart; Spec.allocation_prefix_safe"
+              },
+              {
+                "semanticTransition": "Under registry lock, skip marked/current-thread owners before any observation. Mark existing registered owner before join and is_alive. RuntimeError continues marked; any other exception exits marked. Only both normal returns clear the marker, before optional exact-owner removal/release. Failed observation may poison status metadata, but its owner remains permanently marked and cannot be probed again. Ghost reliability follows initial state and these same transitions; no clean-state premise is inserted.",
+                "source": "BoundedHTTPServer._reap_request_threads + service_actions + traffic_stats",
+                "target": "Extracted.failObservation; resourceStep observation events; reachable_reliable_history; reachable_observation_certifies_dead; reachable_uncertainty_bounded"
+              },
+              {
+                "semanticTransition": "Main constructs one Portal using default normalized TrafficProfile, conditionally one loopback BoundedHTTPServer using equal default values; control default0 disables second constructor. Port validation and successful binds ensure distinct endpoints.",
+                "source": "server.main + Portal.__init__",
+                "target": "Topology; Extracted.laneLimit; Spec.enabled_combined_capacity; Spec.disabled_combined_capacity"
+              },
+              {
+                "semanticTransition": "One serialized accept/callback execution per server. The single pending slot models already accepted socket before ownership, independently of kernel listen backlog.",
+                "source": "socketserver.BaseServer._handle_request_noblock (trusted stdlib primitive)",
+                "target": "ListenerState; Spec.one_pending_per_listener; Spec.pair_pending_at_most_two"
+              },
+              {
+                "semanticTransition": "Distinct object construction keeps lane state disjoint; combined scalar envelope follows sum. Interval refill/charge theorem remains TRF02.",
+                "source": "independent per-instance Admission.bucket and profile public/control values",
+                "target": "Spec.public_cannot_borrow_control; Spec.control_cannot_borrow_public; Spec.combined_credit_bound; default_burst_total/default_rate_total"
+              }
+            ],
+            "credit": {
+              "charge": "tokenUnit",
+              "refill": "(clip capacity (credit + (elapsed * rate)))",
+              "unit": 1000000000
+            },
+            "decrement": 1,
+            "increment": 1,
+            "laneReversed": false,
+            "paths": {
+              "allocation": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start"
+              ],
+              "constructorFailure": [
+                "reserve",
+                "unregister",
+                "release"
+              ],
+              "preAttemptFailure": [
+                "reserve",
+                "allocate",
+                "unregister",
+                "release"
+              ],
+              "reaping": [
+                "markObservation",
+                "joinReturned",
+                "terminate",
+                "clearObservation",
+                "unregister",
+                "release"
+              ],
+              "refusal": [
+                "refuse",
+                "close"
+              ],
+              "retainedOnAmbiguousStart": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start"
+              ],
+              "retainedOnLiveJoin": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "start",
+                "markObservation",
+                "joinReturned",
+                "clearObservation"
+              ],
+              "retainedOnUnstartedJoin": [
+                "reserve",
+                "allocate",
+                "register",
+                "attempt",
+                "identify",
+                "markObservation",
+                "joinRefused"
+              ]
+            },
+            "profile": {
+              "control_burst": 4,
+              "control_handlers": 2,
+              "control_rate": 2,
+              "public_burst": 60,
+              "public_handlers": 30,
+              "public_rate": 30
+            },
+            "reapCheck": "joined",
+            "shapes": {
+              "Admission": "59e26043f5ed38431416886315ce5996b3b8db9e9ef663d9da74f02c88791a50",
+              "BoundedHTTPServer": "c548915f27090caea0d621ad10b6d540ea1a9c194526ef893820ef117bc71c4f",
+              "Portal": "36680320b9141cf29f1a4b1cf64af9a8ecf6f76a9e9df78bcbce62c65efc04bd",
+              "Portal.__init__": "bed5e1c2f443ea43fa9fccded29752356e3b3f1f14402fd65a96fb36599faff9",
+              "TokenBucket": "29003c0e3da91df649becbee6871e47b4d25e6e481d5a23aed2d7bc1184a181a",
+              "TrafficProfile": "1771d41761eb76b474544f0e2e1c0af2827238afd9f75c96eddcc988d27e8bd7",
+              "initial_admission": "4e87059fdb8360e925e198fb304686816b06ba2e3c9172219ca9dfcc98c5d9e5",
+              "main": "80cef46c026ce6aa7f4fc1b4919552fa6b130b4d57982404875a37db00ee4a91",
+              "normalized_profile": "eba9a6cd017e28c2d1e8708984cfcca7e63f8f5db630e46637cefcc55e134cf1",
+              "server.envelope": "ce14f511589d3b82403e298012fd2022ddd29de34a37de682b591da6be22e219",
+              "traffic_http.envelope": "ecd3344631b1037841840033f201ea4580eec46c6dfb873e77ae63ae0d5a0a72",
+              "traffic_http.imports": "c1a374c2788e13dc514f859529c01bfca94eba6a9823280990a040f247a03ff9",
+              "traffic_profile.envelope": "c0fd7843c7863172161f8362377f5818cd9a5726924e9a0ede0785237981517a",
+              "traffic_profile.imports": "fd3617de8b7fd26ff707b78a26b1a5af19d3db457e5f32331f1b0fc4c9296925"
+            },
+            "stickyObservationFailure": true,
+            "trust": [
+              "Closed AST projection implements declared Python primitive semantics; hashes close all non-hole executable syntax but do not by themselves prove CPython.",
+              "CPython object identity/set/list/arithmetic semantics and no adversarial external mutation.",
+              "CPython lock-serialized set/dict/count bookkeeping is modeled as atomic actions; source order is checked. Exceptions at either join/is_alive primitive boundary are included and may poison metadata. Normal returns are interpreted as accurate only when reachable observation history remains reliable. Arbitrary asynchronous cancellation at every bookkeeping bytecode is not claimed.",
+              "Socketserver serial accept/process_request and inherited process_request_thread cleanup.",
+              "OS successful literal-loopback binding, sockets and separately bounded kernel backlog."
+            ]
+          },
+          "status": "PASS",
+          "unmappedObjects": 0
+        },
+        "decoder_bridge": {
+          "contractSha256": "13a0821671d4f95423d8a687762f0df078d8253ef4262eab6e654644f7a87fe8",
+          "generatedSha256": "593799f3d9fd97d97ca34536730941f515d0c8c6adea4413b42fe541452618c9",
+          "headerRules": [
+            "headerVersion",
+            "headerNames",
+            "headerValues",
+            "singletons",
+            "hostRequired",
+            "hostGrammar",
+            "noTransferEncoding",
+            "identityEncoding",
+            "noExpect",
+            "contentTypeRequired",
+            "contentTypeGrammar",
+            "lengthGrammar",
+            "bodylessRead"
+          ],
+          "jsonAstSha256": "6e202a5b9336e318fb2ba4c4a85296615a94cc62a5b3c1668c4fbfec10b1d77d",
+          "kind": "CHECKED_CLOSED_RAW_INPUT_REGEX_AND_RULE_INTERPRETATION",
+          "lineRules": [
+            "crlf",
+            "threeParts",
+            "methodToken",
+            "version",
+            "targetGrammar",
+            "originOnly",
+            "noEscapedControls"
+          ],
+          "mappings": {
+            "_host_valid": "5e7b473ba4b45945d229f1ccf1220abf1151c0986b44ee77d5c2052fc9c699c9",
+            "_require": "86edd7a2700f486144c0589bbf5db767a30f42bc571ba001eae0d03a0149780f",
+            "strict_request_headers": "c4616ee284a511a42738a6bb6d2a607c0a61d7d41a2375a0254f77ee47e75689",
+            "strict_request_line": "aba256312b47aef1fc2ac07435deb10bfb17488f710636fdee297ecba27ef442"
+          },
+          "primitiveTCB": [
+            "CPython ASCII/UTF8 decode and raw_items multiplicity",
+            "CPython re.fullmatch equals extracted derivative regular language",
+            "IPv6Address literal recognition",
+            "CPython JSON syntax, parse_constant rejection and finite Unicode serialization",
+            "ordinary Python statement/exception and recorded closed-loop interpretation"
+          ],
+          "semanticInterpretation": {
+            "_host_valid": "extracted host regex then IPv6 literal primitive and decimal port <=65535",
+            "bounded_json": "decoded text scanner, ordered object-pairs duplicate rejection at every object, rejected named constants, serialization finiteness/Unicode, exact dict root",
+            "strict_request_headers": "lexical guards under all raw pairs, lower-case grouping and OWS stripping, guard conjunction before canonical integer return",
+            "strict_request_line": "ASCII decode, exact split, guarded fields, unchanged tuple return"
+          },
+          "status": "PASS"
+        },
+        "strict_ingress_bridge": {
+          "ambiguous": 0,
+          "bodyLengthGuard": "0 < length <= limit",
+          "mappings": {
+            "admin_POST:self.admin_body": 1,
+            "admin_POST:self.admin_headers": 1,
+            "admin_body:self.read_json_body": 1,
+            "do_GET:self.request_headers": 1,
+            "do_POST:self.admin_POST": 1,
+            "do_POST:self.public_body": 1,
+            "parse_request:self.request_headers": 1,
+            "parse_request:self.rfile.check_deadline": 1,
+            "parse_request:strict_request_line": 1,
+            "parse_request:super().parse_request": 1,
+            "public_body:self.read_json_body": 1,
+            "public_body:self.request_headers": 1,
+            "read_json_body:bounded_json": 1,
+            "read_json_body:self.rfile.begin_body": 1,
+            "read_json_body:self.rfile.check_deadline": 2,
+            "read_json_body:self.rfile.read1": 1,
+            "request_headers:strict_request_headers": 1
+          },
+          "methodAstSha256": {
+            "admin_GET": "c56c8bbaddaa7ec5ce96ef6324b3d4db3625b0fed9c1ac031c3953c6e1397440",
+            "admin_POST": "848894b9096fb676426fbb25d7adc527e8c6b25e0431be8b977e00c8422499da",
+            "admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "admin_headers": "0be04416546832f6cde839943203079b87aefe9c8fc4a36ae61a88f63d87e370",
+            "do_GET": "722effb603adcc25f0bd722d34187e0f21424d102f3f338b024f4f57e42606ae",
+            "do_POST": "f9d790272f932ca95679bbe9d712c392bf4ddcddd2c40fd06bacc310e2991a0f",
+            "handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "request_headers": "ea1a335e5707fc121c86b8ba116929527fd32e2822901dfaa805181d96ec16e4",
+            "setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "readerAstSha256": {
+            "_recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+            "begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+            "read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+            "read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+            "readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d"
+          },
+          "routeProgramSha256": "30f373bf7cfce00534c432a7167b0c56977afeb275b037a0c420b3d61599d8ee",
+          "sourceSemantics": "Frozen interprocedural ordinary-execution/exception interpretation, one request per reserved connection; successful GET dispatch follows strict line+headers+header cut; successful public/admin POST business dispatch additionally follows exact-length bounded JSON and body completion cut. Rejected routes do not constitute business dispatch.",
+          "status": "PASS",
+          "unmapped": 0
+        },
+        "strict_ingress_deadline_bridge": {
+          "consumerAstSha256": {
+            "DeadlineReader.__init__": "98ef87413927a60ccb85fb4750cf03a6be2b8bc614d724ded367b566416a1fd4",
+            "DeadlineReader._recv": "a498d47e214daeec10d09059729cbaa509bc7d8dca957c71bfb3b7b32a641499",
+            "DeadlineReader.begin_body": "6845961b1f1d69c2de47647ec1f7ca73ca61a066f9168cd810694c1030969616",
+            "DeadlineReader.begin_headers": "ca817c3f3617272b1e9c541d47b6a982f9859c4e51e55dd734d1dca067685732",
+            "DeadlineReader.close": "1c80cc58b8c3fb588bf31618fd9369e1cbb144b8b585f1a97fe04bfcb261c2bf",
+            "DeadlineReader.read": "c0984a8131b582a7ef7dcead4502a2a40a7b00fbed42d3dfb07e904324218042",
+            "DeadlineReader.read1": "0cafa0a651d5867a66bf129ca9498ac8923678e6cd85ec001bcf30b4e5d8c9bc",
+            "DeadlineReader.readline": "8b176317e0a38fef95710816aa7c9310390596adabb23a4b3dce127358c9238d",
+            "Handler.admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "Handler.handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "Handler.parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "Handler.public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "Handler.read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "Handler.setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "excluded": [
+            "complete TRF-01",
+            "full byte/JSON decoder proof",
+            "pre-handler allocation and lane composition",
+            "wall-clock time after sampled cuts"
+          ],
+          "generatedSha256": "407aaaa88174df0ba956c9ef1cd9e43ac74474d798efcebc622974f3ac272b2f",
+          "kind": "CHECKED_RESTRICTED_SUCCESSFUL_PATH_ABSTRACTION_UNDER_DECLARED_TCB",
+          "primitiveSha256": "41ce45f6eb164189eb201935182e7313d0cd2c272e5c5248a15527a6e30f4299",
+          "programs": {
+            "beginBodyProgram": [
+              "guard",
+              "reset"
+            ],
+            "bodyProgram": [
+              "work",
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "parseProgram": [
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "read1Program": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "readlineProgram": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ],
+            "recvProgram": [
+              "guard",
+              "work",
+              "guard",
+              "deliver"
+            ]
+          },
+          "status": "PASS",
+          "trust": "Frozen work/call interpretations, ordinary Python and stdlib dispatch, finite-clock order embedding. Work may advance time arbitrarily; no virtual safety check is inserted at delivery."
+        },
+        "wire_ingress_bridge": {
+          "ambiguous": 0,
+          "bindings": {
+            "IngressWire.actualRequest": "strict_request_line(raw_requestline) tuple equals stdlib command/path/version; raw_items is the standard first-colon nonfolded field parse; mutation is command == POST",
+            "IngressWire.declaredLength": "strict_request_headers canonical Content-Length integer from the same ordered header occurrences",
+            "IngressWire.decodedBody": "bounded_json joins those exact chunks, UTF8-decodes them, then passes that same text to json.loads; returned tree is the standard decoded ordered-pair tree",
+            "IngressWire.headerLengths": "request line plus every actually returned field/terminator length; header_remaining -= len(result)",
+            "IngressWire.headerPairs": "DeadlineReader.readline CRLF, first-colon, token, control and no-fold checks; exact terminal blank line must be received",
+            "IngressWire.receivedLength": "remaining starts at declared length, decreases only by len(chunk), and successful exact-read loop returns its joined chunks"
+          },
+          "jsonAstSha256": "6e202a5b9336e318fb2ba4c4a85296615a94cc62a5b3c1668c4fbfec10b1d77d",
+          "modelSha256": "7be05a1aa8254294ed75647d327506da2f7342dc54555a7e159e929806f600f2",
+          "primitiveTCB": [
+            "CPython ordinary sequential/exceptions and bounded recv semantics",
+            "email raw_items first-colon/OWS interpretation on lexically valid nonfolded CRLF lines",
+            "Strict UTF8 decode and standard ordered-pair JSON parse of the resulting codepoints; finite/Unicode serialization at scalar leaves"
+          ],
+          "routeMethodAstSha256": {
+            "admin_GET": "c56c8bbaddaa7ec5ce96ef6324b3d4db3625b0fed9c1ac031c3953c6e1397440",
+            "admin_POST": "848894b9096fb676426fbb25d7adc527e8c6b25e0431be8b977e00c8422499da",
+            "admin_body": "743747747711b649ed68257149f61f2b8044d5a175703a6a3ce5c98c011f9d2b",
+            "admin_headers": "0be04416546832f6cde839943203079b87aefe9c8fc4a36ae61a88f63d87e370",
+            "do_GET": "722effb603adcc25f0bd722d34187e0f21424d102f3f338b024f4f57e42606ae",
+            "do_POST": "f9d790272f932ca95679bbe9d712c392bf4ddcddd2c40fd06bacc310e2991a0f",
+            "handle_one_request": "c198fb6c8b338d7a3eaf4c6d8df901dd439ea1cddfe6e37848a5eaa286cffaf1",
+            "parse_request": "c1ccafc818cd2e5e0a42ac530810f3cd2448c6f91666d28537263856e3e32032",
+            "public_body": "f7e808658d57d76cc17368c91d991e90381cd5c8a522632a644784d1a10cb9b3",
+            "read_json_body": "504e435b8d47e874790378bc1956547b00435df8e6e852fdfef224c356f9bec1",
+            "request_headers": "ea1a335e5707fc121c86b8ba116929527fd32e2822901dfaa805181d96ec16e4",
+            "setup": "7473a1533212d547abb7224410f8208bd17587b80f8bcb58ce51ebe20c756200"
+          },
+          "status": "PASS",
+          "theorems": [
+            "AlloyStudio.IngressWire.actual_request_binding",
+            "AlloyStudio.IngressWire.post_false_mutation_impossible",
+            "AlloyStudio.IngressWire.declared_length_is_parsed_header",
+            "AlloyStudio.IngressWire.decoded_body_binding",
+            "AlloyStudio.IngressWire.accepted_body_has_bound_parse"
+          ],
+          "unmapped": 0
+        }
+      },
+      "inventorySha256": "9308ebe788c84cbe00a5b206e139688a5fdd4be517d9a98cf1a8fbe2bfd2016e",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 356
+    }
+  ],
+  "claimSummary": {
+    "blocked": 0,
+    "passed": 6,
+    "total": 6,
+    "unresolved": 0
+  },
+  "claims": [
+    {
+      "classification": "PROVED_UNDER_DECLARED_TCB",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-DECODE",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "Extracted raw-input decoder equals independent grammar; strict bounded JSON policy correspondence; constructed invalid-byte witnesses reject.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    },
+    {
+      "classification": "PROVED_UNDER_DECLARED_TCB",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-DEADLINES",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "All six current-source read/parse/decode cut programs retain final strict deadline guards.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    },
+    {
+      "classification": "PROVED_UNDER_DECLARED_TCB",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-ALLOCATION",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "Every allocated request thread has a reserved owner until it terminates; reserve/release traces retain exact ownership and handler limits; accepted-unreserved sockets at most one per listener.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    },
+    {
+      "classification": "PROVED_UNDER_DECLARED_TCB",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-LANES",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "Enabled public/control listener topology has distinct nonborrowable gates, separately enforced capacities and combined sums; disabled branch claims no private availability.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    },
+    {
+      "classification": "CHECKED_AND_PROVED_UNDER_DECLARED_TCB",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-DISPATCH",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "Closed source call graph links strict decoder, byte-budget and sampled deadline validation before successful public/admin business dispatch.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    },
+    {
+      "classification": "TESTED",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/strict_ingress_deadline_bridge.json",
+        "build-a/admission_bridge.json",
+        "build-a/decoder_bridge.json",
+        "build-a/strict_ingress_bridge.json",
+        "build-a/wire_ingress_bridge.json",
+        "test_ingress_deadlines.py.log",
+        "test_traffic_http.py.log",
+        "test_strict_http_decode.py.log",
+        "test_ingress_admission.py.log",
+        "test_admission_bridge.py.log",
+        "test_decoder_bridge.py.log",
+        "test_strict_ingress_bridge.py.log",
+        "test_ingress_wire.py.log",
+        "test_strict_ingress_gate.py.log",
+        "test_review_ladder.py.log"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1",
+          "-DmaxRecDepth=8192",
+          "-DmaxHeartbeats=4000000"
+        ],
+        "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF01-REGRESSION",
+      "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+      "parentObligation": "TRF-01",
+      "passPredicate": "Registered actual socket/clock/allocation and source/contract mutation witnesses pass without engine dispatch on rejected input.",
+      "status": "PASS",
+      "verifier": {
+        "id": "V-TING02",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      }
+    }
+  ],
+  "closesParent": true,
+  "closureBoundary": {
+    "excludedSurface": [
+      "Future source revisions and unlisted properties; the other 21 traffic obligations.",
+      "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
+      "Whole-process RSS and kernel allocation sizes, arbitrary asynchronous cancellation of bookkeeping instructions, OS fairness and unsampled scheduling latency after a deadline observation."
+    ],
+    "interpretation": "VERIFIED is finite closure for these hashed inputs and registered interpreters under the explicit TCB, not universal or assumption-free Python/OS correctness.",
+    "trustedSurface": [
+      {
+        "classification": "TRUSTED",
+        "description": "Pinned Lean 4.34.1 distribution/kernel, registered source-language restriction and all-project-definition/theorem transitive axiom auditor.",
+        "id": "TCB-LEAN"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "Closed source AST interpreters and per-operation correspondences; not a proof of an arbitrary Python virtual machine. No entire admission/decoder-validity predicate is trusted.",
+        "id": "TCB-TRANSLATION"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "CPython ASCII/UTF8/string/regex/JSON/IPv6 primitives, HTTP header raw-items and method dispatch, exceptions and sequential ordinary execution, socket recv bound, threading.start/bootstrap, current-thread identity, clean-history join/is_alive semantics with explicit failure transitions, lock mutual exclusion and normally completed protected bookkeeping, one serialized accept callback per listener, monotonic finite clock sample order.",
+        "id": "TCB-PRIMITIVES"
+      },
+      {
+        "classification": "TRUSTED",
+        "description": "Linux user/network namespaces, process/filesystem/socket semantics, SHA-256 implementation and collision resistance, hardware.",
+        "id": "TCB-HOST"
+      }
+    ],
+    "verifiedSurface": []
+  },
+  "closureInvariantFailures": 1,
+  "correspondence": {
+    "ambiguous": 0,
+    "byBridge": {
+      "admission_bridge": 9,
+      "decoder_bridge": 5,
+      "strict_ingress_bridge": 17,
+      "strict_ingress_deadline_bridge": 15,
+      "wire_ingress_bridge": 6
+    },
+    "interpretation": "Distinct registered mapping roles; a method may have separate deadline, data-flow and dispatch mappings.",
+    "mapped": 52,
+    "requiredMappings": 52,
+    "unmapped": 0
+  },
+  "dependency": {
+    "id": "TCFG03",
+    "interpretation": "Historical selected initial profile, with successor admission initialization separately checked; does not certify future transitions.",
+    "report": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json",
+    "sha256": "24642ba8bd6c7d171e2fab165af33eddc56613d0460582e2da34e7065dfc64e7"
+  },
+  "determinism": "PASS",
+  "excluded": [
+    "Future source revisions and unlisted properties; the other 21 traffic obligations.",
+    "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
+    "Whole-process RSS and kernel allocation sizes, arbitrary asynchronous cancellation of bookkeeping instructions, OS fairness and unsampled scheduling latency after a deadline observation."
+  ],
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-j1",
+      "-DmaxRecDepth=8192",
+      "-DmaxHeartbeats=4000000"
+    ],
+    "network": "fresh user+network namespaces; isolated loopback only for socket tests",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+    "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+  },
+  "id": "ting02-20261004T190652Z-70561b23",
+  "infrastructureErrors": [],
+  "inputRootHash": "8404aadf8c7883d49b9df1beb341c8ae62bfb0c5211b0f2e6d2c58dccd66970c",
+  "negativeControls": {
+    "equality_guard": "REJECTED_BY_INDEPENDENT_SPEC",
+    "missing_json_postguard": "REJECTED_BY_INDEPENDENT_SPEC",
+    "placeholder_compiler": "REJECTED_BY_WARNING_AS_ERROR",
+    "placeholder_language": "REJECTED_BY_REGISTERED_LANGUAGE_GATE",
+    "rogue_axiom_audit": "REJECTED_BY_TRANSITIVE_AUDIT",
+    "rogue_axiom_language": "REJECTED_BY_REGISTERED_LANGUAGE_GATE"
+  },
+  "parentObligation": "TRF-01",
+  "provedTheorems": 356,
+  "provenance": {
+    "blockManifestSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+    "claims": [
+      "TRF01-DECODE",
+      "TRF01-DEADLINES",
+      "TRF01-ALLOCATION",
+      "TRF01-LANES",
+      "TRF01-DISPATCH",
+      "TRF01-REGRESSION"
+    ],
+    "fullyBound": 1,
+    "originalRegistrySha256": "c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc",
+    "orphanClaims": 0,
+    "publicClaimCount": 1,
+    "publicClaims": [
+      "docs/strict-ingress-closure.md"
+    ],
+    "specification": "closure/traffic-refinement/strict-ingress-spec.json"
+  },
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "testCount": 103,
+  "tests": [
+    {
+      "evidence": "test_ingress_deadlines.py.log",
+      "module": "test_ingress_deadlines.py",
+      "sha256": "899892e2594934277080bcaa2a70a3db8deed5bef4650c715af411a66f20fd5f",
+      "status": "PASS",
+      "tests": 19
+    },
+    {
+      "evidence": "test_traffic_http.py.log",
+      "module": "test_traffic_http.py",
+      "sha256": "ce51c7f6b1b768c6946318c439a81ddfd14467bd84e3f42506afd747913559ed",
+      "status": "PASS",
+      "tests": 19
+    },
+    {
+      "evidence": "test_strict_http_decode.py.log",
+      "module": "test_strict_http_decode.py",
+      "sha256": "cad4b5a6c7a3ead5c109e2d6fde865e8a8e6bb34d6d5fec7c4bd9f3be355982d",
+      "status": "PASS",
+      "tests": 9
+    },
+    {
+      "evidence": "test_ingress_admission.py.log",
+      "module": "test_ingress_admission.py",
+      "sha256": "069e822c2509730dfd44f5b6cf556b7606a7f25573f5b2d8aa395e80a93fc5aa",
+      "status": "PASS",
+      "tests": 14
+    },
+    {
+      "evidence": "test_admission_bridge.py.log",
+      "module": "test_admission_bridge.py",
+      "sha256": "7dadc340a015b6afba34362f737b0794bc790be83b7b6d2441d73d6304ac1458",
+      "status": "PASS",
+      "tests": 10
+    },
+    {
+      "evidence": "test_decoder_bridge.py.log",
+      "module": "test_decoder_bridge.py",
+      "sha256": "66d6534c16251d077f4f48625166f6bff7ef0a569c3af9c84ff6706ddeacea4a",
+      "status": "PASS",
+      "tests": 7
+    },
+    {
+      "evidence": "test_strict_ingress_bridge.py.log",
+      "module": "test_strict_ingress_bridge.py",
+      "sha256": "29ba612cf6da4d6239b62c815f33d6182fdaf6ed5d290b6408fddc53599a181e",
+      "status": "PASS",
+      "tests": 5
+    },
+    {
+      "evidence": "test_ingress_wire.py.log",
+      "module": "test_ingress_wire.py",
+      "sha256": "f55722f022065420fdd920e029260e88b07719972bc90bb825da368dc159d70a",
+      "status": "PASS",
+      "tests": 6
+    },
+    {
+      "evidence": "test_strict_ingress_gate.py.log",
+      "module": "test_strict_ingress_gate.py",
+      "sha256": "f855dfe0ee7478986bb6b78b7c988826fb95b548dcdf3675784b556f2845a07a",
+      "status": "PASS",
+      "tests": 9
+    },
+    {
+      "evidence": "test_review_ladder.py.log",
+      "module": "test_review_ladder.py",
+      "sha256": "533131dad8973c589ae697ab1dd346cc55caa134cd1e536cedf26f1b057c0f1f",
+      "status": "PASS",
+      "tests": 5
+    }
+  ],
+  "toolchain": {
+    "pin": "leanprover/lean4:v4.34.1",
+    "rootHash": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "version": "Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)"
+  },
+  "trust": [
+    {
+      "classification": "TRUSTED",
+      "description": "Pinned Lean 4.34.1 distribution/kernel, registered source-language restriction and all-project-definition/theorem transitive axiom auditor.",
+      "id": "TCB-LEAN"
+    },
+    {
+      "classification": "TRUSTED",
+      "description": "Closed source AST interpreters and per-operation correspondences; not a proof of an arbitrary Python virtual machine. No entire admission/decoder-validity predicate is trusted.",
+      "id": "TCB-TRANSLATION"
+    },
+    {
+      "classification": "TRUSTED",
+      "description": "CPython ASCII/UTF8/string/regex/JSON/IPv6 primitives, HTTP header raw-items and method dispatch, exceptions and sequential ordinary execution, socket recv bound, threading.start/bootstrap, current-thread identity, clean-history join/is_alive semantics with explicit failure transitions, lock mutual exclusion and normally completed protected bookkeeping, one serialized accept callback per listener, monotonic finite clock sample order.",
+      "id": "TCB-PRIMITIVES"
+    },
+    {
+      "classification": "TRUSTED",
+      "description": "Linux user/network namespaces, process/filesystem/socket semantics, SHA-256 implementation and collision resistance, hardware.",
+      "id": "TCB-HOST"
+    }
+  ],
+  "umbrellaObligationsClosed": [],
+  "verifier": {
+    "id": "V-TING02",
+    "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+  },
+  "witnesses": {
+    "executedChecks": 103,
+    "invalidModules": 0,
+    "modules": [
+      "test_ingress_deadlines.py",
+      "test_traffic_http.py",
+      "test_strict_http_decode.py",
+      "test_ingress_admission.py",
+      "test_admission_bridge.py",
+      "test_decoder_bridge.py",
+      "test_strict_ingress_bridge.py",
+      "test_ingress_wire.py",
+      "test_strict_ingress_gate.py",
+      "test_review_ladder.py"
+    ],
+    "requiredModules": 10,
+    "validModules": 10
+  }
+}

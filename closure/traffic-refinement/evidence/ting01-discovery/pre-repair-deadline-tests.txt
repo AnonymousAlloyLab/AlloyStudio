@@ -1,0 +1,132 @@
+test_expired_buffered_headers_cannot_dispatch_health (tests.test_ingress_deadlines.HandlerDeadlineTests) ... FAIL
+test_header_parse_completion_rechecks_deadline (tests.test_ingress_deadlines.HandlerDeadlineTests) ... FAIL
+test_json_completion_rechecks_deadline_before_business_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests) ... FAIL
+test_valid_request_retains_channel_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests) ... FAIL
+test_body_has_one_new_absolute_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_body_transition_cannot_renew_expired_header_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) ... test_buffered_body_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests) ... FAIL
+test_buffered_header_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests) ... FAIL
+test_deadline_before_boundary_accepts (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ERROR
+test_deadline_equality_and_lateness_reject (tests.test_ingress_deadlines.ReaderDeadlineTests) ... test_expired_buffered_body_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_expired_buffered_header_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) ... test_expired_recv_is_not_started (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_header_eof_is_rejected_existing_negative_control (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_recv_equality_rejects_received_bytes (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_zero_count_read_does_not_bypass_expiration (tests.test_ingress_deadlines.ReaderDeadlineTests) ... FAIL
+
+======================================================================
+ERROR: test_deadline_before_boundary_accepts (tests.test_ingress_deadlines.ReaderDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 77, in test_deadline_before_boundary_accepts
+    reader.check_deadline()
+AttributeError: 'DeadlineReader' object has no attribute 'check_deadline'
+
+======================================================================
+ERROR: test_deadline_equality_and_lateness_reject (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=5.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 72, in test_deadline_equality_and_lateness_reject
+    reader.check_deadline()
+AttributeError: 'DeadlineReader' object has no attribute 'check_deadline'
+
+======================================================================
+ERROR: test_deadline_equality_and_lateness_reject (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=6.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 72, in test_deadline_equality_and_lateness_reject
+    reader.check_deadline()
+AttributeError: 'DeadlineReader' object has no attribute 'check_deadline'
+
+======================================================================
+FAIL: test_expired_buffered_headers_cannot_dispatch_health (tests.test_ingress_deadlines.HandlerDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 257, in test_expired_buffered_headers_cannot_dispatch_health
+    self.assertNotIn(b' 200 ', response.split(b'\r\n')[0])
+AssertionError: b' 200 ' unexpectedly found in b'HTTP/1.0 200 OK'
+
+======================================================================
+FAIL: test_header_parse_completion_rechecks_deadline (tests.test_ingress_deadlines.HandlerDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 275, in test_header_parse_completion_rechecks_deadline
+    self.assertNotIn(b' 200 ', response.split(b'\r\n')[0])
+AssertionError: b' 200 ' unexpectedly found in b'HTTP/1.0 200 OK'
+
+======================================================================
+FAIL: test_json_completion_rechecks_deadline_before_business_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 293, in test_json_completion_rechecks_deadline_before_business_dispatch
+    response = self.exchange(request, expire=True)
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 229, in exchange
+    self.assertTrue(self.entered.wait(2), 'Parser did not reach the intended boundary.')
+AssertionError: False is not true : Parser did not reach the intended boundary.
+
+======================================================================
+FAIL: test_valid_request_retains_channel_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 249, in test_valid_request_retains_channel_dispatch
+    self.assertIn(b' 200 ', response.split(b'\r\n')[0])
+AssertionError: b' 200 ' not found in b'HTTP/1.0 400 Bad Request'
+
+======================================================================
+FAIL: test_body_transition_cannot_renew_expired_header_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=5.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 120, in test_body_transition_cannot_renew_expired_header_deadline
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_body_transition_cannot_renew_expired_header_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=6.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 120, in test_body_transition_cannot_renew_expired_header_deadline
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_buffered_body_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 152, in test_buffered_body_return_rechecks_clock
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_buffered_header_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 95, in test_buffered_header_return_rechecks_clock
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_expired_buffered_header_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=5.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 87, in test_expired_buffered_header_rejected_without_recv
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_expired_buffered_header_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) (instant=6.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 87, in test_expired_buffered_header_rejected_without_recv
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+======================================================================
+FAIL: test_zero_count_read_does_not_bypass_expiration (tests.test_ingress_deadlines.ReaderDeadlineTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_ingress_deadlines.py", line 159, in test_zero_count_read_does_not_bypass_expiration
+    with self.assertRaises(TimeoutError):
+AssertionError: TimeoutError not raised
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.007s
+
+FAILED (failures=11, errors=3)

@@ -1,0 +1,16 @@
+{
+  "blockManifestSha256": "c3876c829b5f027b61e05cf7dd7635e54b9814eff3102ffd8d81438fd0a4981c",
+  "coverage": "Mathematical review only: profile Model/Spec/Extracted Lean files, Audit.lean, theorem inventory, and recorded candidate build evidence. No production correspondence or application/security review attestation.",
+  "findings": [],
+  "notesSha256": "ab08acb996b865fc1b74ba3bda60902fa67507bf7a3ff2be6ab5b39b90043f3d",
+  "priorReviews": {
+    "formal/reviews/TCFG02/luna-a.json": "9e027a4245964787db01d39a3c5a56fca7593bc121b1014d3e4e7e007ae5f802",
+    "formal/reviews/TCFG02/luna-b.json": "9a00bf1a149b15aa2acfc485af3a66ded5d6aaadb048c8a9a98965c82ea663e9",
+    "formal/reviews/TCFG02/sol-a.json": "d9e36278c042c41c51484bf613a47b851fc75a45d2cd800911f6f93814f86b9c",
+    "formal/reviews/TCFG02/sol-b.json": "dc5eecc958b5d1b17623da3a88390723ff9e2b671c02e3fb3355fb1e0c8ded31"
+  },
+  "reviewerModel": "gpt-6-astra",
+  "schemaVersion": 1,
+  "tier": 3,
+  "verdict": "no_constructed_breach"
+}

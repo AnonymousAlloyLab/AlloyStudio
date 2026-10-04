@@ -1,0 +1,25 @@
+build/
+node_modules/
+__pycache__/
+*.pyc
+*.log
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+# The bundled exercise catalogue and correct pools are intentionally versioned.
+exercises/.private-import-*/
+exercises/*.sqlite3-wal
+exercises/*.sqlite3-shm
+exercises/*.sqlite3-journal
+exercises/.exercise-migration-*
+exercises/.exercise-restore-*/
+closure/runs/
+openai.local.json
+admin.local.json
+.admin-config-*.tmp
+formal/.lake/
+formal/**/*.olean
+formal/**/*.ilean

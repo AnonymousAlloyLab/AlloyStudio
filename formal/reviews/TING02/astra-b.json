@@ -1,0 +1,14 @@
+{
+  "blockManifestSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+  "findings": [],
+  "notesSha256": "da0d1c107153da78c5d589de9ddf2493b1d73db3bbcaff4fb47968890840b32c",
+  "priorReviews": {
+    "formal/reviews/TING02/luna-a.json": "6ec165615aaabd5e9be7105e368556ef841999fa449b1a5807d4499258a325fe",
+    "formal/reviews/TING02/luna-b.json": "6786412b9406611ed8ed6389e74fe3d67720e0c6637b58451f9034fe7ef9d2f3",
+    "formal/reviews/TING02/sol-a.json": "0dfc1b6a9a019dca4590cc28e26e8163137d9ab9ee99062f7cb644cca4ce3635",
+    "formal/reviews/TING02/sol-b.json": "4575cdbb3cdf9d91b3504a4a581d5881e70efa874d2a608596bd794761539f1c"
+  },
+  "reviewerModel": "gpt-6-astra",
+  "tier": 3,
+  "verdict": "no_constructed_breach"
+}

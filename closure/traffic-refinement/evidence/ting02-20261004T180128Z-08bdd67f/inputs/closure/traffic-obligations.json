@@ -1,0 +1,1121 @@
+{
+  "baselineCommit": "e75b20419f8f92c2adc59ce083008ec897434cb1",
+  "closureInputManifest": null,
+  "evidence": [],
+  "existingObligationsUnchanged": "closure/lean-obligations.json",
+  "formalClosureStatus": "NOT_ESTABLISHED",
+  "futureEvidenceRequirements": [
+    "canonical hashed input manifest",
+    "registered hashed verifier implementations",
+    "independent observation semantics",
+    "finite witness inputs and checked counterexample traces",
+    "unique implementation-to-model mappings",
+    "explicit TCB and claim provenance",
+    "two clean offline proof builds",
+    "finite differential/load/platform test reports"
+  ],
+  "kind": "specification-first-performance-and-traffic-plan",
+  "obligations": [
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "runtime_dependencies.py",
+        "vendor/acgn/snapshot.json"
+      ],
+      "id": "TRF-00",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Exactly one frozen profile, source/dependency manifest, observation schema, TCB and verifier inventory; no required numeric limit or semantic field left unspecified.",
+      "plannedTheorem": "AlloyStudio.Traffic.profile_wellFormed",
+      "statement": "All configuration quantities are finite, positive where required, correctly encoded, and determine a unique valid initial state.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Freeze the baseline, independent observation semantics, finite profile and trust",
+      "witnessIds": []
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "admin_auth.py",
+        "deploy/iis/web.config"
+      ],
+      "id": "TRF-01",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Model theorem and unique concrete decoder/admission mapping; malformed, ambiguous, oversized and slow requests never dispatch; pre-handler allocation is bounded.",
+      "plannedTheorem": "AlloyStudio.Traffic.admitted_is_validated",
+      "statement": "Every dispatched request was strictly framed/decoded and admitted within its header/body/deadline budgets; connection capacity is reserved before allocating a handler. Public and private control ingress have separately enforced nonborrowable admission, with combined limits.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-INGRESS"
+      ],
+      "title": "Strict inbound admission before expensive allocation",
+      "witnessIds": [
+        "W07",
+        "W13",
+        "W15"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "admin_auth.py"
+      ],
+      "id": "TRF-02",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Kernel-checked refill/admission arithmetic including saturation, rollback rejection and integer range; runtime clock/proxy/bucket-update mapping; no free retry or cache-hit path.",
+      "plannedTheorem": "AlloyStudio.Traffic.admissions_le_budget",
+      "statement": "For monotone logical time t, admissions cost is at most initial burst plus cumulative authorized refill; every bucket balance and bucket registry is bounded. Public and private control buckets sum to the combined envelope and cannot borrow each other's credits.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-INGRESS"
+      ],
+      "title": "Bound admission credits and rate registry",
+      "witnessIds": [
+        "W08",
+        "W13",
+        "W15"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "runtime_dependencies.py",
+        "admin_service.py",
+        "luna.py"
+      ],
+      "id": "TRF-03",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Induction over every registered event from the empty initial state with reservations derived from owned records, plus concrete allocation correspondence; no unaccounted buffers or unbounded registries.",
+      "plannedTheorem": "AlloyStudio.Traffic.reachable_resource_bounds",
+      "statement": "All reachable states satisfy configured lane/global limits for connections, workers, jobs, queues, subscribers, channels, snapshots, retained input/output/cache/evidence bytes and delivery buffers.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-RESOURCES",
+        "TRFM-INGRESS"
+      ],
+      "title": "Account for all owned resources",
+      "witnessIds": [
+        "W01",
+        "W02",
+        "W07",
+        "W08",
+        "W09",
+        "W15"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-08"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "luna.py"
+      ],
+      "id": "TRF-04",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Unique-key theorem over atomic lookup/reserve/join; runtime lock/event-loop mapping; simultaneous duplicate requests execute only one job, rejecting excess subscribers explicitly.",
+      "plannedTheorem": "AlloyStudio.Traffic.one_computation_per_key",
+      "statement": "For any complete execution key there is at most one queued or running computation, regardless of subscriber count.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Share identical pending computation atomically",
+      "witnessIds": [
+        "W01"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-04"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "web/app.js"
+      ],
+      "id": "TRF-05",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Theorems for channel-owned cancellation and queue replacement; machine-checked ownership traces and concrete capability/expiry mapping; no unconditional liveness claim.",
+      "plannedTheorem": "AlloyStudio.Traffic.superseded_not_dispatched",
+      "statement": "Only live subscribers authorize dispatch; supersession detaches only the issuing channel's subscription and preserves other subscribers and bounded round-robin ordering. Server dispatch suppression begins at the accepted supersession event, not an unobserved browser edit.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Latest queued request and subscriber isolation",
+      "witnessIds": [
+        "W03",
+        "W08",
+        "W18"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-03"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "runtime_dependencies.py",
+        "server.py",
+        "admin_service.py"
+      ],
+      "id": "TRF-06",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "All cancellation/crash/timeout/completion/reap permutations preserve ownership; no replacement before confirmed exit; OS acknowledgement interpretation explicitly declared.",
+      "plannedTheorem": "AlloyStudio.Traffic.release_requires_terminal_owner",
+      "statement": "Starting, busy and stopping processes retain their reserved occupancy; only a matching reaped incarnation releases a process permit, once. Job and delivery resources have separately defined terminal owners.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-RESOURCES"
+      ],
+      "title": "Release reservations exactly once after terminal ownership",
+      "witnessIds": [
+        "W02",
+        "W06",
+        "W14"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-06",
+        "TRF-08"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/BehaviorFeedback.java",
+        "runtime_dependencies.py"
+      ],
+      "id": "TRF-07",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Frame size checked before allocation; strict duplicate-key/tag/version decoder; malformed, truncated, duplicate, oversized and late frames retire the worker without publication.",
+      "plannedTheorem": "AlloyStudio.Traffic.accepted_frame_matches_ticket",
+      "statement": "Only a complete bounded frame for the current incarnation, ticket, kind and exact execution context can produce one terminal outcome.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-INGRESS"
+      ],
+      "title": "Bound and bind every worker frame",
+      "witnessIds": [
+        "W06",
+        "W09",
+        "W16"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "exercise_store.py",
+        "admin_service.py",
+        "luna.py"
+      ],
+      "id": "TRF-08",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Independent structured key definition, encoding equality theorem and production extraction mapping; digest lookup followed by exact identity comparison or explicit cryptographic trust.",
+      "plannedTheorem": "AlloyStudio.Traffic.reuse_key_preserves_context",
+      "statement": "Execution-key equality entails equality of exact learner bytes, snapshot, environment, predicate, ordered inclusive pool, primary oracle, engine/projection policy, kind, applicable metric and solver bounds.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Context-complete reuse identity",
+      "witnessIds": [
+        "W04",
+        "W05"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-04",
+        "TRF-08",
+        "TRF-11",
+        "TRF-15"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "web/app.js"
+      ],
+      "id": "TRF-09",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Model observation-preservation theorem with bounded immutable result ownership and explicit valid-cache origin; runtime mapping and mutation/subscriber regressions. No assumed warm=fresh premise.",
+      "plannedTheorem": "AlloyStudio.Traffic.cache_and_join_observation",
+      "statement": "Reusing a resident public result for the exact computation key preserves fresh execution observations and attaches only each subscriber's own delivery metadata.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Transparent result cache and joined delivery",
+      "witnessIds": [
+        "W03",
+        "W04",
+        "W05"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-08",
+        "TRF-11"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java",
+        "engine/src/live/VerifiedPoolSelection.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/Canonical.java"
+      ],
+      "id": "TRF-10",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Actual preparation/comparison state refinement, parser/graph ownership and no-mutation proof; frozen all-candidate vector correspondence. Differential tests alone do not discharge it.",
+      "plannedTheorem": "AlloyStudio.Traffic.prepared_pool_preserves_scan",
+      "statement": "Fresh and cached/cloned preparation yield identical candidate costs, first-minimum selection, complete-pool metadata, traces and failures, including invalid candidates after a zero match.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Optional prepared-pool reuse preserves complete scan",
+      "witnessIds": [
+        "W10"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-06",
+        "TRF-08"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java",
+        "engine/src/live/BehaviorFeedback.java",
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/EGraphNode.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/NormalForm.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/ir/IRAgent.java",
+        "vendor/acgn/lib/alloy.jar"
+      ],
+      "id": "TRF-11",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Independent cold/warm semantics and refinement, audited fatal error classification, mutable-state ownership and parser/solver cleanup or bounded recycling; fresh versus warm history tests are separate TESTED evidence.",
+      "plannedTheorem": "AlloyStudio.Traffic.warm_worker_history_independent",
+      "statement": "For every admitted reusable-worker history, the next public evaluator observation agrees with a fresh process on the same explicit input; private mutable state and parser registrations do not accumulate beyond declared bounds.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-RESOURCES"
+      ],
+      "title": "Warm worker history independence and bounded parser lifetime",
+      "witnessIds": [
+        "W12",
+        "W14"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-08",
+        "TRF-11"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "engine/src/live/BehaviorFeedback.java",
+        "server.py",
+        "web/app.js"
+      ],
+      "id": "TRF-12",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Explicit observation relation and solver/nondeterminism trust; category validity and token-to-instance binding; exact comparison where deterministic, precisely frozen alternatives otherwise.",
+      "plannedTheorem": "AlloyStudio.Traffic.behavior_reuse_preserves_evidence",
+      "statement": "Reuse preserves the primary oracle, facts, sampling algorithm, score/rounding, bounds, four category meanings and up-to-three witnesses; metric-only changes do not change behavior identity.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Behavioral score/category/evidence preservation",
+      "witnessIds": []
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-05",
+        "TRF-08"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "web/app.js",
+        "formal/AlloyStudio/SessionBridge.lean"
+      ],
+      "id": "TRF-13",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Extend existing guard correspondence rather than replacing it; prove model transitions and map async capture/render sites; execute race and navigation witnesses.",
+      "plannedTheorem": "AlloyStudio.Traffic.publish_only_current_delivery",
+      "statement": "A displayed response agrees with current selection, exact draft, revision, exercise, metric, snapshot and active subscription; after the scheduler accepts supersession, the obsolete subscription cannot initiate a new downstream stage.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Publish only into the current editor context",
+      "witnessIds": [
+        "W05",
+        "W06",
+        "W18"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-03",
+        "TRF-08",
+        "TRF-13",
+        "TRF-15"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "luna.py",
+        "web/app.js"
+      ],
+      "id": "TRF-14",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Evidence ownership/token scope theorem, concrete projection and cache/call mapping; fake-provider tests preserve operation/instance IDs and summary contract; no claims about generated prose truth.",
+      "plannedTheorem": "AlloyStudio.Traffic.explanation_evidence_binding",
+      "statement": "Each explanation uses precisely the approved trace/instances, policy and private credential epoch for its subscribers; admitted evidence is pinned and no duplicate structural computation is initiated solely for explanation.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE"
+      ],
+      "title": "Reuse bound evidence for per-step/instance guidance",
+      "witnessIds": [
+        "W11"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "luna.py",
+        "admin_luna.py",
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/AstFeedback.java"
+      ],
+      "id": "TRF-15",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Explicit projection and sink inventories with serialization refinement and redaction fixtures; do not claim private-pool noninterference because approved distances/operations intentionally depend on it.",
+      "plannedTheorem": "AlloyStudio.Traffic.public_projection_preserved",
+      "statement": "Every browser/provider/telemetry value equals the independently defined approved projection or bounded sanitized transport value, with explicit permitted operator disclosure; private reference code, credentials, worker paths and raw diagnostics cannot enter existing allowed fields either. Worker launch environment uses a minimal allowlist, not inherited secrets; same-account filesystem access is explicit trust.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-REUSE",
+        "TRFM-INGRESS"
+      ],
+      "title": "Preserve public disclosure projection",
+      "witnessIds": [
+        "W16",
+        "W17"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-02",
+        "TRF-03",
+        "TRF-05",
+        "TRF-06",
+        "TRF-07"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MODEL_PROOF_AND_RUNTIME_BRIDGE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "runtime_dependencies.py",
+        "web/app.js",
+        "admin_service.py"
+      ],
+      "id": "TRF-16",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Logical-time theorem including unresponsive/unreaped workers; concrete timer/kill/reap and write-deadline mappings; no assumed wall-clock scheduling or unconditional progress.",
+      "plannedTheorem": "AlloyStudio.Traffic.terminal_and_retry_bounded",
+      "statement": "Expiration, retries, recycling and shutdown preserve safety, terminal uniqueness and bounded retained work; expired jobs do not dispatch or publish, and client retries consume admission credit. Retry eligibility excludes unknown outcomes and admin mutations and cannot extend the original absolute operation deadline.",
+      "status": "OPEN",
+      "supportingModelClaims": [
+        "TRFM-RESOURCES",
+        "TRFM-INGRESS"
+      ],
+      "title": "Deadlines, bounded retry/restart and shutdown",
+      "witnessIds": [
+        "W02",
+        "W07",
+        "W14"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-01",
+        "TRF-02",
+        "TRF-03",
+        "TRF-04",
+        "TRF-05",
+        "TRF-06",
+        "TRF-07",
+        "TRF-08",
+        "TRF-09",
+        "TRF-10",
+        "TRF-11",
+        "TRF-12",
+        "TRF-14",
+        "TRF-15",
+        "TRF-16"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_IMPLEMENTATION_CORRESPONDENCE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "runtime_dependencies.py",
+        "admin_service.py",
+        "luna.py",
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/BehaviorFeedback.java"
+      ],
+      "id": "TRF-17",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Frozen extraction/bridge inventory resolves each required implementation object exactly once with semantic correspondence; truth tables/source hashes/test success alone cannot establish universal host-loop refinement.",
+      "plannedTheorem": "AlloyStudio.Traffic.backend_step_refines_model",
+      "statement": "Every concrete Python/Java scheduler, worker lifecycle and cache transition has a unique mechanically justified mapping to the independent state model, including atomicity and exceptional paths.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Concrete backend transition correspondence",
+      "witnessIds": [
+        "W01",
+        "W02",
+        "W12",
+        "W16",
+        "W17"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-01",
+        "TRF-07",
+        "TRF-08",
+        "TRF-13",
+        "TRF-15"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_IMPLEMENTATION_CORRESPONDENCE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "web/app.js",
+        "deploy/iis/web.config"
+      ],
+      "id": "TRF-18",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Decoder/encoding/async correspondence for all admitted values; separately enumerated proxy/OS trust; finite generated guard policies checked without claiming raw decoder correctness from Boolean rows.",
+      "plannedTheorem": "AlloyStudio.Traffic.wire_and_browser_refinement",
+      "statement": "Wire decoding, exact key construction, trusted peer extraction, browser capability handling and guard capture compute the values and transitions used by the model.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Concrete boundary and frontend correspondence",
+      "witnessIds": [
+        "W04",
+        "W06",
+        "W09",
+        "W13",
+        "W18"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "existingImplementationAnchors": [
+        "tests/browser.mjs",
+        "tests/navigation.mjs",
+        "engine/src/live/EngineSelfTest.java"
+      ],
+      "id": "TRF-19",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Zero unapproved public-observation differences under frozen equal resource budgets; nondeterminism excluded only by a predeclared justified relation. Classify evidence TESTED.",
+      "plannedTheorem": null,
+      "statement": "Frozen finite fixtures across all 181 invariants preserve both metrics, public traces/locations, diagnostics, behavior, redaction, imports and browser behavior against the one-shot baseline.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Catalogue-wide differential regression",
+      "witnessIds": [
+        "W03",
+        "W04",
+        "W05",
+        "W06",
+        "W10",
+        "W11",
+        "W12"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-19"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "existingImplementationAnchors": [
+        "server.py",
+        "web/app.js",
+        "runtime_dependencies.py"
+      ],
+      "id": "TRF-20",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "After prewarming, 100 valid sequential unique edits with no faults/recycling cause zero new JVM launches; coalescing, overload, slow peers and drain tests meet frozen counters. Baseline-dependent p95 targets fixed before candidate measurements.",
+      "plannedTheorem": null,
+      "statement": "The frozen workloads meet process/computation reduction and all reservation budgets without stale UI or missing final admitted results, under the explicitly stated finite test environment.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Traffic and performance acceptance",
+      "witnessIds": [
+        "W01",
+        "W02",
+        "W07",
+        "W08",
+        "W09",
+        "W11",
+        "W14"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-19",
+        "TRF-20"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_FINITE_TEST_EVIDENCE",
+      "existingImplementationAnchors": [
+        "scripts/build.sh",
+        "scripts/build.ps1",
+        "deploy/iis/web.config",
+        "runtime_dependencies.py"
+      ],
+      "id": "TRF-21",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Platform integration fixtures and process/memory/proxy checks pass for frozen supported profiles; any unsupported containment/RSS control remains explicit OPEN or TRUSTED, not silently certified.",
+      "plannedTheorem": null,
+      "statement": "Linux, macOS and Windows/IIS packages start/manage/reap the intended workers and preserve private config, owned scratch, proxy boundaries, caching freshness and bounded credential-free telemetry.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Portable deployment and observable budgets",
+      "witnessIds": [
+        "W05",
+        "W13",
+        "W15",
+        "W17"
+      ]
+    },
+    {
+      "blockConditions": [
+        "Required definitions, limits, implementation mapping or verifier missing",
+        "Counterexample refutes required invariant or finite acceptance fails",
+        "Evidence is absent, ambiguous, stale or not bound to frozen inputs",
+        "Undeclared dependency or semantic assumption"
+      ],
+      "dependsOn": [
+        "TRF-00",
+        "TRF-17",
+        "TRF-18",
+        "TRF-19",
+        "TRF-20",
+        "TRF-21"
+      ],
+      "evidence": [],
+      "evidenceClass": "PLANNED_MECHANICAL_GATE",
+      "existingImplementationAnchors": [
+        "scripts/lean_offline.py",
+        "scripts/verify_lean.py",
+        "formal/lean-toolchain",
+        "formal/blocks/B01.json",
+        "formal/blocks/B03.json"
+      ],
+      "id": "TRF-22",
+      "implementationBindingStatus": "OPEN",
+      "modelSupportDoesNotCloseObligation": true,
+      "plannedPassCondition": "Two isolated clean offline builds; no sorry/admit/new or transitive axioms/native unchecked evaluation; exact inventories and reproducibility; 2 Luna/2 Sol/2 Astra advisory reviews per proof block with constructed breach witnesses. Reviews are never proof evidence.",
+      "plannedTheorem": null,
+      "statement": "Every advertised finite claim is bound to frozen inputs, registered verifiers, kernel-checked declarations, unique mappings, constructed witnesses and explicit trust; missing obligations cannot pass.",
+      "status": "OPEN",
+      "supportingModelClaims": [],
+      "title": "Offline proof and provenance gate",
+      "witnessIds": []
+    }
+  ],
+  "plannedVerifierFamilies": [
+    {
+      "id": "V-TRF-MODEL",
+      "implementation": "scripts/verify_traffic_proofs.py",
+      "purpose": "Offline model theorem checking and complete axiom audit",
+      "status": "MODEL_ONLY_IMPLEMENTED"
+    },
+    {
+      "id": "V-TRF-BRIDGE",
+      "purpose": "Registered concrete semantic correspondence and finite policy checks",
+      "status": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "V-TRF-REGRESSION",
+      "purpose": "Frozen fresh/warm differential behavior and adversarial traces",
+      "status": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "V-TRF-LOAD",
+      "purpose": "Bounded fake-worker and real-worker traffic/resource measurements",
+      "status": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "V-TRF-PLATFORM",
+      "purpose": "Portable lifecycle/proxy/scratch/caching integration",
+      "status": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "V-TRF-PROVENANCE",
+      "implementation": "scripts/verify_traffic_proofs.py",
+      "purpose": "Frozen manifest, witness, provenance and clean-build binding",
+      "status": "MODEL_ONLY_IMPLEMENTED"
+    }
+  ],
+  "proofPolicy": {
+    "allowlistedAxioms": [],
+    "counterexampleRequiredForBreach": true,
+    "forbidden": [
+      "sorry",
+      "admit",
+      "new axioms",
+      "transitive axiom dependencies",
+      "native unchecked proof evaluation",
+      "unlisted semantic assumptions"
+    ],
+    "networkDuringProofs": false,
+    "requiredCleanBuilds": 2,
+    "reviewIsProofEvidence": false,
+    "reviewLadder": [
+      {
+        "count": 2,
+        "model": "gpt-6-luna"
+      },
+      {
+        "count": 2,
+        "model": "gpt-6-sol"
+      },
+      {
+        "count": 2,
+        "model": "gpt-6-astra"
+      }
+    ],
+    "toolchain": "leanprover/lean4:v4.34.1"
+  },
+  "proposedLeanNamespace": "AlloyStudio.Traffic",
+  "proposedValidationProfile": {
+    "baselineBehaviorMinimumSeconds": 30,
+    "baselineFeedbackSeconds": 12,
+    "baselineIpcInputBytes": 1048576,
+    "behaviorOutputBytes": 4194304,
+    "bodyAbsoluteSeconds": 5,
+    "channelsTotal": 64,
+    "controlAdmissionBurst": 4,
+    "controlAdmissionTokensPerSecond": 2,
+    "controlIngress": "Separate operator-configured loopback-only listener; never proxied publicly",
+    "creditsBorrowableAcrossIngress": false,
+    "globalAdmissionBurst": 64,
+    "globalAdmissionTokensPerSecond": 32,
+    "handlersPublic": 30,
+    "handlersReservedControl": 2,
+    "handlersTotal": 32,
+    "headerAbsoluteSeconds": 5,
+    "lunaActive": 2,
+    "maxAutomaticRetries": 2,
+    "openLimits": [
+      "header bytes/count and request line",
+      "JSON nesting",
+      "total reserved input/output/delivery bytes",
+      "other IPC request/reply and stderr bytes",
+      "pool load bytes",
+      "cache/preparation/snapshot/pinned evidence byte and entry caps",
+      "channel expiry and creation rate",
+      "queue/write/kill/reap/start deadlines",
+      "worker age/task/parse count/RSS caps",
+      "restart and circuit breaker profile",
+      "platform resource containment",
+      "baseline-dependent p95 responsiveness target",
+      "operator-selected private control listener address and separate bounded backlogs"
+    ],
+    "publicAdmissionBurst": 60,
+    "publicAdmissionTokensPerSecond": 30,
+    "publicBodyBytes": 8192,
+    "publicRequestBytes": 16384,
+    "queueCaps": {
+      "admin": 1,
+      "behavior": 2,
+      "feedback": 8,
+      "luna": 4
+    },
+    "retryEligibility": "Only learner feedback/behavior/explanation 429/503 admission rejections confirming no dispatch; preserve original operation deadline. No automatic retries for admin mutations, analysis timeouts, auth errors or unknown provider outcomes.",
+    "status": "CANDIDATE_NOT_DEPLOYMENT_DEFAULT",
+    "subscribersPerJob": 16,
+    "subscribersTotal": 128,
+    "workerCaps": {
+      "admin": 1,
+      "behavior": 1,
+      "feedback": 2,
+      "total": 4
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Specification and open obligations only; production refactor, Lean declarations, bridges and verifier implementations are not added by this plan.",
+  "specification": "docs/backend-performance-spec.md",
+  "status": "SPECIFIED_NOT_VERIFIED",
+  "supportingModelBlock": {
+    "claims": "formal/traffic/claims.json",
+    "id": "TB01",
+    "manifest": "formal/traffic/block.json",
+    "productionRefinement": "OPEN",
+    "statusSource": "Fresh source-bound report required; ledger is not proof evidence",
+    "verifier": "scripts/verify_traffic_proofs.py"
+  },
+  "verifierRegistry": null,
+  "version": 1,
+  "witnesses": [
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W01",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W01"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W02",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W02"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W03",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W03"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W04",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W04"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W05",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W05"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W06",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W06"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W07",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W07"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W08",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W08"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W09",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W09"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W10",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W10"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W11",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W11"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W12",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W12"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W13",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W13"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W14",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W14"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W15",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W15"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W16",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W16"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W17",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W17"
+    },
+    {
+      "definition": "docs/backend-performance-spec.md#8-constructed-adversarial-traces-to-formalize",
+      "id": "W18",
+      "machineWitness": null,
+      "modelWitnessRequiresFreshVerification": true,
+      "status": "PROSE_TRACE_ONLY",
+      "supportingModelWitness": "formal/traffic/witnesses.json#W18"
+    }
+  ]
+}

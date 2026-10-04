@@ -1,0 +1,50 @@
+{
+  "blockManifestSha256": "e1fc05d411a453ebba4ccb3be7f65d2d6ad731e565741db0c2b62653fa5519ca",
+  "classification": "BOUNDARY_NOT_CONSTRUCTED_BREACH",
+  "files": {
+    "build/trf-closure/tcfg03-20261004T165357Z-18a0f46e/inputs/closure/traffic-refinement/observation-spec.json": {
+      "archivePath": "inputs/closure/traffic-refinement/observation-spec.json",
+      "sha256": "6a65549570285c0c4b5acc57d671acb60cbabeee078d02edee39e84ec0b1e8a9"
+    },
+    "build/trf-closure/tcfg03-20261004T165357Z-18a0f46e/inputs/docs/traffic-observation-contract.md": {
+      "archivePath": "inputs/docs/traffic-observation-contract.md",
+      "sha256": "a80b3c87bc2ce8d54bc32e5a96b41d4c8c0cdde7c85e46b840878cc867c7014f"
+    },
+    "build/trf-closure/tcfg03-20261004T165357Z-18a0f46e/inputs/formal/service_profile/block.json": {
+      "archivePath": "inputs/formal/service_profile/block.json",
+      "sha256": "e1fc05d411a453ebba4ccb3be7f65d2d6ad731e565741db0c2b62653fa5519ca"
+    },
+    "build/trf-closure/tcfg03-20261004T165357Z-18a0f46e/inputs/scripts/traffic_observation.py": {
+      "archivePath": "inputs/scripts/traffic_observation.py",
+      "sha256": "f1afc3a778fdc6d8f0a1cb43ef28745fed9bdbc14abd784f30c429c14a2fa1a4"
+    },
+    "build/trf-closure/tcfg03-20261004T165357Z-18a0f46e/inputs/tests/test_traffic_observation.py": {
+      "archivePath": "inputs/tests/test_traffic_observation.py",
+      "sha256": "604c1a8b9b468e5dd566e3e79dc3605d09849e91a8f53ff7c6147838291cbc48"
+    },
+    "build/trf-closure/tcfg03-astra-b/missing-delivery-witness.json": {
+      "archivePath": "missing-delivery-witness.json",
+      "sha256": "3a1dda3d9204474670aed315954b9ecadb0a9b43dabeb3a1ec0463e1b733f089"
+    },
+    "build/trf-closure/tcfg03-astra-b/replay_missing_delivery.py": {
+      "archivePath": "replay_missing_delivery.py",
+      "sha256": "f183e3a668b1f5eb06abd2b5824bc43dcc47b77d62aacb7575f709a1bb990ae7"
+    },
+    "formal/reviews/TCFG03/astra-b.json": {
+      "archivePath": "review/astra-b.json",
+      "sha256": "cd433a08d2b8e32c4363bc9bf4eca1e85b33269a5ba84d724edeb508a2409835"
+    },
+    "formal/reviews/TCFG03/astra-b.md": {
+      "archivePath": "review/astra-b.md",
+      "sha256": "7c8344b59bf2124e98ddc54f256639e69067af0890ef73ce4c7ad93d01ef456c"
+    },
+    "generated:archive-local-replay": {
+      "archivePath": "replay.py",
+      "provenance": "Equivalent archive-local invocation on the unchanged retained witness and frozen checker; not executed by evidence packaging.",
+      "sha256": "a9ff3199dcc6a54942b8546e9ba7bd4b7ef651095750ebad2d1657280ab133de"
+    }
+  },
+  "indexPolicy": "All payload members are hashed here; archive.json does not self-hash.",
+  "interpretation": "The frozen schema permits absent optional delivery metadata and excludes it from computational equality. A computational MATCH does not require delivery-envelope field presence or establish authorization. This archive preserves the existing constructed limitation and the original Astra B advisory notes; it neither classifies a breach nor changes or discharges a claim. Original replay bytes are retained; replay.py uses archive-local frozen inputs.",
+  "kind": "advisory-optional-delivery-boundary-characterization"
+}

@@ -1,0 +1,840 @@
+{
+  "arms": [
+    {
+      "arm": "archived-oneshot",
+      "reuse": {},
+      "rows": [
+        {
+          "case": "health",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "health",
+          "semanticSha256": "4c296a689bd91f1429f12a2552c1fbe03a9ac978c9b277a7cf5e9cf2249aa26a"
+        },
+        {
+          "case": "catalogue",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "catalogue",
+          "semanticSha256": "0fb3ad8cf7bb3d7242e2561fae82c859d7dd2fa38de0a779c25648867e1d00c6"
+        },
+        {
+          "case": "detail",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "exercise",
+          "semanticSha256": "4d83cd643e7a2e27ccf649ccdc7658cf793b0c3cec4a76afea7154a52a7b5750"
+        },
+        {
+          "case": "admin-disabled",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "admin",
+          "semanticSha256": "d2f6e56e70bdec8985db5ac113baa94799a85996923feb836e06cd0ce856c672"
+        },
+        {
+          "case": "asset/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "2c356acc23e4f335ba00cba1f52011934d1d04579d20d7e92783af83bc0b5ff3"
+        },
+        {
+          "case": "asset/app.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9b4fd00fc5b33024ee6dc9ecac30bb4a0d6a48a090b4ceff16056d73bbc886af"
+        },
+        {
+          "case": "asset/instance-graph.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9256e2fe4da245b5183480aa15f7a5904af2d18f78b55bb30fcb0397017af2e6"
+        },
+        {
+          "case": "asset/admin/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "63e3ad3d20262232e9426f993dba9b4c8d2e8e44f6bebeb16368dcb598845db9"
+        },
+        {
+          "case": "asset/dashboard/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "5c609d0ae9a64f1d0aeb27172a921e9f4d08a752c7d76cc44c25b77a162f8c80"
+        },
+        {
+          "case": "admin-rejected",
+          "errors": [],
+          "httpStatus": 404,
+          "kind": "admin",
+          "semanticSha256": "146635e9031a3f67d6a0739ad3f1dd677510d9575f950f65e6559ef4ac41b135"
+        },
+        {
+          "case": "incorrect/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "47e55f1c9bfd1c079b019703e4b89a0be7fa06e8e0809b2c07afb958e59a33d7",
+          "status": "ok"
+        },
+        {
+          "case": "incorrect/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "c9041030132358f8fe5d3d31e1fbfa63257e2dacd168034fe67d5f5f02f0b3c3",
+          "status": "ok"
+        },
+        {
+          "case": "correct/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "2c9286a1be5bd29744b4c21b451c9088867dbabc84238ac60374e726ee3276fc",
+          "status": "ok"
+        },
+        {
+          "case": "correct/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "48a5e246baf3e8d07014795153f758b0cd6d8c0998e1a1d76be73457cd338e51",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "e1a3748315caef2827e6e7bcec6a3e68e05789065946044b2174487d61ff4c98",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "8e01eba1dd93e0b701adb9004079bed559f0134defb804279f33f3641e364352",
+          "status": "ok"
+        },
+        {
+          "case": "invalid/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "84f0a46adf725836da61729dfdc59aaa258cdd6baa7d6603d06de87ab6e323cd",
+          "status": "invalid"
+        },
+        {
+          "case": "invalid/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "31effe74ca25a6e5a37303e1abd83f0b42ea9385f5d4117f00ac63d57daee2ae",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "incorrect/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "d71dba9d0fe66392d54294530ea58c3be6edf2f6920df456ed149f7b817af128",
+          "status": "ok"
+        },
+        {
+          "case": "correct/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "831c79468d227899e2b88aff41e7bc4df73b6252a3408df266e3be797a3b1841",
+          "status": "ok"
+        },
+        {
+          "case": "disabled-provider",
+          "errors": [],
+          "expectedStatus": "disabled",
+          "httpStatus": 200,
+          "kind": "explanation",
+          "semanticSha256": "dac42c0eb7a34239b463fde9863c0dca8236a3007da0889fedeb87a91ec9157b",
+          "status": "disabled"
+        }
+      ]
+    },
+    {
+      "arm": "oneshot",
+      "reuse": {
+        "cacheHits": 2,
+        "completed": 0,
+        "launches": 0,
+        "repeatedAddedComputations": 0,
+        "repeatedAddedLaunches": 0
+      },
+      "rows": [
+        {
+          "case": "health",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "health",
+          "semanticSha256": "4c296a689bd91f1429f12a2552c1fbe03a9ac978c9b277a7cf5e9cf2249aa26a"
+        },
+        {
+          "case": "catalogue",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "catalogue",
+          "semanticSha256": "0fb3ad8cf7bb3d7242e2561fae82c859d7dd2fa38de0a779c25648867e1d00c6"
+        },
+        {
+          "case": "detail",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "exercise",
+          "semanticSha256": "4d83cd643e7a2e27ccf649ccdc7658cf793b0c3cec4a76afea7154a52a7b5750"
+        },
+        {
+          "case": "admin-disabled",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "admin",
+          "semanticSha256": "d2f6e56e70bdec8985db5ac113baa94799a85996923feb836e06cd0ce856c672"
+        },
+        {
+          "case": "asset/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "2c356acc23e4f335ba00cba1f52011934d1d04579d20d7e92783af83bc0b5ff3"
+        },
+        {
+          "case": "asset/app.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9b4fd00fc5b33024ee6dc9ecac30bb4a0d6a48a090b4ceff16056d73bbc886af"
+        },
+        {
+          "case": "asset/instance-graph.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9256e2fe4da245b5183480aa15f7a5904af2d18f78b55bb30fcb0397017af2e6"
+        },
+        {
+          "case": "asset/admin/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "63e3ad3d20262232e9426f993dba9b4c8d2e8e44f6bebeb16368dcb598845db9"
+        },
+        {
+          "case": "asset/dashboard/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "5c609d0ae9a64f1d0aeb27172a921e9f4d08a752c7d76cc44c25b77a162f8c80"
+        },
+        {
+          "case": "admin-rejected",
+          "errors": [],
+          "httpStatus": 404,
+          "kind": "admin",
+          "semanticSha256": "146635e9031a3f67d6a0739ad3f1dd677510d9575f950f65e6559ef4ac41b135"
+        },
+        {
+          "case": "incorrect/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "47e55f1c9bfd1c079b019703e4b89a0be7fa06e8e0809b2c07afb958e59a33d7",
+          "status": "ok"
+        },
+        {
+          "case": "incorrect/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "c9041030132358f8fe5d3d31e1fbfa63257e2dacd168034fe67d5f5f02f0b3c3",
+          "status": "ok"
+        },
+        {
+          "case": "correct/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "2c9286a1be5bd29744b4c21b451c9088867dbabc84238ac60374e726ee3276fc",
+          "status": "ok"
+        },
+        {
+          "case": "correct/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "48a5e246baf3e8d07014795153f758b0cd6d8c0998e1a1d76be73457cd338e51",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "e1a3748315caef2827e6e7bcec6a3e68e05789065946044b2174487d61ff4c98",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "8e01eba1dd93e0b701adb9004079bed559f0134defb804279f33f3641e364352",
+          "status": "ok"
+        },
+        {
+          "case": "invalid/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "84f0a46adf725836da61729dfdc59aaa258cdd6baa7d6603d06de87ab6e323cd",
+          "status": "invalid"
+        },
+        {
+          "case": "invalid/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "31effe74ca25a6e5a37303e1abd83f0b42ea9385f5d4117f00ac63d57daee2ae",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "incorrect/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "d71dba9d0fe66392d54294530ea58c3be6edf2f6920df456ed149f7b817af128",
+          "status": "ok"
+        },
+        {
+          "case": "correct/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "831c79468d227899e2b88aff41e7bc4df73b6252a3408df266e3be797a3b1841",
+          "status": "ok"
+        },
+        {
+          "case": "disabled-provider",
+          "errors": [],
+          "expectedStatus": "disabled",
+          "httpStatus": 200,
+          "kind": "explanation",
+          "semanticSha256": "dac42c0eb7a34239b463fde9863c0dca8236a3007da0889fedeb87a91ec9157b",
+          "status": "disabled"
+        }
+      ]
+    },
+    {
+      "arm": "persistent",
+      "reuse": {
+        "cacheHits": 2,
+        "completed": 10,
+        "launches": 2,
+        "repeatedAddedComputations": 0,
+        "repeatedAddedLaunches": 0
+      },
+      "rows": [
+        {
+          "case": "health",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "health",
+          "semanticSha256": "4c296a689bd91f1429f12a2552c1fbe03a9ac978c9b277a7cf5e9cf2249aa26a"
+        },
+        {
+          "case": "catalogue",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "catalogue",
+          "semanticSha256": "0fb3ad8cf7bb3d7242e2561fae82c859d7dd2fa38de0a779c25648867e1d00c6"
+        },
+        {
+          "case": "detail",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "exercise",
+          "semanticSha256": "4d83cd643e7a2e27ccf649ccdc7658cf793b0c3cec4a76afea7154a52a7b5750"
+        },
+        {
+          "case": "admin-disabled",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "admin",
+          "semanticSha256": "d2f6e56e70bdec8985db5ac113baa94799a85996923feb836e06cd0ce856c672"
+        },
+        {
+          "case": "asset/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "2c356acc23e4f335ba00cba1f52011934d1d04579d20d7e92783af83bc0b5ff3"
+        },
+        {
+          "case": "asset/app.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9b4fd00fc5b33024ee6dc9ecac30bb4a0d6a48a090b4ceff16056d73bbc886af"
+        },
+        {
+          "case": "asset/instance-graph.js",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "9256e2fe4da245b5183480aa15f7a5904af2d18f78b55bb30fcb0397017af2e6"
+        },
+        {
+          "case": "asset/admin/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "63e3ad3d20262232e9426f993dba9b4c8d2e8e44f6bebeb16368dcb598845db9"
+        },
+        {
+          "case": "asset/dashboard/",
+          "errors": [],
+          "httpStatus": 200,
+          "kind": "asset",
+          "semanticSha256": "5c609d0ae9a64f1d0aeb27172a921e9f4d08a752c7d76cc44c25b77a162f8c80"
+        },
+        {
+          "case": "admin-rejected",
+          "errors": [],
+          "httpStatus": 404,
+          "kind": "admin",
+          "semanticSha256": "146635e9031a3f67d6a0739ad3f1dd677510d9575f950f65e6559ef4ac41b135"
+        },
+        {
+          "case": "incorrect/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "47e55f1c9bfd1c079b019703e4b89a0be7fa06e8e0809b2c07afb958e59a33d7",
+          "status": "ok"
+        },
+        {
+          "case": "incorrect/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "c9041030132358f8fe5d3d31e1fbfa63257e2dacd168034fe67d5f5f02f0b3c3",
+          "status": "ok"
+        },
+        {
+          "case": "correct/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "2c9286a1be5bd29744b4c21b451c9088867dbabc84238ac60374e726ee3276fc",
+          "status": "ok"
+        },
+        {
+          "case": "correct/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "48a5e246baf3e8d07014795153f758b0cd6d8c0998e1a1d76be73457cd338e51",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/canonical",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "e1a3748315caef2827e6e7bcec6a3e68e05789065946044b2174487d61ff4c98",
+          "status": "ok"
+        },
+        {
+          "case": "unicode/ast",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "8e01eba1dd93e0b701adb9004079bed559f0134defb804279f33f3641e364352",
+          "status": "ok"
+        },
+        {
+          "case": "invalid/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "84f0a46adf725836da61729dfdc59aaa258cdd6baa7d6603d06de87ab6e323cd",
+          "status": "invalid"
+        },
+        {
+          "case": "invalid/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "31effe74ca25a6e5a37303e1abd83f0b42ea9385f5d4117f00ac63d57daee2ae",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/canonical",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "empty/ast",
+          "errors": [],
+          "expectedStatus": "invalid",
+          "httpStatus": 200,
+          "kind": "feedback",
+          "semanticSha256": "39d3f7bbd520058ec4adc04049dd7e004ef993f49edfb2376f12cdfa56d26bd7",
+          "status": "invalid"
+        },
+        {
+          "case": "incorrect/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "d71dba9d0fe66392d54294530ea58c3be6edf2f6920df456ed149f7b817af128",
+          "status": "ok"
+        },
+        {
+          "case": "correct/behavior",
+          "errors": [],
+          "expectedStatus": "ok",
+          "httpStatus": 200,
+          "kind": "behavior",
+          "semanticSha256": "831c79468d227899e2b88aff41e7bc4df73b6252a3408df266e3be797a3b1841",
+          "status": "ok"
+        },
+        {
+          "case": "disabled-provider",
+          "errors": [],
+          "expectedStatus": "disabled",
+          "httpStatus": 200,
+          "kind": "explanation",
+          "semanticSha256": "dac42c0eb7a34239b463fde9863c0dca8236a3007da0889fedeb87a91ec9157b",
+          "status": "disabled"
+        }
+      ]
+    }
+  ],
+  "baselineCommit": "e75b20419f8f92c2adc59ce083008ec897434cb1",
+  "comparison": {
+    "casesPerArm": 23,
+    "failures": [],
+    "status": "PASS"
+  },
+  "execution": {
+    "elapsedSeconds": 3.391863,
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "providersDisabled": true,
+    "python": "3.10.11"
+  },
+  "kind": "bounded-http-projector-and-worker-regression",
+  "limitations": [
+    "Synthetic single exercise; all-181 checks and enabled administrator tests are separate.",
+    "Archived Python baseline and current modes use identical current compiled Java artifacts.",
+    "Finite successful requests and deterministic invalid drafts; not arbitrary-history equivalence.",
+    "Linux execution only; not native Windows/macOS or deployed proxy validation.",
+    "No private deployment configuration or provider credentials are copied/read."
+  ],
+  "schemaVersion": 1,
+  "sourceIdentitySha256": "218a3e04f867989f2135515236c824730a96e6684ae2d6f347fe131b20e134e7",
+  "sourceIdentityStable": true,
+  "sources": {
+    "admin_auth.py": "8dd1218b98ed35a34451b36277082825ca7ba8a0cfec733949b76d0df32a2ea1",
+    "admin_luna.py": "74ca5bd859f2a88b8420e526ef293e3faef51894b031e2da32b9691690ac757d",
+    "admin_service.py": "caf329b8fadfdad94ed140d782660d1521cd1984d0c978a5b6a5491b5fd1a2ae",
+    "admin_upload.py": "45e79ec4cf40424b0423c65519d56ca92aa3b76b5bbe85e17c21aaeea0b8f373",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/AAME.class": "a120ad834ff1329ff7cb658064652c6dd70621e617acc6f8f90795d6be347d84",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/AbstractSymbol.class": "9f075c38fc9e0982af246ac2b90b3ee307a8c4478f03298024f2beaa48ef67ba",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger$Signature.class": "032743389137d1d2af37f17fda472dcc848b7b0052e78deb001e693e8ebfe1d6",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.class": "2fb3cce2ffda44f23352bcbc394e552e2831e2d44d3f456a4d67fdb52e05aa35",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/AssertSymbol.class": "ad24b4a71bfb44279d4fc9893282665528aa5a7a20b3567236583238d401a179",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/CallSymbol$ArityAuthority.class": "bfee02c568d8910f35a86e13e045e8528af0348cf99d91fe75e7c158372cceab",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/CallSymbol$Kind.class": "b4b7a74ca9098ad746e6bfdfda90717a5f0a04321248e3ba4b0f51ab99ab28f3",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/CallSymbol.class": "f62989740c5058286627417d0d42d4246bdd066e7213d607dc8dbd3c111c797e",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/CallableTargetSymbol.class": "ff9cfb7034c929bfc96723943edf0eea2e78726b064ef8fe4416f44f88b73ae7",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ConstSymbol$Kind.class": "896dd5a554fcbf844524dbbe92a5114c50c299ecab31692191cfbeb6294d58a8",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ConstSymbol.class": "5cdd92b84ced58fd12bfe979a185d1cc584d2bb600b4835da6281c37774b3aa4",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/DeclRootSymbol.class": "053e01bd2d530ca4cd1906418e79040a00c150be022a041629477bf78da1b1bf",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/DummySymbol.class": "9c7a39a89febd6e65645871dd94a79aad9798121d4f20d740476e0367847c042",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/EndSymbol.class": "57840e3c9f96b26c28a043294a9058ed9be77b13392b9b12eb1dbd379208d6d1",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ExactAlloyType$AlternativeShape.class": "d9d9bee71a98534e271d1e603424e47ebda953408f0fe14090c305928910ad71",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ExactAlloyType$Kind.class": "998216c6bf87bf134b1c63604d97796967ebccb120ef63040924a2855bd71094",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ExactAlloyType.class": "629c0d4cd98f1239af6d29b691c2c46b26a66123fb200590b179550d18740f34",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ExtFact.class": "ac3f2ed87387647695f46ab8d2250a2f7c46f0a35efed568d639133493367e7e",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/FieldConfiner.class": "a05863bb187ee94d3c353098994ed2a15ef8753c5234aba910d0be8ee8b05c17",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/FieldRelation.class": "51bca0deba9410242ec48a3c23d79be7583b7450bb5737a7e5ce2438c4094347",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/LetSymbol.class": "14a14e494a1a76e007747d942163a9b4e0215a1f83b27eb4e0211feca06e0f3f",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/MiddleSymbol.class": "873b12f31d8f802f0417229673901dfd0cefe3f0cbe1bc994185688366ed6831",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/PredRootSymbol.class": "8a05ae57ebc4c1ce8566d90af9736b61725a386aa7fe2c98621e70aaaad9212d",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/RefSymbol.class": "f224960d14e28da0c8f672eee069ff1ea74f0eda9e63da0f06e4728f20232a75",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/RelationSet.class": "d5963f79ef160d58037debfd998328f86c5669ce40738e07525a8c744565df34",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/SetSymbol.class": "531172487d65a7b93063fe5b14e0e3bef9ad9f9af90e8146ecde9b0fcdb5e236",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/ShadowSymbol.class": "ccdb006a88d466169beb1e5164888e118ea185b2745555c4c3f5ad3285c9ba14",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/SigSymbol$1.class": "74d77a6ffdb8849c34fb483ed4ad7ce8e5a8d6968003281f3bc13b89d56dd73e",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/SigSymbol$Kind.class": "9b616309b7e3c77460d0543ce4447b0fb4255139b21c1b3dff3c22ddd9e517fc",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/SigSymbol.class": "5737fc0f93246cf4728fd34399acc18d08b104fcd6940de88e71fb4b133f5d16",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/SubsetRelation.class": "d861bc970b4e9ef253cc3457b02c8c76f478cf2e62976b3ea1ad2a5a05d33fe9",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/Symbol.class": "1b3f553f64bf7fd8be90680cebfa43ec3093d0e7d291128663d685772174c358",
+    "build/engine/classes/is/fivefivefive/ACGN/alloy/VarSymbol.class": "efe83527ff7d31be176b47b1bed6f937d675636e1fc2738e22bac04e01b5a50a",
+    "build/engine/classes/is/fivefivefive/ACGN/asg/AugmentedNode.class": "2daa10608f87ca36f347b2e31fb2f168261facae2ee38f7ef8948cb988bd614c",
+    "build/engine/classes/is/fivefivefive/ACGN/asg/MASGEdge.class": "a960b89b7ac27c310c4a2a59b19f8d4f9a24f1eeae9d949ff73aadb65efe499d",
+    "build/engine/classes/is/fivefivefive/ACGN/asg/Multigraph.class": "af4b12ccd304a465b2668d1872c060f7b5084febf5a8ce6d375e703806b51104",
+    "build/engine/classes/is/fivefivefive/ACGN/codegen/Generator.class": "52b8c6d56178e0e4ce9c6dc051cc03fd7d3d44a1ab4521f32ed1abf39b81e9d5",
+    "build/engine/classes/is/fivefivefive/ACGN/etc/BiMap.class": "ee16a315b8d9e762d206df6dd135785b30b49d169d8c7d8c2930a9f8f52255dd",
+    "build/engine/classes/is/fivefivefive/ACGN/etc/Triple.class": "1e1f407bcbc575de56c27d8d535c0f9a4edfa82d0ad764e74dc932f57943f139",
+    "build/engine/classes/is/fivefivefive/ACGN/learn/Hyperparams.class": "7ec7301bb8053c0fbd12ab39304c9851f3263a9afcf6c56a690a65a36712d417",
+    "build/engine/classes/is/fivefivefive/ACGN/structure/RLScopeTreeNode.class": "28cd459ccd5802cbf384198796c6e3766f169c32bdcf975362c6fc3d4e409438",
+    "build/engine/classes/is/fivefivefive/ACGN/structure/ScopeTreeNode.class": "6979eb07ee8827e346ade331bb662b3ce9c86365d9d38b90d76f99374327c22c",
+    "build/engine/classes/is/fivefivefive/ACGN/test/Playground.class": "e366ba843d2fd107a4a0117ce85fbbd3f078dd404d1aada0974abc4eff062245",
+    "build/engine/classes/is/fivefivefive/ACGN/util/GlobalVariables.class": "ff1c83075f17545504b343a368f6a11466816c993a92d9553df41f7816409f4d",
+    "build/engine/classes/is/fivefivefive/ACGN/util/Hasher.class": "da2ebc896cf66fe935e21efbd576deec90eefe983ae81918b2822dd9699f184e",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$1.class": "8e206f8ddab0583b001384060735927d65b5677c2ff7ffc4f07db67d4828f22e",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$2.class": "20e12ae428cfc17d4e7321c340e9264e34878eba8df78988b4ad4eef4b87eb51",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$CallExtractionStats.class": "80132917c785dab9a59254b5e82c3607dcd50aad9b948134cd2a48897a8d735b",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$CallVisitCapture.class": "450063520073d88f9c9f26f6386358b44580b259e0833a856b266640e1512259",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$CallableDescriptor.class": "b6d2757936689b21da1c33dea0844018bb33aac37654a5bbeecfbc8dd7ca2283",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$CallableKey.class": "c8c7fda03791ed326c110206c926f178a6d896ee8c29ae613d8f800d36323ed1",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$FieldKey.class": "93ed534c51f2b6b3040718d9e9de2a7546c58f889658397d0d6e7bf039d8fb88",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$ImportedCall.class": "adbc03307b4e2e2901104fc702de882d3276c5e48f23fc9bc7263358cb35807d",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$ImportedModuleDescriptor.class": "726e584c55f8e1748fd5bb8d852fd3711c8914cd5995e3357a305b38253f7e2c",
+    "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor.class": "798395d386713689b5a81ec2b445323409301c57bf170b852190250d3be662e6",
+    "build/engine/classes/is/fivefivefive/AlloyDataProcessor/EdgeCounter.class": "47faf34b00c7175c799b29cee02a67bc8d5c7855c0fbd38d5b537da084f6327d",
+    "build/engine/classes/is/fivefivefive/CanDis/Canonical$CallStats.class": "c7782693e64eb91ba2795ae4a01ba5eb25aea4df3c1ece25afc77622c6b55490",
+    "build/engine/classes/is/fivefivefive/CanDis/Canonical$Prepared.class": "502f6cebb1bfdf92b3a4206bcbd25fd475ca03b89eb3c50b149d699cd146f25e",
+    "build/engine/classes/is/fivefivefive/CanDis/Canonical.class": "d45bb649de72452819b04b293288f500e709b8c18975a06d4d046b4f46dddf36",
+    "build/engine/classes/is/fivefivefive/CanDis/DatasetConventions.class": "af873e2ed93ee9375126addf5880153f4f19b9248e929b00aef4d59a8f5459be",
+    "build/engine/classes/is/fivefivefive/CanDis/LiveTrace$1.class": "302ed4cbec759a9d94f3d190f933ef38ad580d3110bcbd349af1f4e7927beaf6",
+    "build/engine/classes/is/fivefivefive/CanDis/LiveTrace$Context.class": "19ced04c85b347318aa461e980639a4e7c8bf97365b7c68e14c1bcabec2e59b0",
+    "build/engine/classes/is/fivefivefive/CanDis/LiveTrace$ReplayNode.class": "fc7fa25b8bb372e15112333396db82c789f318b6d2504519438872751963ed7a",
+    "build/engine/classes/is/fivefivefive/CanDis/LiveTrace$Result.class": "3ed77faf2941199a1810efbcf2ed3a8fc1cf63dd7dabfdf49748d6abea4d0c91",
+    "build/engine/classes/is/fivefivefive/CanDis/LiveTrace.class": "fedc4ea9be9a9bec3ac863a1b3fa618f10ecab9296e1362e9a397299bdd1f0bb",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$1.class": "34bd71fddf0159ff7aabf9778bf6921d212cd88cd66eaba46842295921a1fd3d",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Edit.class": "2c1f67053d3824e4fe233de51bbfffce2056fc2be8ee52b26121bc317971d44d",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Index.class": "8528d5593252d1a595d34df8e4bcdc19c2ab70639327a8220eaeb2d055690444",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Mutable.class": "cd43ab2c85153c163079ffc594d0743abe8841fa9d1a3d5f4fdd8ec24d61dde6",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Prepared.class": "59322467befca8897b2189b37c539e54ce805febf400cd6788edf7a44010bf35",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$PrivateEdit.class": "d69616d0a8db0f1f61a2b4a7e3eca484d7b2ccc4363050355925cff89a782063",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Result.class": "eab3a2be6aec636b99f305a65467c54028a714f60bda6a99abed0d813c9372e5",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Solver.class": "0d97584bf0d3a27fa4ad025327d13220b6928468b5d0151ff0b2b15bf1ab8171",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Tree.class": "659817a4d3a81e336c7c7b5f7b9ad2ee02eb51da9c29373d9f240a969d5a8d7a",
+    "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace.class": "7cb0b139685f5f1882ff9cc985c1a8ff07bc6f14901cbd6eeb55b9079ad1013d",
+    "build/engine/classes/is/fivefivefive/CanDis/core/AlloyOperatorPolicy$1.class": "a7d65fbc4ff984546bdc861461da085454400f54a6663905fcde1ba559b5eaec",
+    "build/engine/classes/is/fivefivefive/CanDis/core/AlloyOperatorPolicy.class": "14d5b489262aa06028353b3112db4f47144f0981ba12ac86a954cbeebc3efe6d",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CallMetadata$Validated.class": "39b50aa5b67045246c58b2c924f72b0feaa12052869f11314f968b13f81d8ef6",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CallMetadata.class": "95d4e7ccea36d7298be5487908024ff52faaac0dbd8008b28f5832d9eeb6646d",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$1.class": "e999f4f84e78024ac53c31e8008226f9e064d533f05996e57bff5245ca898953",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$2.class": "39ce545a55dc2a1c5c87b9baaa43a38635ad0396f08309d4093e394f78c7976b",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$AllocationStats.class": "7f7276ff8e4c52f10913e6e3d4ee1c9f2ad3b17fe0f1b33963564bd9ab2bcf69",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$BestCoherentMapping.class": "39fbe31a696ef63d6a5cdfe68b10ed02bf6884cedd623513e08c22a1c2b74fa5",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$BestMapping.class": "11210b87873b7ad0a59013d01cbf212969ccd48fa38f25892f36eb1acafa9044",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$BindingDescriptor.class": "21ca5ef9b0735f3912bfa72117943851470d861946b05272fd18048c491675ca",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$BindingRole.class": "5194e436c6c52130abf861401f9b501e74d6903b6acfd74cc3c3db01f127a383",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$CoherentVariable.class": "5ac04e5751fbca2133eee0cfe069de0416ec9fa2a1d811a428628d83c7ab8120",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$CoherentVariableSpace.class": "d85ed25155ff7e462f0c2e8c352c39aba6d03dc119d42e2c35d5316ac043e9fa",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$DistanceBreakdown.class": "f9ade5d399a35ce0709dce74d06d4bf8e407c58e60ac9525ac549664bc67d0de",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$EGraphDistanceContext.class": "627a2c936b7ab6ef3a6e4349ec2e36144640104cbd2ca7199d48a700fc0defc1",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$EGraphMetadata.class": "0a13ed205a8f444bdfea8fd0aa53a9ec7e91119963f627635a957bf9e8b82267",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$MatrixAlignment.class": "ee000ee4b03510ca1bc679ad40253f390d5102529b6f7d85cc2bb7ee882326d5",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$MutableAllocationStats.class": "161a046eda28dc4b7f92b25a6a6fef14d3d4564185d48a9992a622351173d629",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$Prepared.class": "40b7c897a053c59b12b897cc8f56989e29812dad766270d6bdabee9bcd3c0f86",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance$TemporalTree.class": "72a648524780b6f7842cbde8bb615fc36d01806146ad82cd7f8fb44631c39b3a",
+    "build/engine/classes/is/fivefivefive/CanDis/core/CanonicalDistance.class": "becab3ea65ec8dd3710abec7fea9f96b8892b5c40577a8f5323b1298cf036f94",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$1.class": "a7b829124df7d9ec9551c94b8ed210096c52591e0614f23c9b33bd16517dc6bb",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$2.class": "4d25d16e15f08ef908d9a260db58ce813a828c6e278d3f0091c81cf0cd655244",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$BuiltinConstantKind.class": "ee413243ad60855c78a478f3e6198c94a5c0cecba79896df6e4af72b353811a4",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$DifferenceCoordinates.class": "26f5dbfb13d8c00dd334fa2bc803bdabf12b632d3ef147ebf1148ba4add2c203",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$EClass.class": "1851f3aa743bac165d425c2d133c725d44bbbacc509a8a321d0ec86195a81e5c",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$EClassRef.class": "89cfd797af70c487b6eefc01b9a892d66ce504ac1d0d7eaaa46407c06ed26dc5",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$EGraphArena.class": "78644fe7e3cabc993b7fd194e8eb7a0dfa1799eb76a72a42565c37cde6ab448e",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$FlexibleArityKind.class": "10b1633cd24962c042a618c6528abd3763a986724d60fea1ff7305c1bafe81f8",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$Metatype.class": "bbc04b9c31eb39dac937c0dd754726a94bf7e668cf50bcc3ad5c51b8a05ac0f6",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$Opcode.class": "c5724d0cedfbf7b2a56fc3e9ab71470fc8d69821ae1676b865a7826592cfe514",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$ProductCoordinateCover.class": "b7204e298231b2449a07e9c2f0778504423b187946339bd9e94b395a6bd227f1",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$ReachabilityStats.class": "6fd84474c1ec6a085d44ba3f0b83aafe6d79e9da15b4eb9e867985751f811f6f",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$RestrictionCoordinates.class": "7404a72e37ee90e5ed3ebfd09bd7cf5ac74efa146d3fe81c1db3f3e5eca4c67e",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$SourceOrigin.class": "c4b154ea1ea4e0137918a7e0bc23f079c8ad5a9da4489b5b7c1109dfaae3688c",
+    "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode.class": "81776827a04d0c00ebb27efd727f82b483cc0a8443d94588ff28bd2d5312bd8a",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$1.class": "18b3068a40e8bb18c7896655f53deaf88d9c2501da0b6cf21f8f4bfadb891562",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$BindingCoordinate.class": "afc694870a6cdacf5fda96c2c244af6ef2576182d1665b41dec7118ce5d6726e",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$BindingSignature.class": "8724064515d5e3231ef47f5d1289ded7a2a7fe3fd2c371a7a70acda40160b6c2",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$DomainDescriptor.class": "c82cf793d68cf38a04d2ae000f5dd653e4c19442644d18a9f6efcbbb0c08d4a8",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$LocalBindingSeed.class": "29fadfe3c10244a3a0d84dc869a2d6e640328a6df3deedb778cd5665dde3f1db",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$NormalizationObserver.class": "3f666e82ecf0a431c81a6b9126fab57c0788af36637d6c8ea7aa06e75eeadcf7",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$PhaseLocalBindingImport.class": "b05b839bc99e384ee7161cf80bf5db5bf5fe7387aa27018953cc86d9b8201260",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$PrenexSlotAllocator.class": "26b178418a304283dc32abe3f836210a6625531570242afe21939bf3b6908493",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$RelDeclResult.class": "daeddf24eb0f2a90d289036978796459054bee0a346f7ca2dc84cfcebfaf1480",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$ScopedLocalBinding.class": "d6e2b503d0e2571aae75fd8b4ff3dcc873784c6317b472b9b1ec694b2ac18a15",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$TemporalDualization.class": "4026d00a1f200768c495d6712b7bf9a70f8fd704d484a10b43e33bf88781d7ca",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$TemporalOp.class": "b68b1f9bd480189a8adbda3f0a82f46340baf94d81a0901873d2ce466770b95c",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm$TemporalReferenceAuthority.class": "2482f2dd352f2249c527d95959893c7d20f2d2aabf16733f47bef6cdf983ca2c",
+    "build/engine/classes/is/fivefivefive/CanDis/core/NormalForm.class": "7db828a0c195ed48b514a543e0afae3562ae045628464b7944fc87283732ebeb",
+    "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance$Adapter.class": "e2dffc54d1b6f389c53d48ccc5680ed30056c6ddc5cae5222196dc63cb72fec7",
+    "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance$IndexedTree.class": "d171dc1c66704adda18cf93499cad4fd4a665dd219fd9ae7931143bfc7bee3d8",
+    "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.class": "19ba935f45cf5e547c30b0d2ff746f9dd811cfe3bba3dd8051b95c9534aceaa0",
+    "build/engine/classes/is/fivefivefive/CanDis/core/QuantiVar$Cardinality.class": "e0dfc0a7050da22a2d6bd94aba7099b8f895c0b4453b67b5a2bea8ed1a37f6ce",
+    "build/engine/classes/is/fivefivefive/CanDis/core/QuantiVar$Quantifier.class": "97f048cd9461fc8d7a52e24843fdea36af2fa2a459c13260d2d6ecb83819404e",
+    "build/engine/classes/is/fivefivefive/CanDis/core/QuantiVar.class": "09845f3b4df7f2f373ea9366a9c502da75bd7ebe3962b41227cb6452a897343b",
+    "build/engine/classes/is/fivefivefive/CanDis/core/RenamedIdUnionFind$RenamedId.class": "4434992ad0fa5f74c499b80c01216d3e69aa443a70cb88df071d9108575c7716",
+    "build/engine/classes/is/fivefivefive/CanDis/core/RenamedIdUnionFind$RootPath.class": "dff2095cd2c4818173e2224a6ccacf3d365cd51b129dec8673e1ad3f2fce365a",
+    "build/engine/classes/is/fivefivefive/CanDis/core/RenamedIdUnionFind.class": "bd11b838783cd9e0147c8c76beac956f92728f59afc727a1e828cee69d8d6312",
+    "build/engine/classes/is/fivefivefive/CanDis/core/SlotPermutationGroup.class": "d16cdc6bf50e02eccfabf37bb8697f2ee15e603c86de7dc6dacab984281a2e1d",
+    "build/engine/classes/is/fivefivefive/CanDis/ir/IRAgent$1.class": "722721b734f0ab2d14ae311d64b734508bd86b9771a61907bf64024152fec0fe",
+    "build/engine/classes/is/fivefivefive/CanDis/ir/IRAgent$DiagnosticsObserver.class": "a42bb0ea6909c6d85159000ae49d9dcebd531705de546fd4615293a856e2f55b",
+    "build/engine/classes/is/fivefivefive/CanDis/ir/IRAgent$TemporalReferenceClaim.class": "f9add7d295df763281aeef8545a2921ff0f2d326e7f56d780a6687fddc84f5d6",
+    "build/engine/classes/is/fivefivefive/CanDis/ir/IRAgent$TemporalReferenceEvidence.class": "b8475f590f4b1e125a8d76f11b7631bf3409a769daf4b7d9b8035914830a0a6f",
+    "build/engine/classes/is/fivefivefive/CanDis/ir/IRAgent.class": "f220b40340404ea4765f996ae8c370bad77da40199aacae898ea5f7eeedc8929",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/ArityPolicy$Kind.class": "ab308f8e97183bb046d7bf90e30d8f1dfb48e0f2b0da6ef098acbad59f213df6",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/ArityPolicy.class": "0fd949db2457cf18c41089e9b9f012b00aca05364db07de0c8e01941c94d4feb",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/FlatLicense.class": "1af784d5c7975bca6eac5a07925b2c493ba83eb5ebd6dd032e3d4700c7203309",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/LeanVerifiedRewrite.class": "ddf5028e5a589c6c7aeb7505f611c3594c8a1d4962d4ca715056335646b96959",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/PortPath.class": "762cead86a1e9cd2ceaa70b10218d7fd633262404b630fbec8d71bf632cd12b1",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/SemanticProfile$Authority.class": "2c73050ad9c18d727ccc569bd4f558ffacf52c843654f11ff5afd3a97e981169",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/SemanticProfile$OverflowMode.class": "b76bf074dde852ee7af08a83aaa6299b3b94f17f624f1d5313c42eead89082ac",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/SemanticProfile.class": "f17b606a9b6e38cc747d1b5f8fa70737155d18b754f0df52b856f785a66185d2",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/SiblingQuotient.class": "262e9b040fcc9710305b52b0593e2cc8e2c6ef31e32cd20998d0182c8e5df69c",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/StructuralKey.class": "b430906d4fd8447b6e437eb7d8a02bfa0be0582010fd246d91b6af944d7da96b",
+    "build/engine/classes/is/fivefivefive/CanDis/theory/UnitLicense.class": "b1e02cb5a7a9b2405d0bbce8e6030a3f19b903c512cf794b5c126f54c2a5582f",
+    "build/engine/classes/live/AstFeedback$Candidate.class": "4b0d6f4ab305794d1cca3c794d00cd72db86f7241baabd08d8b1ca6d0c7f18bb",
+    "build/engine/classes/live/AstFeedback$Locations.class": "7c178d236f8cdf24dd5cc1651172ba7717f0059cb72719576f58f97eb92f460f",
+    "build/engine/classes/live/AstFeedback.class": "c13de0cadf38f3429d4411815e87d101f417588b113896618cd80a12d2d70f7f",
+    "build/engine/classes/live/BehaviorFeedback.class": "92e4999cc1aba3ef228928b7883a498a7689343138f97829337ad54f455790ae",
+    "build/engine/classes/live/BridgePolicies.class": "f6cad1b27a714d5b16cced73e0088eda673e60dad25ee5bce7006160e644609f",
+    "build/engine/classes/live/CanonicalLocator$1.class": "66366e08aa4ff9eb013f09f5a4b6bf37936f19b349c306dcf48e7eebd256d0e2",
+    "build/engine/classes/live/CanonicalLocator$FormIndex.class": "41906e7047814f6aa6b687f2593b15db54f69975b2eefa614103b55b2a0b4a2d",
+    "build/engine/classes/live/CanonicalLocator$Group.class": "3d294e9f55706eb5619037dd3ab0ab8151350fe5077e2161401f4c8fab5e9d0e",
+    "build/engine/classes/live/CanonicalLocator$Span.class": "64b32d1c24d543f41eac91a560bf63846c10367611c501b15a93feb42e76bb13",
+    "build/engine/classes/live/CanonicalLocator$Token.class": "2c88eb93403c5f4c1af6a34a655b444d9541cded96d9ddb3cf294f6b20b8a408",
+    "build/engine/classes/live/CanonicalLocator.class": "babd480fa79bff9593e5b5ff8d3df8cb8d9df8ddf47a11658982bb3a0f7d509e",
+    "build/engine/classes/live/EngineSelfTest.class": "0f6a676d1dca273a678b084cffc548878d1e377327cb5238405897ccce051982",
+    "build/engine/classes/live/EngineWorker.class": "0b67cec5ed4e81045af94ddf995ff4ce36a858d4f7f3daaef3e3490d29a8e003",
+    "build/engine/classes/live/ExerciseValidator$Rejected.class": "3fec7cd3a9ee0fd50bfdeacd16ebae97a3be0e642997b6fe7af69e9b78286f41",
+    "build/engine/classes/live/ExerciseValidator.class": "fe56d89f0ad9c629b45aa0ecf8bda27f09f4ea554456295217dff1c0d2ffb1ef",
+    "build/engine/classes/live/LiveFeedback$Candidate.class": "0fa370e491aa286cd51032ecdaf03d2e6e7e1d9fe79cec80ed619f385036d941",
+    "build/engine/classes/live/LiveFeedback.class": "30340f6a14aec40358ece105c3a560873a060afb5248984a9d07161f3bb40657",
+    "build/engine/classes/live/SourceLocator$1.class": "8e29fd0504ad559b8d13206f71b3deea28c7caf688f9baca392f596c265cac7f",
+    "build/engine/classes/live/SourceLocator$Range.class": "d8f3ee84eacf9412088cdc020a0dc8fa36dbcef766155a7578894cf0c24895a3",
+    "build/engine/classes/live/SourceLocator.class": "3aac08000bdd2f111ecf54c30c63152ebb1bf0c8dc8c6f52d79414150aba9386",
+    "build/engine/classes/live/UploadInspector$Declaration.class": "14599dbbbcaf1cd5b035fae746cfcd64c9317e75bdb52cb0905be64d0f9d248c",
+    "build/engine/classes/live/UploadInspector.class": "fd317f0eafbc7ab9432e6adfec137d15173b9c5ac0389cc5edc087a0a117e460",
+    "build/engine/classes/live/VerifiedPoolSelection$Result.class": "14c36a874317d6d5611ec24c8b3a3e3c7f21499ceeee80dab3ce7f8c3a9586f0",
+    "build/engine/classes/live/VerifiedPoolSelection.class": "5feba428a665260fbe392588b74273bca5d056357fee16200b2c9c1ee2cdd71a",
+    "build/engine/classes/live/WorkerJson.class": "9e0f122aa68bc77d42ed09a9ecf02d50b6f28a88d11a5bab371df7a44941f330",
+    "build/engine/classes/live/WorkerSafety$PoisonedWorker.class": "0f8aff36d26c03894da55827692de9bf2367463e3581edea3278fd57898da191",
+    "build/engine/classes/live/WorkerSafety.class": "8461ef7c309534555d68f0aeb69f0267bb7ea4882a16d114f48f8665aa288b2c",
+    "closure/traffic-refinement/observation-baseline.json": "8b26da69a93fa736a2502a73317614fe4ea1fe73a54923658076d99125ee4688",
+    "closure/traffic-refinement/observation-baseline/server.py": "524021e8cb2a89427441e4ea1c2eee6e153a064e3dfefcd1c229a9677dddaba5",
+    "closure/traffic-refinement/observation-spec.json": "6a65549570285c0c4b5acc57d671acb60cbabeee078d02edee39e84ec0b1e8a9",
+    "engine_workers.py": "66e5d239301c285210a5b4dfbb4b2b7766fe1de6d54907e18f171a0dc8c36b7c",
+    "exercise_sql.py": "214517aafa78e23ea0d0c741a2791265df8db47c453084d01d0de400ab4d4d7d",
+    "exercise_store.py": "c6d64f9a59ad6792cab5a5bb555f3b8eedda56c198384235ba5a315c78ade357",
+    "luna.py": "f748b36076fa6828c66c190719983faeeab74644066f663432beabd7d1c7584b",
+    "runtime_dependencies.py": "2fe10b1c6aa7c5eadb53135e61e2487fd5d0861c81fb98a581276e4f7406b974",
+    "scripts/check_ingress_functional_invariance.py": "f77d0b50a03cf634caf97a68cf036b0c9d6f60252eb13ccc89ef9d5ee4052c7f",
+    "scripts/import_correct_pools.py": "239357494453434206ad7aecc2e9ffa0aeac9cf5e5fe7f94d959f50c09cee4c4",
+    "scripts/import_exercises.py": "1fa51082960c01a8a896456bf08b2175e79e7484876a4f4305494b74448812e4",
+    "scripts/traffic_observation.py": "f1afc3a778fdc6d8f0a1cb43ef28745fed9bdbc14abd784f30c429c14a2fa1a4",
+    "server.py": "3a5683cfe1fa1b442f24d8fe3f540f72322d8eb22d1cebb852e3cfa76f3764da",
+    "tests/test_ingress_functional_invariance.py": "371250eaf3a699d3372cf9ced501a3b62c64b7f61a61010ceb34d2286f5bac25",
+    "traffic_decode.py": "3abc955160781227d77325d28a3238e317bcd754d8e05edd9b8dc9aa9bd4e04c",
+    "traffic_http.py": "24c53e150cec30bb44fe0763fbbee5b3f62b60703b0b5dcf6f573f8121ad4a80",
+    "traffic_limits.py": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+    "traffic_scheduler.py": "5e84ef9a88d7e099e0aedf8001b214d995a3386341308077afd291ba261ea867",
+    "vendor/acgn/lib/AlloyASG-Release.jar": "8d245fd222bbca8af797842d349502e1f46f7a27f5dbd70489a4e622d10de3cd",
+    "vendor/acgn/lib/AlloyASG.jar": "5adc247bae551739bb61db848eb8ba6ee3292300f126e2b286c3a298a22c9dc6",
+    "vendor/acgn/lib/AlloyParser.jar": "be040bcd26ddcf042bb629f9c2a8c56e2f8bca0c829281c5cc0d07a047474fe3",
+    "vendor/acgn/lib/alloy.jar": "ac0ee637172ed035a4ca43327d5e09c05990aa0d073887308e30f88c2471370c",
+    "vendor/acgn/lib/commons-cli-1.4.jar": "fd3c7c9545a9cdb2051d1f9155c4f76b1e4ac5a57304404a6eedb578ffba7328",
+    "vendor/acgn/lib/json-java.jar": "9971d8e62ddf0e0db8baef94a920f099659b665058981e839f6500922f8a46dd",
+    "vendor/acgn/lib/slf4j-simple-1.7.36.jar": "2f39bed943d624dfa8f4102d0571283a10870b6aa36f197a8a506f147010c10f",
+    "web/admin/app.js": "444d0197f3a8c41f58a50a6b2e434c4dcca776ebc2034187b68ca8b4ad219e44",
+    "web/admin/index.html": "90d34093d507accaba46302dcd0dbdfe4a1417683752703a934d67725b16da3b",
+    "web/admin/styles.css": "453080918b0510377c970fbeecff09df4adf810f94a976dfb2c5bd79ce9187ad",
+    "web/app.js": "61082ae883967de5a55cafa8c1a3c775aad43c210454f57082c60bb0080cf58f",
+    "web/dashboard/app.js": "aff19447a762bac5176a189ec527a1047b31c92bd41f3e3997ac58d74d780641",
+    "web/dashboard/data.json": "e937aeae44ab59254f957e80bc70525c739d8dbaaf26913df51bd8821c116580",
+    "web/dashboard/index.html": "e697af15f2ec832a17ecfd433fdb5ff3f700d44bc834f6f24f4a9b7c68f4d0f2",
+    "web/dashboard/styles.css": "a210d354f96e159830eb55e1820dacac133e31201c76dd7623b80429d3358e58",
+    "web/index.html": "c81051ce0dbdc15eb1bb1ba5c91ee54fe81036894449586455e1b01155fcedb3",
+    "web/instance-graph.js": "4c8ee517119278fa3d27d3524a7fc54597e409d54f4b9642199bbe0512c6a41b",
+    "web/styles.css": "319b9f96e2e8947c6ae11bab73a466e17ca8d9757a77798fe85dd306a044301b"
+  },
+  "status": "PASS"
+}

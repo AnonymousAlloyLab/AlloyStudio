@@ -1,0 +1,35 @@
+test_admission_rejects_bypassed_profile_and_truthy_selector_before_allocation (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_bounded_server_and_public_views_retain_detached_profile_values (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_bounded_server_rejects_invalid_ingress_before_locks_threads_or_socket_init (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_invalid_or_raising_clock_precedes_admission_allocation (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_runtime_state_matches_projection_and_is_detached_from_caller_profile (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_separate_admission_instances_do_not_share_occupied_collections (test_http_profile_initialization.HTTPConstructorIntegrationTests) ... ok
+test_bad_profile_and_selector_are_rejected_before_clock_sampling (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_clock_result_requires_exact_builtin_integer (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_complete_profile_is_copied_without_changing_accepted_values (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_every_field_is_revalidated_at_ingress (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_exact_numeric_types_and_existing_field_maxima_are_checked (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_existing_three_relationships_are_rechecked_on_corrupted_profiles (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_initial_projection_has_exact_selected_values_and_empty_occupancy (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+test_instance_dataclass_metadata_cannot_replace_registered_values (test_http_profile_initialization.HTTPProfileProjectionTests) ... FAIL
+test_profile_type_cannot_be_duck_typed_subclassed_or_impersonated (test_http_profile_initialization.HTTPProfileProjectionTests) ... ok
+
+======================================================================
+FAIL: test_instance_dataclass_metadata_cannot_replace_registered_values (test_http_profile_initialization.HTTPProfileProjectionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/augustus/Live_Programming/tests/test_http_profile_initialization.py", line 73, in test_instance_dataclass_metadata_cannot_replace_registered_values
+    self.assertEqual((copied.public_handlers, copied.control_handlers), (17, 3))
+AssertionError: Tuples differ: (30, 2) != (17, 3)
+
+First differing element 0:
+30
+17
+
+- (30, 2)
++ (17, 3)
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.011s
+
+FAILED (failures=1)

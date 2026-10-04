@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "kind": "specification-first-security-contract",
+  "version": 1,
+  "status": "SPECIFIED_NOT_VERIFIED",
+  "specification": "docs/sqlite-security-spec.md",
+  "privateAdministration": "Private CLI plus authenticated batch upload under closure/admin-spec.json",
+  "parserBoundary": "SQLeanParser parses and schema-checks finite templates before generation; only registered parameterized statements execute at runtime. Fixed DDL and connection controls are separately trusted.",
+  "claims": [
+    {
+      "id": "SDB-01",
+      "requirement": "SQLite is authoritative; exact ordered legacy migration; existing invalid DB never falls back or gets overwritten.",
+      "tests": [
+        "migration_parity",
+        "sqlite_without_json",
+        "existing_database_authority",
+        "invalid_database_no_fallback"
+      ]
+    },
+    {
+      "id": "SDB-02",
+      "requirement": "All data queries derive from actual SQLeanParser parsed, validated, round-tripped templates; artifact mismatches and unsupported templates fail closed.",
+      "tests": [
+        "real_sqlean_generation",
+        "query_artifact_tampering",
+        "unknown_query",
+        "missing_duplicate_parameter",
+        "unsupported_sql"
+      ]
+    },
+    {
+      "id": "SDB-03",
+      "requirement": "Typed parameters are bound; malicious predicate/ID text cannot alter SQL structure or execute an additional statement.",
+      "tests": [
+        "sql_injection_values",
+        "parameter_type_arity",
+        "no_arbitrary_sql_interface",
+        "boolean_integer_rejection",
+        "signed_integer_bounds",
+        "invalid_unicode_nul_rejection"
+      ]
+    },
+    {
+      "id": "SDB-04",
+      "requirement": "Private imports require one or more distinct contained, parsed/type-checked oracles; Alloy API must find satisfiable facts and bounded equivalence of every additional oracle/correct body to primary. Counterexamples, malformed bodies, unsupported cases and timeouts reject atomically. First oracle controls behavior independently of pool order.",
+      "tests": [
+        "multiple_oracles",
+        "both_metric_pool_inclusion",
+        "primary_behavior_oracle",
+        "invalid_later_solution",
+        "invalid_import_fields",
+        "alloy_equivalence_unsat",
+        "alloy_counterexample_rejection",
+        "inconsistent_facts_rejection",
+        "valid_unsatisfiable_primary",
+        "body_escape_rejection",
+        "scope_limit_witness",
+        "equivalence_timeout_rollback"
+      ]
+    },
+    {
+      "id": "SDB-05",
+      "requirement": "Import is atomic, duplicates never overwrite, schema/integrity checks reject invalid relational state.",
+      "tests": [
+        "transaction_rollback",
+        "duplicate_id",
+        "schema_version_shape",
+        "orphan_or_missing_oracle",
+        "stable_ordinals",
+        "unexpected_trigger_view_index_rejection",
+        "consistent_read_snapshot"
+      ]
+    },
+    {
+      "id": "SDB-06",
+      "requirement": "Learner routes read only; authenticated admin writes follow the separate admin specification. Existing public projection excludes private predicates and DB/parser/config artifacts.",
+      "tests": [
+        "readonly_web_store",
+        "no_unauthenticated_import_aliases",
+        "public_projection",
+        "private_routes",
+        "no_credentials"
+      ]
+    },
+    {
+      "id": "SDB-07",
+      "requirement": "SQLite-only deployment includes data/query dependencies, consistent snapshots and administrator additions; no original source checkout or Lean runtime needed.",
+      "tests": [
+        "relocated_sqlite_startup",
+        "sqlite_iis_package",
+        "snapshot_admin_additions",
+        "no_external_parser_runtime",
+        "bounded_failures"
+      ]
+    },
+    {
+      "id": "SDB-08",
+      "requirement": "Private database/import publication rejects unsafe paths and never modifies an existing DB implicitly.",
+      "tests": [
+        "linked_paths",
+        "failed_migration_preserves_existing",
+        "import_size_limits",
+        "lock_timeout",
+        "aggregate_engine_request_limit",
+        "backup_busy_deadline",
+        "ancestor_reparse_path"
+      ]
+    },
+    {
+      "id": "NAV-01",
+      "requirement": "Previous/Next follow filtered order, disable at edges/loading, preserve drafts and invalidate stale work.",
+      "tests": [
+        "navigation_edges",
+        "navigation_filters",
+        "navigation_drafts",
+        "navigation_races",
+        "navigation_mobile"
+      ]
+    }
+  ],
+  "trust": [
+    "Pinned SQLeanParser source/binary and Lean 4.34.0 toolchain",
+    "Python sqlite3 and SQLite execution/transaction semantics",
+    "Registered query generator and runtime adapter",
+    "Alloy parser/solver bounded results and administrator intent for the primary oracle; legacy classified correctness labels",
+    "Source provenance and SHA-256",
+    "OS, filesystem permissions and hardware"
+  ],
+  "excluded": [
+    "Arbitrary SQL support",
+    "Universal SQL/parser/SQLite semantic equivalence",
+    "Empty-axiom proof for SQLeanParser",
+    "Unbounded equivalence and agreement of primary oracle with natural-language specification",
+    "Native Windows/IIS execution in the Linux verification environment"
+  ],
+  "supersededBy": "closure/admin-spec.json for authenticated HTTP administration and add-only snapshot publication"
+}

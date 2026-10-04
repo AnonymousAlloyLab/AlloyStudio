@@ -1,0 +1,86 @@
+{
+  "files": [
+    {
+      "path": "witness.py",
+      "sha256": "6c2b5046caf46a1e9c66854f9db2015a4b7e8135a206baef8196f525f3b0d567",
+      "size": 8243
+    },
+    {
+      "path": "witness-results.json",
+      "sha256": "be368500496a2938724d249cb6d27a2227926825b58609553bbfcd601e0ff3f6",
+      "size": 6116
+    },
+    {
+      "path": "baseline-hashes.json",
+      "sha256": "3f721dbb18981fadab905119a087195dfa701f9f8dc68a2fc72c99c363804c76",
+      "size": 1836
+    },
+    {
+      "path": "recommendation.json",
+      "sha256": "c7718572b8a41858ea6bfdc1bbba95aa51d2153a447f5472305c702f236831cc",
+      "size": 5168
+    },
+    {
+      "path": "baseline/closure/traffic-refinement/status.json",
+      "sha256": "5b730ba5ebf93024b9abeb90e545e67fa0882c98d485f7d69edcc53b1f327f7f",
+      "size": 15499
+    },
+    {
+      "path": "baseline/docs/backend-performance-spec.md",
+      "sha256": "aeaa777c165f634696148499fd1e6a1afd7d9e4e03693f3a2b67ab8629f01c3a",
+      "size": 43048
+    },
+    {
+      "path": "baseline/docs/performance-implementation.md",
+      "sha256": "0d59e85d400560677481dfc3de3e74bf7d2633abdb0ea5d491bc12ab28c05577",
+      "size": 13926
+    },
+    {
+      "path": "baseline/docs/traffic-obligation-progress.md",
+      "sha256": "ee5a2cf117af13e410bfb2bc12d6711946c017a8f1a108c24bd109d03a035d2c",
+      "size": 7541
+    },
+    {
+      "path": "baseline/engine_workers.py",
+      "sha256": "66e5d239301c285210a5b4dfbb4b2b7766fe1de6d54907e18f171a0dc8c36b7c",
+      "size": 18145
+    },
+    {
+      "path": "baseline/formal/traffic_config/block.json",
+      "sha256": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06",
+      "size": 4465
+    },
+    {
+      "path": "baseline/runtime_dependencies.py",
+      "sha256": "2fe10b1c6aa7c5eadb53135e61e2487fd5d0861c81fb98a581276e4f7406b974",
+      "size": 15195
+    },
+    {
+      "path": "baseline/server.py",
+      "sha256": "6d471f0b5b350fcd1a6bd5cc0efa861607258e34ee2c0d89a25fe6072896abde",
+      "size": 59798
+    },
+    {
+      "path": "baseline/traffic_http.py",
+      "sha256": "ba059548aff70911e474cd8cd3cf84348f34e5b44bde4464c855af8cb7cbc51e",
+      "size": 17266
+    },
+    {
+      "path": "baseline/traffic_limits.py",
+      "sha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+      "size": 1626
+    },
+    {
+      "path": "baseline/traffic_scheduler.py",
+      "sha256": "5e84ef9a88d7e099e0aedf8001b214d995a3386341308077afd291ba261ea867",
+      "size": 15326
+    }
+  ],
+  "kind": "preserved-baseline-counterexamples-not-closure-evidence",
+  "preservation": "Raw baseline sources and witness outputs copied byte-for-byte before production repair; do not mutate them or relabel earlier TCFG01/TB01 results.",
+  "reproduce": "python3 -B witness.py",
+  "reproductionNote": "Run witness.py from a writable copy to preserve immutable archived results; it imports the archived baseline traffic_http.py/traffic_limits.py.",
+  "schemaVersion": 1,
+  "sourceDirectory": "build/trf-closure/next-profile-audit",
+  "witnessCount": 5
+}

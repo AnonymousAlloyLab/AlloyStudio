@@ -1,0 +1,91 @@
+{
+  "claim": "At the registered successful header/body completion cuts, an observed finite monotonic clock sample is strictly before the fixed phase deadline; buffered reads cannot bypass these checks and beginning the body phase cannot erase an expired header phase.",
+  "closesParent": false,
+  "excluded": [
+    "Complete original TRF-01 decoder/schema validation, pre-handler memory/capacity refinement, lane composition and enabled private control topology",
+    "Real elapsed wall time after a sampled completion cut; CPU preemption and total handler lifetime",
+    "Actual deployment, native Windows/macOS, IIS/Cloudflare request transformations",
+    "JSON semantic parser proof, full request-line grammar and media-type parameter ambiguity"
+  ],
+  "guard": {
+    "accepted": "now < deadline",
+    "equality": "reject",
+    "reject": "now >= deadline"
+  },
+  "id": "TING01",
+  "mapping": {
+    "DeadlineReader._recv": [
+      "guard",
+      "work",
+      "guard",
+      "deliver"
+    ],
+    "DeadlineReader.begin_body": [
+      "guard",
+      "reset"
+    ],
+    "DeadlineReader.check_deadline": "translated guard expression",
+    "DeadlineReader.read1": [
+      "guard",
+      "work",
+      "guard",
+      "deliver"
+    ],
+    "DeadlineReader.readline": [
+      "guard",
+      "work",
+      "guard",
+      "deliver"
+    ],
+    "Handler.parse_request": [
+      "work",
+      "guard",
+      "deliver"
+    ],
+    "Handler.read_json_body": [
+      "work",
+      "guard",
+      "work",
+      "guard",
+      "deliver"
+    ]
+  },
+  "original": {
+    "dependsOn": [
+      "TRF-00"
+    ],
+    "id": "TRF-01",
+    "plannedPassCondition": "Model theorem and unique concrete decoder/admission mapping; malformed, ambiguous, oversized and slow requests never dispatch; pre-handler allocation is bounded.",
+    "statement": "Every dispatched request was strictly framed/decoded and admitted within its header/body/deadline budgets; connection capacity is reserved before allocating a handler. Public and private control ingress have separately enforced nonborrowable admission, with combined limits."
+  },
+  "parent": "TRF-01",
+  "phaseReset": "Use the single returned validated clock sample as origin. Formal duration denotes the realized normalized difference after finite floating addition, not an assumption that floating arithmetic is exact real arithmetic.",
+  "requiredBuilds": 2,
+  "requiredWitnesses": [
+    "buffered header at or beyond deadline rejects",
+    "late stdlib header completion cannot dispatch",
+    "expired header cannot reset into body",
+    "late JSON decoder completion cannot dispatch",
+    "on-time public/control request compatibility",
+    "missing final guard accepted-but-unsafe counterexample in model",
+    "guard comparison mutation rejected by independent Lean theorem"
+  ],
+  "reviewLadder": [
+    "gpt-6-luna",
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "gpt-6.1-sol",
+    "gpt-6-astra",
+    "gpt-6-astra"
+  ],
+  "sampleSemantics": "Each work segment may advance logical time arbitrarily. Guard reads a fresh explicit clock sample. Delivery and reset are unconditional actions in the model; the independent static discipline, not the evaluator, requires a guard after the final work segment.",
+  "schemaVersion": 1,
+  "trust": [
+    "Pinned Lean4.34.1 kernel/compiler and empty transitive axiom audit",
+    "Closed AST translator and recorded host-function call/return interpretations",
+    "CPython finite float clock order embeds into unbounded signed logical integers; real monotonic clock, arithmetic, socket/JSON/stdlib semantics and successful ordinary execution",
+    "Successful guard sample is the observation cut, not an assertion that no scheduler pause occurs between that sample and the next Python instruction",
+    "Host filesystem/process/network namespace isolation, SHA256 and hardware"
+  ],
+  "workInterpretation": "The registered AST interpreter collapses admitted non-phase-mutating statements and early exception/rejection paths into work; accepted paths are checked exactly. Required primitives and consumers are structurally closed; every check_deadline guard is extracted in order rather than inferred from a source hash."
+}

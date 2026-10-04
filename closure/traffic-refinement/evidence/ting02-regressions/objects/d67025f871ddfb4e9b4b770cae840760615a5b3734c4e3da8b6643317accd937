@@ -1,0 +1,108 @@
+name: CI
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  OPENAI_DISABLED: '1'
+jobs:
+  linux:
+    name: Linux build and regressions
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: Fresh build and private IIS package validation
+        run: python scripts/ci_check.py build
+      - name: Engine self-test
+        run: python scripts/ci_check.py runtime
+      - name: Python regressions
+        run: python scripts/ci_check.py python
+      - name: Portal browser regressions
+        run: python scripts/ci_check.py browser
+      - name: Dashboard browser regressions
+        run: python scripts/ci_check.py dashboard
+      - name: Generate safe dashboard summary
+        if: always()
+        run: python scripts/ci_dashboard.py
+      - name: Upload dashboard only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dashboard-linux-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/ci-dashboard/index.html
+            build/ci-dashboard/app.js
+            build/ci-dashboard/styles.css
+            build/ci-dashboard/data.json
+          if-no-files-found: error
+          retention-days: 14
+  portability:
+    name: Portable build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+      - name: Build through the portable entrypoint
+        run: python scripts/ci_check.py build
+      - name: Validate every dependency and run the engine
+        run: python scripts/ci_check.py runtime
+      - name: Persistent transport, scheduling and HTTP boundary regressions
+        env:
+          PYTHONPATH: ${{ github.workspace }}/tests
+          TMPDIR: ${{ github.workspace }}/build/ci/tmp
+          TMP: ${{ github.workspace }}/build/ci/tmp
+          TEMP: ${{ github.workspace }}/build/ci/tmp
+        run: python -m unittest test_engine_workers test_traffic_scheduler test_traffic_http test_traffic_portal test_luna_sharing -v
+      - name: Generate safe dashboard summary
+        if: always()
+        run: python scripts/ci_dashboard.py
+      - name: Upload dashboard only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dashboard-${{ matrix.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/ci-dashboard/index.html
+            build/ci-dashboard/app.js
+            build/ci-dashboard/styles.css
+            build/ci-dashboard/data.json
+          if-no-files-found: error
+          retention-days: 14

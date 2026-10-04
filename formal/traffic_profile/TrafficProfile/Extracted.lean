@@ -1,0 +1,90 @@
+import TrafficConfig.Extracted
+import TrafficProfile.Model
+
+/- Generated from the admitted production profile AST. Do not hand-edit. -/
+namespace AlloyStudio.HttpProfile.Extracted
+open AlloyStudio
+open TrafficConfig
+
+def accepted (p : Model.RawProfile) : Prop :=
+  (TrafficConfig.Extracted.validatedInt p.public_handlers 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.control_handlers 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.public_burst 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.public_rate 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.control_burst 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.control_rate 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.peer_burst 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.peer_rate 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.peer_entries 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.peer_idle_seconds 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.backlog 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.control_backlog 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.line_bytes 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.header_bytes 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.header_count 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedSeconds p.header_seconds false 300).isSome = true ∧
+  (TrafficConfig.Extracted.validatedSeconds p.body_seconds false 300).isSome = true ∧
+  (TrafficConfig.Extracted.validatedSeconds p.write_seconds false 300).isSome = true ∧
+  (TrafficConfig.Extracted.validatedSeconds p.idle_seconds false 300).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.json_depth 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.response_bytes 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.public_cache_bytes 1 67108864).isSome = true ∧
+  (TrafficConfig.Extracted.validatedInt p.public_cache_entries 1 67108864).isSome = true ∧
+  ¬ (less (Model.integerValue p.header_bytes) (Model.integerValue p.line_bytes)) ∧
+  ¬ (less 100 (Model.integerValue p.header_count)) ∧
+  ¬ (less 256 ((Model.integerValue p.public_handlers) + (Model.integerValue p.control_handlers)))
+
+instance (p : Model.RawProfile) : Decidable (accepted p) := by
+  unfold accepted
+  infer_instance
+
+def normalize (p : Model.RawProfile) : Option Model.RawProfile :=
+  if accepted p then some p else none
+
+def defaults : Model.RawProfile := {
+  public_handlers := .integer 30
+  control_handlers := .integer 2
+  public_burst := .integer 60
+  public_rate := .integer 30
+  control_burst := .integer 4
+  control_rate := .integer 2
+  peer_burst := .integer 60
+  peer_rate := .integer 30
+  peer_entries := .integer 1024
+  peer_idle_seconds := .integer 120
+  backlog := .integer 32
+  control_backlog := .integer 2
+  line_bytes := .integer 8192
+  header_bytes := .integer 32768
+  header_count := .integer 64
+  header_seconds := .floating 5 1
+  body_seconds := .floating 5 1
+  write_seconds := .floating 5 1
+  idle_seconds := .floating 5 1
+  json_depth := .integer 32
+  response_bytes := .integer 8388608
+  public_cache_bytes := .integer 16777216
+  public_cache_entries := .integer 512
+}
+
+def initial (p : Model.RawProfile) (control : Bool) (now : Int) : Model.InitialState :=
+  let limit : Int := (if control then (Model.integerValue p.control_handlers) else (Model.integerValue p.public_handlers))
+  let burst : Int := (if control then (Model.integerValue p.control_burst) else (Model.integerValue p.public_burst))
+  let rate : Int := (if control then (Model.integerValue p.control_rate) else (Model.integerValue p.public_rate))
+  let capacity : Int := (burst * 1000000000)
+  {
+    limit := limit
+    capacity := capacity
+    rate := rate
+    credit := capacity
+    last := now
+    active := 0
+    peak := 0
+    accepted := 0
+    rejected := 0
+    owners := []
+    anonymous_owners := []
+    peers := []
+  }
+
+end AlloyStudio.HttpProfile.Extracted

@@ -1,0 +1,277 @@
+{
+  "blockManifestSha256": "e1fc05d411a453ebba4ccb3be7f65d2d6ad731e565741db0c2b62653fa5519ca",
+  "claim": "TRF00-OBSERVATION",
+  "baseline": {
+    "status": "ok",
+    "metric": "acgn-fast-rewrite-canonical-distance",
+    "distance": 2,
+    "breakdown": {
+      "temporal": 0,
+      "quantifier": 0,
+      "matrix": 2
+    },
+    "canonicalForm": [
+      "some A and some A"
+    ],
+    "operations": [
+      {
+        "kind": "replace",
+        "component": "matrix",
+        "path": "matrix[0]",
+        "cost": 1,
+        "aggregate": false,
+        "description": "Inspect this operator.",
+        "replacementOperator": "no",
+        "sourceLocation": {
+          "status": "located",
+          "coordinateSystem": "body",
+          "offsetEncoding": "utf-16",
+          "precision": "node",
+          "reason": "Selected occurrence.",
+          "ranges": [
+            {
+              "start": 0,
+              "end": 6,
+              "text": "some A",
+              "startLine": 1,
+              "startColumn": 1,
+              "endLine": 1,
+              "endColumn": 7,
+              "moduleLine": 3,
+              "moduleColumn": 1
+            }
+          ]
+        },
+        "canonicalLocation": {
+          "status": "unavailable",
+          "coordinateSystem": "canonical",
+          "offsetEncoding": "utf-16",
+          "ranges": [],
+          "reason": "No learner location."
+        }
+      },
+      {
+        "kind": "replace",
+        "component": "matrix",
+        "path": "matrix[11]",
+        "cost": 1,
+        "aggregate": false,
+        "description": "Inspect this operator.",
+        "replacementOperator": "no",
+        "sourceLocation": {
+          "status": "located",
+          "coordinateSystem": "body",
+          "offsetEncoding": "utf-16",
+          "precision": "node",
+          "reason": "Selected occurrence.",
+          "ranges": [
+            {
+              "start": 11,
+              "end": 17,
+              "text": "some A",
+              "startLine": 1,
+              "startColumn": 12,
+              "endLine": 1,
+              "endColumn": 18,
+              "moduleLine": 3,
+              "moduleColumn": 12
+            }
+          ]
+        },
+        "canonicalLocation": {
+          "status": "unavailable",
+          "coordinateSystem": "canonical",
+          "offsetEncoding": "utf-16",
+          "ranges": [],
+          "reason": "No learner location."
+        }
+      }
+    ],
+    "operationSummary": {
+      "replace": 2
+    },
+    "diagnostics": [],
+    "trace": {
+      "cost": 2,
+      "matchesDistance": true,
+      "hasAggregates": false,
+      "kind": "redacted-framework-feedback",
+      "certifiedOptimalScript": false,
+      "note": "Hints only.",
+      "matrixReplayVerified": true,
+      "matrixTraceAlgorithm": "ordered-dp-unordered-assignment-v1",
+      "quantifierCostVerified": true,
+      "components": [
+        {
+          "component": "temporal",
+          "distance": 0,
+          "hintCount": 0,
+          "countMatchesDistance": true
+        },
+        {
+          "component": "quantifier",
+          "distance": 0,
+          "hintCount": 0,
+          "countMatchesDistance": true
+        },
+        {
+          "component": "matrix",
+          "distance": 2,
+          "hintCount": 2,
+          "countMatchesDistance": true
+        }
+      ]
+    },
+    "comparison": {
+      "strategy": "nearest-known-correct",
+      "poolSize": 2,
+      "evaluatedCandidates": 2,
+      "complete": true
+    },
+    "exerciseId": "synthetic-exercise",
+    "revision": 2,
+    "requestedMetric": "canonical"
+  },
+  "candidate": {
+    "status": "ok",
+    "metric": "acgn-fast-rewrite-canonical-distance",
+    "distance": 2,
+    "breakdown": {
+      "temporal": 0,
+      "quantifier": 0,
+      "matrix": 2
+    },
+    "canonicalForm": [
+      "some A and some A"
+    ],
+    "operations": [
+      {
+        "kind": "replace",
+        "component": "matrix",
+        "path": "matrix[0]",
+        "cost": 1,
+        "aggregate": false,
+        "description": "Inspect this operator.",
+        "replacementOperator": "no",
+        "sourceLocation": {
+          "status": "located",
+          "coordinateSystem": "body",
+          "offsetEncoding": "utf-16",
+          "precision": "node",
+          "reason": "Selected occurrence.",
+          "ranges": [
+            {
+              "start": 0,
+              "end": 6,
+              "text": "some A",
+              "startLine": 1,
+              "startColumn": 1,
+              "endLine": 1,
+              "endColumn": 7,
+              "moduleLine": 3,
+              "moduleColumn": 1
+            }
+          ]
+        },
+        "canonicalLocation": {
+          "status": "unavailable",
+          "coordinateSystem": "canonical",
+          "offsetEncoding": "utf-16",
+          "ranges": [],
+          "reason": "No learner location."
+        }
+      },
+      {
+        "kind": "replace",
+        "component": "matrix",
+        "path": "matrix[11]",
+        "cost": 1,
+        "aggregate": false,
+        "description": "Inspect this operator.",
+        "replacementOperator": "no",
+        "sourceLocation": {
+          "status": "located",
+          "coordinateSystem": "body",
+          "offsetEncoding": "utf-16",
+          "precision": "node",
+          "reason": "Selected occurrence.",
+          "ranges": [
+            {
+              "start": 11,
+              "end": 17,
+              "text": "some A",
+              "startLine": 1,
+              "startColumn": 12,
+              "endLine": 1,
+              "endColumn": 18,
+              "moduleLine": 3,
+              "moduleColumn": 12
+            }
+          ]
+        },
+        "canonicalLocation": {
+          "status": "unavailable",
+          "coordinateSystem": "canonical",
+          "offsetEncoding": "utf-16",
+          "ranges": [],
+          "reason": "No learner location."
+        }
+      }
+    ],
+    "operationSummary": {
+      "replace": 2
+    },
+    "diagnostics": [],
+    "trace": {
+      "cost": 2,
+      "matchesDistance": true,
+      "hasAggregates": false,
+      "kind": "redacted-framework-feedback",
+      "certifiedOptimalScript": false,
+      "note": "Hints only.",
+      "matrixReplayVerified": true,
+      "matrixTraceAlgorithm": "ordered-dp-unordered-assignment-v1",
+      "quantifierCostVerified": true,
+      "components": [
+        {
+          "component": "temporal",
+          "distance": 0,
+          "hintCount": 0,
+          "countMatchesDistance": true
+        },
+        {
+          "component": "quantifier",
+          "distance": 0,
+          "hintCount": 0,
+          "countMatchesDistance": true
+        },
+        {
+          "component": "matrix",
+          "distance": 2,
+          "hintCount": 2,
+          "countMatchesDistance": true
+        }
+      ]
+    },
+    "comparison": {
+      "strategy": "nearest-known-correct",
+      "poolSize": 2,
+      "evaluatedCandidates": 2,
+      "complete": true
+    }
+  },
+  "context": {
+    "exerciseId": "synthetic-exercise",
+    "revision": 2,
+    "requestedMetric": "canonical",
+    "body": "some A and some A",
+    "poolSize": 2
+  },
+  "baselineErrors": [],
+  "candidateErrors": [],
+  "comparison": {
+    "status": "PASS",
+    "code": "MATCH",
+    "successfulAnalysis": true
+  }
+}

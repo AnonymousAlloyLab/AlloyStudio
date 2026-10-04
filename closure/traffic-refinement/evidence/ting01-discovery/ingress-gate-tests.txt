@@ -1,0 +1,18 @@
+test_empty_missing_duplicate_and_axiomatic_inventories_are_rejected (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_every_registered_core_input_is_required (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_frozen_source_change_is_rejected (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_original_obligation_cannot_be_rewritten_or_closed_by_spec (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_registered_language_rejects_proof_escapes (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_scope_trust_and_proof_policy_cannot_be_relaxed (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_snapshot_is_independent_of_later_worktree_edit (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_snapshot_refuses_source_swap_before_consumption (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_source_manifest_cannot_drop_a_historical_dependency (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_source_manifest_hashes_must_match_actual_frozen_input (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_unregistered_proof_module_is_rejected (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_valid_fixture_retains_child_only_scope (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+test_verified_dependency_cannot_be_replaced (tests.test_ingress_deadline_gate.IngressDeadlineGateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.537s
+
+OK

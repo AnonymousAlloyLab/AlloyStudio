@@ -1,0 +1,49 @@
+TrafficConfig/Spec.lean:174:6: error: 'change' tactic failed, pattern
+  (if less number 0 ∨ minimumZero = false ∧ number = 0 ∨ less (maximum * Int.ofNat 1) number then none
+      else some (Scalar.integer number)) =
+      some (Scalar.integer number) ↔
+    RationalInterval minimumZero maximum number 1
+is not definitionally equal to target
+  (have ratio :=
+        match Scalar.integer number with
+        | Scalar.integer number => some (number, 1)
+        | Scalar.floating numerator denominator => if denominator = 0 then none else some (numerator, denominator)
+        | Scalar.invalid reason => none;
+      match ratio with
+      | none => none
+      | some (numerator, denominator) =>
+        if
+            less numerator 0 ∨
+              minimumZero = false ∧ less numerator 0 ∨ less (maximum * Int.ofNat denominator) numerator then
+          none
+        else some (Scalar.integer number)) =
+      some (Scalar.integer number) ↔
+    SecondsInterval minimumZero maximum (Scalar.integer number)
+TrafficConfig/Spec.lean:190:8: error: 'change' tactic failed, pattern
+  (if
+          less numerator 0 ∨
+            minimumZero = false ∧ numerator = 0 ∨ less (maximum * Int.ofNat (denominator + 1)) numerator then
+        none
+      else some (Scalar.floating numerator (denominator + 1))) =
+      some (Scalar.floating numerator (denominator + 1)) ↔
+    RationalInterval minimumZero maximum numerator (denominator + 1)
+is not definitionally equal to target
+  (have ratio :=
+        match Scalar.floating numerator (denominator + 1) with
+        | Scalar.integer number => some (number, 1)
+        | Scalar.floating numerator denominator => if denominator = 0 then none else some (numerator, denominator)
+        | Scalar.invalid reason => none;
+      match ratio with
+      | none => none
+      | some (numerator_1, denominator_1) =>
+        if
+            less numerator_1 0 ∨
+              minimumZero = false ∧ less numerator_1 0 ∨ less (maximum * Int.ofNat denominator_1) numerator_1 then
+          none
+        else some (Scalar.floating numerator (denominator + 1))) =
+      some (Scalar.floating numerator (denominator + 1)) ↔
+    SecondsInterval minimumZero maximum (Scalar.floating numerator (denominator + 1))
+TrafficConfig/Spec.lean:244:69: error: Tactic `decide` proved that the proposition
+  Extracted.validatedInt (Scalar.integer 0) 1 67108864 = none ∧
+    Extracted.validatedSeconds (Scalar.integer 0) false 86400 = none
+is false

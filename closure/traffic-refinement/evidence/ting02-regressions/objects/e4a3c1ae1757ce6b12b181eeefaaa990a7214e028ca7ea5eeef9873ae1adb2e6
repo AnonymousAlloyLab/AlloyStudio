@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "kind": "specification-first-security-contract",
+  "version": 1,
+  "status": "SPECIFIED_NOT_VERIFIED",
+  "specification": "docs/admin-security-spec.md",
+  "claims": [
+    {
+      "id": "ADM-01",
+      "requirement": "Password hashing, configuration isolation, disabled-by-default setup",
+      "tests": [
+        "authentication"
+      ],
+      "testPrefixes": [
+        "test_admin_auth.AdminConfigurationTests",
+        "test_admin_auth.AdminAuthTests",
+        "test_credentials.CredentialDeliveryTests"
+      ]
+    },
+    {
+      "id": "ADM-02",
+      "requirement": "Origin, CSRF, framing, bounded sessions/rate limits, expiry and rotation",
+      "tests": [
+        "http_authority"
+      ],
+      "testPrefixes": [
+        "test_admin_auth.",
+        "test_admin_http."
+      ]
+    },
+    {
+      "id": "ADM-03",
+      "requirement": "Actual Alloy grouping, complete variant equivalence and fail-closed dependencies",
+      "tests": [
+        "upload_validation"
+      ],
+      "testPrefixes": [
+        "test_admin_upload.",
+        "test_admin_http."
+      ]
+    },
+    {
+      "id": "ADM-04",
+      "requirement": "Exact original/source-body preservation and protected quotient names",
+      "tests": [
+        "source_preservation"
+      ],
+      "testPrefixes": [
+        "test_admin_upload.",
+        "test_admin_store."
+      ]
+    },
+    {
+      "id": "ADM-05",
+      "requirement": "Metadata-only Luna, manual fallback and public question review",
+      "tests": [
+        "luna_metadata"
+      ],
+      "testPrefixes": [
+        "test_admin_luna.",
+        "test_admin_browser."
+      ]
+    },
+    {
+      "id": "ADM-06",
+      "requirement": "Owner-bound bounded jobs and atomic authorized batch publication",
+      "tests": [
+        "publication"
+      ],
+      "testPrefixes": [
+        "test_admin_service.",
+        "test_admin_store.",
+        "test_admin_http."
+      ]
+    },
+    {
+      "id": "ADM-07",
+      "requirement": "Public oracle/credential redaction and immediate consistent catalogue visibility",
+      "tests": [
+        "public_projection"
+      ],
+      "testPrefixes": [
+        "test_admin_http.",
+        "test_admin_store."
+      ]
+    },
+    {
+      "id": "ADM-08",
+      "requirement": "Portable admin assets, private config, narrow IIS database permissions",
+      "tests": [
+        "deployment"
+      ],
+      "testPrefixes": [
+        "test_iis_package.",
+        "test_repository.",
+        "test_local_setup.",
+        "test_iis_launcher."
+      ]
+    }
+  ],
+  "excluded": [
+    "Unbounded Alloy equivalence",
+    "Native IIS/NTFS or Cloudflare execution in Linux tests",
+    "Semantic correctness/non-disclosure of generated question prose without administrator review",
+    "End-to-end Lean proof for new application code"
+  ]
+}

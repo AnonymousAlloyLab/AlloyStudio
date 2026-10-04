@@ -1,0 +1,10 @@
+IngressDeadlines/Spec.lean:167:0: error: Not a definitional equality: the left-hand side
+  wellGuarded Extracted.bodyProgram false
+is not definitionally equal to the right-hand side
+  true
+IngressDeadlines/Spec.lean:167:81: error: Type mismatch
+  rfl
+has type
+  ?m.3 = ?m.3
+but is expected to have type
+  wellGuarded Extracted.bodyProgram false = true

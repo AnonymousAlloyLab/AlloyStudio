@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "TING02",
+  "parent": "TRF-01",
+  "closesParent": true,
+  "original": {
+    "id": "TRF-01",
+    "statement": "Every dispatched request was strictly framed/decoded and admitted within its header/body/deadline budgets; connection capacity is reserved before allocating a handler. Public and private control ingress have separately enforced nonborrowable admission, with combined limits.",
+    "plannedPassCondition": "Model theorem and unique concrete decoder/admission mapping; malformed, ambiguous, oversized and slow requests never dispatch; pre-handler allocation is bounded.",
+    "dependsOn": [
+      "TRF-00"
+    ]
+  },
+  "claimIds": [
+    "TRF01-DECODE",
+    "TRF01-DEADLINES",
+    "TRF01-ALLOCATION",
+    "TRF01-LANES",
+    "TRF01-DISPATCH",
+    "TRF01-REGRESSION"
+  ],
+  "passPredicate": "All registered independent Lean contracts, actual source mappings, constructed negative controls, source-bound functional regressions and six advisory reviews pass; two clean offline builds have identical audited empty-axiom inventories and artifacts.",
+  "blockPredicates": [
+    "unmapped_or_ambiguous_source_transition",
+    "changed_original_obligation",
+    "unclassified_dependency",
+    "unresolved_constructed_counterexample",
+    "stale_input_or_review",
+    "failed_proof_or_axiom_audit",
+    "failed_required_witness_or_regression",
+    "nondeterministic_required_artifact"
+  ],
+  "operationalProfile": {
+    "platform": "Linux CPython direct HTTP at a single process, fixed validated TrafficProfile, one public listener and zero or one literal-loopback control listener",
+    "dispatchCut": "last successful sampled ingress check before the registered route operation; OS scheduling latency after a sample is not elapsed-time proof",
+    "handlerAllocation": "reservation before thread/handler creation; reservation retained until thread has terminated, with at most one accepted-unreserved socket per serialized listener",
+    "body": "positive declared length within route limit, exactly that many bytes, strict bounded UTF-8 JSON object, one request per connection",
+    "control": "when enabled, independent nonborrowable handler/burst/refill capacities with sums; disabled topology makes no private availability claim"
+  },
+  "publicClaims": [
+    "docs/strict-ingress-closure.md"
+  ],
+  "verificationDistinctions": {
+    "PROVED": "Lean safety statements for the extracted transition programs under concrete initial state and independently specified grammar/guards",
+    "CHECKED": "closed Python AST correspondence and source/dependency hashes",
+    "TESTED": "finite socket, scheduling, byte-grammar and production analysis differential witnesses",
+    "TRUSTED": "Lean distribution, registered translators and audits, CPython primitive/stdlib/socket/thread/lock/JSON/regex semantics, monotonic clock sample order, host OS/filesystem/hardware and SHA-256",
+    "OUT_OF_SCOPE": "unlisted future source revisions, external IIS/Cloudflare HTTP normalization, native Windows/macOS execution, whole-process RSS, kernel resource allocation, distributed traffic and unsampled scheduling latency"
+  },
+  "noAdditionalProofAxioms": true,
+  "internetDuringProving": false,
+  "requiredCleanBuilds": 2,
+  "reviewModels": [
+    "gpt-6-luna",
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "gpt-6.1-sol",
+    "gpt-6-astra",
+    "gpt-6-astra"
+  ],
+  "derivedPublicRenderings": [
+    "README.md",
+    "docs/releases/v0.0.4.f1-alpha.md"
+  ]
+}

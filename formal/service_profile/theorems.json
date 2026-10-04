@@ -1,0 +1,958 @@
+{
+  "block": "TCFG03",
+  "schemaVersion": 1,
+  "theorems": [
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.Traffic.profile_wellFormed",
+      "typeSha256": "baebcfc1b8b7777d7cbe543425a0bef3622eb6fc453d55ad94ca82edc87e3982"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.default_huge_integer_rejected",
+      "typeSha256": "712b26692dcf68fd32f00758f1c0e9f90dc4ad68a6ba909cd46db6b264ac30a3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.default_maximum_admitted",
+      "typeSha256": "3946e2cb7fab26a4493cac6a146937363ad9030d3c9bc231b65676f36d704c47"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.default_negative_rejected",
+      "typeSha256": "bfb81c1bf184fd26c5360cc149cd8289749be88cee5deddef2f1ca0d656c4dfc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.default_oversized_rejected",
+      "typeSha256": "882552d1e57f8192a1bf1d9cdadd2b06b9f071cc64f850141d1c408552da45a1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.default_zero_rejected",
+      "typeSha256": "8e4d5899c532698591ef438e39a468787dbf9bba06a00e1508d509d8439c5cff"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.floating_int_rejected",
+      "typeSha256": "3e5dc7fed41f4afd291b14b18ea4a54a5bec52db6239c802a03dff680e82421a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.fractional_seconds_admitted",
+      "typeSha256": "36e6c9a8eac3be0f28783027e0cf7dececd7dfa4332f35281a9cba585f8cb605"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.guarded_accept_iff",
+      "typeSha256": "223c226444ceb94e0beb7a3e22b287338263fbab4b63ff970bb9621c30808124"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.guarded_preserves",
+      "typeSha256": "36e5f0c5ebd832d92f87717da56dac886cad642cad114e296d3e74952ba53d2f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.integer_guard_iff",
+      "typeSha256": "f7e7a071a22a2b615064aa50947ae4d6c8b94c89019dd0dff1a25316cbad8b67"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.invalid_denominator_rejected",
+      "typeSha256": "9032047275a4547540539166e2f9882cc3358eb8b9389c0f8aa33a1874f14990"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.invalid_int_rejected",
+      "typeSha256": "7490022886eef9f63842e00a7ed9e4bdf939d25780755ab01425820728b53ebb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.invalid_seconds_rejected",
+      "typeSha256": "4b10f72215361358707a05308fe83961b1101fecd3c5a2c73729f9a262b57c87"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.lessEqual_iff_standard",
+      "typeSha256": "77c165a0dfcd2088cbe06771da5c2dc9faf01cfcbb6f7c0b2d01d33e31b123a0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.less_iff_standard",
+      "typeSha256": "65d5515bd403879673bb0bc1e745aa20ac19d1ef249bcd70e7a130628a9eb122"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.less_iff_successor_lessEqual",
+      "typeSha256": "497b5399618413d7e2c555dbc4497c3eccf83e241f5366338e7ee76349f1e382"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.nat_sub_zero_of_le",
+      "typeSha256": "28da5738ad0a976432d856df3be18d014907eefb20705d7a6daefff52ab34485"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.nonnegative_subNatNat_iff",
+      "typeSha256": "bc0b5eafc55f8a6f3467b89db0d6395a05064410dc8cc1a6a832d13b5867e125"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.not_lessEqual_iff_less",
+      "typeSha256": "bd1de5eb8ef59980472310b68e0e2d5050c0b881e9ad4475eb6a9a80d470a192"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.not_less_iff_lessEqual",
+      "typeSha256": "6f80728b6a3bab13bccd6513023e4b39e20396ca838ef3b29eb08da585f976e7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.optional_zero_admitted",
+      "typeSha256": "d6ef4485ed03b9012a2af16f2bd5b65496cd1c50f14e0988b490dc8871b280e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.positive_iff_nonnegative_nonzero",
+      "typeSha256": "a45aab3379da3cb794917237212371fa653ad4d1704d7fba69a6e36b1aaab6b2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.seconds_guard_iff",
+      "typeSha256": "ed7614c21448ac2bea941cb8fe1e917d979fdbdba612450e697bc37423cf2b4d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.validated_int_iff",
+      "typeSha256": "ab20b7d0a3859425aa0667103f2377db6ed7391e736e6ca91325dd43bf45221c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.validated_int_preserves",
+      "typeSha256": "62b5245d10b1f34e82fde4635775e5ae71f464d1c95363a16aad9d56d831c7bb"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.validated_seconds_iff",
+      "typeSha256": "7cfcefc3d7c23882ca5098bf4bdda1852acf68237fc5550ca1afbdcff348e491"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.validated_seconds_preserves",
+      "typeSha256": "b99569a528f743259da4ea8b972491a503ecc01724e90eff80be6b07717d622d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.accepted_iff",
+      "typeSha256": "99fd0b51c3c92e3ee2dffd59e3115605174b5b6a4ea50992d580d9992f0b01f0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.accepted_initial_valid",
+      "typeSha256": "7e4191bf79fddb3b11330b2c234530fd229dd8144353d94c3c761d0687093817"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.boolean_handlers_witness",
+      "typeSha256": "298428d94d4bde32b79c39e6bd5eb17e92c5d601378e198cea53fdace94ec0e5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.capacity_bounds",
+      "typeSha256": "f6ce4d60a21c0cfa1570afefb1c47e80572b995bcb4a0c33f6d52870c212f043"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.capacity_nonnegative",
+      "typeSha256": "4ad5aae28c3deb3d0a07b6c261a7dd651f4e714e028eb7f865685a7384f6a1d2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.count_as_nat",
+      "typeSha256": "ad59df24d7113c93111b314d344deb85060808a12679a01e1f7a97c6a086f133"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.count_boundary_witness",
+      "typeSha256": "94573c4f52260ac046d0ffc4670b62fd3fcb235254da7650e3f47f3a995e3bb1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.count_bounds",
+      "typeSha256": "b9c147a28bf2fcfee2f7bf3a597542ffe763b7b4b661b1d1cce47107ae8283b6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.count_excess_witness",
+      "typeSha256": "1afd5c0339462e67362f764ee30718eb0aaa2f64c30124bf10baa306b323a43a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.count_nonnegative",
+      "typeSha256": "5628f5e8e9eb3110d9609b6de94d63b068a2cdee88482381c6bf9fe87a93e921"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.default_burst_total",
+      "typeSha256": "050be09a930d1b49889e71a110a4c0352b8ae33b7650cc204e0b304f01ef04c7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.default_control_negative_clock_witness",
+      "typeSha256": "8ff5286d41ae7b9b128158c08e2bb7d382a36b6ad080d8b8db2d13f6428aba9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.default_handler_total",
+      "typeSha256": "d13966ecf946179be820789b039413f34c74b0f912adb5310446df6a3ff0d51f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.default_public_witness",
+      "typeSha256": "9a1992254e1c62734d520b9a7b7b0401c2384b89ec746f9056361273c94c3b69"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.default_rate_total",
+      "typeSha256": "586d54d0b49ba14bb383c137f0398f755ce549abbe23364f5cc6773c27d1ad91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.defaults_accepted",
+      "typeSha256": "0dfffe422750758a9e24773d5fc9093dbd54ac1622959e995b9c777e9350846a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.defaults_exact",
+      "typeSha256": "74f314e75fef771ed3fade67988f7e22adc5b264fa728867a23d29bd34ab99a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.defaults_normalize",
+      "typeSha256": "5d6524c54bec107559571b759cd96f2c20d9e3c71620d39be7d72d0d4203390b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.defaults_wellFormed",
+      "typeSha256": "f44953debf4657ef9e6194d1e8e7d9db1dc7e128c041afcafef388e9410d46c9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.duration_boundary_witness",
+      "typeSha256": "eb01e84b5df3d2cd2c0ea5fa96aadf42036e4c80a251c83e2c31f26806ff61d3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.duration_excess_witness",
+      "typeSha256": "29e13ce6c0e2b9709cbc7875515e605baee1f3dc70ad35b9f0cce8499cc9b6f7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.handler_boundary_witness",
+      "typeSha256": "ccf426e994fdf0725031c0314126c048154b4e77825f91f591093943730c299d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.handler_bounds",
+      "typeSha256": "4ccf7052ee3744c8081d47971f776bf7b172332fd26e18c6c0b6e385e9deb5ae"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.handler_excess_witness",
+      "typeSha256": "8c38149676832d6a3e6fffe8248706c5d2ab4661b4a4a0e9865cac4f8240da8c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.header_boundary_witness",
+      "typeSha256": "571bb566a0b5f3063f317272c15ce63774cdfc41c7ac1c0c169374329f3c4031"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.header_excess_witness",
+      "typeSha256": "8f5a3ac94da47e0a515f47db61781363280451d34d3880b22d54cffc65d53b7d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.initial_exists_unique",
+      "typeSha256": "95d269a1e0ca5801a920061801fb92c5f4d29329b7c21f0f29c8e15105dd9971"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.initial_last",
+      "typeSha256": "0cb63563280fa68bd17c2a5e535e0d957cf6e72b7c197b46ab1baaa241ab2271"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.initial_relation",
+      "typeSha256": "14e0a670b7dd6f8c0e94e873aff0afc2c3deca6bb1eb1fdd84899b22b2647a91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.initial_unique",
+      "typeSha256": "1a946fd07f60473962368b167cb55d214acb6d28147479e92e4667fb9078ed48"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.initial_valid",
+      "typeSha256": "46a60efce5bc90ba4e484fcde13ec6ba5b2d17c6a31f5e0cc577813cfef9a543"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.integer_isSome_iff",
+      "typeSha256": "400ac3f63143bc118a5096c618a90422ed5bb43f07ae7bd436f42c9f045ab75f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.line_excess_witness",
+      "typeSha256": "9452660ade2a3686e649b2360c7e91a7023cbfa722fdb9eb1bdb8641743158fe"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.normalize_iff",
+      "typeSha256": "cbf625e64c78912f41aa89ed519c1232477a99383d009b214ff03dd240eff490"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.normalize_preserves",
+      "typeSha256": "5086f2301b610e917dd485d8b3ff97d66a044d1d230187542427a1ab9062beb2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.relation_iff",
+      "typeSha256": "0b86a16f12e2e505296acf3522eaf486e23f403afcfc6279b893a6d4e502ae60"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.seconds_isSome_iff",
+      "typeSha256": "78165105ae1df6def920c7ee5f02eeb1129eee2790fd2a6ff8c6a6bc1f5e8f25"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Spec",
+      "name": "AlloyStudio.HttpProfile.Spec.zero_handlers_witness",
+      "typeSha256": "280bada57ec930954fe759a0ee47da5329ae9c42fd796231881043ae16dd4cbd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.extracted_graph_exact",
+      "typeSha256": "0da7fabf85799429670b21bf39d7e9e7eb3da4ac4f8ce60066ecf66c47066313"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.extracted_profile_exact",
+      "typeSha256": "b777d0ef03ffe3be5752a2aa575a3f92a6876327006a78719069424532c3bb8b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_absent_configuration",
+      "typeSha256": "ca10b593add7c858e589ed837633ebca6080a7cd0a14824fabe8c9d6aa6aebba"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_administrator_idle",
+      "typeSha256": "1345e6d490b30c95edb4d64234d0cf59bc52bf5cd25d0438806d19bbbd9dbdb9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_bound_listener_count",
+      "typeSha256": "42a3dfd805b3067e9bfd108df2dcccadd9de2b949b0891b5988bb2f0f45c23f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_empty_owned_collections",
+      "typeSha256": "a761e2675e5a8748d6eba476329a285f282174e1c6ae9fb054dee79d38e0ff42"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_exists_unique",
+      "typeSha256": "d27bdf9cad4480a1004465c6094ab2db7738eb276b06f87482387ad392cb0a8b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_external_inputs",
+      "typeSha256": "50b102463ec61234e392cb915d2337df2b710a811a33296b55da730f26f4fda2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_graph_unique_paths",
+      "typeSha256": "03aa367a427a444d9b89fff57ad361dd3a9c0ac4e523e3fc459f202515669725"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_http_count_bounds",
+      "typeSha256": "d76e3957abd21f493b6f9f07d718022c97c1605c7798824828beccd9ef70376a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_no_worker_process",
+      "typeSha256": "38c883bda367af712cf3c816be4b8e9306516da0aea7b34995ef78316f088210"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_open_flags",
+      "typeSha256": "79b3a8decdd35f0ed034569f7a036f876502eea392879c8c87ccfc98fd585c91"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_preserves_explicit_inputs",
+      "typeSha256": "35e5c8197d2a4cab3ce77291cf8f2f58eb073cc5743c3d5bd8360f10a15d4292"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_public_clock",
+      "typeSha256": "7f02d1e1abe35e0e4761220b5ea0b5923a44a87ac11274b6a142202d7a2dddd5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_public_empty_ownership",
+      "typeSha256": "a0c78a186fd4160dbae141d2be03eb3842f70753f3e524fad3968a44d053abab"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_public_full_credit",
+      "typeSha256": "89823c2f41ca568de08ac1373274f339c9448c4a5d68f134225682034c47b200"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_reference_targets",
+      "typeSha256": "0447ef4826878c9669b6a7423a900facc8a4748518031a642f4c7f749f063a5f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_relation",
+      "typeSha256": "785e59c43a14d8aa723611462ab1bcdde7769864c8027a210a8db2ec9126018d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_scalar_configuration",
+      "typeSha256": "c58af2f83e78ea2af4468abd8dbf2a69c3791f16db4e464b1729115c23f45cd5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_shared_references",
+      "typeSha256": "edbd32cf7c618011e72413384d886cc72d7fdbc523ee4e7d0083ba02f6421b58"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_started_thread_bindings",
+      "typeSha256": "bceb3398381d5cc2ffbb0f01e5a407dd1294cc914ad5e29f6595f5d125857984"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_started_thread_count",
+      "typeSha256": "fd8cc79bfd335162aa70ae1ed510560be40e2ee779ee9aff425055b10e3ae44a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_unique",
+      "typeSha256": "650c39e61e11a4868cabdbeb85af116d72b25bcc9ca96f28813cce9c15e1bbbd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_valid",
+      "typeSha256": "bbac11bb4cf977db29a0c3dc967ab2df6a167d490714a23ac43278afe4db7a69"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_witness",
+      "typeSha256": "768961c90df6e5070fc66160f09da85b523a74924dd0f9c697c438d4e83192e0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.initial_zero_counters",
+      "typeSha256": "da40ab8992cc6545d58eac7454d67ab7400b3f51a29b5290f51239351fb89292"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.negative_clock_witness",
+      "typeSha256": "4fdd4997ee3be41aa1f531d6be950bc86500ffafc44a4054bf981209c33e899e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.profile_quantities_valid",
+      "typeSha256": "219722fa2e68404b753b3ff8dcf442680c91d32718cfe3a770e31a9e81967422"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.profile_rational_domain",
+      "typeSha256": "d34eaf76e285248fb5fa83240030e8bce1fd7c9b09d12414b9e7bc312049bce1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.profile_wellFormed",
+      "typeSha256": "021af883c9f074f1ad5f41c5e746e29f0b2e1151028358d6885bd44d65534f37"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.quantities_member_valid",
+      "typeSha256": "5ff30e2653693caa77ec52fbc9d953d8b36f1c4d4326177f867e60d0e3f668b7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.quantity_domain",
+      "typeSha256": "aa9a07770c007a470dd2c93282d8a2430fb3e808a0815eb2bff59dd2cf41c9de"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.related_state_valid",
+      "typeSha256": "12a8a7055ea49fbad9bbddcc3b0efee648b9490d5f0a06a76bf87a9ee85c4ec4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.related_states_equal",
+      "typeSha256": "b8d1aa202ec06cf9a4998c304bcb6ef753c85c75880c613c7185a1882095bfc5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.true_and_left",
+      "typeSha256": "535bfb01bc60b4d77bdab60567d2105af1ba46ad3691100d98e983a7b4f1c4a8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Spec",
+      "name": "AlloyStudio.ServiceProfile.Spec.true_and_right",
+      "typeSha256": "47897d7cbe7e5f2616d05063367ae82a60590342713267c7486ff9a43a96d350"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.ofNat_ctorIdx",
+      "typeSha256": "1cf31a8f6d26a8bd92b34afe9b9ce5908c8992baf1eca3910251bc2a44deb8c3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_1",
+      "typeSha256": "899082c9d8bc85a8254cf7b4ec021cb14b09785e8c275ab0f9ea8a12ac6d296c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_2",
+      "typeSha256": "680d921334e37423d02afad6ac3bf9be725a6afc5e4089123c37d9e975bdf36e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableLess._proof_1",
+      "typeSha256": "96a9a191129950aa440864c92e2609b32a49fc8b4f54459100c83eade96ec64b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableLess._proof_2",
+      "typeSha256": "8464958f3fc01c1d8d3c6c79bf8ad7bcc59a8206797044e6764e09d1c0aead8d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.Extracted.validatedInt.eq_def",
+      "typeSha256": "dffcc18a53a2175dcb676cf22bdd00443e3f07c1d2e6142367115d54d21100e3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Spec",
+      "name": "AlloyStudio.TrafficConfig.Extracted.validatedSeconds.eq_def",
+      "typeSha256": "a2fa994e78e5bc87e999f313cddc9218a742e15cd127e5b241c6b4dee6605584"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.boolean.sizeOf_spec",
+      "typeSha256": "0556cd6b0ad5b61da78118aa89858e89e830f1818c7c20adeb4ada412ffec1ae"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.nan.sizeOf_spec",
+      "typeSha256": "b3898f2cb3bce7562cfd6dfcdf164ba390ddc2aea7df860a8034bfabca86f078"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.negativeInfinity.sizeOf_spec",
+      "typeSha256": "b6af16035326ddcc9ed57cada485e2d8dfcd6ebfcd04dd257cc79ff5bc70b695"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.other.sizeOf_spec",
+      "typeSha256": "062d9e7672a52f98185ba66dce74cec40cce46f3d07308378138a3b89f45ed79"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.InvalidKind.positiveInfinity.sizeOf_spec",
+      "typeSha256": "26577c8ddff007cc045fbbce962a46c25ee4ed846c55b2cc4d54350e45544238"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.Scalar.floating.sizeOf_spec",
+      "typeSha256": "9d91b965ce093c401aae5a750065291651506ca421ef562b30749fc94282be28"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.Scalar.integer.sizeOf_spec",
+      "typeSha256": "e64423a498ea0edd7110ab800cd6aed237c99a4e9931e0713fa22b5fa203a995"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.Scalar.invalid.sizeOf_spec",
+      "typeSha256": "3add4a78533a02a43f9085276236f9e4212f58ec109567630d12334183e8111b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_1",
+      "typeSha256": "0be97c9b28534defe2b3ddb5f72a57ae4ad03a49b31da3b90fcdeac728167037"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_10",
+      "typeSha256": "817ff6e57c449892b5a42947d4a546c9a3353cb1592f3b802f6ed632d8b94b55"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_11",
+      "typeSha256": "280cbf4e76431bcc5b46034c71a94c555e3aca65793c42a18b547a0403adcb96"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_12",
+      "typeSha256": "d017bf86b0a48fea7dbfecc302950c07db5b7ea88b89179b29252dedfd4bb2fe"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_13",
+      "typeSha256": "5d5352020dee421c792e6782b3da88849dd4ff93e12f3e7fbbaad91167484918"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_2",
+      "typeSha256": "e7df3212a3b0d84aaacda5315a88093d51d8c6a9dc29a7930f54bd7d728a3067"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_3",
+      "typeSha256": "e15d57624f546cc497564c17ebb564a1680dae09d75136e683343d80b0e0287e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_4",
+      "typeSha256": "6db9e2045c191482f61efcd968018366fba66c28f29625633bbab8385fe6a220"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_5",
+      "typeSha256": "bc68979b935aba9cba0e63afb81709c126a738f822c11f89fa787b6ba8993146"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_6",
+      "typeSha256": "361e48700e28ea6b4157487483d6ca265cb066cd4360c3e5c21c0c7f55008252"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_7",
+      "typeSha256": "eef90673de2e7a4b2e2f303e216f06f13056e10f6f2838c00947d9e50c4889cf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_8",
+      "typeSha256": "c2eb69c6811e9048f7232ab862e82ac81c38a4bf3db289dfdcc65c8045c5bfb4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficConfig.Scalar",
+      "name": "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_9",
+      "typeSha256": "fadb6a7a21822a6026fb7703d5ba93a48375848848404b1f662fe2b3b1482915"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Model",
+      "name": "AlloyStudio.HttpProfile.Model.InitialState.mk.sizeOf_spec",
+      "typeSha256": "1ebfc0a448fe9214a49d78da13de29b4ff90bf87ec137cc70a1ce6d598c547b0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "TrafficProfile.Model",
+      "name": "AlloyStudio.HttpProfile.Model.RawProfile.mk.sizeOf_spec",
+      "typeSha256": "331e3135696ac71cd73aa0c522ef5c438f80d0de282bc28a82a18587f806d8e5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Model",
+      "name": "AlloyStudio.ServiceProfile.Model.Cell.mk.sizeOf_spec",
+      "typeSha256": "64b1b0a922a2fa6e8492d47e80f8da670f4d4101c0967ecd10cd62bb18ce0266"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Model",
+      "name": "AlloyStudio.ServiceProfile.Model.Inputs.mk.sizeOf_spec",
+      "typeSha256": "7995552a2403abed0930f96516587309687dec152f21891fddb4f9f6bae61c8b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Model",
+      "name": "AlloyStudio.ServiceProfile.Model.Quantity.mk.sizeOf_spec",
+      "typeSha256": "4737eed5abe4f8480e5e1370a44b3fc180eeb52054bcb7f2eb8273a7e53b2f58"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "ServiceProfile.Model",
+      "name": "AlloyStudio.ServiceProfile.Model.State.mk.sizeOf_spec",
+      "typeSha256": "abccf0d7e87c4e9618a57adba71152b7f3484c395265fefaf2a25808f9f575fb"
+    }
+  ]
+}

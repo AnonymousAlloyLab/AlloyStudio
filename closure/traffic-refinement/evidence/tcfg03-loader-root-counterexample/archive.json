@@ -1,0 +1,11 @@
+{
+  "currentBridgeSha256": "466e78414477ae8b5add979ea8b25fb5cfc488d1b7a6cb660d404aa17f8c2ec0",
+  "files": {
+    "mutated-server.py.txt": "8ad2d6a4b168a6b2cef136dcac910dfd7903aa762fc135534273861f64402318",
+    "reconstructed-vulnerable-adapter.py.txt": "48369d749dfd8e739be63706af7c9b27445a57f990f0ff4b9ddd02c8de585c2a",
+    "result.json": "1eded675da8441ecc35a512b4789b5665998015c1d228102f06e6f8fa7ac9bbf",
+    "witness.py": "d0fe25d9ce81983157ded7fef13232add7b912ceb723fd8ab5503f7af851c2ad"
+  },
+  "productionSourceSha256": "d5905160c0e5e9422590a1cf04c692146d4a7512809452c9d929377b4d27ad24",
+  "schemaVersion": 1
+}

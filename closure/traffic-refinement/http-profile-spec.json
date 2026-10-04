@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent-http-profile-and-initialization-specification",
+  "designStatus": "SPECIFIED_NOT_VERIFIED",
+  "blockId": "TCFG02",
+  "claimId": "TRF00-HTTP-PROFILE-INIT",
+  "parentObligation": "TRF-00",
+  "closesParent": false,
+  "publicClaimDocuments": ["docs/http-profile-obligation.md"],
+  "statement": "The admitted production HTTP profile program validates exactly the independently specified 23 scalar fields and three relations, preserves accepted scalar values in a defensive copy, and determines a unique valid abstract empty Admission state from that copy, a Boolean lane and an explicit signed integer clock sample.",
+  "scope": {
+    "profileModule": "traffic_profile.py",
+    "runtimeModule": "traffic_http.py",
+    "existingScalarModule": "traffic_limits.py",
+    "scalarProofDependency": "formal/traffic_config",
+    "scalarDependencyClaim": "TRF00-NUMERIC",
+    "registeredConsumers": ["Admission.__init__", "TokenBucket.from_initial", "BoundedHTTPServer.__init__"],
+    "fieldCount": 23,
+    "integerFieldCount": 19,
+    "durationFieldCount": 4,
+    "allRequiredConsumers": "Exactly the registered initialization consumers and the import/re-export bindings they use; this is not a source-wide service configuration inventory."
+  },
+  "scalarDomains": {
+    "positive_integer": {
+      "acceptedPythonTypes": ["exact built-in int"],
+      "minimum": 1,
+      "maximum": 67108864,
+      "minimumInclusive": true,
+      "maximumInclusive": true,
+      "rejectBooleanAndSubclasses": true,
+      "leanPredicate": "AlloyStudio.TrafficConfig.IntegerInterval 1 67108864"
+    },
+    "positive_seconds": {
+      "acceptedPythonTypes": ["exact built-in int", "exact built-in float"],
+      "minimum": 0,
+      "maximum": 300,
+      "minimumInclusive": false,
+      "maximumInclusive": true,
+      "rejectBooleanAndSubclasses": true,
+      "floatEncoding": "Exact positive-denominator as_integer_ratio; reject NaN and both infinities; preserve integer versus floating representation.",
+      "leanPredicate": "AlloyStudio.TrafficConfig.SecondsInterval false 300"
+    }
+  },
+  "fields": [
+    {"name": "public_handlers", "domain": "positive_integer", "unit": "handlers", "default": 30},
+    {"name": "control_handlers", "domain": "positive_integer", "unit": "handlers", "default": 2},
+    {"name": "public_burst", "domain": "positive_integer", "unit": "requests", "default": 60},
+    {"name": "public_rate", "domain": "positive_integer", "unit": "requests_per_second", "default": 30},
+    {"name": "control_burst", "domain": "positive_integer", "unit": "requests", "default": 4},
+    {"name": "control_rate", "domain": "positive_integer", "unit": "requests_per_second", "default": 2},
+    {"name": "peer_burst", "domain": "positive_integer", "unit": "requests", "default": 60},
+    {"name": "peer_rate", "domain": "positive_integer", "unit": "requests_per_second", "default": 30},
+    {"name": "peer_entries", "domain": "positive_integer", "unit": "peers", "default": 1024},
+    {"name": "peer_idle_seconds", "domain": "positive_integer", "unit": "seconds", "default": 120},
+    {"name": "backlog", "domain": "positive_integer", "unit": "connections", "default": 32},
+    {"name": "control_backlog", "domain": "positive_integer", "unit": "connections", "default": 2},
+    {"name": "line_bytes", "domain": "positive_integer", "unit": "bytes", "default": 8192},
+    {"name": "header_bytes", "domain": "positive_integer", "unit": "bytes", "default": 32768},
+    {"name": "header_count", "domain": "positive_integer", "unit": "headers", "default": 64},
+    {"name": "header_seconds", "domain": "positive_seconds", "unit": "seconds", "default": 5.0},
+    {"name": "body_seconds", "domain": "positive_seconds", "unit": "seconds", "default": 5.0},
+    {"name": "write_seconds", "domain": "positive_seconds", "unit": "seconds", "default": 5.0},
+    {"name": "idle_seconds", "domain": "positive_seconds", "unit": "seconds", "default": 5.0},
+    {"name": "json_depth", "domain": "positive_integer", "unit": "nesting_levels", "default": 32},
+    {"name": "response_bytes", "domain": "positive_integer", "unit": "bytes", "default": 8388608},
+    {"name": "public_cache_bytes", "domain": "positive_integer", "unit": "bytes", "default": 16777216},
+    {"name": "public_cache_entries", "domain": "positive_integer", "unit": "entries", "default": 512}
+  ],
+  "relations": [
+    {"id": "HP-LINE-WITHIN-HEADERS", "operator": "le", "left": {"field": "line_bytes"}, "right": {"field": "header_bytes"}},
+    {"id": "HP-HEADER-COUNT", "operator": "le", "left": {"field": "header_count"}, "right": {"integer": 100}},
+    {"id": "HP-COMBINED-HANDLERS", "operator": "le", "left": {"add": [{"field": "public_handlers"}, {"field": "control_handlers"}]}, "right": {"integer": 256}}
+  ],
+  "defaultConsequences": {
+    "publicHandlers": 30,
+    "controlHandlers": 2,
+    "combinedHandlers": 32,
+    "combinedBurst": 64,
+    "combinedRate": 32,
+    "qualification": "Burst 64 and rate 32 describe the default pair only. The admitted custom-profile domain does not impose those combined burst/rate caps."
+  },
+  "normalization": {
+    "profileType": "Exact TrafficProfile type identity; subclasses and arbitrary duck-typed objects are rejected.",
+    "defaultSentinel": "Only an explicitly registered None default at a constructor boundary may select the specified default profile; no general truthiness fallback.",
+    "snapshot": "Read each registered field into a fresh exact TrafficProfile, validate all copied fields and relations, and preserve their accepted scalar values. No original profile container alias is retained as the admitted configuration.",
+    "invalidValues": "Reject through a registered constant ValueError diagnostic without rendering the invalid input or invoking its user-defined numeric methods.",
+    "allocationOrder": "Normalize configuration and validate the lane and sampled clock before creating Admission locks, buckets and registries or binding a listener socket. This does not assert validation before all enclosing Portal resources.",
+    "lane": {"acceptedPythonType": "exact built-in bool", "false": "public", "true": "control"},
+    "clockSample": {"acceptedPythonType": "exact built-in int", "unit": "nanoseconds", "signed": true, "bounded": false, "role": "Explicit external origin sample, not a configurable duration or a claim of future clock monotonicity."}
+  },
+  "initialization": {
+    "nanocreditsPerRequest": 1000000000,
+    "inputs": ["normalized_profile", "control_boolean", "signed_integer_clock_sample"],
+    "laneSelections": {
+      "public": {"handlerLimit": "public_handlers", "burst": "public_burst", "rate": "public_rate"},
+      "control": {"handlerLimit": "control_handlers", "burst": "control_burst", "rate": "control_rate"}
+    },
+    "abstractStateFields": {
+      "handlerLimit": {"selectedField": "handlerLimit"},
+      "capacity": {"multiply": [{"selectedField": "burst"}, {"integer": 1000000000}]},
+      "rate": {"selectedField": "rate"},
+      "credit": {"sameAs": "capacity"},
+      "last": {"input": "signed_integer_clock_sample"},
+      "active": {"integer": 0},
+      "peak": {"integer": 0},
+      "accepted": {"integer": 0},
+      "rejected": {"integer": 0},
+      "owners": {"empty": "set"},
+      "anonymousOwners": {"empty": "sequence"},
+      "peers": {"empty": "ordered_map"}
+    },
+    "validity": [
+      "0 < handlerLimit and handlerLimit <= 256",
+      "0 < rate and rate <= 67108864",
+      "1000000000 <= capacity and capacity <= 67108864000000000",
+      "0 <= credit and credit = capacity",
+      "active = cardinality(owners) = 0 and active <= handlerLimit",
+      "peak = accepted = rejected = 0",
+      "anonymousOwners is empty and every anonymous owner is in owners",
+      "peers is empty and cardinality(peers) <= profile.peer_entries",
+      "last = supplied clock sample; no sign restriction on the clock origin"
+    ],
+    "uniqueness": "For fixed profile scalar values, Boolean lane and signed clock sample, exactly one abstract state satisfies the independent initialization relation. Concrete object/lock identity is erased by the declared abstraction.",
+    "ownershipAbstraction": "The initially empty concrete set, list and OrderedDict map to the corresponding empty abstract collections. This does not prove future reserve/release transitions, lock atomicity, container allocation bytes or ownership of socket/OS resources.",
+    "constructorLinkage": "The closed AST mapping must connect the real Admission and TokenBucket initial assignments to the pure initialization result, account for every relevant assigned field and reject overrides or bypasses; detached pure-function correctness is insufficient."
+  },
+  "requiredClaims": [
+    {"id": "HP-SCHEMA", "class": "implementation_correspondence", "passPredicate": "production_field_names_and_defaults_equal_independent_schema AND unique_field_mappings = 23 AND unmapped_or_ambiguous_items = 0"},
+    {"id": "HP-ACCEPTANCE", "class": "proof", "passPredicate": "kernel_checked_for_all_normalized_profiles: accepts_iff_all_23_scalar_domains_and_all_3_relations"},
+    {"id": "HP-PRESERVATION", "class": "proof_and_correspondence", "passPredicate": "accepted_profile_preserves_every_scalar_value AND exact_type_defensive_copy_and_guard_order_bind_to_production_AST"},
+    {"id": "HP-DEFAULT", "class": "witness", "passPredicate": "registered_default_profile_witness_is_accepted AND default_handler_burst_rate_totals_equal_32_64_32"},
+    {"id": "HP-INITIAL", "class": "proof", "passPredicate": "kernel_checked_for_every_accepted_profile_boolean_lane_signed_clock: independent_initial_relation_has_exactly_one_state AND every_initial_validity_condition_holds"},
+    {"id": "HP-LINKAGE", "class": "implementation_correspondence", "passPredicate": "all_registered_constructors_imports_and_pure_initial_assignments_have_exactly_one_closed_AST_mapping AND unknown_executable_syntax_or_rebindings = 0"},
+    {"id": "HP-WITNESSES", "class": "test_and_witness", "passPredicate": "all_registered_positive_negative_and_mutation_witnesses_have_their_expected_checked_results"}
+  ],
+  "witnessRequirements": {
+    "positive": [
+      {"id": "HPW-DEFAULT-PUBLIC", "profile": "defaults", "control": false, "clockSample": 0},
+      {"id": "HPW-DEFAULT-CONTROL", "profile": "defaults", "control": true, "clockSample": -1},
+      {"id": "HPW-HANDLER-BOUNDARY", "override": {"public_handlers": 254, "control_handlers": 2}, "expected": "accept"},
+      {"id": "HPW-HEADER-BOUNDARY", "override": {"line_bytes": 32768, "header_bytes": 32768, "header_count": 100}, "expected": "accept"},
+      {"id": "HPW-DURATION-BOUNDARY", "override": {"header_seconds": 300.0}, "expected": "accept"},
+      {"id": "HPW-COUNT-BOUNDARY", "override": {"peer_entries": 67108864}, "expected": "accept"}
+    ],
+    "negative": [
+      {"id": "HPW-HANDLER-EXCESS", "override": {"public_handlers": 255, "control_handlers": 2}, "expected": "reject"},
+      {"id": "HPW-LINE-EXCESS", "override": {"line_bytes": 32769, "header_bytes": 32768}, "expected": "reject"},
+      {"id": "HPW-HEADER-EXCESS", "override": {"header_count": 101}, "expected": "reject"},
+      {"id": "HPW-ZERO-FIELD", "forEachField": true, "value": 0, "expected": "reject"},
+      {"id": "HPW-BOOL-FIELD", "forEachField": true, "value": true, "expected": "reject"},
+      {"id": "HPW-COUNT-EXCESS", "override": {"peer_entries": 67108865}, "expected": "reject"},
+      {"id": "HPW-DURATION-EXCESS", "override": {"header_seconds": 301.0}, "expected": "reject"}
+    ],
+    "runtimeBoundary": [
+      "Reject profile subclasses, attribute-bearing impostors and falsey non-None impostors.",
+      "Reject an exact TrafficProfile whose fields were made invalid before normalization; mutating the original after normalization must not mutate the copy.",
+      "Reject non-Boolean lane values including 0, 1 and truthy objects before runtime allocation.",
+      "Reject Boolean, fractional, nonfinite, subclass and object clock samples; accept negative and arbitrarily large exact integers.",
+      "Observe one clock sample per Admission initialization and exact initial public/control fields, zero counters and empty ownership/peer collections.",
+      "Demonstrate invalid profile/lane/sample rejection before the registered lock, bucket, registry and listener allocation points."
+    ],
+    "mutationControls": [
+      "Added, removed, duplicate, miswired or misclassified profile fields must block the bridge or independent acceptance proof.",
+      "An altered line/header, header-count or combined-handler relation must fail its independent relational theorem or boundary witness.",
+      "A wrong lane selector, token unit, initial credit, counter, ownership collection or constructor assignment must fail the independent initial-state theorem or linkage verifier.",
+      "Removed defensive copy, truthiness fallback, weakened exact type checks, unexpected code or module rebinding must fail the closed AST verifier.",
+      "An introduced axiom and a placeholder proof must each fail the registered proof gate."
+    ]
+  },
+  "verificationContract": {
+    "leanToolchain": "leanprover/lean4:v4.34.1",
+    "requiredCleanOfflineBuilds": 2,
+    "allowlistedAxioms": [],
+    "theoremAudit": "Audit every project theorem including generated and private declarations and each complete transitive axiom set; do not exclude failing generated declarations.",
+    "prohibited": ["sorry", "admit", "introduced axioms", "native_decide", "network access in proof builds", "proof of a fixed known-good formula substituted for extracted production guards"],
+    "independence": "This schema and its relational/initial semantics are authored independently of extraction. Generated production Lean must not generate the expected schema or specification from its own implementation.",
+    "evidenceBinding": "Before a closure run, register exact theorem types, witnesses, verifiers and production mappings; hash the full source/specification/proof/verifier/test/dependency inputs and bind all raw evidence to the same closure ID and canonical input root.",
+    "determinism": "Compare theorem inventory, generated correspondence and provenance metadata, claim-status set and registered reproducible artifact hashes across the two builds.",
+    "reviews": "Two GPT-6 Luna, then two GPT-6.1 Sol, then two GPT-6 Astra source-bound adversarial reviews; mechanically checked breaches can block, while review text is never proof evidence.",
+    "terminalStates": ["VERIFIED", "BLOCKED", "INFRASTRUCTURE_FAILURE"],
+    "blockOn": ["missing or ambiguous mappings", "schema mismatch", "unregistered executable syntax", "invalid witness", "failed theorem or nonempty axiom audit", "stale or unbound evidence", "missing required clean build", "undeclared dependency", "nondeterminism", "orphan public claim", "scope leakage"],
+    "designQualification": "This specification fixes a candidate surface and reports no execution result. A later registered verifier report is required for closure."
+  },
+  "trustedComputingBase": [
+    {"id": "TCB-LEAN", "classification": "TRUSTED", "components": ["Pinned Lean kernel, compiler and installed distribution"]},
+    {"id": "TCB-TRANSLATION", "classification": "TRUSTED", "components": ["Frozen restricted AST translator, constructor/import linkage checker, theorem audit, witness checker, closure verifier and input hashing"]},
+    {"id": "TCB-PYTHON", "classification": "TRUSTED", "components": ["Exact built-in type identity, integer arithmetic, scalar comparisons and int/float.as_integer_ratio", "Dataclass construction, ordinary attribute access, immutable built-in scalar copying and registered standard-library empty-container semantics", "No monkey-patched built-ins/imports, hostile concurrent mutation during normalization or executable rebinding outside the admitted source"]},
+    {"id": "TCB-INITIALIZATION-ABSTRACTION", "classification": "TRUSTED", "components": ["Successful clock callback supplies its explicit validated sample without hostile mutation or reentrancy", "Successful ordinary lock/container construction has the registered initial interpretation; concrete allocation identities are erased", "The theorem describes successful initialization, not resource exhaustion, arbitrary asynchronous interruption or OS socket behavior"]},
+    {"id": "TCB-HOST", "classification": "TRUSTED", "components": ["Python standard library and runtime", "SHA-256 and input-root integrity", "Linux isolation, filesystem/process semantics and execution hardware"]}
+  ],
+  "excluded": [
+    "Complete TRF-00 or any complete original TRF obligation",
+    "Complete service/deployment byte, age, RSS, process, cache, evidence, snapshot, queue and channel profile",
+    "Independent analysis observation schema, diagnostic/disclosure semantics and behavioral-instance equivalence",
+    "Whole Portal initialization, random generations and service identities, OS handles, socket binding, locks/threads/process execution or enclosing constructor rollback",
+    "Future Admission reserve/release/refill histories, rate conservation, nonborrowability under concurrency, decoder behavior and resource allocation bytes",
+    "Shared-host budgets, proxy/IIS/CDN buffering, platform containment, runtime latency and warm-worker history independence",
+    "Arbitrary Python code, hostile trusted code, later source revisions and undeclared deployment environments"
+  ],
+  "remainingParentBlockers": [
+    "COMPLETE_PROFILE_NOT_FROZEN",
+    "OBSERVATION_SCHEMA_NOT_BOUND",
+    "WHOLE_INITIAL_STATE_REFINEMENT_NOT_ESTABLISHED",
+    "COMPLETE_TRF00_PROFILE_OBSERVATION_MAPPING_VERIFIER_PROVENANCE_PACKAGE_NOT_VERIFIED"
+  ]
+}

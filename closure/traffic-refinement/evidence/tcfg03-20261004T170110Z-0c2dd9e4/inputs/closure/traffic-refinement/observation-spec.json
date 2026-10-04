@@ -1,0 +1,1673 @@
+{
+  "schemaVersion": 1,
+  "id": "TRF00-INDEPENDENT-OBSERVATION",
+  "baselineCommit": "e75b20419f8f92c2adc59ce083008ec897434cb1",
+  "claim": "Define the independent public response observation before any equality/refinement claim; preserve all computational fields, statuses and ordered sequences.",
+  "baselineFeedbackFields": [
+    "status",
+    "metric",
+    "distance",
+    "breakdown",
+    "canonicalForm",
+    "operations",
+    "operationSummary",
+    "trace",
+    "diagnostics",
+    "comparison",
+    "astSize"
+  ],
+  "metrics": {
+    "canonical": "acgn-fast-rewrite-canonical-distance",
+    "ast": "acgn-raw-ast-zhang-shasha-distance"
+  },
+  "categoryTruth": {
+    "both": [
+      true,
+      true
+    ],
+    "undercoverage": [
+      true,
+      false
+    ],
+    "overcoverage": [
+      false,
+      true
+    ],
+    "neither": [
+      false,
+      false
+    ]
+  },
+  "definitions": {
+    "exerciseSummary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "predicate": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "group",
+        "predicate",
+        "description"
+      ]
+    },
+    "exercise": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "predicate": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "environmentBefore": {
+          "type": "string"
+        },
+        "environmentAfter": {
+          "type": "string"
+        },
+        "predicateHeader": {
+          "type": "string"
+        },
+        "starter": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "exerciseSource"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "group",
+        "predicate",
+        "description",
+        "environmentBefore",
+        "environmentAfter",
+        "predicateHeader",
+        "starter",
+        "source"
+      ]
+    },
+    "exerciseSource": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "[0-9a-f]{64}"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ]
+    },
+    "diagnostic": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "moduleLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "sourceRange": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "text": {
+          "type": "string"
+        },
+        "startLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "startColumn": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "endColumn": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "moduleLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "moduleColumn": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "text",
+        "startLine",
+        "startColumn",
+        "endLine",
+        "endColumn",
+        "moduleLine",
+        "moduleColumn"
+      ]
+    },
+    "canonicalRange": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "text": {
+          "type": "string"
+        },
+        "formIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "text",
+        "formIndex"
+      ]
+    },
+    "sourceLocation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "located",
+            "ambiguous",
+            "unavailable"
+          ]
+        },
+        "coordinateSystem": {
+          "type": "string",
+          "enum": [
+            "body"
+          ]
+        },
+        "offsetEncoding": {
+          "type": "string",
+          "enum": [
+            "utf-16"
+          ]
+        },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "$ref": "sourceRange"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "reason": {
+          "type": "string"
+        },
+        "precision": {
+          "type": "string",
+          "enum": [
+            "node",
+            "related",
+            "predicate"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "coordinateSystem",
+        "offsetEncoding",
+        "ranges",
+        "reason"
+      ]
+    },
+    "canonicalLocation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "located",
+            "ambiguous",
+            "unavailable"
+          ]
+        },
+        "coordinateSystem": {
+          "type": "string",
+          "enum": [
+            "canonical"
+          ]
+        },
+        "offsetEncoding": {
+          "type": "string",
+          "enum": [
+            "utf-16"
+          ]
+        },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "$ref": "canonicalRange"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "reason": {
+          "type": "string"
+        },
+        "precision": {
+          "type": "string",
+          "enum": [
+            "node",
+            "related",
+            "form"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "coordinateSystem",
+        "offsetEncoding",
+        "ranges",
+        "reason"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "insert",
+            "delete",
+            "replace",
+            "modify",
+            "component-edit"
+          ]
+        },
+        "component": {
+          "type": "string",
+          "enum": [
+            "temporal",
+            "quantifier",
+            "matrix",
+            "ast"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "aggregate": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sourceTerm": {
+          "type": "string"
+        },
+        "sourceOperator": {
+          "type": "string"
+        },
+        "sourceNodeKind": {
+          "type": "string"
+        },
+        "sourceRole": {
+          "type": "string",
+          "enum": [
+            "affected",
+            "insertion-anchor"
+          ]
+        },
+        "replacementOperator": {
+          "type": "string",
+          "enum": [
+            "and",
+            "or",
+            "not",
+            "implies",
+            "iff",
+            "=",
+            "!=",
+            ">",
+            ">=",
+            "in",
+            "<",
+            "<=",
+            "!>",
+            "!>=",
+            "!in",
+            "!<",
+            "!<=",
+            "some",
+            "no",
+            "one",
+            "lone",
+            "all",
+            "->",
+            ".",
+            "<:",
+            ":>",
+            "&",
+            "++",
+            "+",
+            "-",
+            "*",
+            "/",
+            "%",
+            "<<",
+            ">>",
+            ">>>",
+            "set",
+            "exactly",
+            "~",
+            "^",
+            "#",
+            "int",
+            "Int",
+            "'",
+            "before",
+            "historically",
+            "once",
+            "always",
+            "eventually",
+            "after",
+            "until",
+            "releases",
+            "since",
+            "triggered",
+            "if-then-else",
+            "disj",
+            "sum",
+            "some->some",
+            "some->one",
+            "some->lone",
+            "some->",
+            "one->some",
+            "one->one",
+            "one->lone",
+            "one->",
+            "lone->some",
+            "lone->one",
+            "lone->lone",
+            "lone->",
+            "->some",
+            "->one",
+            "->lone"
+          ]
+        },
+        "action": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "nextStep": {
+          "type": "string"
+        },
+        "sourceLocation": {
+          "$ref": "sourceLocation"
+        },
+        "canonicalLocation": {
+          "$ref": "canonicalLocation"
+        }
+      },
+      "required": [
+        "kind",
+        "component",
+        "path",
+        "cost",
+        "aggregate",
+        "description",
+        "sourceLocation",
+        "canonicalLocation"
+      ]
+    },
+    "operationSummary": {
+      "type": "object",
+      "properties": {
+        "insert": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "delete": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "replace": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "modify": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "component-edit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": []
+    },
+    "component": {
+      "type": "object",
+      "properties": {
+        "component": {
+          "type": "string",
+          "enum": [
+            "temporal",
+            "quantifier",
+            "matrix",
+            "ast"
+          ]
+        },
+        "distance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "hintCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "countMatchesDistance": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "distance",
+        "hintCount",
+        "countMatchesDistance"
+      ]
+    },
+    "trace": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "matchesDistance": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        },
+        "hasAggregates": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "redacted-framework-feedback"
+          ]
+        },
+        "certifiedOptimalScript": {
+          "type": "boolean",
+          "enum": [
+            false
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "component"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "note": {
+          "type": "string"
+        },
+        "matrixReplayVerified": {
+          "type": "boolean"
+        },
+        "matrixTraceAlgorithm": {
+          "type": "string",
+          "enum": [
+            "ordered-dp-unordered-assignment-v1"
+          ]
+        },
+        "quantifierCostVerified": {
+          "type": "boolean"
+        },
+        "astReplayVerified": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        },
+        "astTraceAlgorithm": {
+          "type": "string",
+          "enum": [
+            "zhang-shasha-node-edit-v1"
+          ]
+        }
+      },
+      "required": [
+        "cost",
+        "matchesDistance",
+        "hasAggregates",
+        "kind",
+        "certifiedOptimalScript",
+        "components",
+        "note"
+      ]
+    },
+    "comparison": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "nearest-known-correct"
+          ]
+        },
+        "poolSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "evaluatedCandidates": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "complete": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        }
+      },
+      "required": [
+        "strategy",
+        "poolSize",
+        "evaluatedCandidates",
+        "complete"
+      ]
+    },
+    "signature": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "atoms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "minItems": 0,
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "label",
+        "atoms"
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "arity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "tuples": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "minItems": 0,
+          "maxItems": 512
+        }
+      },
+      "required": [
+        "label",
+        "arity",
+        "tuples"
+      ]
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "signature"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "relation"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "index",
+        "signatures",
+        "relations"
+      ]
+    },
+    "instance": {
+      "type": "object",
+      "properties": {
+        "traceLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "loopState": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 9
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "stringsAnonymized": {
+          "type": "boolean"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "$ref": "state"
+          },
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": [
+        "traceLength",
+        "loopState",
+        "truncated",
+        "stringsAnonymized",
+        "states"
+      ]
+    },
+    "category": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "both",
+            "undercoverage",
+            "overcoverage",
+            "neither"
+          ]
+        },
+        "oracle": {
+          "type": "boolean"
+        },
+        "student": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "sat",
+            "unsat"
+          ]
+        },
+        "enumerationComplete": {
+          "type": "boolean"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "instance"
+          },
+          "minItems": 0,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "id",
+        "oracle",
+        "student",
+        "status",
+        "enumerationComplete",
+        "instances"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "overall": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "bitwidth": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "maxSequence": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "poolSize": {
+          "type": "integer",
+          "enum": [
+            100
+          ]
+        },
+        "minTrace": {
+          "type": "integer",
+          "enum": [
+            1
+          ]
+        },
+        "maxTrace": {
+          "type": "integer",
+          "enum": [
+            10
+          ]
+        },
+        "moduleFacts": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        }
+      },
+      "required": [
+        "overall",
+        "bitwidth",
+        "maxSequence",
+        "poolSize",
+        "minTrace",
+        "maxTrace",
+        "moduleFacts"
+      ]
+    },
+    "sampling": {
+      "type": "object",
+      "properties": {
+        "positiveTested": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "positiveAccepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "negativeTested": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "negativeRejected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "semanticCounterexamples": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "positiveTested",
+        "positiveAccepted",
+        "negativeTested",
+        "negativeRejected",
+        "semanticCounterexamples"
+      ]
+    },
+    "educationItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 360
+        }
+      },
+      "required": [
+        "id",
+        "description"
+      ]
+    }
+  },
+  "schemas": {
+    "feedback": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "ok"
+              ]
+            },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "acgn-fast-rewrite-canonical-distance",
+                "acgn-raw-ast-zhang-shasha-distance"
+              ]
+            },
+            "distance": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            "breakdown": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "temporal": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9223372036854775807
+                    },
+                    "quantifier": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9223372036854775807
+                    },
+                    "matrix": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9223372036854775807
+                    }
+                  },
+                  "required": [
+                    "temporal",
+                    "quantifier",
+                    "matrix"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "ast": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9223372036854775807
+                    }
+                  },
+                  "required": [
+                    "ast"
+                  ]
+                }
+              ]
+            },
+            "canonicalForm": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 0,
+              "maxItems": 9223372036854775807
+            },
+            "operations": {
+              "type": "array",
+              "items": {
+                "$ref": "operation"
+              },
+              "minItems": 0,
+              "maxItems": 9223372036854775807
+            },
+            "operationSummary": {
+              "$ref": "operationSummary"
+            },
+            "trace": {
+              "$ref": "trace"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "diagnostic"
+              },
+              "minItems": 0,
+              "maxItems": 0
+            },
+            "comparison": {
+              "$ref": "comparison"
+            },
+            "astSize": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status",
+            "metric",
+            "distance",
+            "breakdown",
+            "canonicalForm",
+            "operations",
+            "operationSummary",
+            "trace",
+            "diagnostics",
+            "comparison"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "invalid",
+                "unsupported",
+                "engine_error",
+                "invalid_request",
+                "error",
+                "timeout",
+                "busy",
+                "unavailable",
+                "disabled",
+                "superseded",
+                "expired"
+              ]
+            },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "acgn-fast-rewrite-canonical-distance",
+                "acgn-raw-ast-zhang-shasha-distance"
+              ]
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "diagnostic"
+              },
+              "minItems": 0,
+              "maxItems": 9223372036854775807
+            },
+            "message": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-6-luna"
+              ]
+            },
+            "code": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "dispatched": {
+              "type": "boolean"
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "error"
+          ]
+        }
+      ]
+    },
+    "behavior": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "ok"
+              ]
+            },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "acgn-reward"
+              ]
+            },
+            "score": {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scoreStatus": {
+              "type": "string",
+              "enum": [
+                "ok",
+                "unavailable"
+              ]
+            },
+            "scoreReason": {
+              "type": "string",
+              "enum": [
+                "OK",
+                "ORACLE_POSITIVE_UNSAT",
+                "ORACLE_NEGATIVE_UNSAT"
+              ]
+            },
+            "scope": {
+              "$ref": "scope"
+            },
+            "sampling": {
+              "$ref": "sampling"
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "$ref": "category"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status",
+            "metric",
+            "score",
+            "scoreStatus",
+            "scoreReason",
+            "scope",
+            "sampling",
+            "categories"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "invalid",
+                "unsupported",
+                "engine_error",
+                "invalid_request",
+                "error",
+                "timeout",
+                "busy",
+                "unavailable",
+                "disabled",
+                "superseded",
+                "expired"
+              ]
+            },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "acgn-fast-rewrite-canonical-distance",
+                "acgn-raw-ast-zhang-shasha-distance"
+              ]
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "diagnostic"
+              },
+              "minItems": 0,
+              "maxItems": 9223372036854775807
+            },
+            "message": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-6-luna"
+              ]
+            },
+            "code": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "dispatched": {
+              "type": "boolean"
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "error"
+          ]
+        }
+      ]
+    },
+    "explanation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "ok"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-6-luna"
+              ]
+            },
+            "operations": {
+              "type": "array",
+              "items": {
+                "$ref": "educationItem"
+              },
+              "minItems": 0,
+              "maxItems": 128
+            },
+            "instances": {
+              "type": "array",
+              "items": {
+                "$ref": "educationItem"
+              },
+              "minItems": 0,
+              "maxItems": 12
+            },
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 700
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status",
+            "model",
+            "operations",
+            "instances",
+            "summary"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "invalid",
+                "unsupported",
+                "engine_error",
+                "invalid_request",
+                "error",
+                "timeout",
+                "busy",
+                "unavailable",
+                "disabled",
+                "superseded",
+                "expired"
+              ]
+            },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "acgn-fast-rewrite-canonical-distance",
+                "acgn-raw-ast-zhang-shasha-distance"
+              ]
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "diagnostic"
+              },
+              "minItems": 0,
+              "maxItems": 9223372036854775807
+            },
+            "message": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-6-luna"
+              ]
+            },
+            "code": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "dispatched": {
+              "type": "boolean"
+            },
+            "exerciseId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requestedMetric": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "ast"
+              ]
+            },
+            "evidenceToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            },
+            "behaviorToken": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "error"
+          ]
+        }
+      ]
+    },
+    "catalogue": {
+      "type": "object",
+      "properties": {
+        "exercises": {
+          "type": "array",
+          "items": {
+            "$ref": "exerciseSummary"
+          },
+          "minItems": 0,
+          "maxItems": 9223372036854775807
+        }
+      },
+      "required": [
+        "exercises"
+      ]
+    },
+    "exercise": {
+      "$ref": "exercise"
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok"
+          ]
+        },
+        "exercises": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "engine": {
+          "type": "string",
+          "enum": [
+            "ACGN / CanDis Fast Rewrite IR"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "exercises",
+        "engine"
+      ]
+    },
+    "transportError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ]
+    },
+    "control": {
+      "type": "json"
+    },
+    "admin": {
+      "type": "json"
+    },
+    "dashboard": {
+      "type": "json"
+    },
+    "asset": {
+      "type": "object",
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "bodySha256": {
+          "type": "string",
+          "pattern": "[0-9a-f]{64}"
+        },
+        "bodyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": [
+        "mime",
+        "bodySha256",
+        "bodyBytes"
+      ]
+    }
+  },
+  "deliveryMetadata": [
+    "exerciseId",
+    "revision",
+    "requestedMetric",
+    "evidenceToken",
+    "behaviorToken"
+  ],
+  "observationRules": {
+    "json": "Exact built-in JSON values; finite numbers; valid Unicode. Object key ordering is ignored. Array order and multiplicity, missing versus null fields and every semantic leaf are observable.",
+    "feedback": "Preserve status, metric, every distance/breakdown/cost, exact ordered operations and tie-derived trace, canonical display, UTF-16 source/canonical locations, diagnostic code/text/coordinates, AST size and complete pool declaration. Correct-pool order and all references, including every oracle, belong to input identity; first minimum tie is retained. No zero-distance short circuit. Invalid later reference means failure.",
+    "behavior": "Primary oracle, exact model/environment/body, facts, scope, bitwidth, sequence and trace bounds and sampling algorithm are input identity. Preserve all sample counts, half-up 0.001 rounded score and availability reason, ordered four categories and truth flags, zero-to-three witness order, trace state order, signature/atom/relation/tuple order, loop state, truncation and anonymization flags. Shape checking does not establish actual Alloy witness truth.",
+    "explanation": "Preserve status/model, one indexed description per operation and displayed instance in their evidence order, and summary. Same explicit provider response is compared exactly; independently sampled provider wording has no equality claim. No oracle/source/target expressions may be added to prompts or results by reuse.",
+    "location": "Ranges are ordered unique half-open UTF-16 spans of exactly the admitted learner body or displayed canonical form; unavailable has no spans. Node precision is one structural occurrence, not a search for all equal strings. Reasons and line/column/module coordinates remain semantic fields.",
+    "failures": "Failures are observable and never count as a successful hit, even when equal. No error/unsupported/timeout/busy result may be coerced to success or empty distance. Exact diagnostics/messages are compared. Capacity/cancel/expiry are explicit permitted transport outcomes, not computational equality exceptions.",
+    "admin": "The whole authenticated JSON response is retained recursively with no fields erased; authentication, cookies, status and authorization are an independent transport envelope. TRF-00 freezes observation only, not admin correctness. New fields cannot silently disappear from equality.",
+    "other": "Catalogue and exercise schemas are closed; list order and source/environment bytes remain exact. Assets retain exact body bytes via SHA-256 under declared collision resistance plus MIME and byte length. Dashboard/control JSON retains every field recursively.",
+    "httpEnvelope": "Method, path, HTTP status, content type, Location, authentication cookies and security headers are separately observed. Date, Content-Length (checked against body), Server, connection-close mechanics, cache validators, Cache-Control and explicit Retry-After are transport metadata. A 304 is compared only after successful validator-based resolution to the exact retained prior 200 entity. No blind omission of 304 or private cache changes.",
+    "delivery": "exerciseId, revision and requestedMetric must equal the current subscriber context when provided; evidenceToken and behaviorToken have fixed shape but require separate exact evidence binding/capability checks. They are stripped only from computational comparison, never from delivery validation.",
+    "nondeterminism": "No solver, atom-name, tuple-order, score, category or diagnostic difference is permitted by this contract. Host timing, process identifiers, scheduling interleavings, random channel/evidence capabilities and external provider wording are outside computational equality only at explicit distinct boundaries. A future solver-equivalence relaxation requires a new frozen specification and Alloy witness checker; no blanket ignoring differences.",
+    "independence": "Checker imports no production server, projector, scheduler, worker or provider implementation. Baseline projection inventory is extracted mechanically from pinned Git objects, not copied from optimized equality. Schema declaration is independent; JSON equality checks only this admitted contract.",
+    "schemaBounds": "Unspecified array/text semantic maxima here use the finite encoded request/response byte envelope, not arbitrary unbounded network allocation. Existing domain-specific limits are explicit. Schema validator is an offline finite-evidence tool, not an inbound JSON parser."
+  },
+  "tcb": [
+    "Python built-in JSON, exact types, Unicode and integer arithmetic, standard library and Git object retrieval",
+    "Declared frozen schema interpreter and baseline extraction implementation",
+    "SHA-256 collision resistance, filesystem/process behavior, host hardware"
+  ],
+  "excluded": [
+    "Universal original/optimized semantic refinement; future requests outside finite evidence",
+    "Lean proof of Python/Java/Alloy execution, solver witness truth, natural-language correctness/non-disclosure",
+    "Delivery authentication/capability state-machine correctness and native deployment behavior"
+  ],
+  "passConditions": [
+    "Pinned baseline SHA-256 source inventory and exact projection inventory match",
+    "Every accepted semantic response field is retained; malformed/unknown analysis fields reject",
+    "Ordered lists and diagnostic failure classes are exact; all declared independent invariants pass",
+    "Constructed mutation witnesses detect omitted costs, swapped operations/occurrences, partial pools, category drift, score drift, delivery confusion, and nested target disclosure"
+  ]
+}

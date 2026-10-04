@@ -1,0 +1,24 @@
+test_expired_buffered_headers_cannot_dispatch_health (tests.test_ingress_deadlines.HandlerDeadlineTests) ... ok
+test_header_parse_completion_rechecks_deadline (tests.test_ingress_deadlines.HandlerDeadlineTests) ... ok
+test_json_completion_rechecks_deadline_before_business_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests) ... ok
+test_valid_request_retains_channel_dispatch (tests.test_ingress_deadlines.HandlerDeadlineTests) ... ok
+test_expired_completed_read_does_not_start_json_decoder (tests.test_ingress_deadlines.JSONCompletionTests) ... ok
+test_public_and_admin_completion_share_the_final_gate (tests.test_ingress_deadlines.JSONCompletionTests) ... ok
+test_body_has_one_new_absolute_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_body_transition_cannot_renew_expired_header_deadline (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_body_transition_uses_exactly_the_validated_clock_sample (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_buffered_body_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_buffered_header_return_rechecks_clock (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_deadline_before_boundary_accepts (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_deadline_equality_and_lateness_reject (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_expired_buffered_body_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_expired_buffered_header_rejected_without_recv (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_expired_recv_is_not_started (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_header_eof_is_rejected_existing_negative_control (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_recv_equality_rejects_received_bytes (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+test_zero_count_read_does_not_bypass_expiration (tests.test_ingress_deadlines.ReaderDeadlineTests) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.008s
+
+OK

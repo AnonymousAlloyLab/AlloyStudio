@@ -1,0 +1,17 @@
+{
+  "blockManifestSha256": "7fa31fe62a5f51603dfa01f67468734eb95c6e38db493ac62883838d7b0969a4",
+  "findings": [
+    {
+      "evidence": "DecoderModel.lean holds uses Input.mutation for contentTypeRequired/bodylessRead; IngressRouteExtracted.lean dispatch gates completedBody on the same field; the closed route bridge has no method/mutation linkage. Production server.py derives mutation from self.command == POST and do_POST revalidates with mutation=True.",
+      "id": "METHOD_MUTATION_UNLINKED",
+      "impact": "The theorem over arbitrary Inbound states does not by itself establish the source-to-model successful dispatch claim. Add and prove method/mutation consistency, then bind that condition to the Handler branch.",
+      "reproduction": "rawLine POST /api/feedback HTTP/1.1 CRLF; pairs=[(Host, localhost)]; mutation=false; header lengths=[]; headerNow=0, headerDeadline=1. Extracted rules accept and dispatch skips completedBody. Actual strict_request_headers(pairs, HTTP/1.1, mutation=False) returns 0; with mutation=True it raises HTTPInputError 415 because Content-Type is absent.",
+      "summary": "The Lean route model allows POST with mutation=false and then skips all body validation."
+    }
+  ],
+  "notesSha256": "89a460e4d9d9e7f5f46e8327c5a20eafd26c73e909b5c941b7a75da7d6a390b8",
+  "priorReviews": {},
+  "reviewerModel": "gpt-6-luna",
+  "tier": 1,
+  "verdict": "constructed_breach"
+}

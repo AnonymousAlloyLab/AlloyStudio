@@ -1,0 +1,20 @@
+{
+  "name": "alloy-live-programming",
+  "version": "0.0.4-alpha",
+  "type": "module",
+  "description": "Alloy live programming with canonical and Zhang-Shasha AST repair feedback",
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "start": "./scripts/run.sh",
+    "test": "OPENAI_DISABLED=1 python3 -m unittest discover -s tests -v",
+    "test:browser": "python3 scripts/ci_check.py browser",
+    "closure": "python3 scripts/verify_closure.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "1.63.0"
+  },
+  "private": true
+}

@@ -1,0 +1,92 @@
+{
+  "engine_nan_recycle": {
+    "invalid_profile_accepted": true,
+    "tasks": 1000000000,
+    "parse_units": 1000000000,
+    "age_seconds": 1000000000,
+    "expired": false
+  },
+  "process_nan_limits": {
+    "invalid_profile_accepted": true,
+    "reserved": 9,
+    "declared_limit": "NaN"
+  },
+  "process_fractional_limit": {
+    "feedback_limit": 0.5,
+    "feedback_reserved": 1
+  },
+  "zero_entry_cache": {
+    "limit": 0,
+    "entries": 1
+  },
+  "nan_cache_ttl": {
+    "age_seconds": 1000000000,
+    "hit_after_age": true
+  },
+  "nan_evidence_profile": {
+    "invalid_profile_accepted": true,
+    "entries": 129
+  },
+  "scheduler_invalid_profile": {
+    "invalid_profile_accepted": true,
+    "dispatcher_threads": 0
+  },
+  "explainer_invalid_profile": {
+    "invalid_profile_accepted": true
+  },
+  "http_profile": {
+    "defaults_valid": true,
+    "fields": {
+      "public_handlers": 30,
+      "control_handlers": 2,
+      "public_burst": 60,
+      "public_rate": 30,
+      "control_burst": 4,
+      "control_rate": 2,
+      "peer_burst": 60,
+      "peer_rate": 30,
+      "peer_entries": 1024,
+      "peer_idle_seconds": 120,
+      "backlog": 32,
+      "control_backlog": 2,
+      "line_bytes": 8192,
+      "header_bytes": 32768,
+      "header_count": 64,
+      "header_seconds": 5.0,
+      "body_seconds": 5.0,
+      "write_seconds": 5.0,
+      "idle_seconds": 5.0,
+      "json_depth": 32,
+      "response_bytes": 8388608,
+      "public_cache_bytes": 16777216,
+      "public_cache_entries": 512
+    }
+  },
+  "baseline": {
+    "commit": "985c98bc6b2bf7237c8ee8d33f4c59e954880a73",
+    "sourceSha256": {
+      "engine_workers.py": "e82942bd177694c8868f2566f39d37a8df2d8c4cb6028c59b198e42215857db1",
+      "runtime_dependencies.py": "7874e4e9e5d18cdb55e7bbb301c46fb9aaa61afb914520f7131cb633b2287d36",
+      "traffic_scheduler.py": "d30c260394256819c89d8a5b2180097ca276525cda7ce065e5b95d06aa3d52d0",
+      "luna.py": "e52621aee5b913ca4a14e2794e3d45a3f077b1d35c8d96fd7d8590d7d6f6c051"
+    }
+  },
+  "scope": "Direct constructor configuration counterexamples only; no HTTP attacker-controlled profile, child process, or provider invocation.",
+  "unused_inherited_cache_pop": {
+    "sequence": [
+      "c=ResultCache(2,1000)",
+      "c['a']={'x':1}",
+      "c['b']={'x':2}",
+      "c.pop('a')"
+    ],
+    "exception": "KeyError",
+    "after": {
+      "len": 2,
+      "keys": [
+        "b"
+      ],
+      "bytes": 20
+    },
+    "reachability": "No current production/test callers found; outside the used cache method surface."
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' https://api.github.com; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Project dashboard · Alloy Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="../">Alloy Studio <span>/ Project</span></a><a href="https://github.com/AnonymousAlloyLab/AlloyStudio/actions" target="_blank" rel="noopener noreferrer">Open GitHub Actions ↗</a></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">CI / CD</p><h1>Project dashboard</h1><p class="lead">Build health, verification evidence, and release delivery.</p></div><button id="refresh" type="button">Refresh GitHub status</button></div>
+    <p id="notice" role="status">Loading the local build summary…</p>
+    <section class="overview" aria-label="Build overview">
+      <article><h2>Installed version</h2><p class="big" id="version">Unknown</p><p id="revision">Revision unavailable</p></article>
+      <article><h2>Local verification</h2><p class="big" id="check-state">Not recorded</p><p>Counts below describe recorded checks; missing or older results are marked.</p></article>
+      <article><h2>Latest release</h2><p class="big" id="release">Not fetched</p><p id="release-detail">Refresh to read published release metadata.</p></article>
+    </section>
+    <section><div class="section-heading"><h2>Recorded checks</h2><span>Build snapshot</span></div><div id="checks" class="checks"><p>No check results available.</p></div></section>
+    <section class="closure"><div class="section-heading"><h2>Mechanical closure</h2><span>Historical evidence</span></div><p id="closure-state">No closure report included.</p><p id="closure-detail"></p><p class="muted">A closure result applies only to its frozen inputs and finite claims. This panel does not assert that an earlier run verifies the currently deployed build.</p></section>
+    <section><div class="section-heading"><h2>Lean proof obligations</h2><span>Implementation roadmap</span></div><p id="lean-state">Obligation summary not included.</p><p class="muted">Open obligations are implementation work, not established Lean proofs. See the project’s Lean closure plan for proof boundaries and required witnesses.</p></section>
+    <section><div class="section-heading"><h2>Workflow activity</h2><span id="remote-time">Not fetched</span></div><p id="remote-state">Refresh to fetch public GitHub metadata. This view is read-only.</p><div class="table-wrap"><table><thead><tr><th>Workflow</th><th>Status</th><th>Revision</th><th>Started</th><th>Artifacts</th></tr></thead><tbody id="runs"></tbody></table></div></section>
+    <footer>Only status, counts, revisions, and public links appear here. Private deployment bundles, exercise data, logs, and credentials are excluded from dashboard artifacts. Production deployment is performed separately.</footer>
+  </main>
+</body>
+</html>

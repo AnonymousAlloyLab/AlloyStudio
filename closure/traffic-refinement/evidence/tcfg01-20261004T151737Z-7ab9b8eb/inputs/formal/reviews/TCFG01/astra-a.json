@@ -1,0 +1,17 @@
+{
+  "blockManifestSha256": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06",
+  "findings": [],
+  "notesSha256": "8acf4df2d5e311ba1d269184479b793af4983ac4ded5f1c354f4d61c6d3a2ca1",
+  "priorReviews": {
+    "formal/reviews/TCFG01/luna-a.json": "4fe785d4608026669c0cb849b8b45ab9479c52bf22aecc2f2abe9beb5834b555",
+    "formal/reviews/TCFG01/luna-b.json": "0fd156be2466eb3a00b0ca5ad3be782e042f7d23da52625dabb2893ab03c8cb4",
+    "formal/reviews/TCFG01/sol-a.json": "c96e25c1e6b0c062135426c0037ab38bf121d63eb7c7aec321ce21eb20feed4a",
+    "formal/reviews/TCFG01/sol-b.json": "40e02c013dd3929f43dbff90d3e0a3c341de099abc8cc7d51c0807a095988b81"
+  },
+  "probeResultsSha256": "58401e5c9885a9039632b8f7ad57d2c49454562c6bf26fb3621f98f50b06de0f",
+  "probeSha256": "4ad2cc077dd4382e070d5031b4944c6100907bf01c1b25708b57214dd090f5f0",
+  "reviewerModel": "gpt-6-astra",
+  "schemaVersion": 1,
+  "tier": 3,
+  "verdict": "no_constructed_breach"
+}

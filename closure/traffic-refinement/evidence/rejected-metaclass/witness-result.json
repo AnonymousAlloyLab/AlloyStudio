@@ -1,0 +1,13 @@
+{
+  "acceptedUnsupportedObject": true,
+  "affectedClaim": "TRF00-NUMERIC",
+  "blockManifestSha256": "52cf7df36483365262f8e98c8310bf08ae0b694762914147bbfce5ee3e248c32",
+  "bridgeStatus": "PASS",
+  "events": [
+    "metaclass_equality",
+    "unsupported_ratio"
+  ],
+  "exactBuiltinType": false,
+  "productionSha256": "0339bc237e8f10fe29a4862fe3bdf621a31c5e3dbf0d54bb3f12cf28ebc30307",
+  "status": "CONSTRUCTED_BREACH"
+}

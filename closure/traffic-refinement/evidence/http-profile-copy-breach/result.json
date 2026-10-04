@@ -1,0 +1,14 @@
+{
+  "before": [
+    17,
+    3
+  ],
+  "claim": "HP-PRESERVATION",
+  "copied": [
+    30,
+    2
+  ],
+  "exactProfileType": true,
+  "sourceSha256": "5666b214cc5434d17c0aaf4769bdf8764ed06cde481ec4c24e1c716a830e7fcb",
+  "status": "CONSTRUCTED_BREACH"
+}

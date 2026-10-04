@@ -1,0 +1,217 @@
+{
+  "closureClaim": false,
+  "files": [
+    {
+      "bytes": 4550,
+      "path": "README.md",
+      "sha256": "a87b5143f8b48f29d87fd8b4ce33b3bf09a0b7108f48de47b37960fba4e4205b"
+    },
+    {
+      "bytes": 17114,
+      "path": "after-source/traffic_http.py",
+      "sha256": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca"
+    },
+    {
+      "bytes": 343,
+      "path": "after.json",
+      "sha256": "b49fb1f3e836d799899d981d46e5c0301309510f9b1f9cee738b921e5c27e4f9"
+    },
+    {
+      "bytes": 342,
+      "path": "before.json",
+      "sha256": "4c8a75687bb738941ae7e1183e29761457c325f861374b5550c8109d9e577baa"
+    },
+    {
+      "bytes": 72183,
+      "path": "block.json",
+      "sha256": "930e11c08283c102a44699af30b727820e17588b8686c94a243aa0c8da3ca339"
+    },
+    {
+      "bytes": 1626,
+      "path": "replay-support/traffic_limits.py",
+      "sha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c"
+    },
+    {
+      "bytes": 5232,
+      "path": "replay-support/traffic_profile.py",
+      "sha256": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd"
+    },
+    {
+      "bytes": 1632,
+      "path": "runtime.json",
+      "sha256": "1787e1d983ded2060ac0b6dcb1ff7085df8eb0bcbcd657b9982fe36a701814ac"
+    },
+    {
+      "bytes": 10458,
+      "path": "spec-first/admission-contract.md",
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    {
+      "bytes": 8366,
+      "path": "spec-first/admission-spec.json",
+      "sha256": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9"
+    },
+    {
+      "bytes": 8986,
+      "path": "spec-first/before-admission-contract.md",
+      "sha256": "88629ed23d7b132c987ee821dff3903a32929acf259369524920a302818b1c1f"
+    },
+    {
+      "bytes": 6056,
+      "path": "spec-first/before-admission-spec.json",
+      "sha256": "db8027dcb13ef18d21400b330cfb642263aa451f4c920ab0c5a95c4c1ac5e876"
+    },
+    {
+      "bytes": 444,
+      "path": "spec-first/freeze.json",
+      "sha256": "6c4551520c8369ec3875a6892b2ef3cb47abf0cf84e0ab3df43610decbd7ec32"
+    },
+    {
+      "bytes": 7415,
+      "path": "spec-first/preimplementation-proof/closure/traffic-refinement/admission-source-contract.json",
+      "sha256": "9cf8e3f0d17569ed971ba7e7313e01bd3a1eb53853d1581ddaf437e55dfc746a"
+    },
+    {
+      "bytes": 1818,
+      "path": "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionExtracted.lean",
+      "sha256": "ff7c4a1a601d9c8dc06492d45e5ea1973a60649bf58a04353c32e8d26e6db3c4"
+    },
+    {
+      "bytes": 8279,
+      "path": "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionModel.lean",
+      "sha256": "2dff8bd48bc2c42736f0e7606969a452371d186201cf791d96948f5610e7daa8"
+    },
+    {
+      "bytes": 20575,
+      "path": "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionSpec.lean",
+      "sha256": "edf1c401697c9927098655567650c87a94ac34c680cb5d625b07a389e1ced517"
+    },
+    {
+      "bytes": 696,
+      "path": "spec-first/preimplementation-proof/inputs.json",
+      "sha256": "f89d5544ac432b90a3c3b4928dd986b38131433ef35ab75603f97638d73c32c7"
+    },
+    {
+      "bytes": 17853,
+      "path": "spec-first/preimplementation-proof/scripts/admission_bridge.py",
+      "sha256": "77ba495cf5e488a40757a0a75526bf8a198f990a7c969bcc1a9e8d0d9a62f4ca"
+    },
+    {
+      "bytes": 11681,
+      "path": "spec-first/preimplementation-proof/tests/test_admission_bridge.py",
+      "sha256": "4b19b79c38ab780f67dc33dbbb96d6118e077a60826e0c2f41424f3fbd4c64c2"
+    },
+    {
+      "bytes": 1748,
+      "path": "tests.txt",
+      "sha256": "822bcc0b456ab4e00c5104c448b4530049a627537cbd556efe62fa7956c8a167"
+    },
+    {
+      "bytes": 16546,
+      "path": "traffic_http.py",
+      "sha256": "f15442ab8c1372927355b0909529b427498017a4416ee43a284c6b5dc7b28deb"
+    },
+    {
+      "bytes": 6843,
+      "path": "verify_evidence.py",
+      "sha256": "9937789bce5408ccd810e7c5b4629c181691d31ce3b565695c8193139b1d2af2"
+    },
+    {
+      "bytes": 2611,
+      "path": "witness.py",
+      "sha256": "0367c25ebba9fa0883e546ed3b3c3716c77e10bc25085fe48c914ee777aeeb72"
+    }
+  ],
+  "id": "ting02-observation-interruption",
+  "indexHashConvention": "Index is excluded from files to avoid self-reference. Retain SHA-256 of evidence-index.json externally as the archive identity.",
+  "kind": "local-regression-evidence-archive",
+  "payloadRootSha256": "244c0922ba7651821098593a3e8135420d138b3c7ba9630be2b0edbc81357331",
+  "preservedOriginals": {
+    "after-source/traffic_http.py": {
+      "path": "traffic_http.py",
+      "sha256": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca"
+    },
+    "after.json": {
+      "path": "build/trf-closure/ting02-observation-interruption/after.json",
+      "sha256": "b49fb1f3e836d799899d981d46e5c0301309510f9b1f9cee738b921e5c27e4f9"
+    },
+    "before.json": {
+      "path": "build/trf-closure/ting02-observation-interruption/before.json",
+      "sha256": "4c8a75687bb738941ae7e1183e29761457c325f861374b5550c8109d9e577baa"
+    },
+    "block.json": {
+      "path": "build/trf-closure/ting02-observation-interruption/block.json",
+      "sha256": "930e11c08283c102a44699af30b727820e17588b8686c94a243aa0c8da3ca339"
+    },
+    "replay-support/traffic_limits.py": {
+      "path": "traffic_limits.py",
+      "sha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c"
+    },
+    "replay-support/traffic_profile.py": {
+      "path": "traffic_profile.py",
+      "sha256": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd"
+    },
+    "spec-first/admission-contract.md": {
+      "path": "build/trf-closure/admission-v5-spec-first/admission-contract.md",
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    "spec-first/admission-spec.json": {
+      "path": "build/trf-closure/admission-v5-spec-first/admission-spec.json",
+      "sha256": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9"
+    },
+    "spec-first/before-admission-contract.md": {
+      "path": "build/trf-closure/admission-v5-spec-first/before-admission-contract.md",
+      "sha256": "88629ed23d7b132c987ee821dff3903a32929acf259369524920a302818b1c1f"
+    },
+    "spec-first/before-admission-spec.json": {
+      "path": "build/trf-closure/admission-v5-spec-first/before-admission-spec.json",
+      "sha256": "db8027dcb13ef18d21400b330cfb642263aa451f4c920ab0c5a95c4c1ac5e876"
+    },
+    "spec-first/freeze.json": {
+      "path": "build/trf-closure/admission-v5-spec-first/freeze.json",
+      "sha256": "6c4551520c8369ec3875a6892b2ef3cb47abf0cf84e0ab3df43610decbd7ec32"
+    },
+    "spec-first/preimplementation-proof/closure/traffic-refinement/admission-source-contract.json": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/closure/traffic-refinement/admission-source-contract.json",
+      "sha256": "9cf8e3f0d17569ed971ba7e7313e01bd3a1eb53853d1581ddaf437e55dfc746a"
+    },
+    "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionExtracted.lean": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/formal/ingress_admission/AdmissionExtracted.lean",
+      "sha256": "ff7c4a1a601d9c8dc06492d45e5ea1973a60649bf58a04353c32e8d26e6db3c4"
+    },
+    "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionModel.lean": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/formal/ingress_admission/AdmissionModel.lean",
+      "sha256": "2dff8bd48bc2c42736f0e7606969a452371d186201cf791d96948f5610e7daa8"
+    },
+    "spec-first/preimplementation-proof/formal/ingress_admission/AdmissionSpec.lean": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/formal/ingress_admission/AdmissionSpec.lean",
+      "sha256": "edf1c401697c9927098655567650c87a94ac34c680cb5d625b07a389e1ced517"
+    },
+    "spec-first/preimplementation-proof/inputs.json": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/inputs.json",
+      "sha256": "f89d5544ac432b90a3c3b4928dd986b38131433ef35ab75603f97638d73c32c7"
+    },
+    "spec-first/preimplementation-proof/scripts/admission_bridge.py": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/scripts/admission_bridge.py",
+      "sha256": "77ba495cf5e488a40757a0a75526bf8a198f990a7c969bcc1a9e8d0d9a62f4ca"
+    },
+    "spec-first/preimplementation-proof/tests/test_admission_bridge.py": {
+      "path": "build/trf-closure/admission-v5-spec-first/preimplementation-proof/tests/test_admission_bridge.py",
+      "sha256": "4b19b79c38ab780f67dc33dbbb96d6118e077a60826e0c2f41424f3fbd4c64c2"
+    },
+    "tests.txt": {
+      "path": "build/trf-closure/ting02-observation-interruption/tests.txt",
+      "sha256": "822bcc0b456ab4e00c5104c448b4530049a627537cbd556efe62fa7956c8a167"
+    },
+    "traffic_http.py": {
+      "path": "build/trf-closure/ting02-observation-interruption/traffic_http.py",
+      "sha256": "f15442ab8c1372927355b0909529b427498017a4416ee43a284c6b5dc7b28deb"
+    },
+    "witness.py": {
+      "path": "build/trf-closure/ting02-observation-interruption/witness.py",
+      "sha256": "0367c25ebba9fa0883e546ed3b3c3716c77e10bc25085fe48c914ee777aeeb72"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Byte preservation and one CPython 3.10.11 local interrupted-status-observation regression; not a closure execution."
+}

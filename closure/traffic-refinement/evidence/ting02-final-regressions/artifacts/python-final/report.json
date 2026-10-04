@@ -1,0 +1,17 @@
+{
+  "changedInputPaths": [],
+  "elapsedSeconds": 320.57187450199854,
+  "excluded": [
+    "private deployment configs",
+    ".env files",
+    ".env.example",
+    "native Windows/macOS execution"
+  ],
+  "exitCode": 0,
+  "inputManifestSha256": "4cc6f589af3fbad7eb04fa590e40d417d3c7a4978b6a7c03084e060d68f42f38",
+  "logSha256": "f7417a0ead41be5cf1fd116ad53e1dc39b17aa8ddfdbaf6d1c85ed47dd8394c3",
+  "providersDisabled": true,
+  "stage": "build/trf-closure/ting02-python-20261004T182729Z/source",
+  "status": "PASS",
+  "tests": 1047
+}

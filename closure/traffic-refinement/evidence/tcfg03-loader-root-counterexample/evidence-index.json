@@ -1,0 +1,27 @@
+{
+  "classification": "DEVELOPMENT_REJECTION_EVIDENCE",
+  "description": "Reconstructed vulnerable adapter fixture, not a byte-exact historical implementation: ignored loader-root mutation was accepted; current bridge rejects it.",
+  "files": {
+    "archive.json": {
+      "original": "build/trf-closure/initial-adapter-counterexample/archive.json",
+      "sha256": "53ee2d096bf10468aa6d05423f524ae975b1be480902f9d9584f874ef1297e69"
+    },
+    "mutated-server.py.txt": {
+      "original": "build/trf-closure/initial-adapter-counterexample/mutated-server.py.txt",
+      "sha256": "8ad2d6a4b168a6b2cef136dcac910dfd7903aa762fc135534273861f64402318"
+    },
+    "reconstructed-vulnerable-adapter.py.txt": {
+      "original": "build/trf-closure/initial-adapter-counterexample/reconstructed-vulnerable-adapter.py.txt",
+      "sha256": "48369d749dfd8e739be63706af7c9b27445a57f990f0ff4b9ddd02c8de585c2a"
+    },
+    "result.json": {
+      "original": "build/trf-closure/initial-adapter-counterexample/result.json",
+      "sha256": "1eded675da8441ecc35a512b4789b5665998015c1d228102f06e6f8fa7ac9bbf"
+    },
+    "witness.py": {
+      "original": "build/trf-closure/initial-adapter-counterexample/witness.py",
+      "sha256": "d0fe25d9ce81983157ded7fef13232add7b912ceb723fd8ab5503f7af851c2ad"
+    }
+  },
+  "schemaVersion": 1
+}

@@ -1,0 +1,36 @@
+ServiceProfile/Spec.lean:90:0: error: Not a definitional equality: the left-hand side
+  Extracted.graph
+is not definitionally equal to the right-hand side
+  Frozen.graph
+ServiceProfile/Spec.lean:90:66: error: Type mismatch
+  rfl
+has type
+  ?m.3 = ?m.3
+but is expected to have type
+  Extracted.graph = Frozen.graph
+ServiceProfile/Spec.lean:145:34: error: Application type mismatch: The argument
+  initial_shared_references
+has type
+  allReferencesMatch Frozen.graph Frozen.referenceEqualities = true
+but is expected to have type
+  allReferencesMatch (Extracted.initial input).graph Frozen.referenceEqualities = true
+in the application
+  And.intro initial_shared_references
+ServiceProfile/Spec.lean:168:4: error: Tactic `rfl` failed: The left-hand side
+  { inputs := input, profile := Frozen.profile, graph := Frozen.graph,
+    http := HttpProfile.Extracted.initial HttpProfile.Extracted.defaults false input.clock }
+is not definitionally equal to the right-hand side
+  Extracted.initial input
+
+case mk.refl.refl.refl.refl
+input : Inputs
+hpublic :
+  HttpProfile.Spec.InitialRelation HttpProfile.Extracted.defaults false input.clock
+    (HttpProfile.Extracted.initial HttpProfile.Extracted.defaults false input.clock)
+relation :
+  InitialRelation input
+    { inputs := input, profile := Frozen.profile, graph := Frozen.graph,
+      http := HttpProfile.Extracted.initial HttpProfile.Extracted.defaults false input.clock }
+⊢ { inputs := input, profile := Frozen.profile, graph := Frozen.graph,
+      http := HttpProfile.Extracted.initial HttpProfile.Extracted.defaults false input.clock } =
+    Extracted.initial input

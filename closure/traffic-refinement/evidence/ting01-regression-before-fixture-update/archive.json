@@ -1,0 +1,9 @@
+{
+  "classification": "PRESERVED_REGRESSION_FAILURE",
+  "files": {
+    "regression-before-fixture-update-inputs.json": "135a5156a2b49124b258b5a41004f9db69441be0ceca1ff1a6ccc3fedada7d11",
+    "regression-before-fixture-update.json": "24e4da48649a3fb02e05d2552846e3c25a7ac09be2e44feed7256fdf9d25539d",
+    "regression-before-fixture-update.txt": "99efd8bd18bd835631b9c6f06a36a0af92718dc88b5ba9fa3f9bcc4e871321a9"
+  },
+  "repair": "Historical TCFG02 positive/mutation tests now use its archived input root; the unchanged legacy bridge still rejects the successor runtime layout."
+}

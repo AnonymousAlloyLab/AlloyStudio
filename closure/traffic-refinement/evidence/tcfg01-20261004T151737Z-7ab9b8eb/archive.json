@@ -1,0 +1,265 @@
+{
+  "closureId": "tcfg01-20261004T151737Z-7ab9b8eb",
+  "excluded": "Compiled objects remain in original owned build; their hashes are recorded by the raw report. Log bytes are unchanged, with .txt archive filenames.",
+  "files": {
+    "build-a/TrafficConfig.Extracted.log": {
+      "archivePath": "build-a/TrafficConfig.Extracted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-a/TrafficConfig.Scalar.log": {
+      "archivePath": "build-a/TrafficConfig.Scalar.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-a/TrafficConfig.Spec.log": {
+      "archivePath": "build-a/TrafficConfig.Spec.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-a/audit.jsonl": {
+      "archivePath": "build-a/audit.jsonl",
+      "sha256": "358458ff26ae02783842cc4b6d0351d9a7eff90a4ca2cff88a38256a5a70793b"
+    },
+    "build-a/bridge.json": {
+      "archivePath": "build-a/bridge.json",
+      "sha256": "885535c64d265c233c0bd0dbec881c7fa70183729698566e84e27e3d065caaa4"
+    },
+    "build-a/network.json": {
+      "archivePath": "build-a/network.json",
+      "sha256": "f231c3308de648339c74b421306e0b5dce0973f0d403ddb874e208c0a8544183"
+    },
+    "build-b/TrafficConfig.Extracted.log": {
+      "archivePath": "build-b/TrafficConfig.Extracted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-b/TrafficConfig.Scalar.log": {
+      "archivePath": "build-b/TrafficConfig.Scalar.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-b/TrafficConfig.Spec.log": {
+      "archivePath": "build-b/TrafficConfig.Spec.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-b/audit.jsonl": {
+      "archivePath": "build-b/audit.jsonl",
+      "sha256": "358458ff26ae02783842cc4b6d0351d9a7eff90a4ca2cff88a38256a5a70793b"
+    },
+    "build-b/bridge.json": {
+      "archivePath": "build-b/bridge.json",
+      "sha256": "885535c64d265c233c0bd0dbec881c7fa70183729698566e84e27e3d065caaa4"
+    },
+    "build-b/network.json": {
+      "archivePath": "build-b/network.json",
+      "sha256": "f231c3308de648339c74b421306e0b5dce0973f0d403ddb874e208c0a8544183"
+    },
+    "inputs/formal/lean-toolchain": {
+      "archivePath": "inputs/formal/lean-toolchain",
+      "sha256": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b"
+    },
+    "inputs/formal/reviews/TCFG01/astra-a.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/astra-a.json",
+      "sha256": "3aa57acacc2c38dde43d20deb818b621b8adb73f26e378bba00c108ca66975e4"
+    },
+    "inputs/formal/reviews/TCFG01/astra-a.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/astra-a.md",
+      "sha256": "8acf4df2d5e311ba1d269184479b793af4983ac4ded5f1c354f4d61c6d3a2ca1"
+    },
+    "inputs/formal/reviews/TCFG01/astra-b.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/astra-b.json",
+      "sha256": "ea2eea05b58620adc40b41fb6e8a4ee3bfbfb528f49f8cd03bf3c018c61ebcae"
+    },
+    "inputs/formal/reviews/TCFG01/astra-b.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/astra-b.md",
+      "sha256": "0d828a353a37adfdd78a77c7dce3def3dd2aa1ed20298dacae35777804a94d45"
+    },
+    "inputs/formal/reviews/TCFG01/luna-a.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/luna-a.json",
+      "sha256": "4fe785d4608026669c0cb849b8b45ab9479c52bf22aecc2f2abe9beb5834b555"
+    },
+    "inputs/formal/reviews/TCFG01/luna-a.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/luna-a.md",
+      "sha256": "f4daee78b81334589873f812b6c441ae30358674cba16e5af05dcf0eab0c2054"
+    },
+    "inputs/formal/reviews/TCFG01/luna-b.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/luna-b.json",
+      "sha256": "0fd156be2466eb3a00b0ca5ad3be782e042f7d23da52625dabb2893ab03c8cb4"
+    },
+    "inputs/formal/reviews/TCFG01/luna-b.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/luna-b.md",
+      "sha256": "df5e232d5640c63088624bfcdc7e7ed250956e8f2a951af5fa4e9237edef1dc3"
+    },
+    "inputs/formal/reviews/TCFG01/sol-a.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/sol-a.json",
+      "sha256": "c96e25c1e6b0c062135426c0037ab38bf121d63eb7c7aec321ce21eb20feed4a"
+    },
+    "inputs/formal/reviews/TCFG01/sol-a.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/sol-a.md",
+      "sha256": "4021ea55e48b1ee285ae68589cda6e602682b023beeda1e14c9b2577e19954c8"
+    },
+    "inputs/formal/reviews/TCFG01/sol-b.json": {
+      "archivePath": "inputs/formal/reviews/TCFG01/sol-b.json",
+      "sha256": "40e02c013dd3929f43dbff90d3e0a3c341de099abc8cc7d51c0807a095988b81"
+    },
+    "inputs/formal/reviews/TCFG01/sol-b.md": {
+      "archivePath": "inputs/formal/reviews/TCFG01/sol-b.md",
+      "sha256": "8dd31f6d082333658aa50acc992d095e1b19b799b367db6e8afd69051ec3bf32"
+    },
+    "inputs/formal/traffic_config/Audit.lean": {
+      "archivePath": "inputs/formal/traffic_config/Audit.lean",
+      "sha256": "218cac9899a26eb7d315fa50e044ed711afac29141f12111ef71b64e8a56966f"
+    },
+    "inputs/formal/traffic_config/README.md": {
+      "archivePath": "inputs/formal/traffic_config/README.md",
+      "sha256": "ad2bc4adcba64254af2cd1facd6065cf4e398de204423623417ebf855fc8dc5b"
+    },
+    "inputs/formal/traffic_config/TrafficConfig/Extracted.lean": {
+      "archivePath": "inputs/formal/traffic_config/TrafficConfig/Extracted.lean",
+      "sha256": "54eb68f363572f86b5f14b01243992e2722ca2ac550c26ce96704ace7cd605d0"
+    },
+    "inputs/formal/traffic_config/TrafficConfig/Scalar.lean": {
+      "archivePath": "inputs/formal/traffic_config/TrafficConfig/Scalar.lean",
+      "sha256": "cf0dad1219e0abdc93b288c7b211842d10de80cad603825db9559d054cf8e744"
+    },
+    "inputs/formal/traffic_config/TrafficConfig/Spec.lean": {
+      "archivePath": "inputs/formal/traffic_config/TrafficConfig/Spec.lean",
+      "sha256": "d78263a69a3e9b23f6aef5b41b5f9b2d8fa385e3778bf569643281146c1dc386"
+    },
+    "inputs/formal/traffic_config/block.json": {
+      "archivePath": "inputs/formal/traffic_config/block.json",
+      "sha256": "1c263a140f2a58c88022ad51463d2c6542c4b4b2e68600bbaf17d267a8546b06"
+    },
+    "inputs/formal/traffic_config/theorems.json": {
+      "archivePath": "inputs/formal/traffic_config/theorems.json",
+      "sha256": "3941ffa086051f607ce89297d1d7bb654f74575d31335952689e5eaedb2d95b1"
+    },
+    "inputs/lean-toolchain": {
+      "archivePath": "inputs/lean-toolchain",
+      "sha256": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b"
+    },
+    "inputs/scripts/__pycache__/bridge_policies.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/bridge_policies.cpython-310.pyc",
+      "sha256": "27c5cd30ca5f19ba522e435b7dcde756308301159d5d68e927aac7d7eb6e9a9c"
+    },
+    "inputs/scripts/__pycache__/lean_offline.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/lean_offline.cpython-310.pyc",
+      "sha256": "5a87f68602534e0d951014c82a2fb8988fb69d02bd551b6034f3b5a31058b84c"
+    },
+    "inputs/scripts/__pycache__/review_ladder.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/review_ladder.cpython-310.pyc",
+      "sha256": "946ba99a59bb4cd0e8abbbd54aaf334751214877a3b5eb3fa5edb86c7a09be18"
+    },
+    "inputs/scripts/__pycache__/traffic_config_bridge.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/traffic_config_bridge.cpython-310.pyc",
+      "sha256": "a96186f50f33ccbceaa8ca51291a642d11b7a01e9d95a3619ca8b6a8d7dae77c"
+    },
+    "inputs/scripts/__pycache__/verify_lean.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/verify_lean.cpython-310.pyc",
+      "sha256": "43bbc6e5707b1fdfe04b66f0efad99f2bd607a5e7701938948e0b68ec568cc4e"
+    },
+    "inputs/scripts/__pycache__/verify_traffic_config.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/verify_traffic_config.cpython-310.pyc",
+      "sha256": "80df1bd43243c423a0b48ceeb53a9aedfd8e269ebe65a9b53dd69ff6140c23bf"
+    },
+    "inputs/scripts/__pycache__/verify_traffic_proofs.cpython-310.pyc": {
+      "archivePath": "inputs/scripts/__pycache__/verify_traffic_proofs.cpython-310.pyc",
+      "sha256": "c67210d416a94cf0ccf0ef01c870acf55d8340232c8336b0fc7c6449cf9b1666"
+    },
+    "inputs/scripts/bridge_policies.py": {
+      "archivePath": "inputs/scripts/bridge_policies.py",
+      "sha256": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc"
+    },
+    "inputs/scripts/lean_offline.py": {
+      "archivePath": "inputs/scripts/lean_offline.py",
+      "sha256": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0"
+    },
+    "inputs/scripts/review_ladder.py": {
+      "archivePath": "inputs/scripts/review_ladder.py",
+      "sha256": "583e38ccb665ecb8107c169f41bda0639805e8c8aa9ae24d4b445c162a8f477a"
+    },
+    "inputs/scripts/traffic_config_bridge.py": {
+      "archivePath": "inputs/scripts/traffic_config_bridge.py",
+      "sha256": "f7a74f9197bb3bc5916fb0e6316fc8ead0c5a1e6b0bd81d81cf52cb40aee84f2"
+    },
+    "inputs/scripts/verify_lean.py": {
+      "archivePath": "inputs/scripts/verify_lean.py",
+      "sha256": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2"
+    },
+    "inputs/scripts/verify_traffic_config.py": {
+      "archivePath": "inputs/scripts/verify_traffic_config.py",
+      "sha256": "8487b2e869e9d70e9c27106a4d0db0f268dea57dc943aa0ea311bf0424a21e60"
+    },
+    "inputs/scripts/verify_traffic_proofs.py": {
+      "archivePath": "inputs/scripts/verify_traffic_proofs.py",
+      "sha256": "fcfb38b4487e06d9e5c23287fa24fef34ca0499aef95f6090310fea0a0c630dd"
+    },
+    "inputs/tests/test_review_ladder.py": {
+      "archivePath": "inputs/tests/test_review_ladder.py",
+      "sha256": "041b1e8abe7dd31daf3e910b074b6f59822e60bded2f9312548aae9b6368b4de"
+    },
+    "inputs/tests/test_traffic_config_bridge.py": {
+      "archivePath": "inputs/tests/test_traffic_config_bridge.py",
+      "sha256": "f0745eac9323be35ea52df02806d8fba48228ac33a35a028fd4010002b995516"
+    },
+    "inputs/tests/test_traffic_config_gate.py": {
+      "archivePath": "inputs/tests/test_traffic_config_gate.py",
+      "sha256": "4a658e7b9004f79eaf9ddd6caf706e6745c8621e37318694d7b3498d37738a74"
+    },
+    "inputs/traffic_limits.py": {
+      "archivePath": "inputs/traffic_limits.py",
+      "sha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c"
+    },
+    "lean-version.log": {
+      "archivePath": "lean-version.txt",
+      "sha256": "355a9a028f81641782d75d6e6b58dec70f29d2f61238a9e271690259d9bf5680"
+    },
+    "manifest.json": {
+      "archivePath": "manifest.json",
+      "sha256": "8916a670f16355ecfea4341a1a45ec38c0595f53bb228e4da44c68ce7cf020e5"
+    },
+    "negative-controls/TrafficConfig.Extracted.log": {
+      "archivePath": "negative-controls/TrafficConfig.Extracted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "negative-controls/TrafficConfig.Scalar.log": {
+      "archivePath": "negative-controls/TrafficConfig.Scalar.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "negative-controls/TrafficConfig.Spec.log": {
+      "archivePath": "negative-controls/TrafficConfig.Spec.txt",
+      "sha256": "ef217326bdb4a8045bd1f472326fe7fa8ff3f1700c24638ff2b2467a695a39f8"
+    },
+    "negative-controls/axiom-audit.jsonl": {
+      "archivePath": "negative-controls/axiom-audit.jsonl",
+      "sha256": "99ffc9f1de141f1d5935e6385514828e234aabdea56bced9f2dff98a26202f00"
+    },
+    "negative-controls/axiom-build.log": {
+      "archivePath": "negative-controls/axiom-build.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "negative-controls/placeholder.log": {
+      "archivePath": "negative-controls/placeholder.txt",
+      "sha256": "6d0de0989ba0731b326fdb15272984056e7a2bac7cd3cda07a9cc15f10b51415"
+    },
+    "report.json": {
+      "archivePath": "report.json",
+      "sha256": "15017bb698eca74d12e85e70ae8c16c563a8cda709b05bfc1147aaa2218594ae"
+    },
+    "test_review_ladder.py.log": {
+      "archivePath": "test_review_ladder.py.txt",
+      "sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255"
+    },
+    "test_traffic_config_bridge.py.log": {
+      "archivePath": "test_traffic_config_bridge.py.txt",
+      "sha256": "1716b47a03188bc918a0e69af2d063dbf3f51ded577934827cd953a60bd6070d"
+    },
+    "test_traffic_config_gate.py.log": {
+      "archivePath": "test_traffic_config_gate.py.txt",
+      "sha256": "35e173770e8b2ae664bb6a561f29ed51afa8d5f7cc9761dbdfa594317be439b2"
+    },
+    "toolchain.json": {
+      "archivePath": "toolchain.json",
+      "sha256": "50b91887edb2e1e89b25a4e577b130c2e196c968a2d32911a4ccc4d0b3964654"
+    }
+  },
+  "inputRootHash": "6f492a657d251b98e7feb0667050db90bcffd2dc4409683b585bd93615607f82",
+  "kind": "immutable-verifier-evidence-copy",
+  "originalRun": "build/trf-closure/tcfg01-20261004T151737Z-7ab9b8eb"
+}

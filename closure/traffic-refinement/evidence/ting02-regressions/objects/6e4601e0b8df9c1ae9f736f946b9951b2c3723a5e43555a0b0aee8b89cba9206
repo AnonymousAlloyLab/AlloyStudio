@@ -1,0 +1,28 @@
+{
+  "feedbackSuccess": {
+    "acceptedMasks": [
+      1023
+    ],
+    "arity": 10
+  },
+  "guidanceSuccess": {
+    "acceptedMasks": [
+      8191
+    ],
+    "arity": 13
+  },
+  "poolChoose": {
+    "acceptedMasks": [
+      0,
+      2,
+      3
+    ],
+    "arity": 2
+  },
+  "poolFinish": {
+    "acceptedMasks": [
+      3
+    ],
+    "arity": 2
+  }
+}

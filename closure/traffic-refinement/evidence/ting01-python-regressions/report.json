@@ -1,0 +1,30 @@
+{
+  "classification": "TESTED",
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_*.py"
+  ],
+  "elapsedSeconds": 299.641,
+  "environment": {
+    "OPENAI_DISABLED": "1",
+    "TMPDIR": "build/trf-closure/tmp",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+  },
+  "exitCode": 0,
+  "inputCount": 600,
+  "inputs": "inputs.json",
+  "inputsSha256": "15d74413459a4784c12b43af46ed9897e9db83dd3363d8a52796b484f4dcf885",
+  "log": "unittest.txt",
+  "logSha256": "0c247fd97f3b03f004a075a964184018777a05354d2ea497c75b289bde4e0bb8",
+  "scope": "Finite Linux regression evidence, including build/relocation fixtures. No arbitrary execution refinement, native Windows/macOS or actual IIS deployment claim.",
+  "sourceHashesUnchanged": true,
+  "status": "PASS",
+  "tests": 982
+}

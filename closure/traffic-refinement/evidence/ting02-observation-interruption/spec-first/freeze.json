@@ -1,0 +1,9 @@
+{
+  "candidate": "TRF01-admission-v5",
+  "inputs": {
+    "closure/traffic-refinement/admission-spec.json": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9",
+    "docs/admission-contract.md": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+  },
+  "phase": "specification frozen before production repair",
+  "productionBeforeRepairSha256": "f15442ab8c1372927355b0909529b427498017a4416ee43a284c6b5dc7b28deb"
+}

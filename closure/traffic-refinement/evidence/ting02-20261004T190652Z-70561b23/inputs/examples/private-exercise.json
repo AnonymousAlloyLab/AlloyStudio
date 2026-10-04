@@ -1,0 +1,14 @@
+{
+  "id": "custom-no-self-loops",
+  "title": "No self loops",
+  "group": "Custom graphs",
+  "predicate": "inv",
+  "description": "No node may have an edge to itself.",
+  "environmentBefore": "sig Node { adj: set Node }\n",
+  "environmentAfter": "\n",
+  "predicateHeader": "pred inv ",
+  "starter": "some Node",
+  "oracleSolutions": ["no iden & adj", "all n: Node | n not in n.adj"],
+  "correctSolutions": ["no n: Node | n in n.adj"],
+  "equivalenceScope": 5
+}

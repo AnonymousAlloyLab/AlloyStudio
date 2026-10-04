@@ -1,0 +1,676 @@
+{
+  "schemaVersion": 1,
+  "id": "B01",
+  "scope": "Constructive mathematical foundations only; no Java/Python/JavaScript refinement, semantic distance optimality, normalization correctness, or parser correctness claim.",
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-j1"
+  ],
+  "allowlistedAxioms": [],
+  "sources": {
+    "formal/AlloyStudio/Foundation.lean": "ca9d8f9fb4d6d2bf26b156860c88fb581ba2fc5ea9fc37a381d04f5c2d472e30",
+    "formal/AlloyStudio/RawAst.lean": "fb996131c1c547449bdd9dca98a49ad06252235d95614fbf2d908acd68d2a847",
+    "formal/AlloyStudio/Edits.lean": "8529219103e5762049414a3368a63e2a0e0bef302c42b91c772fed991eb8dab0",
+    "formal/AlloyStudio/Pool.lean": "384fa10522c0e7e27593e5cfa19174dfa44c0ffc1e1b42547a2a9abc0933183c"
+  },
+  "theorems": [
+    {
+      "name": "AlloyStudio.Edits.adopt_count",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "5d27dd8ce55eb7c90f53bd7418db461effebd68ed259bbfad1991e723b4b0ea0"
+    },
+    {
+      "name": "AlloyStudio.Edits.adopt_occurrences",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "ec8f7ec72baa57df9bd155541771887ad5355a229c84ebd090811b25956e9cc5"
+    },
+    {
+      "name": "AlloyStudio.Edits.deleteAt_adopt",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "d6b9151b27573df2cda7fa0107987fddb14ffae031d4036a5b8ba9e8a6b84954"
+    },
+    {
+      "name": "AlloyStudio.Edits.edit_inverse_and_cost",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "a8fb7c1545373253fed65c836e9e7bf5ed2d9315136effbd550644f0ac38eba4"
+    },
+    {
+      "name": "AlloyStudio.Edits.insertAt_promote",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "47e9e4dda59ae65334cb5d9a2574cb30d4e6395fe1b324db3a0ff074d2c65b87"
+    },
+    {
+      "name": "AlloyStudio.Edits.insertion_into_empty",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "77b674e398079b90e42afbfac7ce7d11bafbb8af87b793001a2d3c8022bbfa47"
+    },
+    {
+      "name": "AlloyStudio.Edits.promote_occurrences",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "da100627d2ae1c56bb8bb16c2e7a6bc133ddc7f2dc589494bf5ba79e53f8df9a"
+    },
+    {
+      "name": "AlloyStudio.Edits.promote_occurrences_sublist",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "f5aa5e15eddae37d855b5d60a2cc0142a3f2b0e4254c6e498b74552cd400d330"
+    },
+    {
+      "name": "AlloyStudio.Edits.promotion_preserves_unique_occurrences",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "305ec0a593314ee25c9ec1db29da0cef1f2d8aa3661f0a56aa48ade8caf02f96"
+    },
+    {
+      "name": "AlloyStudio.Edits.relabelAt_adopt",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "3dcb91717a71fef4d10e91fe104398bbd27045a97c1e1c4cac8fcde338598345"
+    },
+    {
+      "name": "AlloyStudio.Edits.relabel_preserves_count",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "26ec794fcd41860b0ef70bb13e789f4260806b5a810800e6aef352948282929c"
+    },
+    {
+      "name": "AlloyStudio.Edits.relabel_preserves_occurrences",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "b485adc5bea1dd2e1379195ae9bf090a34ba8e71a1b76263c220ecbff36cbbe2"
+    },
+    {
+      "name": "AlloyStudio.Edits.root_deletion_keeps_children",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "c95776614e93fa61ca7d6488efe0b0de3e44bad69d75c9b6ea74009b03238214"
+    },
+    {
+      "name": "AlloyStudio.Edits.splitRoots_append",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "f18c3ef0cea16ff3ad4fcc1e95b974670fda538bff5554593f6524d99318164a"
+    },
+    {
+      "name": "AlloyStudio.Foundation.complete_clean_counts_verify",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "76c37bc371e5ba9c54c46f48d31725f2190e45136a9c760264c0d1e16abaca43"
+    },
+    {
+      "name": "AlloyStudio.Foundation.missing_review_witness_is_blocked",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "d1b37322de3d7bc3a63b8d04b789c2e90575f73347062368bab4c9f961d3b212"
+    },
+    {
+      "name": "AlloyStudio.Foundation.unresolved_witness_is_blocked",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "91c2cd651546d214bb930247f7b09a209acafd0440de467508996668bcba56af"
+    },
+    {
+      "name": "AlloyStudio.Foundation.verified_has_complete_count",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "a1a2ae1732195f90c315ef29de1a5e44c7c72fe44170b509f80e5abb101f904c"
+    },
+    {
+      "name": "AlloyStudio.Foundation.verified_has_no_failures",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "35e11ceb16b2a7d5783439370eb6c824315d4c356d29f3a62a0ccf1cb6fd4a63"
+    },
+    {
+      "name": "AlloyStudio.Foundation.verified_has_no_infrastructure_error",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "7a59aaf3e7695130c14d68cc9a1d713946b9271d48ae5d0a7e98b6a0dc10f3bb"
+    },
+    {
+      "name": "AlloyStudio.Pool.argmin_complete_first_minimum",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "43863b5aecaf5dd989aaf3d326ac87e7360f6761c7aa433d6091b4a2bfe41290"
+    },
+    {
+      "name": "AlloyStudio.Pool.evaluate_none_iff",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "03c973fced363b997ea406e138d6db31e1a2fc4b6e24a81f420a8164396a525e"
+    },
+    {
+      "name": "AlloyStudio.Pool.evaluate_success",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "801e2880b1a7e6f942afb95d6b293738a42ada8f60effdf0f597f693d30a2d04"
+    },
+    {
+      "name": "AlloyStudio.Pool.failed_candidate_prevents_result",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "200173bedf52ce948ebbd72c6a75e2f54423563a984331fe79901e768b70c464"
+    },
+    {
+      "name": "AlloyStudio.Pool.failure_after_zero",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "f3d1416ed5a77aa9266985c31765e60fcfc7ec257445cd37c40e8f20b0bc473b"
+    },
+    {
+      "name": "AlloyStudio.Pool.firstMinimum_cons",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "2099f3275f6a94b9bd63af9ec6e80f2a2a849e23d709fc1974233cd13b59a2df"
+    },
+    {
+      "name": "AlloyStudio.Pool.firstMinimum_member_and_minimal",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "cffb0ee0acc840df25c49f8dc952fa3354ed1afd5f4fdcce075a07c26c53d850"
+    },
+    {
+      "name": "AlloyStudio.Pool.firstMinimum_none_iff",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "d75b338ab58d5ac08bbbf1c43f19d3c080e659feaf41953e0f64117446b0f8ff"
+    },
+    {
+      "name": "AlloyStudio.Pool.firstMinimum_spec",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "14a1377aea5f6898afbd0ac95aba8f5516dbcb33a34b7081bfa99cc4dd45c1c8"
+    },
+    {
+      "name": "AlloyStudio.Pool.inclusivePool_nonempty",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "e1aed65d6073a18495e364c6d1bc229f8030e495e90fbf788b6fb66eb684002f"
+    },
+    {
+      "name": "AlloyStudio.Pool.inclusivePool_oracle_member",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "5bc42dcfc46fe8233d94c3cb75b6b19258321b80209569da215f2566f3c9c84f"
+    },
+    {
+      "name": "AlloyStudio.Pool.map_member",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1",
+        "u_2"
+      ],
+      "typeSha256": "86ab43b1c82387638364ea6ec29081c3fda719740ca5c1a29a777856ef113a2c"
+    },
+    {
+      "name": "AlloyStudio.Pool.member_append",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "2d311acc3515b05ea94b6e53599ff591b9ec9466da58db16b4718ddf9d5fd1b5"
+    },
+    {
+      "name": "AlloyStudio.Pool.member_cons",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "e46bf7c42db155746b9c0825ae155534071682eebb598613c050b3298e4f101c"
+    },
+    {
+      "name": "AlloyStudio.Pool.prefer_assoc",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "1466060e38376acf2e7b7d1ef76a1c6b6231418e0f0f6038fcc7b5ef038a863f"
+    },
+    {
+      "name": "AlloyStudio.Pool.scan_prefer",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "7eda1b9a070a0368d3c279831dfb435fca6d1ceb4fea924c0b07cd1f2f6c6690"
+    },
+    {
+      "name": "AlloyStudio.RawAst.differently_spelled_leaves_differ",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "2f17f61efdaadf569ff9731e20bee59efe1120d80f3fbc312e73257ea82025d8"
+    },
+    {
+      "name": "AlloyStudio.RawAst.distinct_occurrences_differ",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "86fa60a886772d928949f33056464bf64b23c52254fc435fbabcb6e7581e894b"
+    },
+    {
+      "name": "AlloyStudio.RawAst.sequence_append_assoc",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "5de1e88c3e9358834a98a0d2747e775f6c64a9dc71071a0601e72e84bc70dacd"
+    },
+    {
+      "name": "AlloyStudio.RawAst.sequence_length_append",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "49395eb2753cc505a5854f588942be7e8c5437175192570a5534b554902d86c7"
+    },
+    {
+      "name": "AlloyStudio.Edits.Script.append",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "33bd8497a502c90798fb9b4993f147e6bb68ca283ad356981155ae123b42f0ae"
+    },
+    {
+      "name": "AlloyStudio.Edits.Script.brecOn",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "29c68a57ecec6c67dc749600a0b415d4b22c78cd08fdd1be0479ad5d3c4bc507"
+    },
+    {
+      "name": "AlloyStudio.Edits.Script.inverse",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "a8fb7c1545373253fed65c836e9e7bf5ed2d9315136effbd550644f0ac38eba4"
+    },
+    {
+      "name": "AlloyStudio.Edits.Script.single",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "327d614398385b690c5b186c703336710cbcdc61f8762ec8b25c108fb5c4a3a3"
+    },
+    {
+      "name": "AlloyStudio.Edits.Step.inverse",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "84581eb4fd569a048008ce77963ade058d28f2df60dc5c4ad976e79f5725dbb1"
+    },
+    {
+      "name": "AlloyStudio.Foundation.Result.ofNat_ctorIdx",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "409b86e719b6fc1b391627b6c9287ebfc9a50bd201d4eb002fbed119f5314691"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqResult._proof_1",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "9c50a5c14e1d2a49a6cda862bd93ea11c9e159ecf6f0a81d06a1139ada2d07c1"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqResult._proof_2",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "e9fb49663eac8cedbce7221cee3f9bce2d896d4ca28cf799829f1e407c3c1b19"
+    },
+    {
+      "name": "AlloyStudio.Pool.evaluate.eq_def",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "589ba63707d6c9329fe65b6c8c873f938d982fbbd449cb1d4ab0ded5ef7c00ce"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.append_assoc",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "935211b020cddf9db9e286484b6d23dfe4b2f09f71782bff5518c3e0ec385645"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.append_nil",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "e8180b26f9e585309dd80004a44512306cb3f34a52b3526ba98e32d28454d3ab"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.cons_append",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "7ef07aeafcc3a87a5384744541f4154dac4f8d9f575699e00fb8fcb03688f94b"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.count_append",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "8daa8d1e4803e3803d5ea84cf0d5069da5c62d352660a33e4a98a52aff342813"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.nil_append",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "21c559a98b9bf6e111341eb0b72b1470bd6da54502a771b246bda6fc26b30825"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.occurrences_append",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "20e3932e03fd23e92b2b9cca521e42f4a09a85c85a914a547d2dc89b7a1325e5"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.occurrences_length",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "7e44e951ef271a7e558308b56a6bd01a03dcc1dfda02d5d5e795b869dd56b536"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Tree.count_positive",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "6167b2a03c24ef0e45112f260e2143d580deba6ac6914046fc4be6c15d1af137"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Tree.occurrences_length",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "31a167d4af62a3456da02700db786dbd561f0ddc284ade266448f8e1d97b71e4"
+    },
+    {
+      "name": "AlloyStudio.Edits.Context.brecOn.eq",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [
+        "u"
+      ],
+      "typeSha256": "8a25dc5bb69007570e85e4d881523f86837bd018bb409f4e284a0a975ca9228d"
+    },
+    {
+      "name": "AlloyStudio.Edits.Context.inside.sizeOf_spec",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "e89cacd11158ce730e6093b09ab36664bec2e8795a7c8a4830b2328823d44957"
+    },
+    {
+      "name": "AlloyStudio.Edits.Context.top.sizeOf_spec",
+      "module": "AlloyStudio.Edits",
+      "levelParameters": [],
+      "typeSha256": "75c80737d76ac71238974194a9256d5b72fafa8191bfb80d8f77276630124cf0"
+    },
+    {
+      "name": "AlloyStudio.Foundation.Counts.mk.sizeOf_spec",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "2fd473c7473fdf8c57ad681c8fe7f792b73850b0c7c6e6fdc5a8674c88fbf254"
+    },
+    {
+      "name": "AlloyStudio.Foundation.Result.blocked.sizeOf_spec",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "c7f71a23b4a0f0f36546786dc346762a7bf894d0abb25e05d8f7c34094c93ae5"
+    },
+    {
+      "name": "AlloyStudio.Foundation.Result.infrastructureFailure.sizeOf_spec",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "71d52be1fd2c1871b0d9b810a095ae64be9aabdfe9b67e3022cf1b64646ceaa7"
+    },
+    {
+      "name": "AlloyStudio.Foundation.Result.verified.sizeOf_spec",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "46b359e8667de8dbe366c52ae2a2609e320c0dc4de6deb4b83a49f2cfedf2423"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_1",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "010ec3c59bff1b68fc827b91bb91d56c3dda4ad185e3d472b41dc666cd70ced8"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_10",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "b8c4cd068a61b8b75702620d643df648d825508b6730bcf750237b4691a3a0e3"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_11",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "41646a64c97ead2407e8199799a1df68413e51d7e77cac2fe6527f6393584246"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_12",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "c0dde689ac541962a8eaab202a25ab879b0b7b72839058d7cdfab2838ef83b1c"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_13",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "3bd520505d0cb6a01688850bab9f68d7305781caa55d77d82658d3d6e33b4a4e"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_2",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "b8f540f8d008daecaeec08f4df7e3c5b37b26751f84d7f1e373386712737d189"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_3",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "f4241e34331b6d3131a5cdb0d0e6a82c97846868f40a7f7d13c18e1465eb596d"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_4",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "ae075b44299e12f12823299cb7fe911a3057687b946c9899114dd43137b24162"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_5",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "b2a8957c3a800dd8c98dd04dbbf5faae15c75082125430361b80488e34e2fa4d"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_6",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "386226a44a08fb93c40ac124ef55adf359e7a61c0588d7a882d65ef0179255b1"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_7",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "99023087e1a9bd4f49137209fa35dbafaeb72cb800a183a1be40a157611e2634"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_8",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "f53089c6ef6b565a92c8500431893acd9fca47aa3dea2230ba461b77388d2f7c"
+    },
+    {
+      "name": "AlloyStudio.Foundation.instDecidableEqCounts.decEq._proof_9",
+      "module": "AlloyStudio.Foundation",
+      "levelParameters": [],
+      "typeSha256": "ec6c7a59a389c1a33d43f244b14d25f27bc6bb529db25d0a8afa0ddbd992f264"
+    },
+    {
+      "name": "AlloyStudio.Pool.Scored.mk.sizeOf_spec",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "ed70b74141c933aca04ffebe6d2d660075ed3792c61725405b7cb3212b022f69"
+    },
+    {
+      "name": "AlloyStudio.Pool.instDecidableEqScored.decEq._proof_1",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "8b3ee47b050c041361a4a086aea6d529aea58e9a297d3ad7723743f137daebaf"
+    },
+    {
+      "name": "AlloyStudio.Pool.instDecidableEqScored.decEq._proof_2",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "58074267827605a8ee5ef8ca34b732947034c96e668959c08bb33ab0ce425173"
+    },
+    {
+      "name": "AlloyStudio.Pool.instDecidableEqScored.decEq._proof_3",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [],
+      "typeSha256": "16738344699e1f10322604c66645f0e29e8357ce43fbfa287cf24e58a3099b82"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.brecOn.eq",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [
+        "u"
+      ],
+      "typeSha256": "e2657170052e9ea170d648fc989ef21da264baf4e3936102391ec1c8c39fe27b"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.cons.sizeOf_spec",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "088679da2f659c37cc27a4848beb479828cb9ab4f6e1ded9aa9c028eefbddd3a"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Forest.nil.sizeOf_spec",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "ab9fed0d96921ab46e7fcba586b42f7ac1d6195ca71055dd590000a8e1c11a1f"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Tree.brecOn.eq",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [
+        "u"
+      ],
+      "typeSha256": "a71dd118a89242bd26f5cdae4fe8710a85e5ab63bb69be539377273aa239482f"
+    },
+    {
+      "name": "AlloyStudio.RawAst.Tree.node.sizeOf_spec",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "0b8819a9d16a3807e8557461be11df5f38639146de6839d5aa8fecf347a2d478"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_1._proof_1",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "9d02fc31944ef1b7366d903e7b819d8312f49135797cd7948693854680c352df"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_1._proof_2",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "2795ca96da5f092efc3332ce321e0fed433e22fe8f6a227a55ed16ca357c3d5d"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_1._proof_3",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "7c0c625868aa309eb7ad9f0c9fcbbb445ed57c1d680e86fa373512290df5849c"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_1._proof_4",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "a612043c18472d646d55a7d8cc41286880fec9417f0edd640790834556d04643"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_2._proof_1",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "ee935b427ce71999e6017aff562fe3e69bf975d8a7ea8e6136b9c6a40eb1b14e"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_2._proof_2",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "509684901c3f925695cf7f88826eb9b57466e1cf20a2f580326ef029a219439d"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_2._proof_3",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "6b3e980c672d1f6635e76f663c5545947f9ad097b2dba7ba60ec88a377737eb8"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_2._proof_4",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "043d62218fcd8f58d4868734630c3e6356f3c41b5722136054688a990697d91e"
+    },
+    {
+      "name": "AlloyStudio.RawAst.instDecidableEqTree.decEq_2._proof_5",
+      "module": "AlloyStudio.RawAst",
+      "levelParameters": [],
+      "typeSha256": "1af63af8d045a361297fa221aaafebd5c02d2b13b7c79e2480d0976b785fb4c6"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_1.eq_1",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "3f96c7340f8d2b70d3e8b2099d768ac1fc718cf4b87b59da8af653e0fed93d89"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_1.eq_2",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "efeda18f892bf7eec5ed730445d1f8add7d35aa1d8eb047d420c408e66724987"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_3.eq_1",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "61cc9bb297e19faa3ae1110b1eded98d7863d127d50cd7b68955952bae21d2ab"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_3.eq_2",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "0803c9b006dae6c516e89b876f97f7c4df1fbe57a4e94c8546343a83b69a5564"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_5.eq_1",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "dce1ea33337640351d15281fb419c1a0d0902e0d6b5e6a4d062d3975b7d7e6d0"
+    },
+    {
+      "name": "_private.AlloyStudio.Pool.0.AlloyStudio.Pool.evaluate.match_5.eq_2",
+      "module": "AlloyStudio.Pool",
+      "levelParameters": [
+        "u_1"
+      ],
+      "typeSha256": "dcdccaf253057fb7b3f4290b1654010562b00f6ffea02a4d16622cb5c9a05fa4"
+    }
+  ],
+  "claims": [
+    "Closure decision rejects any nonzero failure count and requires all counted proofs (evidence collection not proved).",
+    "Ordered forest counts and postorder occurrence laws, with uniqueness a separate predicate.",
+    "Unit single-node promotion/adoption/relabel semantics, local executable operations, contextual script inverse and cost composition (no freshness guarantee for insertion).",
+    "Complete finite pool evaluation and stable first minimum; oracle inclusion by construction (no evaluator correctness premise or conclusion)."
+  ],
+  "supports": [
+    "L00",
+    "L01",
+    "L04",
+    "L11",
+    "L23"
+  ],
+  "doesNotCloseOriginalObligations": true
+}

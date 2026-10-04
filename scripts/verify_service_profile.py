@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Close the unchanged TRF-00 configuration/startup obligation, offline.
+
+The finite selected profile, explicit inputs and declared constructor/host TCB
+are the boundary. This gate does not certify subsequent traffic transitions,
+RSS enforcement, solver truth or native IIS/macOS deployment.
+"""
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import platform
+import re
+import secrets
+import sys
+
+from lean_offline import ROOT, clean_environment, installed_toolchain
+from verify_lean import (FLAGS as BASE_FLAGS, Rejected,check_inventory,check_proof_source,
+                        digest,inside,json_bytes,network_witness,run,toolchain_inventory)
+from verify_traffic_proofs import snapshot_inputs,frozen_bytes
+from review_ladder import check_reviews
+
+FLAGS=[*BASE_FLAGS,'-DmaxRecDepth=4096','-DmaxHeartbeats=2000000']
+BLOCK='formal/service_profile/block.json'
+MODULES=('TrafficConfig.Scalar','TrafficConfig.Extracted','TrafficConfig.Spec',
+         'TrafficProfile.Model','TrafficProfile.Extracted','TrafficProfile.Spec',
+         'ServiceProfile.Model','ServiceProfile.Frozen','ServiceProfile.Extracted','ServiceProfile.Spec')
+SOURCES=tuple('formal/'+{'TrafficConfig':'traffic_config','TrafficProfile':'traffic_profile','ServiceProfile':'service_profile'}[m.split('.')[0]]+'/'+m.replace('.','/')+'.lean' for m in MODULES)
+CLAIMS=(
+ {'id':'TRF00-PROFILE','statement':'Exactly one complete selected finite numeric/semantic/deployment profile is frozen and mapped to source quantities with explicit disabled-zero encodings.'},
+ {'id':'TRF00-OBSERVATION','statement':'One independent complete observation contract binds archived pre-optimization source identities, computational fields, order, failures and disclosure without assuming optimized equality.'},
+ {'id':'TRF00-INITIAL','statement':'Under the registered restricted constructor and allocation interpretations, the selected fresh-service initialization has a unique valid abstract state for each explicit external input.'},
+ {'id':'TRF00-BOUNDARY','statement':'The complete source/dependency manifest, trust, verifier inventory and original TRF-00 statement/pass condition are bound without closing later transition or deployment obligations.'},
+ {'id':'TRF00-PROOF','statement':'All registered initialization/profile theorems have empty transitive axiom sets in two identical clean offline builds.'},
+ {'id':'TRF00-WITNESSES','statement':'Registered finite real-constructor and verifier mutation witnesses pass against the same frozen source tree.'},
+)
+TRUST=[
+ {'id':'TCB-LEAN','classification':'TRUSTED','components':['Pinned Lean 4.34.1 kernel/compiler/distribution, audit machinery; every project theorem and definition axiom-audited.']},
+ {'id':'TCB-TRANSLATION','classification':'TRUSTED','components':['Registered closed AST initialization interpreter, numeric source selectors and renderers, observation checker, proof/source mapping and verifier scripts. These interpreters are declared trust, not a verified arbitrary Python VM.']},
+ {'id':'TCB-PYTHON','classification':'TRUSTED','components':['Pinned observed CPython builtins, modules, exact arithmetic/float ratios, ordinary attributes, dataclass/collection/iterator construction and identity semantics; no hostile trusted code or monkeypatching except recorded finite witness inputs.']},
+ {'id':'TCB-STARTUP','classification':'TRUSTED','components':['Successful standard-library lock/event/semaphore/thread/socket allocation; socket bind/listen adapter; fresh process global state; validated immutable snapshot loader and explicit root/generation/CSRF/clock input interpretations. Empty-queue scheduler bootstrap stutters in the ownership projection; lock ownership and native handles/program counters erased.']},
+ {'id':'TCB-HOST','classification':'TRUSTED','components':['Observed Linux OS, namespace/filesystem/process/hash isolation, hardware, SHA-256 collision resistance, local archived Git provenance and dependency distributions.']},
+ {'id':'TCB-DEPLOYMENT-CONTRACT','classification':'TRUSTED','components':['Finite RSS/scratch/socket/snapshot and upstream deployment targets are specifications only. Runtime enforcement remains TRF-03/TRF-21 and is not inferred from heap or encoded-byte counters.']},
+]
+EXCLUDED=['Nonselected configurations and reused process-global state; arbitrary Python/Java execution refinement.',
+ 'Allocation failures/exception cleanup, startup prewarm, future scheduler/admission/worker histories and resource enforcement.',
+ 'Solver truth, general worker-history equivalence, provider wording/guidance correctness and capability authorization.',
+ 'Actual Windows/macOS/IIS/Cloudflare deployment, unrelated cohosted websites, future revisions and unlisted claims.']
+TESTS=('test_service_initial_bridge.py','test_service_initial_witness.py','test_service_numeric_bindings.py',
+       'test_service_profile_gate.py','test_traffic_observation.py','test_review_ladder.py')
+REQUIRED_THEOREMS={'AlloyStudio.Traffic.profile_wellFormed',
+ 'AlloyStudio.ServiceProfile.Spec.initial_exists_unique','AlloyStudio.ServiceProfile.Spec.initial_valid',
+ 'AlloyStudio.ServiceProfile.Spec.extracted_profile_exact','AlloyStudio.ServiceProfile.Spec.extracted_graph_exact',
+ 'AlloyStudio.ServiceProfile.Spec.initial_empty_owned_collections','AlloyStudio.ServiceProfile.Spec.initial_zero_counters',
+ 'AlloyStudio.ServiceProfile.Spec.initial_shared_references'}
+BASELINE_REGISTRY_SHA='c87b9576349f1e2a071379b7edb77cb090815717dbf1341a0db23b8b768dcfbc'
+
+
+def write(path,value):
+    path.write_text(json.dumps(value,sort_keys=True,indent=2)+'\n')
+
+
+def sha(value):return hashlib.sha256(json_bytes(value)).hexdigest()
+
+
+def required_inputs(root):
+    source=json.loads((root/'closure/traffic-refinement/source-manifest.json').read_text())
+    required=set(source['files'])
+    required.update(SOURCES)
+    required.update(('closure/traffic-obligations.json','closure/traffic-refinement/source-manifest.json',
+       'closure/traffic-refinement/service-profile.json','closure/traffic-refinement/initial-graph.json',
+       'closure/traffic-refinement/observation-spec.json','closure/traffic-refinement/observation-baseline.json',
+       'docs/service-profile-obligation.md','docs/traffic-observation-contract.md',
+       'formal/service_profile/Audit.lean','formal/service_profile/theorems.json','formal/service_profile/README.md',
+       'formal/service_profile/claims.json','formal/service_profile/required-profile.json',
+       'formal/traffic_config/block.json','formal/traffic_profile/block.json',
+       'scripts/verify_service_profile.py','scripts/service_initial_bridge.py','scripts/service_initial_witness.py',
+       'scripts/service_profile_bridge.py','scripts/service_profile_lean.py','scripts/service_numeric_bindings.py',
+       'scripts/traffic_observation.py','scripts/lean_offline.py','scripts/verify_lean.py',
+       'scripts/verify_traffic_proofs.py','scripts/http_profile_bridge.py','scripts/traffic_config_bridge.py',
+       'scripts/bridge_policies.py','scripts/review_ladder.py','lean-toolchain','formal/lean-toolchain',
+       'formal/traffic_profile/runtime-linkage.json','formal/traffic_profile/profile-template.py.txt',
+       'closure/traffic-refinement/http-profile-spec.json'))
+    required.update('tests/'+t for t in TESTS)
+    baseline=json.loads((root/'closure/traffic-refinement/observation-baseline.json').read_text())
+    required.update('closure/traffic-refinement/observation-baseline/'+p for p in baseline['sources'])
+    return required
+
+
+def check_profile(root):
+    profile=json.loads((root/'closure/traffic-refinement/service-profile.json').read_text())
+    contract=json.loads((root/'formal/service_profile/required-profile.json').read_text())
+    if set(profile)!=set(contract['profileKeys']):raise Rejected('Incomplete profile schema')
+    if profile['selected']!=contract['selected']:raise Rejected('Selected profile changed')
+    limits=profile['limits']
+    if [r['id'] for r in limits]!=contract['limitIds']:raise Rejected('Missing, repeated or unexpected profile limit')
+    for r in limits:
+        value=r['value'];encoding=r['encoding']
+        if encoding=='exact-built-in-finite-float-seconds':
+            if type(value) is not float or not 0<value< float('inf'):raise Rejected('Invalid finite float configuration')
+        elif encoding in ('exact-built-in-positive-integer','exact-built-in-nonnegative-integer'):
+            if type(value) is not int or value < (0 if 'nonnegative' in encoding else 1):raise Rejected('Invalid integer configuration')
+        else:raise Rejected('Unknown numeric encoding')
+        if value>2**53-1:raise Rejected('Configuration exceeds frozen exact JSON magnitude')
+        if not r['source'] or not r['symbol'] or not r['unit']:raise Rejected('Unspecified numeric semantics')
+    if profile['semantics']!=contract['semantics'] or profile['numericSemantics']!=contract['numericSemantics']:
+        raise Rejected('Semantic configuration changed')
+    if profile['initialExpectations']!=contract['initialExpectations']:raise Rejected('Independent startup requirements changed')
+    return profile
+
+
+def inputs(root,block):
+    policy={'schemaVersion':1,'id':'TCFG03','scope':'TRF-00-selected-service-configuration-and-initial-state',
+            'flags':FLAGS,'allowlistedAxioms':[],'requiredCleanBuilds':2,'requiredReviews':6,
+            'umbrellaObligationsClosed':['TRF-00'],'modules':list(MODULES),
+            'claims':list(CLAIMS),'trust':TRUST,'excluded':EXCLUDED}
+    if any(block.get(k)!=v for k,v in policy.items()):raise Rejected('Invalid TRF-00 block policy')
+    if set(block.get('inputs',{}))!=required_inputs(root):raise Rejected('Incomplete TRF-00 input inventory')
+    for p,h in block['inputs'].items():
+        if digest(inside(root,p))!=h:raise Rejected('Frozen input changed: '+p)
+    if digest(root/'closure/traffic-obligations.json')!=BASELINE_REGISTRY_SHA:raise Rejected('Original obligation registry changed')
+    profile=check_profile(root)
+    original=json.loads((root/'closure/traffic-obligations.json').read_text())['obligations'][0]
+    claims=json.loads((root/'formal/service_profile/claims.json').read_text())
+    if claims.get('original')!={k:original[k] for k in ('id','statement','plannedPassCondition','dependsOn')}:
+        raise Rejected('Original TRF-00 statement/pass condition/dependencies changed')
+    if claims.get('claims')!=list(CLAIMS):raise Rejected('Required TRF-00 claim missing')
+    for dependency in ('formal/traffic_config/block.json','formal/traffic_profile/block.json'):
+        frozen=json.loads((root/dependency).read_text())
+        for p,h in frozen['inputs'].items():
+            if p in block['inputs'] and block['inputs'][p]!=h:raise Rejected('Frozen prior dependency changed: '+p)
+    sources=json.loads((root/'closure/traffic-refinement/source-manifest.json').read_text())
+    for p,h in sources['files'].items():
+        if block['inputs'].get(p)!=h:raise Rejected('Source/dependency identity mismatch')
+    return dict(block['inputs'],**{BLOCK:digest(root/BLOCK)})
+
+
+def inventory(root):
+    rows=json.loads((root/'formal/service_profile/theorems.json').read_text())['theorems']
+    expected={}
+    for r in rows:
+        if set(r)!={'name','module','levelParameters','typeSha256','axioms'} or r['axioms'] or r['module'] not in MODULES or r['name'] in expected:
+            raise Rejected('Invalid theorem inventory')
+        expected[r['name']]={k:v for k,v in r.items() if k!='axioms'}
+    if not REQUIRED_THEOREMS<=set(expected):raise Rejected('Missing required startup theorem')
+    return expected
+
+
+def build(root,work,toolchain,expected,manifest):
+    work.mkdir();objects=work/'objects'
+    for package in ('TrafficConfig','TrafficProfile','ServiceProfile'):
+        (objects/package).mkdir(parents=True);(work/package).mkdir()
+    env=clean_environment(toolchain,objects);(work/'scratch').mkdir();env['TMPDIR']=str(work/'scratch')
+    network=network_witness(work,env)
+    code='import sys,json;from pathlib import Path;sys.path[:0]=[sys.argv[1],sys.argv[1]+"/scripts"];import service_profile_bridge as b;print(json.dumps(b.check(Path(sys.argv[1])),sort_keys=True))'
+    raw=run([sys.executable,'-I','-c',code,str(root)],root,env,work/'bridge.json')
+    bridge=json.loads(raw)
+    if bridge.get('status')!='PASS':raise Rejected('Profile bridge failed')
+    for m,p in zip(MODULES,SOURCES):
+        source=frozen_bytes(root,p,manifest);check_proof_source(source.decode(),set(MODULES))
+        target=work/(m.replace('.','/')+'.lean');target.write_bytes(source);target.chmod(0o400)
+        run([str(toolchain/'bin/lean'),*FLAGS,'-o',str(objects/(m.replace('.','/')+'.olean')),m.replace('.','/')+'.lean'],work,env,work/(m+'.log'))
+    (work/'Audit.lean').write_bytes(frozen_bytes(root,'formal/service_profile/Audit.lean',manifest))
+    raw=run([str(toolchain/'bin/lean'),*FLAGS,'Audit.lean'],work,env,work/'audit.jsonl')
+    checked=check_inventory([json.loads(line) for line in raw.decode().splitlines()],expected)
+    return {'status':'PASS','theorems':len(checked),'axioms':[],'network':network,'bridge':bridge,
+            'inventorySha256':sha(checked),'artifacts':{m:digest(objects/(m.replace('.','/')+'.olean')) for m in MODULES}}
+
+
+def negative_controls(root,work,toolchain,build_a):
+    import shutil
+    work.mkdir();objects=work/'objects';shutil.copytree(build_a/'objects',objects)
+    for package in ('TrafficConfig','TrafficProfile','ServiceProfile'):
+        shutil.copytree(build_a/package,work/package)
+        for mutable in (work/package).glob('*.lean'):mutable.chmod(0o600)
+    env=clean_environment(toolchain,objects);env['TMPDIR']=str(work)
+    lean=str(toolchain/'bin/lean');results={}
+    original=(root/'formal/service_profile/ServiceProfile/Extracted.lean').read_text()
+    mutations=(('initial_counter','⟨"Scheduler#1.subscribers", "int", "0"⟩','⟨"Scheduler#1.subscribers", "int", "1"⟩'),
+               ('cache_alias','⟨"Portal#1.cache", "reference", "ResultCache#2"⟩','⟨"Portal#1.cache", "reference", "ResultCache#3"⟩'),
+               ('explicit_clock','false input.clock','false (input.clock + 1)'))
+    for name,before,after in mutations:
+        if before not in original:raise Rejected('Missing negative mutation anchor')
+        (work/'ServiceProfile/Extracted.lean').write_text(original.replace(before,after,1))
+        run([lean,*FLAGS,'-o',str(objects/'ServiceProfile/Extracted.olean'),'ServiceProfile/Extracted.lean'],work,env,work/(name+'-extract.log'))
+        try:run([lean,*FLAGS,'ServiceProfile/Spec.lean'],work,env,work/(name+'-spec.log'))
+        except Rejected:
+            output=(work/(name+'-spec.log')).read_text()
+            if 'error:' not in output or 'unknown module' in output or 'unknown identifier' in output:raise Rejected('Unrelated mutation failure')
+        else:raise Rejected('Independent startup spec accepted '+name)
+        results[name]='REJECTED_BY_INDEPENDENT_SPEC'
+    # Source mutation controls (including corrected ignored-path counterexample)
+    # execute in the separately registered bridge tests below.
+    for label,source in (('rogue_axiom','axiom forged : False'),('placeholder','theorem incomplete : True := by sorry')):
+        try:check_proof_source(source,set(MODULES))
+        except Rejected:results[label]='REJECTED_BY_REGISTERED_LANGUAGE_GATE'
+        else:raise Rejected('Proof language escape accepted')
+    # Kernel + transitive audit controls, not merely keyword scanning.
+    (work/'ServiceProfile/Extracted.lean').write_text(original)
+    run([lean,*FLAGS,'-o',str(objects/'ServiceProfile/Extracted.olean'),'ServiceProfile/Extracted.lean'],work,env,work/'restore.log')
+    spec=(root/'formal/service_profile/ServiceProfile/Spec.lean').read_text()
+    (work/'ServiceProfile/Spec.lean').write_text(spec+'\nnamespace AlloyStudio.ServiceProfile.Spec\naxiom forged : False\ntheorem forged_use : False := forged\nend AlloyStudio.ServiceProfile.Spec\n')
+    run([lean,*FLAGS,'-o',str(objects/'ServiceProfile/Spec.olean'),'ServiceProfile/Spec.lean'],work,env,work/'axiom-build.log')
+    (work/'Audit.lean').write_bytes((root/'formal/service_profile/Audit.lean').read_bytes())
+    raw=run([lean,*FLAGS,'Audit.lean'],work,env,work/'axiom-audit.jsonl')
+    if not any(json.loads(line).get('kind')=='forbidden-project-axiom' or json.loads(line).get('axioms') for line in raw.decode().splitlines()):
+        raise Rejected('Introduced project axiom escaped transitive audit')
+    results['rogue_axiom_audit']='REJECTED_BY_TRANSITIVE_AUDIT'
+    (work/'Placeholder.lean').write_text('import ServiceProfile.Model\ntheorem incomplete : True := by sorry\n')
+    try:run([lean,*FLAGS,'Placeholder.lean'],work,env,work/'placeholder.log')
+    except Rejected:results['placeholder_compiler']='REJECTED_BY_WARNING_AS_ERROR'
+    else:raise Rejected('Placeholder compiled without failure')
+    return results
+
+
+def verify(root=ROOT,candidate=False):
+    root=Path(root).resolve();identifier=datetime.now(timezone.utc).strftime('tcfg03-%Y%m%dT%H%M%SZ-')+secrets.token_hex(4)
+    work=root/'build/trf-closure'/identifier;work.mkdir(parents=True)
+    report={'schemaVersion':1,'id':identifier,'blockId':'TCFG03','status':'BLOCKED','scope':'TRF-00-selected-service-configuration-and-initial-state',
+            'umbrellaObligationsClosed':[],'builds':[],'blockingReasons':[],'infrastructureErrors':[]}
+    try:
+        block=json.loads((root/BLOCK).read_text());manifest=inputs(root,block)
+        if candidate:report['blockingReasons'].append('CANDIDATE_ONLY_REVIEWS_NOT_CHECKED')
+        else:manifest.update(check_reviews(root,BLOCK))
+        report['inputRootHash']=sha(manifest);report['verifier']={'id':'V-TCFG03','sha256':manifest['scripts/verify_service_profile.py']}
+        write(work/'manifest.json',manifest);frozen=snapshot_inputs(root,work/'inputs',manifest)
+        if not candidate:check_reviews(frozen,BLOCK)
+        pin,toolchain=installed_toolchain(frozen)
+        if pin!=block['leanToolchain']:raise Rejected('Toolchain pin mismatch')
+        env=clean_environment(toolchain);env['TMPDIR']=str(work)
+        version=run([str(toolchain/'bin/lean'),'--version'],work,env,work/'lean-version.log').decode().strip()
+        if not re.search(r'\bversion '+re.escape(pin.split(':v')[1])+r'(?:[,\s])',version):raise Rejected('Installed Lean version mismatch')
+        tools_before=toolchain_inventory(toolchain);write(work/'toolchain.json',tools_before)
+        report['toolchain']={'pin':pin,'version':version,'rootHash':sha(tools_before)}
+        report['executionEnvironment']={'platform':platform.platform(),'python':sys.version,'pythonExecutableSha256':digest(Path(sys.executable).resolve()),'flags':FLAGS,'network':'isolated user+network namespace for all proof/verifier subprocesses'}
+        report['trust']=TRUST;report['excluded']=EXCLUDED
+        expected=inventory(frozen)
+        for name in ('build-a','build-b'):report['builds'].append(build(frozen,work/name,toolchain,expected,manifest))
+        if report['builds'][0]!=report['builds'][1]:raise Rejected('Clean proof builds disagree')
+        report['determinism']='PASS';report['negativeControls']=negative_controls(frozen,work/'negative-controls',toolchain,work/'build-a')
+        for test in TESTS:
+            run([sys.executable,'-I','-c','import sys,runpy;root,test=sys.argv[1:];sys.path[:0]=[root,root+"/scripts"];sys.argv=[test];runpy.run_path(test,run_name="__main__")',str(frozen),str(frozen/'tests'/test)],frozen,env,work/(test+'.log'))
+        report['verifierTests']='PASS'
+        if toolchain_inventory(toolchain)!=tools_before:raise Rejected('Toolchain changed during verification')
+        for p,h in manifest.items():
+            if digest(inside(root,p))!=h or digest(inside(frozen,p))!=h:raise Rejected('INPUT_MUTATION: '+p)
+        report['claims']=[dict(c,status='PASS',inputRootHash=report['inputRootHash'],verifier=report['verifier'],exitCode=0,
+            evidence=['build-a/bridge.json','build-a/audit.jsonl','build-b/audit.jsonl'],executionEnvironment=report['executionEnvironment']) for c in CLAIMS]
+        report['provedTheorems']=len(expected)
+        report['correspondence']={'requiredObjects':report['builds'][0]['bridge']['objects'],'mappedObjects':report['builds'][0]['bridge']['objects'],'unmappedObjects':0,'ambiguousObjects':0}
+        report['provenance']={'publicClaims':['README.md','docs/traffic-obligation-progress.md','docs/service-profile-obligation.md','formal/service_profile/README.md'],'claimIds':[c['id'] for c in CLAIMS],'orphanClaims':0}
+        report['dependencies']={'verified':['TCFG01 scalar program','TCFG02 HTTP profile/initialization'], 'trusted':[t['id'] for t in TRUST],'undeclared':[]}
+        if not report['blockingReasons']:
+            report['status']='VERIFIED';report['umbrellaObligationsClosed']=['TRF-00']
+    except (Rejected,ValueError,KeyError,TypeError,AssertionError) as error:report['blockingReasons'].append(type(error).__name__+': '+str(error))
+    except (OSError,RuntimeError) as error:
+        report['status']='INFRASTRUCTURE_FAILURE';report['infrastructureErrors'].append(type(error).__name__+': '+str(error))
+    write(work/'report.json',report)
+    print(json.dumps({'status':report['status'],'scope':report['scope'],'report':str(work/'report.json')}))
+    return 0 if report['status']=='VERIFIED' else 2 if report['status']=='INFRASTRUCTURE_FAILURE' else 1
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--candidate',action='store_true');args=parser.parse_args()
+    raise SystemExit(verify(candidate=args.candidate))

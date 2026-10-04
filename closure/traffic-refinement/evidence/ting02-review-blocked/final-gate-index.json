@@ -1,0 +1,7 @@
+{
+  "blockManifestSha256": "930e11c08283c102a44699af30b727820e17588b8686c94a243aa0c8da3ca339",
+  "interpretation": "Final gate stopped before manifest assembly because a required tier2 review record was absent. This is an early BLOCKED result, not a source-certified proof result. The separately archived candidate report binds its full input root and successful proof/test evidence.",
+  "kind": "immutable-failed-final-gate-copy",
+  "sha256": "bdfb95baf8aef53d7aae3e3c4264544dbae23f880320496eac0b0f5ca9b78447",
+  "source": "build/trf-closure/ting02-20261004T183422Z-6bb43986/report.json"
+}

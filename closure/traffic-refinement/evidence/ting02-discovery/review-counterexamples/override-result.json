@@ -1,0 +1,11 @@
+{
+  "sourceSha256": "3a5683cfe1fa1b442f24d8fe3f540f72322d8eb22d1cebb852e3cfa76f3764da",
+  "mutation": "new Handler.handle overrides stdlib receive/parse dispatch",
+  "preRepairBridges": {
+    "route": "PASS",
+    "deadline": 6,
+    "admission": 14
+  },
+  "sentBytes": 0,
+  "businessChannelIssued": true
+}

@@ -1,0 +1,157 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "key",
+          "type": "text"
+        },
+        {
+          "name": "value",
+          "type": "text"
+        }
+      ],
+      "name": "metadata"
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "type": "int"
+        },
+        {
+          "name": "origin",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "model_group",
+          "type": "text"
+        },
+        {
+          "name": "predicate_name",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "environment_before",
+          "type": "text"
+        },
+        {
+          "name": "environment_after",
+          "type": "text"
+        },
+        {
+          "name": "predicate_header",
+          "type": "text"
+        },
+        {
+          "name": "starter",
+          "type": "text"
+        },
+        {
+          "name": "original_source",
+          "type": "text"
+        },
+        {
+          "name": "primary_token",
+          "type": "text"
+        },
+        {
+          "name": "metadata",
+          "type": "text"
+        },
+        {
+          "name": "validation",
+          "type": "text"
+        }
+      ],
+      "name": "exercises"
+    },
+    {
+      "columns": [
+        {
+          "name": "exercise_id",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "type": "int"
+        },
+        {
+          "name": "kind",
+          "type": "text"
+        },
+        {
+          "name": "body",
+          "type": "text"
+        },
+        {
+          "name": "original_source",
+          "type": "text"
+        },
+        {
+          "name": "token_hash",
+          "type": "text"
+        },
+        {
+          "name": "metadata",
+          "type": "text"
+        }
+      ],
+      "name": "solutions"
+    },
+    {
+      "columns": [
+        {
+          "name": "kind",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "type": "int"
+        },
+        {
+          "name": "payload",
+          "type": "text"
+        },
+        {
+          "name": "original_source",
+          "type": "text"
+        }
+      ],
+      "name": "auxiliary"
+    },
+    {
+      "columns": [
+        {
+          "name": "type",
+          "type": "text"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "tbl_name",
+          "type": "text"
+        },
+        {
+          "name": "sql",
+          "type": "text"
+        }
+      ],
+      "name": "sqlite_schema"
+    }
+  ]
+}

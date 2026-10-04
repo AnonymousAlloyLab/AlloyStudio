@@ -1,0 +1,7 @@
+# B01 tier 1 review — Luna A
+
+Reviewed the four frozen sources named by B01 and the strict build inventory (102 theorem entries; every entry reports an empty axiom list). The constructive tree definitions use finite inductive forests, postorder occurrence lists, and explicit `Nodup` uniqueness. The adoption/promotion equations preserve sibling order; deletion and insertion are inverse on the corresponding adopted/promotion shape, and relabeling leaves occurrence sequences unchanged. The uniqueness theorem for promotion has the necessary uniqueness premise on the adopted forest. No concrete breach of a claimed unit-edit or occurrence invariant was constructed, so there is no witness file.
+
+Coverage: inspected `RawAst.lean`, `Edits.lean`, `Foundation.lean`, `Pool.lean`, and inventoried declarations. This was an adversarial source review, not a fresh execution of every theorem. The inventory reports 102 theorems and no axioms.
+
+Remaining gaps: occurrence uniqueness is a caller-supplied property, not enforced by insertion; insertion may reuse an existing `Nat` ID. The results establish properties of these Lean definitions and generic finite-pool selector only. They do not establish Java replay correspondence, parser behavior, Alloy semantic distance, adapter label injectivity/coverage, or search optimality; these are explicit B01 exclusions or documented obligations in the source comments. Review is advisory and supplies no theorem evidence.

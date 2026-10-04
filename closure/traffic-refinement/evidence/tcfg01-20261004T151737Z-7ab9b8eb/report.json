@@ -1,0 +1,236 @@
+{
+  "blockId": "TCFG01",
+  "blockingReasons": [],
+  "builds": [
+    {
+      "artifacts": {
+        "TrafficConfig.Extracted": "255eb1a7665d52052b38a4e10326cf9c827c5fb6e667aa22209cfbcaba92712a",
+        "TrafficConfig.Scalar": "d7cddcb5b0e3288e6c3857f3b2af5a207e8c91c2e955930539dd9f85c571d0a2",
+        "TrafficConfig.Spec": "95742756c8fe7eee39b004666f1e1d39edb1fd52046e8950c9b5e81494eb4db9"
+      },
+      "axioms": [],
+      "bridge": {
+        "excluded": [
+          "arbitrary Python code",
+          "constructor allocation/state refinement",
+          "complete TRF-00 profile closure"
+        ],
+        "generatedSha256": "54eb68f363572f86b5f14b01243992e2722ca2ac550c26ce96704ace7cd605d0",
+        "guards": {
+          "integer_bounds": "e7dbcc03961504b0a6badaaf9e7ffab5e3fafe209b8056a89a04ac5b9285f786",
+          "integer_value": "2d46211bd959a59c52dd739bec72b24991805b9ae95814594e05fc6c41cac858",
+          "seconds_bounds": "d8276f1ed037fcfe26a187390ea88daea4f46c381781049282cc2e3751957e97",
+          "seconds_value": "497f79f2eef11b0c8bdab7efa3a210d4445739a106118f1c2c7661abc4adf2ef"
+        },
+        "kind": "restricted_ast_translation",
+        "normalizationTrust": "Exact built-in Python type identity and int/float.as_integer_ratio; typed bound parameters and positive float denominators.",
+        "sourceSha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+        "status": "PASS"
+      },
+      "inventorySha256": "1a974e5a2609a903ebef6b7565321f65022ef433605e906a1861295b0d212d75",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 55
+    },
+    {
+      "artifacts": {
+        "TrafficConfig.Extracted": "255eb1a7665d52052b38a4e10326cf9c827c5fb6e667aa22209cfbcaba92712a",
+        "TrafficConfig.Scalar": "d7cddcb5b0e3288e6c3857f3b2af5a207e8c91c2e955930539dd9f85c571d0a2",
+        "TrafficConfig.Spec": "95742756c8fe7eee39b004666f1e1d39edb1fd52046e8950c9b5e81494eb4db9"
+      },
+      "axioms": [],
+      "bridge": {
+        "excluded": [
+          "arbitrary Python code",
+          "constructor allocation/state refinement",
+          "complete TRF-00 profile closure"
+        ],
+        "generatedSha256": "54eb68f363572f86b5f14b01243992e2722ca2ac550c26ce96704ace7cd605d0",
+        "guards": {
+          "integer_bounds": "e7dbcc03961504b0a6badaaf9e7ffab5e3fafe209b8056a89a04ac5b9285f786",
+          "integer_value": "2d46211bd959a59c52dd739bec72b24991805b9ae95814594e05fc6c41cac858",
+          "seconds_bounds": "d8276f1ed037fcfe26a187390ea88daea4f46c381781049282cc2e3751957e97",
+          "seconds_value": "497f79f2eef11b0c8bdab7efa3a210d4445739a106118f1c2c7661abc4adf2ef"
+        },
+        "kind": "restricted_ast_translation",
+        "normalizationTrust": "Exact built-in Python type identity and int/float.as_integer_ratio; typed bound parameters and positive float denominators.",
+        "sourceSha256": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+        "status": "PASS"
+      },
+      "inventorySha256": "1a974e5a2609a903ebef6b7565321f65022ef433605e906a1861295b0d212d75",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "status": "PASS",
+      "theorems": 55
+    }
+  ],
+  "claims": [
+    {
+      "classification": "PROVED_RESTRICTED_SCALAR_PROGRAM",
+      "evidence": [
+        "build-a/audit.jsonl",
+        "build-b/audit.jsonl",
+        "build-a/bridge.json"
+      ],
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-j1"
+        ],
+        "network": "isolated user+network namespace for every proof subprocess",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+        "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+      },
+      "exitCode": 0,
+      "id": "TRF00-NUMERIC",
+      "inputRootHash": "6f492a657d251b98e7feb0667050db90bcffd2dc4409683b585bd93615607f82",
+      "status": "PASS",
+      "theorems": [
+        "AlloyStudio.TrafficConfig.Extracted.validatedInt.eq_def",
+        "AlloyStudio.TrafficConfig.Extracted.validatedSeconds.eq_def",
+        "AlloyStudio.TrafficConfig.InvalidKind.boolean.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.nan.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.negativeInfinity.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.ofNat_ctorIdx",
+        "AlloyStudio.TrafficConfig.InvalidKind.other.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.InvalidKind.positiveInfinity.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.floating.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.integer.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.Scalar.invalid.sizeOf_spec",
+        "AlloyStudio.TrafficConfig.default_huge_integer_rejected",
+        "AlloyStudio.TrafficConfig.default_maximum_admitted",
+        "AlloyStudio.TrafficConfig.default_negative_rejected",
+        "AlloyStudio.TrafficConfig.default_oversized_rejected",
+        "AlloyStudio.TrafficConfig.default_zero_rejected",
+        "AlloyStudio.TrafficConfig.floating_int_rejected",
+        "AlloyStudio.TrafficConfig.fractional_seconds_admitted",
+        "AlloyStudio.TrafficConfig.guarded_accept_iff",
+        "AlloyStudio.TrafficConfig.guarded_preserves",
+        "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableEqInvalidKind._proof_2",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_10",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_11",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_12",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_13",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_2",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_3",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_4",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_5",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_6",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_7",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_8",
+        "AlloyStudio.TrafficConfig.instDecidableEqScalar.decEq._proof_9",
+        "AlloyStudio.TrafficConfig.instDecidableLess._proof_1",
+        "AlloyStudio.TrafficConfig.instDecidableLess._proof_2",
+        "AlloyStudio.TrafficConfig.integer_guard_iff",
+        "AlloyStudio.TrafficConfig.invalid_denominator_rejected",
+        "AlloyStudio.TrafficConfig.invalid_int_rejected",
+        "AlloyStudio.TrafficConfig.invalid_seconds_rejected",
+        "AlloyStudio.TrafficConfig.lessEqual_iff_standard",
+        "AlloyStudio.TrafficConfig.less_iff_standard",
+        "AlloyStudio.TrafficConfig.less_iff_successor_lessEqual",
+        "AlloyStudio.TrafficConfig.nat_sub_zero_of_le",
+        "AlloyStudio.TrafficConfig.nonnegative_subNatNat_iff",
+        "AlloyStudio.TrafficConfig.not_lessEqual_iff_less",
+        "AlloyStudio.TrafficConfig.not_less_iff_lessEqual",
+        "AlloyStudio.TrafficConfig.optional_zero_admitted",
+        "AlloyStudio.TrafficConfig.positive_iff_nonnegative_nonzero",
+        "AlloyStudio.TrafficConfig.seconds_guard_iff",
+        "AlloyStudio.TrafficConfig.validated_int_iff",
+        "AlloyStudio.TrafficConfig.validated_int_preserves",
+        "AlloyStudio.TrafficConfig.validated_seconds_iff",
+        "AlloyStudio.TrafficConfig.validated_seconds_preserves"
+      ],
+      "verifier": {
+        "id": "V-TCFG01",
+        "sha256": "8487b2e869e9d70e9c27106a4d0db0f268dea57dc943aa0ea311bf0424a21e60"
+      }
+    }
+  ],
+  "determinism": "PASS",
+  "excluded": [
+    "Complete TRF-00 profile, source-wide configuration inventory and unique initialization.",
+    "Other TRF obligations, constructor allocation/locking/state refinement and arbitrary Python code.",
+    "Whole-process memory containment, solver history independence, platform deployment and future source revisions."
+  ],
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-j1"
+    ],
+    "network": "isolated user+network namespace for every proof subprocess",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]",
+    "pythonExecutableSha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420"
+  },
+  "id": "tcfg01-20261004T151737Z-7ab9b8eb",
+  "infrastructureErrors": [],
+  "inputRootHash": "6f492a657d251b98e7feb0667050db90bcffd2dc4409683b585bd93615607f82",
+  "negativeControls": {
+    "introducedAxiom": "REJECTED_BY_AUDITOR",
+    "placeholder": "REJECTED_BY_COMPILER",
+    "zeroAdmissionMutation": "REJECTED_BY_INDEPENDENT_SPEC"
+  },
+  "provedTheorems": 55,
+  "schemaVersion": 1,
+  "scope": "normalized-numeric-configuration",
+  "status": "VERIFIED",
+  "toolchain": {
+    "pin": "leanprover/lean4:v4.34.1",
+    "rootHash": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "version": "Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)"
+  },
+  "trust": [
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Pinned Lean kernel, compiler and installed distribution; transitive axiom audit is empty."
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Frozen restricted Python AST translator and Lean audit/verifier scripts."
+      ],
+      "id": "TCB-TRANSLATION"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Exact built-in Python type identity, comparison/integer arithmetic and int/float.as_integer_ratio semantics; no monkey-patched built-ins or hostile trusted code."
+      ],
+      "id": "TCB-PYTHON"
+    },
+    {
+      "classification": "TRUSTED",
+      "components": [
+        "Python standard library, SHA-256, Linux network namespaces, filesystem/process isolation and hardware."
+      ],
+      "id": "TCB-HOST"
+    }
+  ],
+  "umbrellaObligationsClosed": [],
+  "verifier": {
+    "id": "V-TCFG01",
+    "sha256": "8487b2e869e9d70e9c27106a4d0db0f268dea57dc943aa0ea311bf0424a21e60"
+  },
+  "verifierTests": "PASS"
+}

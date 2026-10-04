@@ -1,0 +1,34 @@
+# v0.0.2-alpha
+
+This release adds constructive Lean proofs for SQL code/data separation and
+checked mappings to Alloy Studio's production SQLite adapter and request paths.
+Untrusted values remain bound parameters; they cannot alter the SQL bytes of a
+selected registered operation. Arbitrary request values are covered by the
+model, without relying on browser validation.
+
+The standalone offline verifier requires two clean, deterministic proof builds,
+zero axiom dependencies, complete theorem/source inventories, and an ordered
+review ladder of two GPT-6 Luna, two GPT-6 Sol, and two GPT-6 Astra reviewers.
+The generic proofs are instantiated with the actual query registry. Executable
+tests additionally cover injection payloads in every text parameter, real
+authenticated Alloy uploads, publication, reload, backup, browser JSON
+serialization, and deliberately broken source-mapping cases.
+
+The claim is SQL separation for the frozen release inputs. **PROVED** applies
+to the SQL Lean model; **CHECKED** to production correspondence; **TESTED** to
+finite executable regressions. The source extractor, Python/JavaScript and JSON
+semantics, SQLite binding, Lean kernel/toolchain, hashing and host are **TRUSTED**.
+Future revisions and universal application immunity are excluded.
+
+The portal regression gate's `VERIFIED` result covers 26 frozen finite claims
+(**TESTED** regressions and **CHECKED** build/integrity checks). It does not
+establish whole-portal formal closure: the original 24 general portal proof
+obligations remain `OPEN`, with formal closure `NOT_ESTABLISHED`. See the
+[precise proof boundary](../sql-injection-proof.md).
+
+This release also includes the macOS temporary-path packaging fix, timestamped
+private IIS builds, SQLite exercise storage, authenticated model uploads and
+SQLeanParser attribution added since the initial alpha. Administration is
+configured separately on each deployment; source releases contain no configured
+password or OpenAI key. Private IIS archives are built locally and are not
+public release assets.

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0",
+  "candidate": "TRF01-admission-v5",
+  "frozenBeforeImplementation": true,
+  "claims": [
+    {
+      "id": "TRF01-A01",
+      "predicate": "Closed source translation accounts for every statement of Admission reserve/release and initial ownership; actual capacity operator, owner mutation, count delta and lane selector generate the Lean executable."
+    },
+    {
+      "id": "TRF01-A02",
+      "predicate": "From empty ownership, every serial lock-linearized reserve/release trace preserves active = owner cardinality, distinct owners and active <= selected lane limit; duplicate and rejected reservations do not acquire ownership."
+    },
+    {
+      "id": "TRF01-A03",
+      "predicate": "Exact-owner release is idempotent, cannot remove another owner, and removes exactly one reservation when owned. Anonymous allocation uses a fresh owner and anonymous release uses the last anonymous owner, or no-op."
+    },
+    {
+      "id": "TRF01-A04",
+      "predicate": "Reservation precedes thread allocation and registration precedes attempted start. The reaper skips current-thread and already-uncertain entries. It marks an owned registered entry uncertain before either join(timeout=0) or is_alive. RuntimeError retains that mark and continues; every other observation exception propagates with the mark retained. Only normal return from both observations clears the mark. A normally observed live thread retains ownership; only a normally observed terminated thread may be removed and released. Uncertain entries are never observed or reclaimed again before process restart."
+    },
+    {
+      "id": "TRF01-A05",
+      "predicate": "The successful main startup topology has one public listener and zero or one literal-loopback control listener with equal normalized default profiles. Disabled control has zero handlers and no diagnostic availability claim. Enabled lanes have disjoint ownership, locks and credits; component bounds imply the combined cap, burst and rate sums."
+    },
+    {
+      "id": "TRF01-A06",
+      "predicate": "Actual paired sockets demonstrate public saturation and independent enabled loopback health ingress, refusal before allocation, and release after normal and exceptional handler paths."
+    },
+    {
+      "id": "TRF01-A07",
+      "predicate": "At the serialized listener callback cut there is at most one accepted-but-unreserved socket per listener, at most two in the enabled topology. Kernel backlogs are separate; accepted-before-reserve does not count as a handler reservation."
+    },
+    {
+      "id": "TRF01-A08",
+      "predicate": "Every declaration and theorem in the admission Lean modules has an empty transitive axiom set, including no propext, sorryAx or Classical.choice."
+    },
+    {
+      "id": "TRF01-A09",
+      "predicate": "The augmented owner ledger includes prethread reservations and registered native threads. Its cardinality equals active reservations inductively; concrete registered and potentially live threads remain bounded. Uncertain owners form a subset of registered owners and therefore remain bounded by the same selected lane cap. A reachable-history reliability relation is established from clean initial metadata: observation begins only for a previously reliable owner, failed join or liveness observation makes that owner permanently uncertain, and no subsequent apparently successful observation can restore it. Reclamation requires a complete successful observation begun from reliable history, not a free clean-state premise."
+    }
+  ],
+  "failurePolicy": "Any unsupported syntax, unmatched mutation, missing mapping, failed theorem, negative control escape or witness failure is BLOCKED.",
+  "representation": {
+    "owners": "List of injectively named live socket/object identities, with distinctness invariant; order is unobservable in the Python set.",
+    "active": "Natural number representation of Python exact integers on reachable nonnegative states; mutations are separately related to exact integer arithmetic.",
+    "credits": "Credit gates can nondeterministically refuse but cannot acquire or release ownership. Detailed refill and total admissions-over-time belong to TRF02.",
+    "concurrency": "Python lock linearizes the admitted reserve/release critical sections; no arbitrary external mutation of admission state.",
+    "threads": "Phases distinguish attempted, identified-but-not-started, running and dead. CPython join/is_alive may corrupt status bookkeeping when interrupted; a later false is_alive is not trustworthy after an earlier failed observation. Each registered owner has an observation state: reliable, observation-in-progress, or sticky uncertain. The concrete uncertain-owner set represents in-progress and sticky uncertain states. Only normal completion of both observations restores reliability; failure never does. Current-thread entries are skipped before marking. Successful normal completion clears the marker before optional dead-entry removal and exact-owner release.",
+    "observationBookkeeping": "The marked observation transaction covers exceptions at the join/is_alive primitive boundaries. Lock-serialized CPython set/dict/count bookkeeping transitions are atomic model actions; this contract does not prove arbitrary asynchronous cancellation between every bookkeeping bytecode. Source order and the declared atomic primitive interpretation remain explicit correspondence obligations."
+  },
+  "trustedPrimitives": [
+    "CPython exact integer, list, set and object identity operations",
+    "CPython Lock mutual exclusion and context-manager unwinding",
+    "Closed AST adapter and its explicit ownership-erasing projection",
+    "Lean 4.34.1 kernel",
+    "socketserver serial accept-to-process_request callback per serving listener",
+    "socketserver thread allocation and request cleanup semantics",
+    "OS loopback bind, socket and backlog semantics",
+    "CPython Thread.start/bootstrap and the normal-return semantics of join/is_alive for an owner with an uninterrupted reliable observation history. Any exception from either observation may invalidate later liveness metadata; the model permits this invalidation and the implementation quarantines the owner. No promise that a later successful join repairs metadata is trusted."
+  ],
+  "excluded": [
+    "Arbitrary extra server instances",
+    "External mutation or monkey-patching",
+    "Unconditional scheduling or health latency",
+    "Kernel backlog equals advertised listen argument on every OS",
+    "TRF02 refill accounting",
+    "TRF03 whole-process RSS/native resource totals",
+    "Recovery of capacity quarantined after any join/is_alive exception; each retained uncertain slot is bounded and requires process restart to recover.",
+    "Arbitrary asynchronous cancellation between the separately modeled set/dict/count bookkeeping actions; observation-primitive exceptions are included and must preserve the uncertainty mark."
+  ],
+  "refinesFrozenCandidate": "TRF01-admission-v4",
+  "refinementReason": "Constructed local native status-lock interruption makes CPython Thread liveness bookkeeping unreliable while the handler remains alive. Durable uncertainty is specified and frozen before production repair.",
+  "observationPolicy": {
+    "initial": "Every newly registered owner starts reliable; the uncertain set is empty.",
+    "skip": "If request is already uncertain or its thread is threading.current_thread(), continue without invoking join or is_alive.",
+    "begin": "Add the registered request owner to the uncertain set before invoking join(timeout=0).",
+    "observe": "Invoke join(timeout=0), then is_alive(), within the same try block.",
+    "runtimeError": "Continue without clearing the uncertain marker, releasing ownership, or querying that owner again.",
+    "otherException": "Propagate without clearing the marker or releasing ownership. Future reapers skip this owner.",
+    "normalReturn": "Remove the marker only after both calls return normally, then remove/release only if the returned alive value is false.",
+    "boundedness": "The uncertain set contains only registered reservation owners; marking cannot create an owner or increase the active reservation count.",
+    "recovery": "An owner with a failed observation remains uncertain for the process lifetime; restart creates a new empty ledger."
+  }
+}

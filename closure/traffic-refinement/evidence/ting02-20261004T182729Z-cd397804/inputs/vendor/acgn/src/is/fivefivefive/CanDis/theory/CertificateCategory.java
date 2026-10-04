@@ -1,0 +1,24 @@
+package is.fivefivefive.CanDis.theory;
+
+/** Closed provenance categories for typed equational certificates. */
+public enum CertificateCategory {
+    INPUT_EQUATION,
+    REWRITE_AXIOM,
+    FORWARD_CONGRUENCE,
+    PARENT_EDGE,
+    SLOT_SYMMETRY,
+    INTERFACE_RESTRICTION,
+    CONTAINER_LAW,
+    BINDER_AUTOMORPHISM,
+    CONTAINER_NORMALIZATION,
+    DEPENDENT_CHAIN_NORMALIZATION,
+    KERNEL_REPLAY,
+    CANONICAL_ORBIT,
+    STRUCTURAL_ALPHA,
+    WITNESS_DEFINITION,
+    REFLEXIVITY,
+    EQUATIONAL_SYMMETRY,
+    TRANSITIVITY,
+    RENAMING,
+    CONTEXT_RESTRICTION
+}

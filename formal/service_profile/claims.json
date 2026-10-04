@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "id": "TRF00-PROFILE",
+      "statement": "Exactly one complete selected finite numeric/semantic/deployment profile is frozen and mapped to source quantities with explicit disabled-zero encodings."
+    },
+    {
+      "id": "TRF00-OBSERVATION",
+      "statement": "One independent complete observation contract binds archived pre-optimization source identities, computational fields, order, failures and disclosure without assuming optimized equality."
+    },
+    {
+      "id": "TRF00-INITIAL",
+      "statement": "Under the registered restricted constructor and allocation interpretations, the selected fresh-service initialization has a unique valid abstract state for each explicit external input."
+    },
+    {
+      "id": "TRF00-BOUNDARY",
+      "statement": "The complete source/dependency manifest, trust, verifier inventory and original TRF-00 statement/pass condition are bound without closing later transition or deployment obligations."
+    },
+    {
+      "id": "TRF00-PROOF",
+      "statement": "All registered initialization/profile theorems have empty transitive axiom sets in two identical clean offline builds."
+    },
+    {
+      "id": "TRF00-WITNESSES",
+      "statement": "Registered finite real-constructor and verifier mutation witnesses pass against the same frozen source tree."
+    }
+  ],
+  "original": {
+    "dependsOn": [],
+    "id": "TRF-00",
+    "plannedPassCondition": "Exactly one frozen profile, source/dependency manifest, observation schema, TCB and verifier inventory; no required numeric limit or semantic field left unspecified.",
+    "statement": "All configuration quantities are finite, positive where required, correctly encoded, and determine a unique valid initial state."
+  }
+}

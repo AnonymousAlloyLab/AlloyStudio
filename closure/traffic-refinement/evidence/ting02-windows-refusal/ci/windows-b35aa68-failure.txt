@@ -1,0 +1,549 @@
+﻿2026-10-04T19:55:56.8285765Z Current runner version: '2.337.0'
+2026-10-04T19:55:56.8325448Z ##[group]Runner Image Provisioner
+2026-10-04T19:55:56.8326849Z Hosted Compute Agent
+2026-10-04T19:55:56.8327723Z Version: 20260901.588
+2026-10-04T19:55:56.8328506Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-04T19:55:56.8330046Z Build Date: 2026-09-01T19:56:44Z
+2026-10-04T19:55:56.8331213Z Worker ID: {0f086dff-0780-4a78-95c3-c4b3e17e7742}
+2026-10-04T19:55:56.8332449Z Azure Region: westus
+2026-10-04T19:55:56.8333418Z ##[endgroup]
+2026-10-04T19:55:56.8335682Z ##[group]Operating System
+2026-10-04T19:55:56.8336757Z Microsoft Windows Server 2025
+2026-10-04T19:55:56.8337719Z 10.0.26100
+2026-10-04T19:55:56.8338575Z Datacenter
+2026-10-04T19:55:56.8339390Z ##[endgroup]
+2026-10-04T19:55:56.8340271Z ##[group]Runner Image
+2026-10-04T19:55:56.8341263Z Image: windows-2025-vs2026
+2026-10-04T19:55:56.8342205Z Version: 20260925.250.1
+2026-10-04T19:55:56.8344786Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+2026-10-04T19:55:56.8347697Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+2026-10-04T19:55:56.8349778Z ##[endgroup]
+2026-10-04T19:55:56.8351631Z ##[group]GITHUB_TOKEN Permissions
+2026-10-04T19:55:56.8354187Z Contents: read
+2026-10-04T19:55:56.8355054Z Metadata: read
+2026-10-04T19:55:56.8355869Z ##[endgroup]
+2026-10-04T19:55:56.8358984Z Secret source: Actions
+2026-10-04T19:55:56.8360326Z Cache mode: write
+2026-10-04T19:55:56.8361530Z Prepare workflow directory
+2026-10-04T19:55:56.8959375Z Prepare all required actions
+2026-10-04T19:55:56.9024661Z Getting action download info
+2026-10-04T19:55:57.2759872Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-04T19:55:57.4593699Z Download action repository 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-10-04T19:55:57.6509293Z Download action repository 'actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961' (SHA:b6effb05e454b25005698d916606bdc6ffcbf961)
+2026-10-04T19:55:58.2594800Z Download action repository 'actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-10-04T19:55:58.4329670Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-10-04T19:55:58.7853460Z Complete job name: Portable build (windows-latest)
+2026-10-04T19:55:59.0027255Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-04T19:55:59.0035441Z with:
+2026-10-04T19:55:59.0040609Z   persist-credentials: false
+2026-10-04T19:55:59.0052143Z   repository: AnonymousAlloyLab/AlloyStudio
+2026-10-04T19:55:59.0148982Z   token: ***
+2026-10-04T19:55:59.0150399Z   ssh-strict: true
+2026-10-04T19:55:59.0151470Z   ssh-user: git
+2026-10-04T19:55:59.0152700Z   clean: true
+2026-10-04T19:55:59.0153905Z   sparse-checkout-cone-mode: true
+2026-10-04T19:55:59.0154875Z   fetch-depth: 1
+2026-10-04T19:55:59.0155864Z   fetch-tags: false
+2026-10-04T19:55:59.0156666Z   show-progress: true
+2026-10-04T19:55:59.0157637Z   lfs: false
+2026-10-04T19:55:59.0158434Z   submodules: false
+2026-10-04T19:55:59.0159210Z   set-safe-directory: true
+2026-10-04T19:55:59.0160085Z   allow-unsafe-pr-checkout: false
+2026-10-04T19:55:59.0161761Z env:
+2026-10-04T19:55:59.0162629Z   OPENAI_DISABLED: 1
+2026-10-04T19:55:59.0163643Z ##[endgroup]
+2026-10-04T19:55:59.2224477Z Syncing repository: AnonymousAlloyLab/AlloyStudio
+2026-10-04T19:55:59.2228945Z ##[group]Getting Git version info
+2026-10-04T19:55:59.2230465Z Working directory is 'D:\a\AlloyStudio\AlloyStudio'
+2026-10-04T19:55:59.3523482Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T19:55:59.7296939Z git version 2.55.0.windows.5
+2026-10-04T19:55:59.7357614Z ##[endgroup]
+2026-10-04T19:55:59.7375991Z Temporarily overriding HOME='D:\a\_temp\1c956159-fd87-4725-abc4-5d856cd2bf78' before making global git config changes
+2026-10-04T19:55:59.7382903Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T19:55:59.7389074Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\AlloyStudio\AlloyStudio
+2026-10-04T19:55:59.8642990Z Deleting the contents of 'D:\a\AlloyStudio\AlloyStudio'
+2026-10-04T19:55:59.8649256Z ##[group]Determining repository object format
+2026-10-04T19:55:59.8653024Z ##[endgroup]
+2026-10-04T19:55:59.8655240Z ##[group]Initializing the repository
+2026-10-04T19:55:59.8669181Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\AlloyStudio\AlloyStudio
+2026-10-04T19:56:00.0050084Z Initialized empty Git repository in D:/a/AlloyStudio/AlloyStudio/.git/
+2026-10-04T19:56:00.0115817Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/AnonymousAlloyLab/AlloyStudio
+2026-10-04T19:56:00.1252749Z ##[endgroup]
+2026-10-04T19:56:00.1255327Z ##[group]Disabling automatic garbage collection
+2026-10-04T19:56:00.1263676Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-04T19:56:00.1880766Z ##[endgroup]
+2026-10-04T19:56:00.1883050Z ##[group]Setting up auth
+2026-10-04T19:56:00.1884639Z Removing SSH command configuration
+2026-10-04T19:56:00.1895377Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T19:56:00.3771189Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T19:56:02.7776503Z Removing HTTP extra header
+2026-10-04T19:56:02.7787745Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T19:56:02.9484904Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T19:56:04.7705153Z Removing includeIf entries pointing to credentials config files
+2026-10-04T19:56:04.7719611Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T19:56:04.9498163Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T19:56:06.7017762Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-04T19:56:06.8954026Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/AlloyStudio/AlloyStudio/.git.path D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:07.0933803Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/AlloyStudio/AlloyStudio/.git/worktrees/*.path D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:07.1608727Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:07.2437261Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:07.3259246Z ##[endgroup]
+2026-10-04T19:56:07.3259932Z ##[group]Fetching the repository
+2026-10-04T19:56:07.3307668Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +b35aa68d31167e7311635cca75a62dda1c6be78f:refs/remotes/origin/master
+2026-10-04T19:56:10.3342822Z From https://github.com/AnonymousAlloyLab/AlloyStudio
+2026-10-04T19:56:10.3343733Z  * [new ref]         b35aa68d31167e7311635cca75a62dda1c6be78f -> origin/master
+2026-10-04T19:56:10.3414500Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/master
+2026-10-04T19:56:10.3797847Z   origin/master
+2026-10-04T19:56:10.3845313Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/master
+2026-10-04T19:56:10.4115991Z b35aa68d31167e7311635cca75a62dda1c6be78f
+2026-10-04T19:56:10.4151018Z ##[endgroup]
+2026-10-04T19:56:10.4152192Z ##[group]Determining the checkout info
+2026-10-04T19:56:10.4153149Z ##[endgroup]
+2026-10-04T19:56:10.4162772Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-04T19:56:10.4604710Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-04T19:56:10.4945053Z ##[group]Checking out the ref
+2026-10-04T19:56:10.4954627Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B master refs/remotes/origin/master
+2026-10-04T19:56:11.6361246Z Updating files:  26% (1543/5905)
+2026-10-04T19:56:11.6903709Z Updating files:  27% (1595/5905)
+2026-10-04T19:56:11.7104493Z Updating files:  28% (1654/5905)
+2026-10-04T19:56:11.7309627Z Updating files:  29% (1713/5905)
+2026-10-04T19:56:11.7481930Z Updating files:  30% (1772/5905)
+2026-10-04T19:56:11.7646547Z Updating files:  31% (1831/5905)
+2026-10-04T19:56:11.7804145Z Updating files:  32% (1890/5905)
+2026-10-04T19:56:11.7986330Z Updating files:  33% (1949/5905)
+2026-10-04T19:56:11.8224086Z Updating files:  34% (2008/5905)
+2026-10-04T19:56:11.9251974Z Updating files:  35% (2067/5905)
+2026-10-04T19:56:11.9413242Z Updating files:  36% (2126/5905)
+2026-10-04T19:56:11.9916926Z Updating files:  37% (2185/5905)
+2026-10-04T19:56:12.0126991Z Updating files:  38% (2244/5905)
+2026-10-04T19:56:12.0360518Z Updating files:  39% (2303/5905)
+2026-10-04T19:56:12.0525993Z Updating files:  40% (2362/5905)
+2026-10-04T19:56:12.0692686Z Updating files:  41% (2422/5905)
+2026-10-04T19:56:12.0851660Z Updating files:  42% (2481/5905)
+2026-10-04T19:56:12.1014038Z Updating files:  43% (2540/5905)
+2026-10-04T19:56:12.1241802Z Updating files:  44% (2599/5905)
+2026-10-04T19:56:12.2291524Z Updating files:  45% (2658/5905)
+2026-10-04T19:56:12.2455239Z Updating files:  46% (2717/5905)
+2026-10-04T19:56:12.2974316Z Updating files:  47% (2776/5905)
+2026-10-04T19:56:12.3216343Z Updating files:  48% (2835/5905)
+2026-10-04T19:56:12.3422095Z Updating files:  49% (2894/5905)
+2026-10-04T19:56:12.3601010Z Updating files:  50% (2953/5905)
+2026-10-04T19:56:12.3770168Z Updating files:  51% (3012/5905)
+2026-10-04T19:56:12.3931831Z Updating files:  52% (3071/5905)
+2026-10-04T19:56:12.4165157Z Updating files:  53% (3130/5905)
+2026-10-04T19:56:12.4316494Z Updating files:  54% (3189/5905)
+2026-10-04T19:56:12.5391147Z Updating files:  55% (3248/5905)
+2026-10-04T19:56:12.5744556Z Updating files:  56% (3307/5905)
+2026-10-04T19:56:12.5895556Z Updating files:  57% (3366/5905)
+2026-10-04T19:56:12.6071894Z Updating files:  57% (3367/5905)
+2026-10-04T19:56:12.6286860Z Updating files:  58% (3425/5905)
+2026-10-04T19:56:12.6485321Z Updating files:  59% (3484/5905)
+2026-10-04T19:56:12.6657646Z Updating files:  60% (3543/5905)
+2026-10-04T19:56:12.6807295Z Updating files:  61% (3603/5905)
+2026-10-04T19:56:12.6994204Z Updating files:  62% (3662/5905)
+2026-10-04T19:56:12.7384742Z Updating files:  63% (3721/5905)
+2026-10-04T19:56:12.7551904Z Updating files:  64% (3780/5905)
+2026-10-04T19:56:12.8565852Z Updating files:  65% (3839/5905)
+2026-10-04T19:56:12.8913766Z Updating files:  66% (3898/5905)
+2026-10-04T19:56:12.9246424Z Updating files:  67% (3957/5905)
+2026-10-04T19:56:12.9451705Z Updating files:  68% (4016/5905)
+2026-10-04T19:56:12.9641115Z Updating files:  69% (4075/5905)
+2026-10-04T19:56:12.9828147Z Updating files:  70% (4134/5905)
+2026-10-04T19:56:12.9983803Z Updating files:  71% (4193/5905)
+2026-10-04T19:56:13.0148589Z Updating files:  72% (4252/5905)
+2026-10-04T19:56:13.0383950Z Updating files:  73% (4311/5905)
+2026-10-04T19:56:13.0579766Z Updating files:  74% (4370/5905)
+2026-10-04T19:56:13.0776102Z Updating files:  75% (4429/5905)
+2026-10-04T19:56:13.0951204Z Updating files:  76% (4488/5905)
+2026-10-04T19:56:13.1136441Z Updating files:  77% (4547/5905)
+2026-10-04T19:56:13.1319869Z Updating files:  78% (4606/5905)
+2026-10-04T19:56:13.1486839Z Updating files:  79% (4665/5905)
+2026-10-04T19:56:13.1671436Z Updating files:  80% (4724/5905)
+2026-10-04T19:56:13.1993970Z Updating files:  81% (4784/5905)
+2026-10-04T19:56:13.2156689Z Updating files:  82% (4843/5905)
+2026-10-04T19:56:13.2323209Z Updating files:  83% (4902/5905)
+2026-10-04T19:56:13.2510512Z Updating files:  84% (4961/5905)
+2026-10-04T19:56:13.2696939Z Updating files:  85% (5020/5905)
+2026-10-04T19:56:13.3095215Z Updating files:  86% (5079/5905)
+2026-10-04T19:56:13.4128763Z Updating files:  87% (5138/5905)
+2026-10-04T19:56:13.4307100Z Updating files:  88% (5197/5905)
+2026-10-04T19:56:13.4451078Z Updating files:  89% (5256/5905)
+2026-10-04T19:56:13.4617705Z Updating files:  90% (5315/5905)
+2026-10-04T19:56:13.4786562Z Updating files:  91% (5374/5905)
+2026-10-04T19:56:13.4951561Z Updating files:  92% (5433/5905)
+2026-10-04T19:56:13.5446078Z Updating files:  93% (5492/5905)
+2026-10-04T19:56:13.5637019Z Updating files:  94% (5551/5905)
+2026-10-04T19:56:13.5800622Z Updating files:  95% (5610/5905)
+2026-10-04T19:56:13.5857984Z Updating files:  95% (5653/5905)
+2026-10-04T19:56:13.6030573Z Updating files:  96% (5669/5905)
+2026-10-04T19:56:13.6198097Z Updating files:  97% (5728/5905)
+2026-10-04T19:56:13.6348561Z Updating files:  98% (5787/5905)
+2026-10-04T19:56:13.6525671Z Updating files:  99% (5846/5905)
+2026-10-04T19:56:13.6526168Z Updating files: 100% (5905/5905)
+2026-10-04T19:56:13.6526452Z Updating files: 100% (5905/5905), done.
+2026-10-04T19:56:13.6755719Z Reset branch 'master'
+2026-10-04T19:56:13.6830264Z branch 'master' set up to track 'origin/master'.
+2026-10-04T19:56:13.6933539Z ##[endgroup]
+2026-10-04T19:56:13.7361031Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-04T19:56:13.7643087Z b35aa68d31167e7311635cca75a62dda1c6be78f
+2026-10-04T19:56:13.7688350Z ##[group]Removing auth
+2026-10-04T19:56:13.7688635Z Removing SSH command configuration
+2026-10-04T19:56:13.7696728Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T19:56:13.8010643Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T19:56:14.3929350Z Removing HTTP extra header
+2026-10-04T19:56:14.3937746Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T19:56:14.4257318Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T19:56:14.9735732Z Removing includeIf entries pointing to credentials config files
+2026-10-04T19:56:14.9743800Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T19:56:15.0019273Z includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git.path
+2026-10-04T19:56:15.0020284Z includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git/worktrees/*.path
+2026-10-04T19:56:15.0021220Z includeif.gitdir:/github/workspace/.git.path
+2026-10-04T19:56:15.0021995Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-04T19:56:15.0067430Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git.path
+2026-10-04T19:56:15.0343944Z D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:15.0393956Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git.path D\:\\a\\_temp\\git\-credentials\-9803cbe9\-11ac\-465d\-83b5\-90065ce792d3\.config
+2026-10-04T19:56:15.0716293Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git/worktrees/*.path
+2026-10-04T19:56:15.0988988Z D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:15.1036549Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/AlloyStudio/AlloyStudio/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-9803cbe9\-11ac\-465d\-83b5\-90065ce792d3\.config
+2026-10-04T19:56:15.1353200Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-04T19:56:15.1620498Z /github/runner_temp/git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:15.1663684Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-9803cbe9\-11ac\-465d\-83b5\-90065ce792d3\.config
+2026-10-04T19:56:15.1975219Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-04T19:56:15.2241533Z /github/runner_temp/git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config
+2026-10-04T19:56:15.2294006Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9803cbe9\-11ac\-465d\-83b5\-90065ce792d3\.config
+2026-10-04T19:56:15.2623888Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T19:56:15.8351546Z Removing credentials config 'D:\a\_temp\git-credentials-9803cbe9-11ac-465d-83b5-90065ce792d3.config'
+2026-10-04T19:56:15.8363004Z ##[endgroup]
+2026-10-04T19:56:15.8792530Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+2026-10-04T19:56:15.8793121Z with:
+2026-10-04T19:56:15.8793321Z   python-version: 3.11
+2026-10-04T19:56:15.8793564Z   check-latest: false
+2026-10-04T19:56:15.8796197Z   token: ***
+2026-10-04T19:56:15.8796404Z   update-environment: true
+2026-10-04T19:56:15.8796645Z   allow-prereleases: false
+2026-10-04T19:56:15.8796882Z   freethreaded: false
+2026-10-04T19:56:15.8797082Z env:
+2026-10-04T19:56:15.8797266Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:15.8797461Z ##[endgroup]
+2026-10-04T19:56:16.0533788Z ##[group]Installed versions
+2026-10-04T19:56:16.0761971Z Successfully set up CPython (3.11.9)
+2026-10-04T19:56:16.0763066Z ##[endgroup]
+2026-10-04T19:56:16.1114913Z ##[group]Run actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+2026-10-04T19:56:16.1115368Z with:
+2026-10-04T19:56:16.1115557Z   distribution: temurin
+2026-10-04T19:56:16.1115775Z   java-version: 17
+2026-10-04T19:56:16.1115991Z   java-package: jdk
+2026-10-04T19:56:16.1116185Z   check-latest: false
+2026-10-04T19:56:16.1116388Z   set-default: true
+2026-10-04T19:56:16.1116593Z   verify-signature: false
+2026-10-04T19:56:16.1116808Z   server-id: github
+2026-10-04T19:56:16.1117010Z   server-username: GITHUB_ACTOR
+2026-10-04T19:56:16.1117253Z   server-password: GITHUB_TOKEN
+2026-10-04T19:56:16.1117491Z   overwrite-settings: true
+2026-10-04T19:56:16.1117708Z   job-status: success
+2026-10-04T19:56:16.1120313Z   token: ***
+2026-10-04T19:56:16.1120534Z   show-download-progress: false
+2026-10-04T19:56:16.1120770Z env:
+2026-10-04T19:56:16.1120938Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:16.1121226Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.1121718Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:56:16.1122249Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.1123341Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.1155151Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.1155912Z ##[endgroup]
+2026-10-04T19:56:16.3138974Z ##[group]Installed distributions
+2026-10-04T19:56:16.3348822Z Resolved Java 17.0.20+101 from tool-cache
+2026-10-04T19:56:16.3349365Z Setting Java 17.0.20+101 as the default
+2026-10-04T19:56:16.3377923Z Creating toolchains.xml for JDK version 17 from temurin
+2026-10-04T19:56:16.3475868Z Writing to C:\Users\runneradmin\.m2\toolchains.xml
+2026-10-04T19:56:16.3480105Z 
+2026-10-04T19:56:16.3480445Z Java configuration:
+2026-10-04T19:56:16.3480839Z   Distribution: temurin
+2026-10-04T19:56:16.3481502Z   Version: 17.0.20+101
+2026-10-04T19:56:16.3482185Z   Path: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:16.3482768Z 
+2026-10-04T19:56:16.3483246Z ##[endgroup]
+2026-10-04T19:56:16.3506066Z Creating settings.xml with server-id: github
+2026-10-04T19:56:16.3509085Z Writing to C:\Users\runneradmin\.m2\settings.xml
+2026-10-04T19:56:16.3517667Z Configured MAVEN_ARGS to include -ntp to suppress Maven transfer progress logs. Set 'show-download-progress: true' to keep the download progress output.
+2026-10-04T19:56:16.3890924Z ##[group]Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+2026-10-04T19:56:16.3891380Z with:
+2026-10-04T19:56:16.3891570Z   node-version: 22
+2026-10-04T19:56:16.3891780Z   check-latest: false
+2026-10-04T19:56:16.3894376Z   token: ***
+2026-10-04T19:56:16.3894586Z   package-manager-cache: true
+2026-10-04T19:56:16.3894825Z env:
+2026-10-04T19:56:16.3894996Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:16.3895292Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.3896076Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:56:16.3896592Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.3896993Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.3897408Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:16.3897888Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:16.3898410Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:16.3898814Z   MAVEN_ARGS: -ntp
+2026-10-04T19:56:16.3899006Z ##[endgroup]
+2026-10-04T19:56:16.6054327Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.3\x64
+2026-10-04T19:56:16.6061246Z ##[group]Environment details
+2026-10-04T19:56:20.7341173Z node: v22.23.3
+2026-10-04T19:56:20.7341573Z npm: 10.9.9
+2026-10-04T19:56:20.7341886Z yarn: 1.22.22
+2026-10-04T19:56:20.7342681Z ##[endgroup]
+2026-10-04T19:56:20.7647787Z ##[group]Run python scripts/ci_check.py build
+2026-10-04T19:56:20.7648288Z [36;1mpython scripts/ci_check.py build[0m
+2026-10-04T19:56:20.8155601Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T19:56:20.8156030Z env:
+2026-10-04T19:56:20.8156239Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:20.8156558Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:20.8157067Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:56:20.8157573Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:20.8158014Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:20.8158469Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:20.8158977Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:20.8159600Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:20.8160048Z   MAVEN_ARGS: -ntp
+2026-10-04T19:56:20.8160262Z ##[endgroup]
+2026-10-04T19:56:52.1225107Z {"check": "build", "count": null, "dirty": false, "revision": "b35aa68d31167e7311635cca75a62dda1c6be78f", "status": "PASS"}
+2026-10-04T19:56:52.2473103Z ##[group]Run python scripts/ci_check.py runtime
+2026-10-04T19:56:52.2473558Z [36;1mpython scripts/ci_check.py runtime[0m
+2026-10-04T19:56:52.2547235Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T19:56:52.2547608Z env:
+2026-10-04T19:56:52.2547790Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:52.2548090Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:52.2548565Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:56:52.2549584Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:52.2550049Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:52.2550633Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:52.2551113Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:52.2551711Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:52.2552132Z   MAVEN_ARGS: -ntp
+2026-10-04T19:56:52.2552337Z ##[endgroup]
+2026-10-04T19:56:54.9790901Z {"check": "runtime", "count": 378, "dirty": false, "revision": "b35aa68d31167e7311635cca75a62dda1c6be78f", "status": "PASS"}
+2026-10-04T19:56:55.1334475Z ##[group]Run python -m unittest test_engine_workers test_traffic_scheduler test_traffic_http test_ingress_deadlines test_strict_http_decode test_ingress_admission test_traffic_portal test_luna_sharing -v
+2026-10-04T19:56:55.1335950Z [36;1mpython -m unittest test_engine_workers test_traffic_scheduler test_traffic_http test_ingress_deadlines test_strict_http_decode test_ingress_admission test_traffic_portal test_luna_sharing -v[0m
+2026-10-04T19:56:55.1412874Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T19:56:55.1413238Z env:
+2026-10-04T19:56:55.1413427Z   OPENAI_DISABLED: 1
+2026-10-04T19:56:55.1413739Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:55.1414228Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:56:55.1414694Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:55.1415137Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:55.1415551Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:56:55.1416009Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:55.1416534Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:56:55.1416933Z   MAVEN_ARGS: -ntp
+2026-10-04T19:56:55.1417179Z   PYTHONPATH: D:\a\AlloyStudio\AlloyStudio/tests
+2026-10-04T19:56:55.1417514Z   TMPDIR: D:\a\AlloyStudio\AlloyStudio/build/ci/tmp
+2026-10-04T19:56:55.1417836Z   TMP: D:\a\AlloyStudio\AlloyStudio/build/ci/tmp
+2026-10-04T19:56:55.1418147Z   TEMP: D:\a\AlloyStudio\AlloyStudio/build/ci/tmp
+2026-10-04T19:56:55.1418438Z ##[endgroup]
+2026-10-04T19:56:58.3504182Z test_100_distinct_valid_edits_after_prewarm_start_no_jvms (test_engine_workers.ActualWorkerTests.test_100_distinct_valid_edits_after_prewarm_start_no_jvms) ... ok
+2026-10-04T19:57:00.6000267Z test_behavior_fresh_and_warm_equivalence_including_facts (test_engine_workers.ActualWorkerTests.test_behavior_fresh_and_warm_equivalence_including_facts) ... ok
+2026-10-04T19:57:02.0034226Z test_fatal_classification_and_parser_adapter_avoid_exit_registrations (test_engine_workers.ActualWorkerTests.test_fatal_classification_and_parser_adapter_avoid_exit_registrations) ... ok
+2026-10-04T19:57:05.7094420Z test_fresh_warm_equivalence_after_mixed_history_and_parser_errors (test_engine_workers.ActualWorkerTests.test_fresh_warm_equivalence_after_mixed_history_and_parser_errors) ... ok
+2026-10-04T19:57:06.3972425Z test_java_worker_rejects_non_json_and_oversized_protocol_frames (test_engine_workers.ActualWorkerTests.test_java_worker_rejects_non_json_and_oversized_protocol_frames) ... ok
+2026-10-04T19:57:07.7906709Z test_late_invalid_reference_still_invalidates_complete_pool (test_engine_workers.ActualWorkerTests.test_late_invalid_reference_still_invalidates_complete_pool) ... ok
+2026-10-04T19:57:07.7951953Z test_bounds_are_checked_before_launch (test_engine_workers.WorkerProtocolTests.test_bounds_are_checked_before_launch) ... ok
+2026-10-04T19:57:08.2057331Z test_close_deadline_reports_still_starting_instead_of_clean_exit (test_engine_workers.WorkerProtocolTests.test_close_deadline_reports_still_starting_instead_of_clean_exit) ... ok
+2026-10-04T19:57:08.5329118Z test_close_waits_for_starting_handshake_and_reaping (test_engine_workers.WorkerProtocolTests.test_close_waits_for_starting_handshake_and_reaping) ... ok
+2026-10-04T19:57:08.5621933Z test_closing_constructor_waiting_for_capacity_cannot_launch_after_release (test_engine_workers.WorkerProtocolTests.test_closing_constructor_waiting_for_capacity_cannot_launch_after_release) ... ok
+2026-10-04T19:57:09.0869997Z test_deadline_covers_stalled_response_and_stalled_request_pipe (test_engine_workers.WorkerProtocolTests.test_deadline_covers_stalled_response_and_stalled_request_pipe) ... ok
+2026-10-04T19:57:09.2631178Z test_duplicate_frame_cannot_finish_next_ticket (test_engine_workers.WorkerProtocolTests.test_duplicate_frame_cannot_finish_next_ticket) ... ok
+2026-10-04T19:57:09.2632935Z test_expired_deadline_cannot_launch_a_new_worker (test_engine_workers.WorkerProtocolTests.test_expired_deadline_cannot_launch_a_new_worker) ... ok
+2026-10-04T19:57:09.7954765Z test_frame_faults_retire_and_reap_without_retry_or_diagnostic (test_engine_workers.WorkerProtocolTests.test_frame_faults_retire_and_reap_without_retry_or_diagnostic) ... ok
+2026-10-04T19:57:09.8354458Z test_minimal_environment_excludes_credentials_options_and_unknowns (test_engine_workers.WorkerProtocolTests.test_minimal_environment_excludes_credentials_options_and_unknowns) ... ok
+2026-10-04T19:57:10.5167539Z test_parallel_lanes_and_waiting_deadlines (test_engine_workers.WorkerProtocolTests.test_parallel_lanes_and_waiting_deadlines) ... ok
+2026-10-04T19:57:10.5538986Z test_pool_closed_during_constructor_reaps_new_process (test_engine_workers.WorkerProtocolTests.test_pool_closed_during_constructor_reaps_new_process) ... ok
+2026-10-04T19:57:10.6844693Z test_prewarm_and_100_requests_have_no_new_launches (test_engine_workers.WorkerProtocolTests.test_prewarm_and_100_requests_have_no_new_launches) ... ok
+2026-10-04T19:57:10.9053033Z test_recycling_reaps_before_replacement_and_global_admin_bound (test_engine_workers.WorkerProtocolTests.test_recycling_reaps_before_replacement_and_global_admin_bound) ... ok
+2026-10-04T19:57:11.3750851Z test_startup_circuit_breaker_does_not_retry_forever (test_engine_workers.WorkerProtocolTests.test_startup_circuit_breaker_does_not_retry_forever) ... ok
+2026-10-04T19:57:11.4799537Z test_startup_timeout_reaps_failed_constructor (test_engine_workers.WorkerProtocolTests.test_startup_timeout_reaps_failed_constructor) ... ok
+2026-10-04T19:57:11.5880536Z test_unreaped_owner_is_retained_until_actual_wait (test_engine_workers.WorkerProtocolTests.test_unreaped_owner_is_retained_until_actual_wait) ... ok
+2026-10-04T19:57:11.5895258Z test_cache_expiry_byte_cap_and_copies (test_traffic_scheduler.SchedulerTests.test_cache_expiry_byte_cap_and_copies) ... ok
+2026-10-04T19:57:11.5916372Z test_cancel_A_preserves_B_and_running_owner (test_traffic_scheduler.SchedulerTests.test_cancel_A_preserves_B_and_running_owner) ... ok
+2026-10-04T19:57:11.5929208Z test_failures_are_not_cached_and_bounds_refuse_before_dispatch (test_traffic_scheduler.SchedulerTests.test_failures_are_not_cached_and_bounds_refuse_before_dispatch) ... ok
+2026-10-04T19:57:11.5937448Z test_pinned_evidence_survives_cache_eviction_and_expires_explicitly (test_traffic_scheduler.SchedulerTests.test_pinned_evidence_survives_cache_eviction_and_expires_explicitly) ... ok
+2026-10-04T19:57:11.5956899Z test_queued_orphan_never_dispatches (test_traffic_scheduler.SchedulerTests.test_queued_orphan_never_dispatches) ... ok
+2026-10-04T19:57:11.5965283Z test_revision_is_monotone_and_cannot_rebind_draft (test_traffic_scheduler.SchedulerTests.test_revision_is_monotone_and_cannot_rebind_draft) ... ok
+2026-10-04T19:57:11.6059899Z test_twenty_identical_checks_have_one_computation_and_private_results (test_traffic_scheduler.SchedulerTests.test_twenty_identical_checks_have_one_computation_and_private_results) ... ok
+2026-10-04T19:57:11.6079567Z test_whitespace_metric_generation_and_pool_identity_do_not_alias (test_traffic_scheduler.SchedulerTests.test_whitespace_metric_generation_and_pool_identity_do_not_alias) ... ok
+2026-10-04T19:57:11.6082279Z test_duplicate_or_delayed_release_cannot_free_another_connection (test_traffic_http.AdmissionTests.test_duplicate_or_delayed_release_cannot_free_another_connection) ... ok
+2026-10-04T19:57:11.6084442Z test_integer_credits_backward_clock_and_no_refill_from_rejection (test_traffic_http.AdmissionTests.test_integer_credits_backward_clock_and_no_refill_from_rejection) ... ok
+2026-10-04T19:57:11.6088322Z test_json_is_strict_utf8_duplicate_free_and_depth_bounded (test_traffic_http.AdmissionTests.test_json_is_strict_utf8_duplicate_free_and_depth_bounded) ... ok
+2026-10-04T19:57:11.6091252Z test_peer_registry_finite_and_idle_full_bucket_eviction (test_traffic_http.AdmissionTests.test_peer_registry_finite_and_idle_full_bucket_eviction) ... ok
+2026-10-04T19:57:11.6094663Z test_profile_rejects_unbounded_or_invalid_limits (test_traffic_http.AdmissionTests.test_profile_rejects_unbounded_or_invalid_limits) ... ok
+2026-10-04T19:57:11.6096341Z test_public_and_control_credits_are_nonborrowable (test_traffic_http.AdmissionTests.test_public_and_control_credits_are_nonborrowable) ... ok
+2026-10-04T19:57:11.6098403Z test_public_cache_generation_bytes_entries_and_projection_only_etag (test_traffic_http.AdmissionTests.test_public_cache_generation_bytes_entries_and_projection_only_etag) ... ok
+2026-10-04T19:57:11.6845899Z test_ambiguous_framing_is_rejected_before_engine_even_on_get (test_traffic_http.HTTPBoundaryTests.test_ambiguous_framing_is_rejected_before_engine_even_on_get) ... ok
+2026-10-04T19:57:11.7165749Z test_catalogue_detail_html_revalidation_and_publication_invalidation (test_traffic_http.HTTPBoundaryTests.test_catalogue_detail_html_revalidation_and_publication_invalidation) ... ok
+2026-10-04T19:57:11.7324303Z test_control_listener_rejects_non_loopback_bind (test_traffic_http.HTTPBoundaryTests.test_control_listener_rejects_non_loopback_bind) ... ok
+2026-10-04T19:57:11.7638283Z test_forwarded_addresses_do_not_reset_source_or_total_credits (test_traffic_http.HTTPBoundaryTests.test_forwarded_addresses_do_not_reset_source_or_total_credits) ... ok
+2026-10-04T19:57:11.8430151Z test_gate_precedes_thread_and_control_survives_public_saturation (test_traffic_http.HTTPBoundaryTests.test_gate_precedes_thread_and_control_survives_public_saturation) ... ok
+2026-10-04T19:57:11.8746877Z test_header_line_and_aggregate_bounds (test_traffic_http.HTTPBoundaryTests.test_header_line_and_aggregate_bounds) ... ok
+2026-10-04T19:57:11.9065892Z test_invalid_json_encodings_and_limits_do_not_dispatch (test_traffic_http.HTTPBoundaryTests.test_invalid_json_encodings_and_limits_do_not_dispatch) ... ok
+2026-10-04T19:57:11.9374117Z test_publication_between_capture_and_cache_lookup_cannot_poison_new_generation (test_traffic_http.HTTPBoundaryTests.test_publication_between_capture_and_cache_lookup_cannot_poison_new_generation) ... ok
+2026-10-04T19:57:12.1417586Z test_slow_response_reader_cannot_retain_handler_past_write_budget (test_traffic_http.HTTPBoundaryTests.test_slow_response_reader_cannot_retain_handler_past_write_budget) ... ok
+2026-10-04T19:57:12.4087983Z test_slow_trickle_body_has_absolute_expiry_and_json_error (test_traffic_http.HTTPBoundaryTests.test_slow_trickle_body_has_absolute_expiry_and_json_error) ... ok
+2026-10-04T19:57:12.6782576Z test_slow_trickle_header_has_absolute_expiry (test_traffic_http.HTTPBoundaryTests.test_slow_trickle_header_has_absolute_expiry) ... ok
+2026-10-04T19:57:12.6996976Z test_unexpected_handler_exception_cannot_log_private_values (test_traffic_http.HTTPBoundaryTests.test_unexpected_handler_exception_cannot_log_private_values) ... ok
+2026-10-04T19:57:12.7089942Z test_expired_buffered_headers_cannot_dispatch_health (test_ingress_deadlines.HandlerDeadlineTests.test_expired_buffered_headers_cannot_dispatch_health) ... ok
+2026-10-04T19:57:12.7247919Z test_header_parse_completion_rechecks_deadline (test_ingress_deadlines.HandlerDeadlineTests.test_header_parse_completion_rechecks_deadline) ... ok
+2026-10-04T19:57:12.7407356Z test_json_completion_rechecks_deadline_before_business_dispatch (test_ingress_deadlines.HandlerDeadlineTests.test_json_completion_rechecks_deadline_before_business_dispatch) ... ok
+2026-10-04T19:57:12.7564425Z test_valid_request_retains_channel_dispatch (test_ingress_deadlines.HandlerDeadlineTests.test_valid_request_retains_channel_dispatch) ... ok
+2026-10-04T19:57:12.7569732Z test_expired_completed_read_does_not_start_json_decoder (test_ingress_deadlines.JSONCompletionTests.test_expired_completed_read_does_not_start_json_decoder) ... ok
+2026-10-04T19:57:12.7573576Z test_public_and_admin_completion_share_the_final_gate (test_ingress_deadlines.JSONCompletionTests.test_public_and_admin_completion_share_the_final_gate) ... ok
+2026-10-04T19:57:12.7575627Z test_body_has_one_new_absolute_deadline (test_ingress_deadlines.ReaderDeadlineTests.test_body_has_one_new_absolute_deadline) ... ok
+2026-10-04T19:57:12.7577653Z test_body_transition_cannot_renew_expired_header_deadline (test_ingress_deadlines.ReaderDeadlineTests.test_body_transition_cannot_renew_expired_header_deadline) ... ok
+2026-10-04T19:57:12.7579640Z test_body_transition_uses_exactly_the_validated_clock_sample (test_ingress_deadlines.ReaderDeadlineTests.test_body_transition_uses_exactly_the_validated_clock_sample) ... ok
+2026-10-04T19:57:12.7581847Z test_buffered_body_return_rechecks_clock (test_ingress_deadlines.ReaderDeadlineTests.test_buffered_body_return_rechecks_clock) ... ok
+2026-10-04T19:57:12.7584226Z test_buffered_header_return_rechecks_clock (test_ingress_deadlines.ReaderDeadlineTests.test_buffered_header_return_rechecks_clock) ... ok
+2026-10-04T19:57:12.7586157Z test_deadline_before_boundary_accepts (test_ingress_deadlines.ReaderDeadlineTests.test_deadline_before_boundary_accepts) ... ok
+2026-10-04T19:57:12.7588127Z test_deadline_equality_and_lateness_reject (test_ingress_deadlines.ReaderDeadlineTests.test_deadline_equality_and_lateness_reject) ... ok
+2026-10-04T19:57:12.7590202Z test_expired_buffered_body_rejected_without_recv (test_ingress_deadlines.ReaderDeadlineTests.test_expired_buffered_body_rejected_without_recv) ... ok
+2026-10-04T19:57:12.7592372Z test_expired_buffered_header_rejected_without_recv (test_ingress_deadlines.ReaderDeadlineTests.test_expired_buffered_header_rejected_without_recv) ... ok
+2026-10-04T19:57:12.7594267Z test_expired_recv_is_not_started (test_ingress_deadlines.ReaderDeadlineTests.test_expired_recv_is_not_started) ... ok
+2026-10-04T19:57:12.7596262Z test_header_eof_is_rejected_existing_negative_control (test_ingress_deadlines.ReaderDeadlineTests.test_header_eof_is_rejected_existing_negative_control) ... ok
+2026-10-04T19:57:12.7598356Z test_recv_equality_rejects_received_bytes (test_ingress_deadlines.ReaderDeadlineTests.test_recv_equality_rejects_received_bytes) ... ok
+2026-10-04T19:57:12.7600403Z test_zero_count_read_does_not_bypass_expiration (test_ingress_deadlines.ReaderDeadlineTests.test_zero_count_read_does_not_bypass_expiration) ... ok
+2026-10-04T19:57:12.7726821Z test_discovery_witnesses_cannot_reach_route_handler (test_strict_http_decode.StrictDecoderSocketTests.test_discovery_witnesses_cannot_reach_route_handler) ... ok
+2026-10-04T19:57:12.7885935Z test_valid_browser_and_http10_compatibility (test_strict_http_decode.StrictDecoderSocketTests.test_valid_browser_and_http10_compatibility) ... ok
+2026-10-04T19:57:12.7892814Z test_framing_rejects_duplicates_unknown_encodings_and_noncanonical_lengths (test_strict_http_decode.StrictDecoderTests.test_framing_rejects_duplicates_unknown_encodings_and_noncanonical_lengths) ... ok
+2026-10-04T19:57:12.7897288Z test_host_is_version_sensitive_and_authority_is_unambiguous (test_strict_http_decode.StrictDecoderTests.test_host_is_version_sensitive_and_authority_is_unambiguous) ... ok
+2026-10-04T19:57:12.7902350Z test_json_nested_duplicate_unicode_finite_depth_and_root_rules (test_strict_http_decode.StrictDecoderTests.test_json_nested_duplicate_unicode_finite_depth_and_root_rules) ... ok
+2026-10-04T19:57:12.7905945Z test_media_type_grammar_uses_raw_occurrences_and_unique_parameter (test_strict_http_decode.StrictDecoderTests.test_media_type_grammar_uses_raw_occurrences_and_unique_parameter) ... ok
+2026-10-04T19:57:12.7911016Z test_request_line_preserves_browser_targets_and_supported_versions (test_strict_http_decode.StrictDecoderTests.test_request_line_preserves_browser_targets_and_supported_versions) ... ok
+2026-10-04T19:57:12.7913756Z test_request_line_rejects_every_ambiguous_separator_and_legacy_version (test_strict_http_decode.StrictDecoderTests.test_request_line_rejects_every_ambiguous_separator_and_legacy_version) ... ok
+2026-10-04T19:57:12.7926102Z test_request_targets_reject_controls_fragments_absolute_and_bad_escapes (test_strict_http_decode.StrictDecoderTests.test_request_targets_reject_controls_fragments_absolute_and_bad_escapes) ... ok
+2026-10-04T19:57:12.7928210Z test_anonymous_stack_and_nonborrowable_credits (test_ingress_admission.AdmissionOwnershipTests.test_anonymous_stack_and_nonborrowable_credits) ... ok
+2026-10-04T19:57:12.7973573Z test_simultaneous_reservation_linearization_and_exact_release (test_ingress_admission.AdmissionOwnershipTests.test_simultaneous_reservation_linearization_and_exact_release) ... ok
+2026-10-04T19:57:12.7980087Z test_current_thread_is_skipped_without_creating_uncertainty (test_ingress_admission.ReclamationObservationTests.test_current_thread_is_skipped_without_creating_uncertainty) ... ok
+2026-10-04T19:57:12.8007670Z test_every_observation_exception_prevents_all_later_probes (test_ingress_admission.ReclamationObservationTests.test_every_observation_exception_prevents_all_later_probes) ... ok
+2026-10-04T19:57:12.8033674Z test_installed_thread_status_interruption_cannot_reclaim_a_running_handler (test_ingress_admission.ReclamationObservationTests.test_installed_thread_status_interruption_cannot_reclaim_a_running_handler) ... ok
+2026-10-04T19:57:12.8039525Z test_normal_live_then_dead_observations_reclaim_without_retaining_markers (test_ingress_admission.ReclamationObservationTests.test_normal_live_then_dead_observations_reclaim_without_retaining_markers) ... ok
+2026-10-04T19:57:12.8197826Z test_constructor_start_failure_and_started_then_raise_paths (test_ingress_admission.SocketAdmissionTests.test_constructor_start_failure_and_started_then_raise_paths) ... ok
+2026-10-04T19:57:12.8514397Z test_enabled_pair_actual_saturation_control_health_and_limits (test_ingress_admission.SocketAdmissionTests.test_enabled_pair_actual_saturation_control_health_and_limits) ... ERROR
+2026-10-04T19:57:12.8978263Z test_failed_attempt_without_bootstrap_retains_bounded_capacity (test_ingress_admission.SocketAdmissionTests.test_failed_attempt_without_bootstrap_retains_bounded_capacity) ... ok
+2026-10-04T19:57:12.9136215Z test_handler_failure_retained_until_thread_exit_then_reaped (test_ingress_admission.SocketAdmissionTests.test_handler_failure_retained_until_thread_exit_then_reaped) ... ok
+2026-10-04T19:57:12.9293169Z test_ident_published_before_started_is_not_a_terminated_thread (test_ingress_admission.SocketAdmissionTests.test_ident_published_before_started_is_not_a_terminated_thread) ... ok
+2026-10-04T19:57:12.9451698Z test_interrupted_start_before_ident_publication_retains_future_thread (test_ingress_admission.SocketAdmissionTests.test_interrupted_start_before_ident_publication_retains_future_thread) ... ok
+2026-10-04T19:57:12.9763546Z test_live_thread_tail_retains_reservation_and_blocks_next_allocator (test_ingress_admission.SocketAdmissionTests.test_live_thread_tail_retains_reservation_and_blocks_next_allocator) ... ok
+2026-10-04T19:57:12.9766141Z test_nonloopback_control_refused_before_listening (test_ingress_admission.SocketAdmissionTests.test_nonloopback_control_refused_before_listening) ... ok
+2026-10-04T19:57:12.9788223Z test_auth_or_prior_drain_failure_allocates_no_scheduler_or_worker (test_traffic_portal.PortalLifecycleTests.test_auth_or_prior_drain_failure_allocates_no_scheduler_or_worker) ... ok
+2026-10-04T19:57:12.9801985Z test_starting_worker_prevents_successful_shutdown_acknowledgement (test_traffic_portal.PortalLifecycleTests.test_starting_worker_prevents_successful_shutdown_acknowledgement) ... ok
+2026-10-04T19:57:12.9816272Z test_successful_shutdown_uses_one_absolute_drain_deadline (test_traffic_portal.PortalLifecycleTests.test_successful_shutdown_uses_one_absolute_drain_deadline) ... ok
+2026-10-04T19:57:12.9842565Z test_unreaped_process_prevents_successful_shutdown_acknowledgement (test_traffic_portal.PortalLifecycleTests.test_unreaped_process_prevents_successful_shutdown_acknowledgement) ... ok
+2026-10-04T19:57:18.5650456Z test_duplicate_http_checks_join_and_cancellation_preserves_other_caller (test_traffic_portal.TrafficPortalTests.test_duplicate_http_checks_join_and_cancellation_preserves_other_caller) ... ok
+2026-10-04T19:57:24.2047577Z test_pin_is_bound_to_channel_exact_text_metric_and_generation (test_traffic_portal.TrafficPortalTests.test_pin_is_bound_to_channel_exact_text_metric_and_generation) ... ok
+2026-10-04T19:57:29.8624577Z test_pinned_feedback_does_not_resolve_after_cache_eviction (test_traffic_portal.TrafficPortalTests.test_pinned_feedback_does_not_resolve_after_cache_eviction) ... ok
+2026-10-04T19:57:35.4501014Z test_snapshot_generation_changes_key_and_capacity_is_explicit (test_traffic_portal.TrafficPortalTests.test_snapshot_generation_changes_key_and_capacity_is_explicit) ... ok
+2026-10-04T19:57:35.4691486Z test_body_metric_witness_and_account_variations_do_not_join (test_luna_sharing.ExplanationSharingTests.test_body_metric_witness_and_account_variations_do_not_join) ... ok
+2026-10-04T19:57:35.4711431Z test_cache_byte_budget_counts_exact_evidence_keys_and_oversize_bypasses (test_luna_sharing.ExplanationSharingTests.test_cache_byte_budget_counts_exact_evidence_keys_and_oversize_bypasses) ... ok
+2026-10-04T19:57:35.4720292Z test_cache_expires_at_120_seconds_without_sliding_on_hits (test_luna_sharing.ExplanationSharingTests.test_cache_expires_at_120_seconds_without_sliding_on_hits) ... ok
+2026-10-04T19:57:35.5032015Z test_default_limits_and_129_unique_prompts_evict_without_exceeding_budget (test_luna_sharing.ExplanationSharingTests.test_default_limits_and_129_unique_prompts_evict_without_exceeding_budget) ... ok
+2026-10-04T19:57:35.5346511Z test_follower_wait_has_a_deadline_and_does_not_release_running_provider_slot (test_luna_sharing.ExplanationSharingTests.test_follower_wait_has_a_deadline_and_does_not_release_running_provider_slot) ... ok
+2026-10-04T19:57:35.5369276Z test_global_follower_cap_rejects_without_provider_call_or_resource_leak (test_luna_sharing.ExplanationSharingTests.test_global_follower_cap_rejects_without_provider_call_or_resource_leak) ... ok
+2026-10-04T19:57:35.5394137Z test_join_is_allowed_when_both_provider_slots_are_busy_but_new_work_is_rejected (test_luna_sharing.ExplanationSharingTests.test_join_is_allowed_when_both_provider_slots_are_busy_but_new_work_is_rejected) ... ok
+2026-10-04T19:57:35.5396121Z test_malformed_evidence_and_disabled_account_do_not_enter_pending_ledger (test_luna_sharing.ExplanationSharingTests.test_malformed_evidence_and_disabled_account_do_not_enter_pending_ledger) ... ok
+2026-10-04T19:57:35.5412883Z test_provider_failure_is_shared_but_not_cached (test_luna_sharing.ExplanationSharingTests.test_provider_failure_is_shared_but_not_cached) ... ok
+2026-10-04T19:57:35.5476571Z test_twelve_identical_callers_share_one_provider_and_receive_independent_results (test_luna_sharing.ExplanationSharingTests.test_twelve_identical_callers_share_one_provider_and_receive_independent_results) ... ok
+2026-10-04T19:57:35.5491159Z test_unexpected_terminal_exception_still_releases_followers_and_slots (test_luna_sharing.ExplanationSharingTests.test_unexpected_terminal_exception_still_releases_followers_and_slots) ... ok
+2026-10-04T19:57:35.5493031Z 
+2026-10-04T19:57:35.5493387Z ======================================================================
+2026-10-04T19:57:35.5495659Z ERROR: test_enabled_pair_actual_saturation_control_health_and_limits (test_ingress_admission.SocketAdmissionTests.test_enabled_pair_actual_saturation_control_health_and_limits)
+2026-10-04T19:57:35.5496754Z ----------------------------------------------------------------------
+2026-10-04T19:57:35.5497162Z Traceback (most recent call last):
+2026-10-04T19:57:35.5497896Z   File "D:\a\AlloyStudio\AlloyStudio\tests\test_ingress_admission.py", line 110, in test_enabled_pair_actual_saturation_control_health_and_limits
+2026-10-04T19:57:35.5498611Z     self.assertEqual(self.get(public)[0], 503)
+2026-10-04T19:57:35.5498929Z                      ^^^^^^^^^^^^^^^^
+2026-10-04T19:57:35.5499401Z   File "D:\a\AlloyStudio\AlloyStudio\tests\test_ingress_admission.py", line 95, in get
+2026-10-04T19:57:35.5499856Z     result = conn.getresponse()
+2026-10-04T19:57:35.5500115Z              ^^^^^^^^^^^^^^^^^^
+2026-10-04T19:57:35.5500838Z   File "C:\hostedtoolcache\windows\Python\3.11.9\x64\Lib\http\client.py", line 1395, in getresponse
+2026-10-04T19:57:35.5501323Z     response.begin()
+2026-10-04T19:57:35.5501773Z   File "C:\hostedtoolcache\windows\Python\3.11.9\x64\Lib\http\client.py", line 325, in begin
+2026-10-04T19:57:35.5502277Z     version, status, reason = self._read_status()
+2026-10-04T19:57:35.5502600Z                               ^^^^^^^^^^^^^^^^^^^
+2026-10-04T19:57:35.5503103Z   File "C:\hostedtoolcache\windows\Python\3.11.9\x64\Lib\http\client.py", line 286, in _read_status
+2026-10-04T19:57:35.5503655Z     line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+2026-10-04T19:57:35.5504002Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-04T19:57:35.5504472Z   File "C:\hostedtoolcache\windows\Python\3.11.9\x64\Lib\socket.py", line 706, in readinto
+2026-10-04T19:57:35.5504927Z     return self._sock.recv_into(b)
+2026-10-04T19:57:35.5505200Z            ^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-04T19:57:35.5505796Z ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+2026-10-04T19:57:35.5506248Z 
+2026-10-04T19:57:35.5506458Z ----------------------------------------------------------------------
+2026-10-04T19:57:35.5506800Z Ran 110 tests in 39.406s
+2026-10-04T19:57:35.5506947Z 
+2026-10-04T19:57:35.5507049Z FAILED (errors=1)
+2026-10-04T19:57:35.7065892Z ##[error]Process completed with exit code 1.
+2026-10-04T19:57:35.7243678Z ##[group]Run python scripts/ci_dashboard.py
+2026-10-04T19:57:35.7244109Z [36;1mpython scripts/ci_dashboard.py[0m
+2026-10-04T19:57:35.7316925Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T19:57:35.7317288Z env:
+2026-10-04T19:57:35.7317477Z   OPENAI_DISABLED: 1
+2026-10-04T19:57:35.7317791Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:35.7318241Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:57:35.7318710Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:35.7319133Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:35.7319535Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:35.7319982Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:57:35.7320895Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:57:35.7321487Z   MAVEN_ARGS: -ntp
+2026-10-04T19:57:35.7321695Z ##[endgroup]
+2026-10-04T19:57:36.1522794Z Dashboard generated: static assets and safe summary only.
+2026-10-04T19:57:36.3034994Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+2026-10-04T19:57:36.3035798Z with:
+2026-10-04T19:57:36.3036035Z   name: dashboard-windows-latest-37230133497-1
+2026-10-04T19:57:36.3036660Z   path: build/ci-dashboard/index.html
+build/ci-dashboard/app.js
+build/ci-dashboard/styles.css
+build/ci-dashboard/data.json
+
+2026-10-04T19:57:36.3037225Z   if-no-files-found: error
+2026-10-04T19:57:36.3037456Z   retention-days: 14
+2026-10-04T19:57:36.3037672Z   compression-level: 6
+2026-10-04T19:57:36.3037878Z   overwrite: false
+2026-10-04T19:57:36.3038083Z   include-hidden-files: false
+2026-10-04T19:57:36.3038302Z   archive: true
+2026-10-04T19:57:36.3038480Z env:
+2026-10-04T19:57:36.3038654Z   OPENAI_DISABLED: 1
+2026-10-04T19:57:36.3038934Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:36.3039395Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+2026-10-04T19:57:36.3039884Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:36.3040302Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:36.3040713Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+2026-10-04T19:57:36.3041162Z   JAVA_HOME: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:57:36.3041681Z   JAVA_HOME_17_X64: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.20-101\x64
+2026-10-04T19:57:36.3042077Z   MAVEN_ARGS: -ntp
+2026-10-04T19:57:36.3042263Z ##[endgroup]
+2026-10-04T19:57:36.4886070Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-04T19:57:36.4891834Z The least common ancestor is D:\a\AlloyStudio\AlloyStudio\build\ci-dashboard. This will be the root directory of the artifact
+2026-10-04T19:57:36.4892988Z With the provided path, there will be 4 files uploaded
+2026-10-04T19:57:36.4898244Z Artifact name is valid!
+2026-10-04T19:57:36.4899817Z Root directory input is valid!
+2026-10-04T19:57:36.8744834Z Uploading artifact: dashboard-windows-latest-37230133497-1.zip
+2026-10-04T19:57:36.8789056Z Beginning upload of artifact content to blob storage
+2026-10-04T19:57:37.2004139Z Uploaded bytes 6345
+2026-10-04T19:57:37.2907295Z Finished uploading artifact content to blob storage!
+2026-10-04T19:57:37.2908824Z SHA256 digest of uploaded artifact is ad7db3b4d08c8442a20d83e7fd54bb2cc84da3e15568445eb405b2ff7c24df00
+2026-10-04T19:57:37.2910052Z Finalizing artifact upload
+2026-10-04T19:57:37.7024100Z Artifact dashboard-windows-latest-37230133497-1 successfully finalized. Artifact ID 11312783781
+2026-10-04T19:57:37.7025153Z Artifact dashboard-windows-latest-37230133497-1 has been successfully uploaded! Final size is 6345 bytes. Artifact ID is 11312783781
+2026-10-04T19:57:37.7032877Z Artifact download URL: https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37230133497/artifacts/11312783781
+2026-10-04T19:57:37.7381014Z Post job cleanup.
+2026-10-04T19:57:37.9337054Z Post job cleanup.
+2026-10-04T19:57:38.1341868Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T19:57:38.1651755Z git version 2.55.0.windows.5
+2026-10-04T19:57:38.1731655Z Temporarily overriding HOME='D:\a\_temp\ac94ffd8-0bba-488f-b1a5-ba3a060f1a45' before making global git config changes
+2026-10-04T19:57:38.1733138Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T19:57:38.1744490Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\AlloyStudio\AlloyStudio
+2026-10-04T19:57:38.2069776Z Removing SSH command configuration
+2026-10-04T19:57:38.2081636Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T19:57:38.2409420Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T19:57:38.7864318Z Removing HTTP extra header
+2026-10-04T19:57:38.7875561Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T19:57:38.8181184Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T19:57:39.3577628Z Removing includeIf entries pointing to credentials config files
+2026-10-04T19:57:39.3588656Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T19:57:39.3931985Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T19:57:39.9762044Z Cleaning up orphan processes

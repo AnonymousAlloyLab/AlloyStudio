@@ -1,0 +1,39 @@
+def bounded_json(raw, depth_limit=32):
+    """UTF-8 only, no duplicate keys/nonfinite numbers or excessive nesting."""
+    try:
+        text = raw.decode('utf-8')
+        (depth, quoted, escaped) = (0, False, False)
+        for character in text:
+            if quoted:
+                if escaped:
+                    escaped = False
+                elif character == '\\':
+                    escaped = True
+                elif character == '"':
+                    quoted = False
+            elif character == '"':
+                quoted = True
+            elif character in '[{':
+                depth += 1
+                if depth > depth_limit:
+                    raise ValueError()
+            elif character in ']}':
+                depth -= 1
+
+        def object_(pairs):
+            result = {}
+            for (key, value) in pairs:
+                if key in result:
+                    raise ValueError()
+                result[key] = value
+            return result
+
+        def invalid(_):
+            raise ValueError()
+        value = json.loads(text, object_pairs_hook=object_, parse_constant=invalid)
+        json.dumps(value, ensure_ascii=False, allow_nan=False).encode('utf-8')
+        if type(value) is not dict:
+            raise ValueError()
+        return value
+    except (UnicodeError, ValueError, TypeError, RecursionError, OverflowError):
+        raise HTTPInputError(400, 'Invalid, incomplete or timed-out JSON request.') from None

@@ -1,0 +1,31 @@
+{
+  "host": "Linux; not a reproduction of Windows WinError10053",
+  "records": [
+    {
+      "schedule": "normal",
+      "result": {
+        "status": 503,
+        "body": "{\"status\":\"busy\",\"retryable\":true,\"dispatched\":false,\"code\":\"capacity\"}"
+      },
+      "decision": 503,
+      "accepted_delta": 0,
+      "rejected_delta": 1,
+      "active": 1,
+      "peak": 1,
+      "duration": 0.00020126299932599068
+    },
+    {
+      "schedule": "server_close_before_client_send",
+      "result": {
+        "status": 503,
+        "body": "{\"status\":\"busy\",\"retryable\":true,\"dispatched\":false,\"code\":\"capacity\"}"
+      },
+      "decision": 503,
+      "accepted_delta": 0,
+      "rejected_delta": 1,
+      "active": 1,
+      "peak": 1,
+      "duration": 0.020201603998430073
+    }
+  ]
+}

@@ -25,7 +25,7 @@
     },
     {
       "blockingReasons": [],
-      "closureId": "ting02-20261004T192303Z-906f9fab",
+      "closureId": "ting02-20261004T201301Z-9d697815",
       "dependsOn": [
         "TRF-00"
       ],
@@ -35,13 +35,20 @@
           "candidateReport": "closure/traffic-refinement/evidence/ting02-20261004T182729Z-cd397804/report.json",
           "finalGateAttempt": "closure/traffic-refinement/evidence/ting02-review-blocked/final-gate-report.json",
           "reviewWorkflow": "closure/traffic-refinement/evidence/ting02-review-blocked/workflow.json"
+        },
+        {
+          "closureId": "ting02-20261004T192303Z-906f9fab",
+          "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+          "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
+          "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+          "status": "VERIFIED"
         }
       ],
       "id": "TRF-01",
-      "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+      "inputRootHash": "035b75576a89487b9980b6cd34f5ed7adf2975065c3e83b7b5d48b311d8aa58f",
       "passConditionSha256": "dded6823bde45d40ad279fd5b0ea6dc4efabb06c63a8ad3417ed81db7877db47",
-      "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
-      "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/report.json",
+      "reportSha256": "9d91ad0534bf7f06d07e21b6dc2a0d199c4cdd8c4dbdbd602bba935e820d8543",
       "statementSha256": "6e311abb5ec17596573b32cdc96aaeba9c3d6c13b6dda349e5a36658518f7d39",
       "status": "VERIFIED",
       "subclaims": [
@@ -575,28 +582,79 @@
     },
     {
       "block": "formal/ingress_admission/block.json",
-      "blockManifestSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+      "blockManifestSha256": "9dfa6cc63410929824329d02884c9d32438367531bfc0b7e377e2691b26dfdd9",
       "blockingReasons": [],
       "closesParent": true,
-      "closureId": "ting02-20261004T192303Z-906f9fab",
+      "closureId": "ting02-20261004T201301Z-9d697815",
       "evidenceClass": "FINITE_MECHANICAL_CLOSURE_UNDER_DECLARED_TCB",
       "excluded": [
         "Future source revisions and unlisted properties; the other 21 traffic obligations.",
         "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
         "Whole-process RSS and kernel allocation sizes, arbitrary asynchronous cancellation of bookkeeping instructions, OS fairness and unsampled scheduling latency after a deadline observation."
       ],
+      "historicalClosures": [
+        {
+          "block": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/inputs/formal/ingress_admission/block.json",
+          "blockManifestSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+          "blockingReasons": [],
+          "closesParent": true,
+          "closureId": "ting02-20261004T192303Z-906f9fab",
+          "evidenceClass": "FINITE_MECHANICAL_CLOSURE_UNDER_DECLARED_TCB",
+          "excluded": [
+            "Future source revisions and unlisted properties; the other 21 traffic obligations.",
+            "IIS/Cloudflare normalization and native Windows/macOS execution; external/multiple processes.",
+            "Whole-process RSS and kernel allocation sizes, arbitrary asynchronous cancellation of bookkeeping instructions, OS fairness and unsampled scheduling latency after a deadline observation."
+          ],
+          "id": "TRF01-STRICT-INGRESS",
+          "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+          "mappedRoles": 52,
+          "observationCounterexample": "closure/traffic-refinement/evidence/ting02-observation-interruption/evidence-index.json",
+          "parentObligation": "TRF-01",
+          "provedTheorems": 356,
+          "registeredTests": 103,
+          "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
+          "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+          "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/ting02-v5-regressions/artifacts/python-final/report.json",
+          "specification": "closure/traffic-refinement/strict-ingress-spec.json",
+          "status": "VERIFIED",
+          "trust": [
+            {
+              "classification": "TRUSTED",
+              "description": "Pinned Lean 4.34.1 distribution/kernel, registered source-language restriction and all-project-definition/theorem transitive axiom auditor.",
+              "id": "TCB-LEAN"
+            },
+            {
+              "classification": "TRUSTED",
+              "description": "Closed source AST interpreters and per-operation correspondences; not a proof of an arbitrary Python virtual machine. No entire admission/decoder-validity predicate is trusted.",
+              "id": "TCB-TRANSLATION"
+            },
+            {
+              "classification": "TRUSTED",
+              "description": "CPython ASCII/UTF8/string/regex/JSON/IPv6 primitives, HTTP header raw-items and method dispatch, exceptions and sequential ordinary execution, socket recv bound, threading.start/bootstrap, current-thread identity, clean-history join/is_alive semantics with explicit failure transitions, lock mutual exclusion and normally completed protected bookkeeping, one serialized accept callback per listener, monotonic finite clock sample order.",
+              "id": "TCB-PRIMITIVES"
+            },
+            {
+              "classification": "TRUSTED",
+              "description": "Linux user/network namespaces, process/filesystem/socket semantics, SHA-256 implementation and collision resistance, hardware.",
+              "id": "TCB-HOST"
+            }
+          ],
+          "verifier": "scripts/verify_strict_ingress.py"
+        }
+      ],
       "id": "TRF01-STRICT-INGRESS",
-      "inputRootHash": "22226ba37c2ab3f66eb5587a4b96b5908eeba9ede1801b50e65fe65bfd37ccfe",
+      "inputRootHash": "035b75576a89487b9980b6cd34f5ed7adf2975065c3e83b7b5d48b311d8aa58f",
       "mappedRoles": 52,
       "observationCounterexample": "closure/traffic-refinement/evidence/ting02-observation-interruption/evidence-index.json",
       "parentObligation": "TRF-01",
       "provedTheorems": 356,
       "registeredTests": 103,
-      "report": "closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json",
-      "reportSha256": "c058df97ac8ca609332a7e64bc827aba752e45ce39e86269fff90121416146db",
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/report.json",
+      "reportSha256": "9d91ad0534bf7f06d07e21b6dc2a0d199c4cdd8c4dbdbd602bba935e820d8543",
       "runtimeIntegrationEvidence": "closure/traffic-refinement/evidence/ting02-v5-regressions/artifacts/python-final/report.json",
       "specification": "closure/traffic-refinement/strict-ingress-spec.json",
       "status": "VERIFIED",
+      "transportRefusalEvidence": "closure/traffic-refinement/evidence/ting02-windows-refusal/index.json",
       "trust": [
         {
           "classification": "TRUSTED",

@@ -1,0 +1,224 @@
+{
+  "queries": [
+    {
+      "id": "select_metadata",
+      "parameters": [],
+      "source": "SELECT key, value FROM metadata ORDER BY key"
+    },
+    {
+      "id": "select_exercises",
+      "parameters": [],
+      "source": "SELECT id, ordinal, origin, title, model_group, predicate_name, description, environment_before, environment_after, predicate_header, starter, original_source, primary_token, metadata, validation FROM exercises ORDER BY ordinal"
+    },
+    {
+      "id": "select_solutions",
+      "parameters": [],
+      "source": "SELECT exercise_id, ordinal, kind, body, original_source, token_hash, metadata FROM solutions ORDER BY exercise_id, ordinal"
+    },
+    {
+      "id": "select_auxiliary",
+      "parameters": [],
+      "source": "SELECT kind, ordinal, payload, original_source FROM auxiliary ORDER BY kind, ordinal"
+    },
+    {
+      "id": "insert_metadata",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "key",
+          "sentinel": "__SQL_BIND_METADATA_KEY__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "value",
+          "sentinel": "__SQL_BIND_METADATA_VALUE__",
+          "type": "text"
+        }
+      ],
+      "source": "INSERT INTO metadata (key, value) VALUES ('__SQL_BIND_METADATA_KEY__', '__SQL_BIND_METADATA_VALUE__')"
+    },
+    {
+      "id": "insert_exercises",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_EXERCISES_ID__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000004,
+          "type": "int"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "origin",
+          "sentinel": "__SQL_BIND_EXERCISES_ORIGIN__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "title",
+          "sentinel": "__SQL_BIND_EXERCISES_TITLE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "model_group",
+          "sentinel": "__SQL_BIND_EXERCISES_MODEL_GROUP__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "predicate_name",
+          "sentinel": "__SQL_BIND_EXERCISES_PREDICATE_NAME__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "description",
+          "sentinel": "__SQL_BIND_EXERCISES_DESCRIPTION__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "environment_before",
+          "sentinel": "__SQL_BIND_EXERCISES_ENVIRONMENT_BEFORE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "environment_after",
+          "sentinel": "__SQL_BIND_EXERCISES_ENVIRONMENT_AFTER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "predicate_header",
+          "sentinel": "__SQL_BIND_EXERCISES_PREDICATE_HEADER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "starter",
+          "sentinel": "__SQL_BIND_EXERCISES_STARTER__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_EXERCISES_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "primary_token",
+          "sentinel": "__SQL_BIND_EXERCISES_PRIMARY_TOKEN__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "metadata",
+          "sentinel": "__SQL_BIND_EXERCISES_METADATA__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "validation",
+          "sentinel": "__SQL_BIND_EXERCISES_VALIDATION__",
+          "type": "text"
+        }
+      ],
+      "source": "INSERT INTO exercises (id, ordinal, origin, title, model_group, predicate_name, description, environment_before, environment_after, predicate_header, starter, original_source, primary_token, metadata, validation) VALUES ('__SQL_BIND_EXERCISES_ID__', 9000000000000004, '__SQL_BIND_EXERCISES_ORIGIN__', '__SQL_BIND_EXERCISES_TITLE__', '__SQL_BIND_EXERCISES_MODEL_GROUP__', '__SQL_BIND_EXERCISES_PREDICATE_NAME__', '__SQL_BIND_EXERCISES_DESCRIPTION__', '__SQL_BIND_EXERCISES_ENVIRONMENT_BEFORE__', '__SQL_BIND_EXERCISES_ENVIRONMENT_AFTER__', '__SQL_BIND_EXERCISES_PREDICATE_HEADER__', '__SQL_BIND_EXERCISES_STARTER__', '__SQL_BIND_EXERCISES_ORIGINAL_SOURCE__', '__SQL_BIND_EXERCISES_PRIMARY_TOKEN__', '__SQL_BIND_EXERCISES_METADATA__', '__SQL_BIND_EXERCISES_VALIDATION__')"
+    },
+    {
+      "id": "insert_solutions",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "exercise_id",
+          "sentinel": "__SQL_BIND_SOLUTIONS_EXERCISE_ID__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000019,
+          "type": "int"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_SOLUTIONS_KIND__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "body",
+          "sentinel": "__SQL_BIND_SOLUTIONS_BODY__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_SOLUTIONS_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "token_hash",
+          "sentinel": "__SQL_BIND_SOLUTIONS_TOKEN_HASH__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "metadata",
+          "sentinel": "__SQL_BIND_SOLUTIONS_METADATA__",
+          "type": "text"
+        }
+      ],
+      "source": "INSERT INTO solutions (exercise_id, ordinal, kind, body, original_source, token_hash, metadata) VALUES ('__SQL_BIND_SOLUTIONS_EXERCISE_ID__', 9000000000000019, '__SQL_BIND_SOLUTIONS_KIND__', '__SQL_BIND_SOLUTIONS_BODY__', '__SQL_BIND_SOLUTIONS_ORIGINAL_SOURCE__', '__SQL_BIND_SOLUTIONS_TOKEN_HASH__', '__SQL_BIND_SOLUTIONS_METADATA__')"
+    },
+    {
+      "id": "insert_auxiliary",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_AUXILIARY_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000026,
+          "type": "int"
+        },
+        {
+          "maxBytes": 4194304,
+          "name": "payload",
+          "sentinel": "__SQL_BIND_AUXILIARY_PAYLOAD__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_AUXILIARY_ORIGINAL_SOURCE__",
+          "type": "text"
+        }
+      ],
+      "source": "INSERT INTO auxiliary (kind, ordinal, payload, original_source) VALUES ('__SQL_BIND_AUXILIARY_KIND__', 9000000000000026, '__SQL_BIND_AUXILIARY_PAYLOAD__', '__SQL_BIND_AUXILIARY_ORIGINAL_SOURCE__')"
+    },
+    {
+      "id": "select_schema",
+      "parameters": [],
+      "source": "SELECT type, name, tbl_name FROM sqlite_schema ORDER BY type, name"
+    },
+    {
+      "id": "select_schema_sql",
+      "parameters": [],
+      "source": "SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE sql IS NOT NULL ORDER BY type, name"
+    }
+  ],
+  "schemaVersion": 1
+}

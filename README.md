@@ -92,7 +92,7 @@ host trust boundary. Future traffic transitions, runtime RSS enforcement and
 native deployment remain separate open obligations.
 TRF-01's [read-deadline child](docs/ingress-deadline-obligation.md) remains verified
 at its historical source root. The final [strict ingress refinement](docs/strict-ingress-closure.md)
-has a [VERIFIED source-bound report](closure/traffic-refinement/evidence/ting02-20261004T192303Z-906f9fab/report.json):
+has a [VERIFIED source-bound report](closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/report.json):
 two identical offline builds, 356 empty-axiom theorem declarations, 52 mappings
 and 103 registered checks. The proof derives reliable thread-status observations
 from execution history; a failed observation retains its bounded slot until

@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "controls": [
+    {
+      "name": "valid_response",
+      "caught": null,
+      "expected": null,
+      "status": "PASS"
+    },
+    {
+      "name": "connection_reset",
+      "caught": null,
+      "expected": null,
+      "status": "PASS"
+    },
+    {
+      "name": "connection_aborted",
+      "caught": null,
+      "expected": null,
+      "status": "PASS"
+    },
+    {
+      "name": "broken_pipe",
+      "caught": null,
+      "expected": null,
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_decision_despite_valid_response",
+      "caught": "AssertionError",
+      "expected": "AssertionError",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_delivered_status",
+      "caught": "AssertionError",
+      "expected": "AssertionError",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_retry_after",
+      "caught": "AssertionError",
+      "expected": "AssertionError",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_retryable_json",
+      "caught": "AssertionError",
+      "expected": "AssertionError",
+      "status": "PASS"
+    },
+    {
+      "name": "unrelated_timeout",
+      "caught": "TimeoutError",
+      "expected": "TimeoutError",
+      "status": "PASS"
+    },
+    {
+      "name": "unrelated_oserror",
+      "caught": "OSError",
+      "expected": "OSError",
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "bindings": {
+    "afterTestSha256": "ef2b4bca4a0a0be8b2fcb14206139b357c1ef210703e965365af8a5ca6eed16b",
+    "beforeTestSha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0",
+    "existingContractSha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+  },
+  "closureClaim": false,
+  "files": {
+    "README.md": {
+      "bytes": 5588,
+      "sha256": "9bc4bc9f18d92fa4aa47c37b79eaf84ad298693a3a92fa9d744bd12ea9e4aa17"
+    },
+    "after/block.json": {
+      "bytes": 73081,
+      "sha256": "9dfa6cc63410929824329d02884c9d32438367531bfc0b7e377e2691b26dfdd9"
+    },
+    "after/test_ingress_admission.py": {
+      "bytes": 21786,
+      "sha256": "ef2b4bca4a0a0be8b2fcb14206139b357c1ef210703e965365af8a5ca6eed16b"
+    },
+    "before/ad6-test_ingress_admission.py": {
+      "bytes": 20147,
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "before/b35-test_ingress_admission.py": {
+      "bytes": 20147,
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "ci/prior-ad6-run-37228525806.json": {
+      "bytes": 10188,
+      "sha256": "6a7146b9cb68586b03cc3086b20fdc0c07028c2f03201329b8125f29057c632a"
+    },
+    "ci/run-37230133497-jobs.json": {
+      "bytes": 10136,
+      "sha256": "f2ed49d9b779c07b074556a26e386c2c23acd1161f374aea4819e3e3e84d269f"
+    },
+    "ci/run-37230133497.json": {
+      "bytes": 13328,
+      "sha256": "dac997d146f9489c451bc577aa64a62a05747dcbd38f0d971db034e8af1bfdf4"
+    },
+    "ci/windows-b35aa68-failure.txt": {
+      "bytes": 58179,
+      "sha256": "c770e0f49f7200533b0baf78aca65a6e48b440411c9e306b4c34bac2462f950e"
+    },
+    "ci/windows-job-111517882855.json": {
+      "bytes": 3803,
+      "sha256": "8adcb506754620fa0cc7a6bc3a86f1237f8d1514c9423a3e6d23114126d88dca"
+    },
+    "context/test_traffic_http.py": {
+      "bytes": 19951,
+      "sha256": "a6e437b9961cfc58ae40efb140e993feb360ecfbe26d3a093c71f2387c8644d7"
+    },
+    "contract/admission-contract.md": {
+      "bytes": 10458,
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    "local/before/admission-contract.md": {
+      "bytes": 10458,
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    "local/before/admission-spec.json": {
+      "bytes": 8366,
+      "sha256": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9"
+    },
+    "local/before/block.json": {
+      "bytes": 73081,
+      "sha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752"
+    },
+    "local/before/test_ingress_admission.py": {
+      "bytes": 20147,
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "local/before/test_traffic_http.py": {
+      "bytes": 19951,
+      "sha256": "a6e437b9961cfc58ae40efb140e993feb360ecfbe26d3a093c71f2387c8644d7"
+    },
+    "local/before/traffic_http.py": {
+      "bytes": 17114,
+      "sha256": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca"
+    },
+    "local/focused-tests.txt": {
+      "bytes": 1748,
+      "sha256": "5201130a7eec3945b0f75741c09023b44d0bba5c13c0e969f981da221442b915"
+    },
+    "local/native-linux-schedule-witness.json": {
+      "bytes": 803,
+      "sha256": "b9ca70cac004ce8098045fe8e2d03eb24c62a7dd4f8397d0335e2c42db9cfb0a"
+    },
+    "local/negative-controls.json": {
+      "bytes": 1358,
+      "sha256": "488f95d4d7f4c4262efb98c33024448a835384a573bc959120ca04824b050a16"
+    },
+    "local/new-freeze.json": {
+      "bytes": 379,
+      "sha256": "3896ba07f8dab1e781b9d21c0cffd109801529f4eb6a06ba28184933673c1c7c"
+    },
+    "local/result.json": {
+      "bytes": 261,
+      "sha256": "cd8d4e0919fe3c6fbfc58da9def1834b9229f97e42cfeceae4a7076cef813c72"
+    },
+    "local/schedule-witness.json": {
+      "bytes": 1379,
+      "sha256": "fc73b465b43d4b8c30deb4b4680ed1b9800c0fe7021dcedae2a3031bc2e53268"
+    },
+    "local/spec-first.json": {
+      "bytes": 2343,
+      "sha256": "3c6016ec1179fa9c2bf54f57c7bcbd07dc931506c2fe0d676e30f46d25008505"
+    },
+    "local/verify_refusal.py": {
+      "bytes": 8233,
+      "sha256": "692891214866649147038705da9f28c383b4fc990ea2f5992361b247c5879723"
+    },
+    "verify.py": {
+      "bytes": 5417,
+      "sha256": "76c8bc8ab478a14eb844cc8ab6e0843ad5cd7423a1eb4168427768984df08dd4"
+    }
+  },
+  "kind": "windows-refusal-regression-evidence",
+  "preservedOriginals": {
+    "after/block.json": {
+      "origin": "formal/ingress_admission/block.json",
+      "sha256": "9dfa6cc63410929824329d02884c9d32438367531bfc0b7e377e2691b26dfdd9"
+    },
+    "after/test_ingress_admission.py": {
+      "origin": "build/trf-closure/windows-refusal-20261004/after/test_ingress_admission.py",
+      "sha256": "ef2b4bca4a0a0be8b2fcb14206139b357c1ef210703e965365af8a5ca6eed16b"
+    },
+    "before/ad6-test_ingress_admission.py": {
+      "origin": "git ad6ea7ccc40f04d8022063fcf6012e6aef7fb3da:tests/test_ingress_admission.py",
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "before/b35-test_ingress_admission.py": {
+      "origin": "git b35aa68d31167e7311635cca75a62dda1c6be78f:tests/test_ingress_admission.py",
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "ci/prior-ad6-run-37228525806.json": {
+      "origin": "closure/traffic-refinement/evidence/ci-lean-preparation/artifacts/ci-run-37228525806-20261004T194924Z.json",
+      "sha256": "6a7146b9cb68586b03cc3086b20fdc0c07028c2f03201329b8125f29057c632a"
+    },
+    "ci/run-37230133497-jobs.json": {
+      "origin": "gh run view 37230133497 --json status,conclusion,headSha,url,jobs",
+      "sha256": "f2ed49d9b779c07b074556a26e386c2c23acd1161f374aea4819e3e3e84d269f"
+    },
+    "ci/run-37230133497.json": {
+      "origin": "GitHub API repos/AnonymousAlloyLab/AlloyStudio/actions/runs/37230133497",
+      "sha256": "dac997d146f9489c451bc577aa64a62a05747dcbd38f0d971db034e8af1bfdf4"
+    },
+    "ci/windows-b35aa68-failure.txt": {
+      "origin": "build/trf-closure/ci-lean-provisioning-20261004/windows-b35aa68-failure.txt",
+      "sha256": "c770e0f49f7200533b0baf78aca65a6e48b440411c9e306b4c34bac2462f950e"
+    },
+    "ci/windows-job-111517882855.json": {
+      "origin": "GitHub API repos/AnonymousAlloyLab/AlloyStudio/actions/jobs/111517882855",
+      "sha256": "8adcb506754620fa0cc7a6bc3a86f1237f8d1514c9423a3e6d23114126d88dca"
+    },
+    "context/test_traffic_http.py": {
+      "origin": "tests/test_traffic_http.py",
+      "sha256": "a6e437b9961cfc58ae40efb140e993feb360ecfbe26d3a093c71f2387c8644d7"
+    },
+    "contract/admission-contract.md": {
+      "origin": "docs/admission-contract.md",
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    "local/before/admission-contract.md": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/admission-contract.md",
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d"
+    },
+    "local/before/admission-spec.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/admission-spec.json",
+      "sha256": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9"
+    },
+    "local/before/block.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/block.json",
+      "sha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752"
+    },
+    "local/before/test_ingress_admission.py": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/test_ingress_admission.py",
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0"
+    },
+    "local/before/test_traffic_http.py": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/test_traffic_http.py",
+      "sha256": "a6e437b9961cfc58ae40efb140e993feb360ecfbe26d3a093c71f2387c8644d7"
+    },
+    "local/before/traffic_http.py": {
+      "origin": "build/trf-closure/windows-refusal-20261004/before/traffic_http.py",
+      "sha256": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca"
+    },
+    "local/focused-tests.txt": {
+      "origin": "build/trf-closure/windows-refusal-20261004/focused-tests.txt",
+      "sha256": "5201130a7eec3945b0f75741c09023b44d0bba5c13c0e969f981da221442b915"
+    },
+    "local/native-linux-schedule-witness.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/native-linux-schedule-witness.json",
+      "sha256": "b9ca70cac004ce8098045fe8e2d03eb24c62a7dd4f8397d0335e2c42db9cfb0a"
+    },
+    "local/negative-controls.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/negative-controls.json",
+      "sha256": "488f95d4d7f4c4262efb98c33024448a835384a573bc959120ca04824b050a16"
+    },
+    "local/new-freeze.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/new-freeze.json",
+      "sha256": "3896ba07f8dab1e781b9d21c0cffd109801529f4eb6a06ba28184933673c1c7c"
+    },
+    "local/result.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/result.json",
+      "sha256": "cd8d4e0919fe3c6fbfc58da9def1834b9229f97e42cfeceae4a7076cef813c72"
+    },
+    "local/schedule-witness.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/schedule-witness.json",
+      "sha256": "fc73b465b43d4b8c30deb4b4680ed1b9800c0fe7021dcedae2a3031bc2e53268"
+    },
+    "local/spec-first.json": {
+      "origin": "build/trf-closure/windows-refusal-20261004/spec-first.json",
+      "sha256": "3c6016ec1179fa9c2bf54f57c7bcbd07dc931506c2fe0d676e30f46d25008505"
+    },
+    "local/verify_refusal.py": {
+      "origin": "build/trf-closure/windows-refusal-20261004/verify_refusal.py",
+      "sha256": "692891214866649147038705da9f28c383b4fc990ea2f5992361b247c5879723"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Recorded native Windows failure and separate constructed local test/refusal evidence; no native repaired pass or closure claim."
+}

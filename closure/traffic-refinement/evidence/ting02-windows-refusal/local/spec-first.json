@@ -1,0 +1,36 @@
+{
+  "recorded_at": "2026-10-04T20:00:43.214344+00:00",
+  "phase": "before test correction",
+  "existing_contract": "Rejected capacity or credit requests receive a bounded constant refusal attempt and close without creating a request thread or request parser.",
+  "contract_source": "docs/admission-contract.md",
+  "planned_delta": [
+    "Edit only tests/test_ingress_admission.py; preserve production, proofs, manifests and reviews.",
+    "Add capacity_request equivalent to tests/test_traffic_http.py with actual reserve decision, unchanged accepted/peak counts and exactly one rejection.",
+    "Accept only ConnectionResetError, ConnectionAbortedError or BrokenPipeError from attempted refusal transport; never timeout, general OSError or an unexpected HTTP result.",
+    "For delivered response require exact503 status, Retry-After1 and exact retryable capacity JSON.",
+    "Replace only strict GET503 assertions on pre-thread refusal; leave successful health200 and route404 assertions unchanged.",
+    "Validate original-versus-candidate behavior on deterministic close injection, plus wrong decision/status/headers/body and unrelated timeout/OSError negative controls; focused actual socket test suite once."
+  ],
+  "inputs": {
+    "tests/test_ingress_admission.py": {
+      "sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0",
+      "snapshot": "build/trf-closure/windows-refusal-20261004/before/test_ingress_admission.py"
+    },
+    "tests/test_traffic_http.py": {
+      "sha256": "a6e437b9961cfc58ae40efb140e993feb360ecfbe26d3a093c71f2387c8644d7",
+      "snapshot": "build/trf-closure/windows-refusal-20261004/before/test_traffic_http.py"
+    },
+    "docs/admission-contract.md": {
+      "sha256": "2705eae0c0be39ad34ed2b5cf77424614bf47c72f9659fa0efd7d7201324ab9d",
+      "snapshot": "build/trf-closure/windows-refusal-20261004/before/admission-contract.md"
+    },
+    "traffic_http.py": {
+      "sha256": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca",
+      "snapshot": "build/trf-closure/windows-refusal-20261004/before/traffic_http.py"
+    },
+    "closure/traffic-refinement/admission-spec.json": {
+      "sha256": "5127d490c930eca8b0cf424bed8bb3193c23a4ea22d08a3987fd5fea6bc93ef9",
+      "snapshot": "build/trf-closure/windows-refusal-20261004/before/admission-spec.json"
+    }
+  }
+}

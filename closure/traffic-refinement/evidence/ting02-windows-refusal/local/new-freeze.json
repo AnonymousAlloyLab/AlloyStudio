@@ -1,0 +1,9 @@
+{
+  "changedFrozenInputs": [
+    "tests/test_ingress_admission.py"
+  ],
+  "newBlockSha256": "9dfa6cc63410929824329d02884c9d32438367531bfc0b7e377e2691b26dfdd9",
+  "newTestSha256": "ef2b4bca4a0a0be8b2fcb14206139b357c1ef210703e965365af8a5ca6eed16b",
+  "oldBlockSha256": "09a95b274d9d7f1c80bed17d2d956f5cbe64d4a4481a1cc50324f5ffcccf2752",
+  "productionProofAndVerifierChanges": []
+}

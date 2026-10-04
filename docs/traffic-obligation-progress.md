@@ -335,6 +335,26 @@ and 21 OPEN**; overall traffic closure remains `NOT_ESTABLISHED`. The original
 obligation registry and historical reports are unchanged. The earlier review
 blocker is superseded by this new result, not erased or promoted retroactively.
 
+## TRF-01 reclosed after the Windows refusal-test correction
+
+The earlier observation-history closure remains valid for its recorded root.
+Native Windows CI subsequently showed that a saturation test incorrectly required
+delivery of a 503 after the documented bounded refusal attempt and close. The
+[immutable failure archive](../closure/traffic-refinement/evidence/ting02-windows-refusal/README.md)
+preserves the native error, old/new test, specification-first record, controlled
+replay and ten fault controls. The correction accepts only specific peer-close
+outcomes and still checks the actual rejection decision, unchanged accepted/peak
+counts, one added rejection and the exact response when delivered. Health checks
+remain strict. No production, proof, contract or verifier bytes changed.
+
+The new [registered final report](../closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/report.json) is **VERIFIED** at
+input root `035b75576a89487b9980b6cd34f5ed7adf2975065c3e83b7b5d48b311d8aa58f` (report SHA-256 `9d91ad0534bf7f06d07e21b6dc2a0d199c4cdd8c4dbdbd602bba935e820d8543`).
+All 356 theorem declarations, 52 correspondence roles, 103 registered tests and
+two matching offline builds passed again. A fresh two-Luna, two-GPT-6.1-Sol,
+two-Astra ladder binds this exact revised block. All prior reports/reviews and
+the original 23-obligation registry remain intact; 2 obligations are VERIFIED
+and 21 OPEN. This result has the same explicit trust and excluded surfaces.
+
 ## Constructed breaches and repairs
 
 The [original counterexamples](../closure/traffic-refinement/configuration-counterexamples.json)
@@ -404,12 +424,11 @@ macOS execution and universal constructor/host refinement are not established.
 
 ## Next obligation and remaining boundaries
 
-TRF-01 (strict inbound admission before expensive allocation) is in progress.
-Its sampled read-deadline child is verified; strict decoder and admission
-composition remain next in the preserved dependency order. TRF-01 through TRF-22 retain their original statements,
-pass conditions and dependencies and remain OPEN. Their dependency on TRF-00 is
-now fulfilled for the selected frozen profile; their own pass conditions still
-need proof, correspondence and the registered evidence.
+TRF-00 and TRF-01 are VERIFIED at their recorded source roots. TRF-02 through
+TRF-22 retain their original statements, pass conditions and dependencies and
+remain OPEN. TRF-02 is next in the preserved dependency order. Closing its
+predecessors does not discharge its own proof, correspondence or registered
+evidence requirements.
 
 Finite differential tests remain TESTED evidence; they do not discharge universal
 worker-history or host-language refinement. Prepared-reference caching remains

@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "before_sha256": "8c758ce481df7d465dd3cf8ecff453d33441780c65bd51d4529fb3c4ff150cb0",
+  "after_sha256": "ef2b4bca4a0a0be8b2fcb14206139b357c1ef210703e965365af8a5ca6eed16b",
+  "witness": "schedule-witness.json",
+  "negative_controls": 10
+}

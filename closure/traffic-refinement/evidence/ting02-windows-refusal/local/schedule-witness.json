@@ -1,0 +1,64 @@
+{
+  "host": "linux",
+  "native_windows_reproduction": false,
+  "transport_fault": "The real server completes each refusal; the client response operation then raises an explicitly injected ConnectionAbortedError(10053).",
+  "old_paired_test": {
+    "successful": false,
+    "errors": 1,
+    "failures": 0,
+    "delivered_server_statuses": [
+      503
+    ],
+    "error_contains_expected_close": true
+  },
+  "candidate_paired_test": {
+    "successful": true,
+    "errors": 0,
+    "failures": 0,
+    "delivered_server_statuses": [
+      503,
+      200,
+      404,
+      503
+    ],
+    "error_contains_expected_close": false
+  },
+  "production_send_failure": {
+    "status": "PASS",
+    "kind": "deterministic send-failure injection into production process_request",
+    "trace": [
+      [
+        "setblocking",
+        false
+      ],
+      [
+        "send_attempt",
+        219
+      ],
+      [
+        "shutdown",
+        1
+      ],
+      [
+        "close"
+      ]
+    ],
+    "before": {
+      "activeHandlers": 1,
+      "peakHandlers": 1,
+      "acceptedConnections": 1,
+      "rejectedConnections": 0,
+      "peerEntries": 1,
+      "handlerLimit": 1
+    },
+    "after": {
+      "activeHandlers": 1,
+      "peakHandlers": 1,
+      "acceptedConnections": 1,
+      "rejectedConnections": 1,
+      "peerEntries": 1,
+      "handlerLimit": 1
+    },
+    "new_request_threads": 0
+  }
+}

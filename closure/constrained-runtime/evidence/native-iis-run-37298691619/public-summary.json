@@ -1,0 +1,96 @@
+{
+    "status":  "FAIL",
+    "environment":  "native Windows Server 2022 IIS 10",
+    "revision":  "6fce375c982c8bb166dabba45c447a730eba6573",
+    "stage":  "real Local Service installation and readiness",
+    "checks":  [
+                   {
+                       "name":  "selected Python executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Java executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Python executable can run before provisioning",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS features installed without pending restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "disposable runner ARR configured with a 120-second budget",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "freshly built classes packaged into private local archive",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "complete extracted installer exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture task name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   }
+               ],
+    "live_provider_calls":  false,
+    "deployment_archive_uploaded":  false,
+    "python_candidate_count":  2,
+    "java_candidate_count":  2,
+    "failure_type":  "System.Management.Automation.RuntimeException",
+    "failure_script":  "Manage-AlloyStudio.ps1",
+    "failure_line":  120,
+    "generated_at":  "2026-10-05T10:48:47.1183143Z"
+}

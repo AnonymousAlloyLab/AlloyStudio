@@ -1,0 +1,44 @@
+{
+    "status":  "FAIL",
+    "environment":  "native Windows Server 2022 IIS 10",
+    "revision":  "3b91f1fb338e45cd96be4c9fad70b5eb06f199ac",
+    "stage":  "private package extraction and separate sentinel site",
+    "checks":  [
+                   {
+                       "name":  "IIS features installed without pending restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "disposable runner ARR configured with a 120-second budget",
+                       "status":  "PASS"
+                   }
+               ],
+    "live_provider_calls":  false,
+    "deployment_archive_uploaded":  false,
+    "failure_type":  "System.Management.Automation.CommandNotFoundException",
+    "generated_at":  "2026-10-05T10:40:29.9024943Z"
+}

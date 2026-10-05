@@ -83,6 +83,29 @@ class IISWebConfigurationTests(unittest.TestCase):
 
 
 class IISLauncherTests(unittest.TestCase):
+    def test_install_network_preflight_uses_file_arguments_without_stdin_or_configuration(self):
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            backend = Path(directory) / 'backend with spaces'
+            backend.mkdir()
+            shutil.copyfile(ROOT / 'traffic_identity.py', backend / 'traffic_identity.py')
+            command = [sys.executable, '-I', str(LAUNCHER), '--check-network-policy', str(backend)]
+            for options in ([], ['--trusted-proxy=127.0.0.1', '--trusted-proxy=2001:db8::10',
+                                 '--admin-network=192.0.2.0/24', '--admin-network=2001:db8::/48']):
+                result = subprocess.run(command + options, input=b'not-json', capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout), {'status': 'PASS'})
+                self.assertEqual(result.stderr, b'')
+            for options in (['--trusted-proxy=127.0.0.0/8'], ['--admin-network=192.0.2.1/24'],
+                            ['--trusted-proxy=--help'], ['--admin-network=2001:DB8::/48'],
+                            ['--config', str(backend / 'absent-config.json')]):
+                result = subprocess.run(command + options, input=b'', capture_output=True)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertNotIn(b'PASS', result.stdout)
+            result = subprocess.run([sys.executable, '-I', str(LAUNCHER), '--trusted-proxy=127.0.0.1'],
+                                    capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(sorted(path.name for path in backend.iterdir()), ['traffic_identity.py'])
+
     def configure(self, folder, source, *, enable_luna):
         backend = folder / 'private backend'
         logs = folder / 'private logs'

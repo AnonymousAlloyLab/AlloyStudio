@@ -414,7 +414,7 @@ class IisPackageTests(unittest.TestCase):
                        'trusted_proxies = @($TrustedProxy)', 'admin_networks = @($AdminNetwork)',
                        'resource_profile = $ResourceProfile', '$config.startup_timeout = $StartupTimeout'):
             self.assertIn(option, manager)
-        self.assertLess(manager.index('$networkPolicy | & $PythonExe'), manager.index('Register-ScheduledTask -TaskName'))
+        self.assertLess(manager.index('& $PythonExe @networkArguments'), manager.index('Register-ScheduledTask -TaskName'))
 
     def test_upgrade_permission_migration_changes_only_stopped_private_data_acl(self):
         manager = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text()

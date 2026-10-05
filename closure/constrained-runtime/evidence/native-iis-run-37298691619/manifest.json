@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "scope": "TESTED native Windows workflow; retained failure, not Lean proof or production-host validation",
+  "status": "FAIL",
+  "runId": "37298691619",
+  "runUrl": "https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37298691619",
+  "revision": "6fce375c982c8bb166dabba45c447a730eba6573",
+  "files": {
+    "README.md": "5bedcf04a36d56d700961ab1a0ac357f5d3a75ba7aafb1f7c7b748f72d98f239",
+    "public-summary.json": "8f8307f71b2cd6bd2d22d468874442c10adb5910a2f2f80c412ab5e647a10ca4"
+  }
+}

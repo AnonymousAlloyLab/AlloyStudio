@@ -114,9 +114,12 @@ if ($Action -eq 'Install') {
     $origins = @($PublicUrl | ForEach-Object { Get-PublicOrigin -PublicUrl $_ } | Select-Object -Unique)
     & $PythonExe -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'
     if ($LASTEXITCODE -ne 0) { throw 'Python 3.10 or newer is required.' }
-    $networkPolicy = @{ trusted_proxies = @($TrustedProxy); admin_networks = @($AdminNetwork) } | ConvertTo-Json -Compress
-    $networkValidator = 'import json,sys; sys.dont_write_bytecode=True; sys.path.insert(0,sys.argv[1]); from traffic_identity import trusted_proxies,AdminNetworkPolicy; p=json.load(sys.stdin); trusted_proxies(p["trusted_proxies"]); AdminNetworkPolicy(p["admin_networks"])'
-    $networkPolicy | & $PythonExe -I -c $networkValidator $BackendRoot
+    # A file/argument interface works in Windows PowerShell 5.1 without its
+    # implicit stdin encoding or native -c string quote conversion.
+    $networkArguments = @('-I', (Join-Path $scriptRoot 'run_backend.py'), '--check-network-policy', $BackendRoot)
+    foreach ($address in $TrustedProxy) { $networkArguments += '--trusted-proxy=' + $address }
+    foreach ($network in $AdminNetwork) { $networkArguments += '--admin-network=' + $network }
+    & $PythonExe @networkArguments | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Invalid trusted proxy address or administration network; no task configuration was installed.' }
     # --version writes to stdout; -version uses stderr in Windows PowerShell.
     $javaVersion = (& $JavaExe --version) -join "`n"

@@ -63,7 +63,27 @@ def main():
     parser.add_argument('--config', type=Path)
     parser.add_argument('--check-web-config', type=Path)
     parser.add_argument('--template', type=Path)
+    parser.add_argument('--check-network-policy', type=Path, metavar='BACKEND_ROOT')
+    parser.add_argument('--trusted-proxy', action='append', default=[])
+    parser.add_argument('--admin-network', action='append', default=[])
     args = parser.parse_args()
+    if args.check_network_policy is not None:
+        if any(value is not None for value in (args.config, args.check_web_config, args.template)):
+            parser.error('Network checking cannot be combined with startup or web configuration checking.')
+        # File invocation avoids PowerShell 5.1's inline-source quoting and
+        # pipeline encoding. Inputs are non-secret addresses; no config is read.
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, str(args.check_network_policy))
+        try:
+            from traffic_identity import trusted_proxies, AdminNetworkPolicy
+            trusted_proxies(args.trusted_proxy)
+            AdminNetworkPolicy(args.admin_network)
+        except (ImportError, ValueError):
+            parser.error('Invalid network policy or missing traffic_identity.py in the backend.')
+        print(json.dumps({'status': 'PASS'}))
+        return
+    if args.trusted_proxy or args.admin_network:
+        parser.error('Network arguments require --check-network-policy.')
     if args.check_web_config is not None or args.template is not None:
         if args.config is not None or args.check_web_config is None or args.template is None:
             parser.error('Configuration checking requires only --check-web-config and --template.')

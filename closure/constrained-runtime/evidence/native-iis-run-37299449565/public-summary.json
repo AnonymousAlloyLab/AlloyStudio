@@ -1,0 +1,229 @@
+{
+    "status":  "FAIL",
+    "environment":  "native Windows Server 2022 IIS 10",
+    "revision":  "9f45ab2663c43c03e64bb85dbdbc093f20e2d244",
+    "stage":  "native deployment acceptance",
+    "checks":  [
+                   {
+                       "name":  "selected Python executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Java executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Python executable can run before provisioning",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS features installed without pending restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "disposable runner ARR configured with a 120-second budget",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "freshly built classes packaged into private local archive",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "complete extracted installer exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture task name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "profile defaults reach installed task without accidental overrides",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "all seven bundled JARs have their recorded SHA-256 hashes",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fresh JVM passes 378 engine checks with the packaged classpath",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private SQLite data are writable; backend code and configuration remain read-only",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "scheduled task uses LOCAL SERVICE",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "backend task is running",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task has unlimited runtime and failure restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public origin is explicitly configured",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "backend binds only IPv4 loopback",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private paths are outside IIS and ACLs exclude public readers",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "ARR proxy is enabled with a timeout of at least 120 seconds",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: ",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: index.html",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: instance-graph.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/data.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/index.html",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS proxy reaches the exercise database",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS static assets and proxy health",
+                       "status":  "FAIL"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyASG-Release.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyASG.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyParser.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: alloy.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: commons-cli-1.4.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: json-java.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: slf4j-simple-1.7.36.jar",
+                       "status":  "PASS"
+                   }
+               ],
+    "live_provider_calls":  false,
+    "deployment_archive_uploaded":  false,
+    "python_candidate_count":  2,
+    "java_candidate_count":  2,
+    "failed_check":  "native IIS deployment acceptance completed",
+    "failure_type":  "System.Management.Automation.RuntimeException",
+    "failure_script":  "test_native_iis.ps1",
+    "failure_line":  31,
+    "generated_at":  "2026-10-05T10:55:41.3855539Z"
+}

@@ -119,6 +119,9 @@ try {
     # database, backend log or private archive enters the published summary.
     if (Test-Path -LiteralPath $acceptance -PathType Leaf) {
         $accepted = Get-Content -LiteralPath $acceptance -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($accepted.PSObject.Properties.Name -contains 'last_http_status') {
+            $report.acceptance_http_status = $accepted.last_http_status
+        }
         foreach ($check in $accepted.checks) {
             $report.checks += [ordered]@{name = [string]$check.name; status = [string]$check.status}
         }

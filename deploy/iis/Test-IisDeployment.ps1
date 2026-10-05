@@ -23,16 +23,23 @@ $checks = New-Object 'Collections.Generic.List[object]'
 $stage = 'initialization'
 $failed = $false
 $runtimeDependencies = $null
+$lastHttpStatus = $null
 
 function Assert-Check {
     param([bool]$Condition, [string]$Name)
-    if (-not $Condition) { throw $Name }
+    if (-not $Condition) {
+        $checks.Add([ordered]@{name = $Name; status = 'FAIL'})
+        throw $Name
+    }
     $checks.Add([ordered]@{name = $Name; status = 'PASS'})
 }
 
 function Invoke-PortalRequest {
     param([string]$RelativePath, [object]$Payload = $null, [string]$RequestOrigin = $origin)
     $request = [Net.HttpWebRequest]::Create($baseUrl + $RelativePath)
+    # Browser fetch does not add Expect: 100-continue. .NET Framework enables
+    # it by default, but the portal deliberately rejects this unsupported mode.
+    $request.ServicePoint.Expect100Continue = $false
     $request.Timeout = $RequestTimeoutSeconds * 1000
     $request.ReadWriteTimeout = $RequestTimeoutSeconds * 1000
     $request.AllowAutoRedirect = $false
@@ -52,6 +59,7 @@ function Invoke-PortalRequest {
         $response = $_.Exception.Response
     }
     try {
+        $script:lastHttpStatus = [int]$response.StatusCode
         $reader = New-Object IO.StreamReader($response.GetResponseStream(), [Text.Encoding]::UTF8)
         try { $content = $reader.ReadToEnd() } finally { $reader.Dispose() }
         return @{Status = [int]$response.StatusCode; ContentType = $response.ContentType; Body = $content;
@@ -178,6 +186,9 @@ try {
     Assert-Check ($listing.exercises.Count -eq $health.exercises) 'exercise listing matches backend health'
     $expected = @('id', 'title', 'group', 'predicate', 'description', 'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter', 'source')
     foreach ($exercise in $listing.exercises) {
+        # This checks catalogue contents, not overload handling. Stay below the
+        # default 30 requests/second instead of exhausting its 60-credit burst.
+        Start-Sleep -Milliseconds 50
         $response = Invoke-PortalRequest ('api/exercises/' + [Uri]::EscapeDataString($exercise.id))
         if ($response.Status -ne 200) { throw 'An exercise failed to load.' }
         $record = $response.Body | ConvertFrom-Json
@@ -313,6 +324,7 @@ try {
         live_luna_requested = [bool]$CheckLuna
         administration_network_access_expected = [bool]$ExpectAdminAccess
         private_diagnostics_requested = [bool]$CheckDiagnostics
+        last_http_status = $lastHttpStatus
         runtime_dependencies = $runtimeDependencies
         checks = @($checks.ToArray())
     }

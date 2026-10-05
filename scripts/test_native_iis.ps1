@@ -21,8 +21,8 @@ $sentinelSite = 'AlloyStudioSentinelCI'
 $task = 'AlloyStudioNativeCI'
 $runtime = Join-Path $output 'runtime'
 $publicUrl = 'http://127.0.0.1:8099/'
-$python = (Get-Command python.exe -CommandType Application).Source
-$java = (Get-Command java.exe -CommandType Application).Source
+$python = $null
+$java = $null
 $installed = $false
 $manager = $null
 
@@ -45,6 +45,19 @@ function Install-VerifiedMsi {
 }
 
 try {
+    $report.stage = 'selected runtime invocation'
+    # Application lookup can expose more than one PATH candidate. The call
+    # operator requires one executable path, never an array of Source values.
+    $pythonCandidates = @(Get-Command python.exe -CommandType Application)
+    $javaCandidates = @(Get-Command java.exe -CommandType Application)
+    $report.python_candidate_count = $pythonCandidates.Count
+    $report.java_candidate_count = $javaCandidates.Count
+    $python = [string]$pythonCandidates[0].Path
+    $java = [string]$javaCandidates[0].Path
+    Assert-CI (Test-Path -LiteralPath $python -PathType Leaf) 'selected Python executable exists'
+    Assert-CI (Test-Path -LiteralPath $java -PathType Leaf) 'selected Java executable exists'
+    & $python -I -c 'import sys; sys.exit(0)'
+    Assert-CI ($LASTEXITCODE -eq 0) 'selected Python executable can run before provisioning'
     $report.stage = 'IIS prerequisites'
     $feature = Install-WindowsFeature Web-Server, Web-Static-Content, Web-Default-Doc, Web-Http-Errors, Web-Filtering, Web-Scripting-Tools -IncludeManagementTools
     Assert-CI ($feature.Success -and [string]$feature.RestartNeeded -eq 'No') 'IIS features installed without pending restart'
@@ -101,14 +114,17 @@ try {
     # A child PowerShell contains the acceptance script's explicit exit code.
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $distribution 'deploy\iis\Test-IisDeployment.ps1') `
         -PublicUrl $publicUrl -RuntimeRoot $runtime -TaskName $task -ReportPath $acceptance -CheckDiagnostics
-    Assert-CI ($LASTEXITCODE -eq 0) 'native IIS deployment acceptance completed'
-    $accepted = Get-Content -LiteralPath $acceptance -Raw -Encoding UTF8 | ConvertFrom-Json
-    Assert-CI ($accepted.status -eq 'PASS') 'native acceptance report passes'
+    $acceptanceExitCode = $LASTEXITCODE
     # Keep only fixed check names/statuses. No HTTP body, source, configuration,
     # database, backend log or private archive enters the published summary.
-    foreach ($check in $accepted.checks) {
-        $report.checks += [ordered]@{name = [string]$check.name; status = [string]$check.status}
+    if (Test-Path -LiteralPath $acceptance -PathType Leaf) {
+        $accepted = Get-Content -LiteralPath $acceptance -Raw -Encoding UTF8 | ConvertFrom-Json
+        foreach ($check in $accepted.checks) {
+            $report.checks += [ordered]@{name = [string]$check.name; status = [string]$check.status}
+        }
     }
+    Assert-CI ($acceptanceExitCode -eq 0) 'native IIS deployment acceptance completed'
+    Assert-CI ($accepted.status -eq 'PASS') 'native acceptance report passes'
     $report.stage = 'explicit administration network admission'
     # Synthetic loopback policy only: leave trusted_proxies empty. On this host
     # both ARR and the real test client are 127.0.0.1, so trusting that address
@@ -167,6 +183,13 @@ try {
 } catch {
     # Stage names are fixed above; avoid emitting exception/model/credential text.
     $report.failure_type = $_.Exception.GetType().FullName
+    # Fixed source coordinates identify the failed command without publishing
+    # exception text, invocation arguments, HTTP responses, or runtime paths.
+    $failureFile = [IO.Path]::GetFileName($_.InvocationInfo.ScriptName)
+    if ($failureFile -in @('test_native_iis.ps1', 'Common.ps1', 'Manage-AlloyStudio.ps1', 'Start-AlloyStudio.ps1')) {
+        $report.failure_script = $failureFile
+        $report.failure_line = [int]$_.InvocationInfo.ScriptLineNumber
+    }
     Write-Output ('Native IIS acceptance failed at stage: ' + $report.stage)
 } finally {
     if ($installed -and $manager -and (Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue)) {

@@ -14,6 +14,7 @@ import re
 from types import SimpleNamespace
 
 from admin_service import AdminError
+from luna import solution_length_comparison
 from traffic_scheduler import CapacityError, Superseded, ChannelExpired
 
 PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmentBefore',
@@ -305,7 +306,10 @@ def public_post(app, request):
                 if not current:
                     result = {'status': 'superseded'}
                 else:
-                    result = app.explainer.explain(result, student_body=data['body'], behavior=evidence)
+                    comparison = (solution_length_comparison(data['body'], selected.correct_pools[record['id']])
+                                  if type(result.get('distance')) is int and result['distance'] == 0 else None)
+                    result = app.explainer.explain(result, student_body=data['body'], behavior=evidence,
+                                                   question=record['description'], solution_comparison=comparison)
                     if token is not None:
                         result = dict(result, behaviorToken=token)
     with app.scheduler.lock:

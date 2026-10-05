@@ -5,6 +5,7 @@ import io
 import json
 import subprocess
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -111,6 +112,8 @@ class EducationHTTPTests(unittest.TestCase):
         self.assertEqual(headers['Cache-Control'], 'no-store')
         self.assertEqual(explain.call_args.kwargs['student_body'], PUBLIC_BODY)
         self.assertEqual(explain.call_args.kwargs['behavior'], expected)
+        self.assertEqual(explain.call_args.kwargs['question'], self.record['description'])
+        self.assertIsNone(explain.call_args.kwargs['solution_comparison'])
         self.assertEqual(explain.call_args.args[0]['canonicalForm'], [PUBLIC_CANONICAL])
         encoded = json.dumps({'trace': explain.call_args.args[0], **explain.call_args.kwargs})
         self.assertNotIn(PRIVATE, encoded)
@@ -141,6 +144,8 @@ class EducationHTTPTests(unittest.TestCase):
         self.assertFalse(provider['store'])
         evidence = json.loads(provider['input'])
         self.assertEqual(evidence['studentBody'], PUBLIC_BODY)
+        self.assertEqual(evidence['question'], self.record['description'])
+        self.assertEqual(evidence['solutionComparison'], {'status': 'unavailable'})
         self.assertEqual(evidence['canonicalForm'], [PUBLIC_CANONICAL])
         self.assertEqual(evidence['behavior']['categories'][1]['instances'][0]['id'], 'undercoverage-1')
         self.assertNotIn(PRIVATE, json.dumps(provider))
@@ -224,6 +229,47 @@ class EducationHTTPTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(result['status'], 'unavailable')
 
+    def test_pinned_zero_guidance_uses_captured_question_and_pool_without_new_analysis(self):
+        record = dict(self.record, description='Every node has an outgoing connection.')
+        pools = ['some ' + PRIVATE, 'some Node', 'some Node and some Node']
+        captured = SimpleNamespace(exercises={record['id']: record}, correct_pools={record['id']: pools})
+        payload = dict(self.base, body='some Node and some Node')
+        matching = {'status': 'ok', 'metric': server.METRICS['canonical'], 'distance': 0,
+                    'breakdown': {'temporal': 0, 'quantifier': 0, 'matrix': 0},
+                    'canonicalForm': ['some Node'], 'operations': [],
+                    'comparison': {'strategy': 'nearest-known-correct', 'poolSize': 3,
+                                   'evaluatedCandidates': 3, 'complete': True}}
+        with patch.object(self.app, 'capture', return_value=(captured, 'captured-guidance-generation')), \
+             patch.object(self.app, 'evaluate', return_value=matching) as evaluate:
+            code, _, checked = self.request('/api/feedback', payload)
+        self.assertEqual(code, 200)
+        self.assertEqual(evaluate.call_count, 1)
+        self.app.cache.clear()
+        with patch.object(self.app, 'capture', return_value=(captured, 'captured-guidance-generation')), \
+             patch.object(self.app, 'evaluate', side_effect=AssertionError('Pinned guidance must not rerun feedback')), \
+             patch.object(self.app, '_engine', side_effect=AssertionError('Guidance must not start an analysis')), \
+             patch('server.subprocess.run', side_effect=AssertionError('Guidance must not launch a JVM')), \
+             patch.object(self.app.explainer, 'explain', return_value={'status': 'ok', 'summary': 'Try another expression.'}) as explain:
+            code, _, result = self.request('/api/explain', dict(payload, evidenceToken=checked['evidenceToken']))
+        self.assertEqual(code, 200)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(explain.call_args.kwargs['question'], record['description'])
+        self.assertEqual(explain.call_args.kwargs['solution_comparison'],
+            {'status': 'ok', 'measure': 'lexical-tokens', 'studentTokens': 5,
+             'mostConciseKnownTokens': 2, 'longerThanMostConciseKnown': True})
+        self.assertNotIn(PRIVATE, json.dumps({'feedback': explain.call_args.args[0], **explain.call_args.kwargs}))
+        self.assertEqual(explain.call_args.kwargs['student_body'], payload['body'])
+
+    def test_positive_distance_never_computes_hidden_pool_length_for_luna(self):
+        with patch.object(self.app, 'evaluate', return_value=self.canonical()), \
+             patch('portal_routes.solution_length_comparison', side_effect=AssertionError('Nonzero guidance has no success comparison')), \
+             patch.object(self.app.explainer, 'explain', return_value={'status': 'ok'}) as explain:
+            code, _, result = self.request('/api/explain')
+        self.assertEqual(code, 200)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(explain.call_args.kwargs['question'], self.record['description'])
+        self.assertIsNone(explain.call_args.kwargs['solution_comparison'])
+
     def test_only_explain_accepts_valid_shape_token_and_never_client_generated_evidence(self):
         with patch.object(self.app, 'evaluate', side_effect=AssertionError('Invalid request reached canonical worker')), \
              patch.object(self.app, 'evaluate_behavior', side_effect=AssertionError('Invalid request reached behavioral worker')):
@@ -233,7 +279,8 @@ class EducationHTTPTests(unittest.TestCase):
                 with self.subTest(token=repr(token)[:20]):
                     self.assertEqual(self.request('/api/explain', dict(self.base, behaviorToken=token))[0], 400)
             for field in ('feedback', 'operations', 'behavior', 'instances', 'categories', 'canonicalForm',
-                          'oracleBody', 'studentSource', 'apiKey', 'model'):
+                          'oracleBody', 'studentSource', 'apiKey', 'model', 'question', 'solutionComparison',
+                          'solution_comparison', 'complexity'):
                 with self.subTest(field=field):
                     self.assertEqual(self.request('/api/explain', dict(self.base, **{field: PRIVATE}))[0], 400)
             for origin in ('https://attacker.invalid', 'https://as.555.is.attacker.invalid'):

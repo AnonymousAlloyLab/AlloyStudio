@@ -34,6 +34,14 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Maintenance alpha `v0.0.5-alpha.1`** connects each Luna edit explanation to the
+exercise's natural-language question and the learner's chosen operator. At zero
+distance, guidance invites another solution; a numeric lexical-token comparison
+with the shortest known correct body can encourage a shorter formulation without
+revealing it. Context changes produce separate cached explanations. See the
+[guidance validation](docs/ai-guidance-alpha1.md) and
+[release notes](docs/releases/v0.0.5-alpha.1.md).
+
 **Alpha `v0.0.5-alpha`** adds a constrained-host profile, separate startup and
 execution deadlines, prompt queue expiry and cooperative feedback time limits
 that keep a reusable JVM alive. Both hint modes and all supporting features are
@@ -410,6 +418,9 @@ through the [Responses API](https://developers.openai.com/api/reference/typescri
 Guidance is attached to individual edits and examples, followed by a short learning
 summary. Each operation receives a novice-friendly explanation using the learner's
 raw predicate body, compact canonical form, and validated node or context locators.
+It also receives the exact natural-language question shown above the editor, so
+each edit can explain how the learner's chosen operator may conflict with the
+stated requirement. Uncertain hints remain questions to investigate.
 Each of the displayed instances (up to three in each of four categories) receives
 its own explanation using its public atoms, relations, truth category, and temporal
 states. Empty categories do not receive invented examples.
@@ -419,7 +430,12 @@ a repaired predicate, hidden replacement expression, or complete repair route.
 Permitted replacement-operator hints remain available. The server sends a positive
 allowlist: it never sends the oracle body, correct-pool bodies, target expressions,
 full module/environment, solver commands, or private metadata. The model sees only
-the learner's code and public feedback. AI guidance cannot change distances,
+the learner's code, public question, and public feedback. At zero distance it
+also receives numeric code-token counts for the learner and the shortest known
+correct body, with comments and spacing ignored. It encourages an alternative
+approach and can invite a shorter formulation when the learner's count is larger.
+This measures lexical length, not AST nodes or global optimality, and zero
+distance retains its existing normalization/pool meaning. AI guidance cannot change distances,
 scores, category membership, or instance tuples.
 
 Responses use `store: false` and

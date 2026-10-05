@@ -1,0 +1,11 @@
+Fresh qualitative evaluation of the serialized prompt_education projections in docs/evidence/guidance-alpha1/fixtures.json.
+
+A: Acknowledges normalized distance zero as a matching form, avoids inventing a defect or edit, says examples are unavailable, and encourages exploration of an alternative expression of the same requirement. It does not claim semantic proof.
+B: Acknowledges the matching form and unavailable examples. It uses the supplied lexical-token comparison and repeated condition to invite reflection on a shorter or clearer formulation without giving one or treating token count as an AST or readability verdict.
+C: Connects the affected learner fragment `no Node` to the public requirement that at least one Node exist. It explains that `no` asks whether the set is empty and the suggested `some` asks whether anything is in it, framing the possible mismatch as something to consider. It gives no replacement expression or repair route.
+D: Explains only the supplied `no` fragment and `some` hint, states that no question was supplied, and asks what requirement the fragment should express without inventing one.
+
+For all fixtures, behavior is unavailable; no behavioral or semantic claims are made from examples. Outputs preserve all operation IDs and include no instance IDs because none were supplied. No solution or contrary example was constructed. This is a local GPT-6 Luna agent observation, not a Responses API integration test.
+
+Input fixture SHA256: 88d9ada5f12d16ecb461994ca10625849750c65b76b3bde33715274da32fae8d
+INSTRUCTIONS literal SHA256 (UTF-8): ecf9bdb5553a31d0b333635dff1607f4d7ca8a62d35176736bbf4d556a1f073f

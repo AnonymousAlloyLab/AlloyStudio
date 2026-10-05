@@ -306,7 +306,10 @@ class CredentialHTTPTests(unittest.TestCase):
              patch.object(self.app.explainer, "explain", return_value={"status": "disabled"}) as explain:
             with urlopen(request, timeout=5) as response:
                 body = response.read().decode()
-        explain.assert_called_once_with(feedback, student_body="some Node", behavior=None)
+        exercise = self.app.exercises[payload['exerciseId']]
+        explain.assert_called_once_with(feedback, student_body="some Node", behavior=None,
+            question=exercise['description'], solution_comparison=luna.solution_length_comparison(
+                "some Node", self.app.correct_pools[exercise['id']]))
         self.assertNotIn(KEY_A, body)
 
 

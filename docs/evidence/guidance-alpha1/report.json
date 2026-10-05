@@ -1,0 +1,26 @@
+{
+  "privateIisPackage": {
+    "byteVerifiedEntries": 252,
+    "bytes": 60862668,
+    "files": 252,
+    "frozenInputCount": 26,
+    "frozenInputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+    "frozenInputsUnchanged": true,
+    "privateArchive": true,
+    "sha256": "89b6e75e1fe93256358ed924a08e4b80757837aecf8fedcc3b1bd9576acbaa46"
+  },
+  "qualitativeExamples": {
+    "count": 4,
+    "liveResponsesApi": false,
+    "reviewer": "local GPT-6 Luna agent"
+  },
+  "release": "v0.0.5-alpha.1",
+  "schemaVersion": 1,
+  "scope": "finite-prompt-and-response-boundary",
+  "targetedTests": {
+    "count": 126,
+    "python": "3.10.11",
+    "seconds": 18.694,
+    "status": "PASS"
+  }
+}

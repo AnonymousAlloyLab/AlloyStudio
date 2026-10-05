@@ -6,6 +6,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from server import Portal
+from luna import solution_length_comparison
 
 
 def main():
@@ -18,7 +19,11 @@ def main():
             return 1
         behavior = app.evaluate_behavior(exercise, exercise['starter'])
         result = app.explainer.explain(feedback, student_body=exercise['starter'],
-                                       behavior=behavior if behavior.get('status') == 'ok' else None)
+                                       behavior=behavior if behavior.get('status') == 'ok' else None,
+                                       question=exercise['description'],
+                                       solution_comparison=(solution_length_comparison(
+                                           exercise['starter'], app.correct_pools[exercise['id']])
+                                           if feedback.get('distance') == 0 else None))
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result['status'] == 'ok' else 1
     finally:

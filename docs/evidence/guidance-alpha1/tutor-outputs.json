@@ -1,0 +1,32 @@
+{
+  "A": {
+    "operations": [],
+    "instances": [],
+    "summary": "Your form matches the known form for the requirement that at least one Node exists. There are no edits to explain, and examples are unavailable. You could still explore another way to express the same requirement."
+  },
+  "B": {
+    "operations": [],
+    "instances": [],
+    "summary": "Your form matches the known form for the requirement that at least one Node exists, and examples are unavailable. This version has more lexical tokens than the most concise known form, so you might reflect on whether the repeated condition can be expressed more briefly or clearly. Try exploring another way to express the same requirement."
+  },
+  "C": {
+    "operations": [
+      {
+        "id": "operation-1",
+        "description": "Your fragment uses `no Node`, which asks whether the Node set is empty. The question requires at least one Node, while the suggested `some` asks whether anything is in the set; consider whether the current condition could allow a case the question excludes."
+      }
+    ],
+    "instances": [],
+    "summary": "This edit highlights the difference between asking whether the set is empty and whether it contains anything, which relates directly to the existence requirement. Consider how the learner's condition fits that requirement; examples are unavailable."
+  },
+  "D": {
+    "operations": [
+      {
+        "id": "operation-1",
+        "description": "Your fragment uses `no Node`, which asks whether the Node set is empty, and the suggested `some` asks whether anything is in it. No question is supplied, so what requirement should this fragment express?"
+      }
+    ],
+    "instances": [],
+    "summary": "The available context shows a change between asking whether the set is empty and whether it contains anything, but there is no question to connect that distinction to. Clarifying the intended requirement would help you assess the edit; examples are unavailable."
+  }
+}

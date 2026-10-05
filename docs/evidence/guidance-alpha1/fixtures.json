@@ -1,0 +1,176 @@
+{
+  "A": {
+    "schemaVersion": "alloy-education-v2",
+    "question": "At least one Node must exist.",
+    "studentBody": "some Node",
+    "canonicalForm": [
+      "SOME Node"
+    ],
+    "trace": {
+      "metric": "ACGN CanDis Fast Rewrite IR",
+      "distance": 0,
+      "breakdown": {
+        "temporal": 0,
+        "quantifier": 0,
+        "matrix": 0
+      },
+      "operations": [],
+      "totalOperations": 0,
+      "detailsTruncated": false
+    },
+    "behavior": {
+      "status": "unavailable"
+    },
+    "solutionComparison": {
+      "status": "ok",
+      "measure": "lexical-tokens",
+      "studentTokens": 2,
+      "mostConciseKnownTokens": 2,
+      "longerThanMostConciseKnown": false
+    }
+  },
+  "B": {
+    "schemaVersion": "alloy-education-v2",
+    "question": "At least one Node must exist.",
+    "studentBody": "some Node and some Node",
+    "canonicalForm": [
+      "SOME Node"
+    ],
+    "trace": {
+      "metric": "ACGN CanDis Fast Rewrite IR",
+      "distance": 0,
+      "breakdown": {
+        "temporal": 0,
+        "quantifier": 0,
+        "matrix": 0
+      },
+      "operations": [],
+      "totalOperations": 0,
+      "detailsTruncated": false
+    },
+    "behavior": {
+      "status": "unavailable"
+    },
+    "solutionComparison": {
+      "status": "ok",
+      "measure": "lexical-tokens",
+      "studentTokens": 5,
+      "mostConciseKnownTokens": 2,
+      "longerThanMostConciseKnown": true
+    }
+  },
+  "C": {
+    "schemaVersion": "alloy-education-v2",
+    "question": "At least one Node must exist.",
+    "studentBody": "no Node",
+    "canonicalForm": [
+      "NO Node"
+    ],
+    "trace": {
+      "metric": "ACGN CanDis Fast Rewrite IR",
+      "distance": 1,
+      "breakdown": {
+        "temporal": 0,
+        "quantifier": 0,
+        "matrix": 1
+      },
+      "operations": [
+        {
+          "kind": "replace",
+          "component": "matrix",
+          "cost": 1,
+          "sourceTerm": "no Node",
+          "sourceOperator": "no",
+          "sourceRole": "affected",
+          "replacementOperator": "some",
+          "id": "operation-1",
+          "aggregate": false,
+          "sourceLocation": {
+            "status": "located",
+            "precision": "node",
+            "ranges": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": "no Node"
+              }
+            ],
+            "coordinateSystem": "body",
+            "offsetEncoding": "utf-16"
+          },
+          "canonicalLocation": {
+            "status": "unavailable",
+            "ranges": [],
+            "coordinateSystem": "canonical",
+            "offsetEncoding": "utf-16"
+          }
+        }
+      ],
+      "totalOperations": 1,
+      "detailsTruncated": false
+    },
+    "behavior": {
+      "status": "unavailable"
+    },
+    "solutionComparison": {
+      "status": "unavailable"
+    }
+  },
+  "D": {
+    "schemaVersion": "alloy-education-v2",
+    "question": "",
+    "studentBody": "no Node",
+    "canonicalForm": [
+      "NO Node"
+    ],
+    "trace": {
+      "metric": "ACGN CanDis Fast Rewrite IR",
+      "distance": 1,
+      "breakdown": {
+        "temporal": 0,
+        "quantifier": 0,
+        "matrix": 1
+      },
+      "operations": [
+        {
+          "kind": "replace",
+          "component": "matrix",
+          "cost": 1,
+          "sourceTerm": "no Node",
+          "sourceOperator": "no",
+          "sourceRole": "affected",
+          "replacementOperator": "some",
+          "id": "operation-1",
+          "aggregate": false,
+          "sourceLocation": {
+            "status": "located",
+            "precision": "node",
+            "ranges": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": "no Node"
+              }
+            ],
+            "coordinateSystem": "body",
+            "offsetEncoding": "utf-16"
+          },
+          "canonicalLocation": {
+            "status": "unavailable",
+            "ranges": [],
+            "coordinateSystem": "canonical",
+            "offsetEncoding": "utf-16"
+          }
+        }
+      ],
+      "totalOperations": 1,
+      "detailsTruncated": false
+    },
+    "behavior": {
+      "status": "unavailable"
+    },
+    "solutionComparison": {
+      "status": "unavailable"
+    }
+  }
+}

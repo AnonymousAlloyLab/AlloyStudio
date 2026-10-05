@@ -1,0 +1,26 @@
+{
+  "files": {
+    "docs/evidence/guidance-alpha1/README.md": "6c24df898c93a51d2ba5ae303505154fee1ecdad89b94029a72ae491630fc477",
+    "docs/evidence/guidance-alpha1/fixtures.json": "88d9ada5f12d16ecb461994ca10625849750c65b76b3bde33715274da32fae8d",
+    "docs/evidence/guidance-alpha1/replay.py": "3ed40c4c4b8c09cf7cbcc65d0f81bc94eaefc31e964b2fc5a3634c8d91820174",
+    "docs/evidence/guidance-alpha1/report.json": "6699112844f361b017523fa2c3a4868c48d7c8f11d2a0362c7ff218d17c56474",
+    "docs/evidence/guidance-alpha1/review.txt": "6f8d7408a90a4eb6a7d9ed9cc2295f6026b1947b2cfaede12158dbdb99d8d91f",
+    "docs/evidence/guidance-alpha1/targeted-tests.txt": "da865858104afa4fba15dc6e3cb0195e845662601ff1032502e138cc4b32a75b",
+    "docs/evidence/guidance-alpha1/tutor-outputs.json": "204b85c623c84ec93badb61db3d4728a2a4c4bd0e9aaf5c45dbfd863c7a431c5",
+    "luna.py": "1cd37eb2ab8d39f6c868d92914d145f354da0a1646566de862bdd322c32d2309",
+    "portal_routes.py": "7bed3f1ea3604a0080276af72e16f023d2aac073c30618cac471b9c75cea1202",
+    "scripts/check_luna.py": "18a7dda0799292c13c84a2e8d4e0fe5a6567edf57b264b807a8706758e2c5c59",
+    "scripts/import_exercises.py": "1fa51082960c01a8a896456bf08b2175e79e7484876a4f4305494b74448812e4",
+    "tests/test_cicd.py": "fa124f37b41e48d21b41cd5a76b979fc6c35459522908d46b25bfffe4b58592c",
+    "tests/test_credentials.py": "732da93b017d34141f5307225a02f5ea37bd7c5755c4980f9bce110805dba031",
+    "tests/test_education.py": "11e2ccdc02aac2bcd571b155b4b1a4bd54bdbbc913e3269ecdfed78f64e91121",
+    "tests/test_education_http.py": "5a4da707d97b025b2ca703e63d06315f0138bda2483ddfda13e23b13fc334a0e",
+    "tests/test_guidance_context.py": "9b323385143ec8f89716e545440c753b9503b7c707aad4398bfe0505eb41a3fa",
+    "tests/test_ingress_functional_invariance.py": "512903b45dc50841018250fc62becb495e18a9bb56a797812d6a47079803e528",
+    "tests/test_luna_sharing.py": "81ad16b5e55ee4eebcbf505b840ffb0eb1026856dedb56ee31f3f5729c87f5cc",
+    "tests/test_metric_modes.py": "2c5d1cce383f8ec8552affce9e09b137076e3cfdc38b127d5d0b3c9441ff0cbb",
+    "tests/test_traffic_portal.py": "2eea580d06060f5fd49531db1a41aa7960a0daf2aef8979c79298cc99a2725be"
+  },
+  "instructionsSha256": "ecf9bdb5553a31d0b333635dff1607f4d7ca8a62d35176736bbf4d556a1f073f",
+  "schemaVersion": 1
+}

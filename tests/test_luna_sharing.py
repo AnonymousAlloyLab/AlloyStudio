@@ -169,6 +169,32 @@ class ExplanationSharingTests(unittest.TestCase):
         self.assertEqual(len(provider.calls), 2)
         self.assert_released(client)
 
+    def test_question_and_matching_pool_length_variations_do_not_join(self):
+        for variation in ('question', 'solution_comparison'):
+            with self.subTest(variation=variation):
+                provider = FakeProvider(blocked=True)
+                client = self.client(provider)
+                options = {'student_body': 'some A and some A', 'question': 'Every A must exist.',
+                    'solution_comparison': luna.solution_length_comparison('some A and some A', ['some A'])}
+                changed = deepcopy(options)
+                if variation == 'question':
+                    changed['question'] = 'Exactly one A must exist.'
+                else:
+                    changed['solution_comparison'] = luna.solution_length_comparison(
+                        'some A and some A', ['some A and some A'])
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    first = pool.submit(client.explain, trace(0), **options)
+                    until(lambda: len(provider.calls) == 1)
+                    second = pool.submit(client.explain, trace(0), **changed)
+                    try:
+                        until(lambda: len(provider.calls) == 2)
+                        self.assertEqual(len(client.pending), 2)
+                        self.assertEqual(client.followers, 0)
+                    finally:
+                        provider.release.set()
+                    self.assertEqual(first.result(timeout=5)['status'], 'ok')
+                    self.assertEqual(second.result(timeout=5)['status'], 'ok')
+                self.assert_released(client)
     def test_unexpected_terminal_exception_still_releases_followers_and_slots(self):
         provider = FakeProvider(blocked=True, failure=RuntimeError('SYNTHETIC_PRIVATE_FAILURE'))
         client = self.client(provider)

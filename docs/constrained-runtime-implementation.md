@@ -127,6 +127,13 @@ The private archive created by this run is
 It contains the runtime dependencies and exercise data, and is identified by
 hash in the report. It is not copied into public evidence or release assets.
 
+After the native deployment fixes, the separately rebuilt local package is
+`alloy-studio-iis-20261005-110143-610052Z.zip`: **252 files, 60,858,146 bytes**,
+SHA-256 `fb83fc0d6a1cb36a67f4d393f653ee5ab39a9469c6c429768a5abd7684f985ab`.
+This supplements the historical sealed validation artifact above. Native CI
+builds its own package from the same source; its ZIP bytes are not identified
+by this local archive's hash. Neither archive is a public release asset.
+
 ## Deployment
 
 Local runs use `./scripts/run.sh` with the constrained profile by default.
@@ -142,9 +149,21 @@ configuration and administrator configuration. Reapply intended administration
 network exceptions to the new public template. The private package is rebuilt
 with a timestamped name and is not a public release asset.
 
-Native IIS acceptance is separate from portable package tests: it installs IIS,
-ARR and the Local Service scheduled task on a disposable Windows Server 2022
-runner, exercises both metrics and behavior, verifies default-denied and
-explicitly admitted administrator paths, and checks restart/stop and an unrelated
-IIS site. It does not validate the user's Cloudflare forwarding chain or change
-the user's production server.
+The [native IIS run](https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37300331432)
+passed **138 recorded checks** on Windows Server 2022 at source revision
+`5e550d6451decfaaad904b1aeb0bd30fa27e36f2`; repeated per-worker and per-asset checks
+are counted as records. Its [retained summary and hashes](../closure/constrained-runtime/evidence/native-iis-run-37300331432/README.md)
+cover real IIS/ARR installation and LOCAL SERVICE execution, 378 packaged engine
+checks, all 181 exercise projections, both hint metrics, behavioral rendering
+inputs, persistent JVM reuse, administration network denial/admission, clean
+restart/stop and preservation of another IIS site.
+
+Three earlier failed native runs remain in the evidence directory. They exposed
+multiple executable PATH matches and a PowerShell inline/stdin preflight failure;
+the installer now invokes the packaged network-policy validator through a file
+interface. The acceptance client also disables .NET's automatic `Expect` header
+and paces its catalogue scan below the default request rate. Production protocol
+and admission limits remain unchanged. This finite loopback deployment test does
+not validate production TLS, Cloudflare forwarding, reboot survival, Windows
+desktop installations or live OpenAI calls, and it does not change the user's
+production server.

@@ -131,13 +131,22 @@ is accessible only on your own computer. These local commands do not configure
 a production proxy or an operating-system service.
 
 Java workers remain alive between edits by default (`--engine-mode persistent`).
-Two feedback workers and one behavioral worker are reserved, with one separate
-administrator process slot: at most four engine children in the backend's shared
-process budget. `--workers 1` reduces the feedback lane; older `--workers 4`
-commands are accepted but capped at two feedback workers. The same canonical,
-AST and behavioral computations run inside each worker, with one job at a time.
-Exact repeated requests share work and bounded results; a timeout retires its
-worker without silently launching a fallback.
+The default `--resource-profile constrained` uses one feedback worker and one
+behavioral worker, each with one advertised JVM processor. The separate
+administrator process slot remains available, and the shared engine process
+budget stays capped at four children. `--resource-profile standard` selects two
+feedback workers and two advertised JVM processors. An explicit `--workers`
+overrides the feedback count in either profile; older `--workers 4` commands are
+accepted but capped at two feedback workers.
+
+Worker acquisition/startup has its own allowance: 20 seconds for `constrained`
+and 10 seconds for `standard`. `--startup-timeout` overrides it with a positive
+number of seconds up to 30. Once a worker is ready, feedback gets its full
+`--timeout` allowance (12 seconds by default); behavior gets at least 30 seconds.
+The same Canonical, AST and behavioral computations run inside each worker,
+with one job at a time. Exact repeated requests share work and bounded results.
+A cooperative `WORK_LIMIT` refusal keeps the JVM reusable; a hard execution
+timeout retires its worker without silently launching a fallback.
 
 To compare behavior with the previous per-request JVM execution path, stop the
 server and restart with the explicit rollback option:

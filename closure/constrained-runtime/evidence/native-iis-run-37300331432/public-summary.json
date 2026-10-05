@@ -1,0 +1,566 @@
+{
+    "status":  "PASS",
+    "environment":  "native Windows Server 2022 IIS 10",
+    "revision":  "5e550d6451decfaaad904b1aeb0bd30fa27e36f2",
+    "stage":  "complete",
+    "checks":  [
+                   {
+                       "name":  "selected Python executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Java executable exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "selected Python executable can run before provisioning",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS features installed without pending restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: rewrite_amd64_en-US.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer SHA-256: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "Microsoft installer signature: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS extension install exit 0: requestRouter_amd64.msi",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "disposable runner ARR configured with a 120-second budget",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "freshly built classes packaged into private local archive",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "complete extracted installer exists",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture site name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture task name is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fixture listener port is unoccupied",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "profile defaults reach installed task without accidental overrides",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "all seven bundled JARs have their recorded SHA-256 hashes",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fresh JVM passes 378 engine checks with the packaged classpath",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private SQLite data are writable; backend code and configuration remain read-only",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "scheduled task uses LOCAL SERVICE",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "backend task is running",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task has unlimited runtime and failure restart",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public origin is explicitly configured",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "backend binds only IPv4 loopback",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private paths are outside IIS and ACLs exclude public readers",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "ARR proxy is enabled with a timeout of at least 120 seconds",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: ",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: index.html",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: instance-graph.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/data.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "public asset loads: dashboard/index.html",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration asset is unavailable: admin/styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "IIS proxy reaches the exercise database",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "editing channel resolves a concrete admitted client identity through IIS",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "exercise listing matches backend health",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "all exercise records contain only approved public fields",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "UTF-8 learner predicate returns distance one",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "all candidates in the correct pool are compared",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "repair trace supplies an actionable replacement operator",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "operation costs sum to distance",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "repair trace excludes private target fields",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "applying the shown operator reduces distance one to zero",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "raw AST Zhang-Shasha feedback survives IIS",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "raw AST operation costs sum to distance",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fact-constrained behavioral score and four categories survive IIS",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "all four behavioral categories are present",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "at most three rendering inputs: both",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "at most three rendering inputs: undercoverage",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "at most three rendering inputs: overcoverage",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "instance includes concrete graph-rendering state",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "at most three rendering inputs: neither",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private control port is configured for acceptance",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "feedback and behavioral workers remain ready after requests",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "persistent engine children belong to the scheduled backend",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "second fresh canonical request succeeds",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "second fresh behavioral request succeeds",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fresh feedback and behavior preserve actual JVM process identities",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "fresh requests reuse workers without consuming further launch credits",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private diagnostics are not reachable through IIS",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "anonymous administration is rejected",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "default-deny administration API remains unavailable",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "cross-origin rejection survives IIS as JSON",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "invalid request rejection survives IIS as JSON",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: server.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: luna.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: web.config",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/catalogue.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend/exercises/catalogue.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/correct-pools.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend/exercises/correct-pools.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/exercises.sqlite3",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend/exercises/exercises.sqlite3",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/exercises.sqlite3-wal",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/exercises.sqlite3-shm",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercises/exercises.sqlite3-journal",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercise_store.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: exercise_sql.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: sql/schema.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: sql/queries.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: sql/compiled-queries.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: vendor/sqlean/provenance.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: scripts/manage_exercises.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin.local.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend/admin.local.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin/admin.local.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin_auth.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin_upload.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin_luna.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin_service.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: scripts/configure_admin.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin/upload.als",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin/source.als",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: admin/.admin-config-fixture.tmp",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: vendor/acgn/lib/alloy.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: openai.key",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: openai.local.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend/openai.local.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: .env",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: deploy/iis/run_backend.py",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: backend-task.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "private route unavailable: api/exercises/../../catalogue.json",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyASG-Release.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyASG.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: AlloyParser.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: alloy.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: commons-cli-1.4.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: json-java.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "bundled dependency: slf4j-simple-1.7.36.jar",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "native IIS deployment acceptance completed",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "native acceptance report passes",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "exact loopback edge admission passes packaged policy validator",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "backend still denies administration after edge-only admission",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task restart leaves no previous Java worker process",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task restart leaves no previous Java worker process",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "both network policies admit administration asset: admin/",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "both network policies admit administration asset: admin/app.js",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "both network policies admit administration asset: admin/styles.css",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task stop leaves no previous Java worker process",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "task stop leaves no previous Java worker process",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "another IIS site and binding survive Alloy installation and shutdown",
+                       "status":  "PASS"
+                   },
+                   {
+                       "name":  "scheduled backend releases its public listener",
+                       "status":  "PASS"
+                   }
+               ],
+    "live_provider_calls":  false,
+    "deployment_archive_uploaded":  false,
+    "python_candidate_count":  2,
+    "java_candidate_count":  2,
+    "acceptance_http_status":  404,
+    "generated_at":  "2026-10-05T11:05:17.9341790Z"
+}

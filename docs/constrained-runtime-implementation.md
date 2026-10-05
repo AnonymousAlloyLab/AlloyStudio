@@ -121,6 +121,24 @@ validated separately by the offline proof gate and CI replay; they are not
 silently included in that Python suite count. Provider integration uses controlled
 fixtures or the disabled provider, with no paid calls.
 
+Later hosted CI identified two failing nearest-correct corpus methods among
+1,233 executed tests. The [retained failure report](../closure/constrained-runtime/evidence/ci-run-37302832049/README.md)
+identifies their registered names without exposing private assertion output.
+The [cold-process witness](../closure/constrained-runtime/evidence/cold-pool-20261005T115451Z-1a6b1c40/README.md)
+constructs the relevant completion-assumption failure: four fresh JVMs comparing
+the same 338-candidate `socialMedia-inv4` pool on one CPU all return `WORK_LIMIT`
+at about 8.2 seconds, while serial requests before and after complete in about
+3.1 seconds with identical response hashes. The historical CI response codes
+were not retained; this witness does not claim to reconstruct them.
+
+The correctness cohort now performs its cold JVM requests serially. All 181
+exercises, complete candidate pools, assertions and original time limits remain;
+concurrent load and recovery still have separate tests. The revised ten-test
+nearest-correct module passed in 148.869 seconds on Python 3.11.16 with two-CPU
+affinity. This test scheduling repair changes neither production nor frozen
+proof inputs. CI now reports source-registered failing test identifiers and
+counts on failure, while continuing to suppress private model/error content.
+
 The private archive created by this run is
 `alloy-studio-iis-20261005-102336-623580Z.zip`, with 252 files and SHA-256
 `fa5ad06f5ac15e8ba8297391773cf2f8f44921f707a1d41fd9695438f93cdfc8`.

@@ -3,11 +3,8 @@
 The synthetic pool labels test selection mechanics. Corpus provenance determines
 which predicates are admitted as known correct; these tests do not infer it from
 canonical distance or claim unrestricted Alloy semantic equivalence.
-
-The corpus correctness cohort runs cold JVM requests serially, matching the
-constrained profile's single feedback lane. Concurrent load and timeout recovery
-have separate worker/scheduler regressions and constrained-runtime benchmarks.
 """
+from concurrent.futures import ThreadPoolExecutor
 import copy
 import json
 from pathlib import Path
@@ -164,7 +161,8 @@ class NearestCorrectCorpusTests(unittest.TestCase):
                  json.loads((ROOT / 'exercises/correct-pools.json').read_text())['pools']}
         if set(pools) != {record['id'] for record in records}:
             raise AssertionError('Every exercise must have a registered private correct pool')
-        cls.results = [corpus_case(record, pools[record['id']]) for record in records]
+        with ThreadPoolExecutor(max_workers=4) as workers:
+            cls.results = list(workers.map(lambda record: corpus_case(record, pools[record['id']]), records))
 
     def test_all_181_starters_use_complete_correct_pool(self):
         self.assertEqual(len(self.results), 181)

@@ -1,0 +1,79 @@
+{
+  "affinity": [
+    0
+  ],
+  "exercise": "socialMedia-inv4",
+  "inputSha256": "e248bd90b9ecfb239c260730d9053f32d9cafe985f0a159e7d77c50740fdce68",
+  "parallelFour": [
+    {
+      "seconds": 8.202506260000519,
+      "status": "unsupported",
+      "diagnosticCodes": [
+        "WORK_LIMIT"
+      ],
+      "distance": null,
+      "complete": null,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "c0cad1997618ae7a29ab8d39867724af29ecfa1e811b640ef5e7e0dc0ef8c963"
+    },
+    {
+      "seconds": 8.196127961000457,
+      "status": "unsupported",
+      "diagnosticCodes": [
+        "WORK_LIMIT"
+      ],
+      "distance": null,
+      "complete": null,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "c0cad1997618ae7a29ab8d39867724af29ecfa1e811b640ef5e7e0dc0ef8c963"
+    },
+    {
+      "seconds": 8.18749471299816,
+      "status": "unsupported",
+      "diagnosticCodes": [
+        "WORK_LIMIT"
+      ],
+      "distance": null,
+      "complete": null,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "c0cad1997618ae7a29ab8d39867724af29ecfa1e811b640ef5e7e0dc0ef8c963"
+    },
+    {
+      "seconds": 8.195284367000568,
+      "status": "unsupported",
+      "diagnosticCodes": [
+        "WORK_LIMIT"
+      ],
+      "distance": null,
+      "complete": null,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "c0cad1997618ae7a29ab8d39867724af29ecfa1e811b640ef5e7e0dc0ef8c963"
+    }
+  ],
+  "serialOne": [
+    {
+      "seconds": 3.1122362069982046,
+      "status": "ok",
+      "diagnosticCodes": [],
+      "distance": 7,
+      "complete": true,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "6e0e895d86f1b0f3b6d6ab3d8cb7408f774a0b82bdf97219b1605bc174765b2f"
+    },
+    {
+      "seconds": 3.051002708998567,
+      "status": "ok",
+      "diagnosticCodes": [],
+      "distance": 7,
+      "complete": true,
+      "exitCode": 0,
+      "stderrPresent": false,
+      "responseSha256": "6e0e895d86f1b0f3b6d6ab3d8cb7408f774a0b82bdf97219b1605bc174765b2f"
+    }
+  ]
+}

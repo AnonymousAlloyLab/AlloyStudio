@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "scope": "TESTED CI failure; cause unknown at capture",
+  "status": "FAIL",
+  "runId": "37302832049",
+  "runUrl": "https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37302832049",
+  "revision": "9876c04616c0245d471ae8019dab5c8af954c7f6",
+  "failedPhase": {
+    "jobId": 111739395307,
+    "job": "Linux build and regressions",
+    "step": "Python regressions"
+  },
+  "count": 1233,
+  "failedRegisteredTests": [
+    "test_nearest_correct.NearestCorrectCorpusTests.test_all_181_starters_use_complete_correct_pool",
+    "test_nearest_correct.NearestCorrectCorpusTests.test_real_socialmedia_pool_improves_over_oracle"
+  ],
+  "failureCause": null,
+  "files": {
+    "README.md": "213e9651532b217c28be0501346fc199d9154d9d0220b4cae542564c62127b22",
+    "linux-dashboard.json": "5b1996360f4a6b3b8dadd8e35d7ef9f15370fd62ee6dbb4b76172462bc9320ee",
+    "macos-latest-dashboard.json": "b7b27eba589540708b022d7f12e7dd08aa6b723d9a59ada50c8aca697512072d",
+    "python-summary.json": "ffa5115d4319fa06a18ae654570372a8ae7eae58515fac0d9c030c818fa19e02",
+    "run.json": "66648752c7ee173803c1e6a662cfc5bbf32419beb34e9308960d54cd765fc413",
+    "windows-latest-dashboard.json": "aa3b678c2c1029025fcbb83940e6931228b344f81d4109bbb19994cebd4a9808"
+  }
+}

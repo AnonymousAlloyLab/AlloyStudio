@@ -1,0 +1,11 @@
+{
+  "check": "python",
+  "status": "FAIL",
+  "count": 1233,
+  "revision": "9876c04616c0245d471ae8019dab5c8af954c7f6",
+  "dirty": false,
+  "failedRegisteredTests": [
+    "test_nearest_correct.NearestCorrectCorpusTests.test_all_181_starters_use_complete_correct_pool",
+    "test_nearest_correct.NearestCorrectCorpusTests.test_real_socialmedia_pool_improves_over_oracle"
+  ]
+}

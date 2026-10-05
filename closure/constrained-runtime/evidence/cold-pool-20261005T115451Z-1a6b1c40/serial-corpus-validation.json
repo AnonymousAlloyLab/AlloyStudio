@@ -1,0 +1,19 @@
+{
+  "python": "3.11.16",
+  "affinity": [
+    0,
+    1
+  ],
+  "testModule": "test_nearest_correct",
+  "exitCode": 0,
+  "elapsedSeconds": 148.965,
+  "jvmWorkBudgetMilliseconds": 8000,
+  "execution": "Serial cold JVM corpus requests; all existing pool assertions retained",
+  "poolSubprocessTimeoutSeconds": 20,
+  "oracleSubprocessTimeoutSeconds": 12,
+  "testsRun": 10,
+  "unittestElapsedSeconds": 148.869,
+  "exerciseCount": 181,
+  "allCorpusRequestsComplete": true,
+  "testSourceSha256": "0bcaaba68b135b07e12c91869fd4d5e7952482ed7ca3d6c0a059a5a0a33b19fd"
+}

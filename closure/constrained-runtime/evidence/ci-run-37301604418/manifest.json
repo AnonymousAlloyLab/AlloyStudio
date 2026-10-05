@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "scope": "TESTED CI failure; cause unknown at capture",
+  "status": "FAIL",
+  "runId": "37301604418",
+  "runUrl": "https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37301604418",
+  "revision": "64ea353ca76db2e486592dcd869efa9b167695e5",
+  "failedPhase": {
+    "jobId": 111735385739,
+    "job": "Linux build and regressions",
+    "step": "Python regressions"
+  },
+  "count": null,
+  "failedRegisteredTests": null,
+  "failureCause": null,
+  "files": {
+    "README.md": "b0d140e61983f82c8638dcee28955a801bf06689eda73888c1f0ba6fd57d15d7",
+    "linux-dashboard.json": "d86944259fdc11e97199f5d1eb71d06de41ec402abd412440922d271849de046",
+    "macos-latest-dashboard.json": "fb9dce6a51080677ea4a89cf7b040f2068d849d1fa32fbaba245f7ad1b299213",
+    "run.json": "736b76322c56275a5fb20a60eeecb6caf427fc76f5f91b1c48dce712085cf82d",
+    "windows-latest-dashboard.json": "169d5c6f9fddf8f9a0696f42221e64a392bdd1bddd7a9f11e23d28d6fd7ca29d"
+  }
+}

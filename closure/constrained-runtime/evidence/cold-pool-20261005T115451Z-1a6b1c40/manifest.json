@@ -1,0 +1,9 @@
+{
+  "README.md": "c6b6a48bec7c710196153a5c3d485be8e93b89a1a90d577eddb0efed94c8ba8a",
+  "after-test_nearest_correct.py": "0bcaaba68b135b07e12c91869fd4d5e7952482ed7ca3d6c0a059a5a0a33b19fd",
+  "before-test_nearest_correct.py": "7a73ac81dfa1dd39cccc66d4b309abe83d8c8eb2bed3b2d3db9c95d0c1355b5e",
+  "controlled-observation.json": "5e9d1e06b691b0dd0b259c71aeb1758634039e30f7e59b89c1444929791c3f2e",
+  "initial-observation.json": "e2300e37b6170b82eec9a29b5b3c0c47307aeba8b8ad6cdbe22a1df9135758b1",
+  "reproduce.py": "26ed459060430efcbd4b9c8c8d067684c591bccce75971bff9be12c8580ca747",
+  "serial-corpus-validation.json": "dc2656ce7fcf002ed26104fa32f7d42529125f81a3ae97cc4b19a3bc176070ef"
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "interpretation": "Independently frozen registrations of historical VERIFIED closures. Every pin is a hash of historical evidence, never of the current source. Freshness classifies the current checkout against each approved inventory; it never rewrites the historical result.",
+  "closures": [
+    {
+      "id": "TRF-00",
+      "title": "Freeze the baseline, independent observation semantics, finite profile and trust",
+      "ledger": {
+        "path": "closure/traffic-refinement/status.json",
+        "obligation": "TRF-00"
+      },
+      "report": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/report.json",
+      "reportSha256": "24642ba8bd6c7d171e2fab165af33eddc56613d0460582e2da34e7065dfc64e7",
+      "inventory": {
+        "kind": "manifest",
+        "path": "closure/traffic-refinement/evidence/tcfg03-20261004T170110Z-0c2dd9e4/manifest.json",
+        "sha256": "72c9a96eabc6123783ec1310d214b5f35db3152ac976e78f7a076e24a28a7963"
+      },
+      "root": {
+        "field": "inputRootHash",
+        "sha256": "0a865739ab334bc954132df3351d48471bb183dfc9e18e99ad1f81ce01a70aad"
+      },
+      "verifier": {
+        "path": "scripts/verify_service_profile.py",
+        "sha256": "8e745b831074f0ab7b2194ae5c98f373c7d497dd1a5870b47be9f74dde9585fe"
+      },
+      "completeProofDirectories": [
+        "formal/service_profile",
+        "formal/service_profile/ServiceProfile",
+        "formal/traffic_config/TrafficConfig",
+        "formal/traffic_profile/TrafficProfile"
+      ]
+    },
+    {
+      "id": "TRF-01",
+      "title": "Strict inbound admission before expensive allocation",
+      "ledger": {
+        "path": "closure/traffic-refinement/status.json",
+        "obligation": "TRF-01"
+      },
+      "report": "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/report.json",
+      "reportSha256": "9d91ad0534bf7f06d07e21b6dc2a0d199c4cdd8c4dbdbd602bba935e820d8543",
+      "inventory": {
+        "kind": "manifest",
+        "path": "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/manifest.json",
+        "sha256": "e16e94a4d82de1808815d86854e02057f79cf627d0c1ad3848d616581cecb622"
+      },
+      "root": {
+        "field": "inputRootHash",
+        "sha256": "035b75576a89487b9980b6cd34f5ed7adf2975065c3e83b7b5d48b311d8aa58f"
+      },
+      "verifier": {
+        "path": "scripts/verify_strict_ingress.py",
+        "sha256": "69c0ac1bc39ec0ed99d4ecfef486a8222ad123ed1d1d736125a6dad9fd88f63c"
+      },
+      "completeProofDirectories": [
+        "formal/ingress_admission",
+        "formal/ingress_deadlines",
+        "formal/ingress_deadlines/IngressDeadlines"
+      ]
+    },
+    {
+      "id": "AP01",
+      "title": "Proposed patch contracts (Lean models only; production bridges were OPEN)",
+      "report": "closure/patch-contracts/evidence/verify-20261005T070949Z-fb879e03/report.json",
+      "reportSha256": "6f59de5ef60c83fa67d13b735b9d9b15482e7bc6ea62516d1a8375286d7a6a6d",
+      "inventory": {
+        "kind": "report-inputs"
+      },
+      "root": {
+        "field": "evidenceInputRootSha256",
+        "sha256": "82bd64af2ccd0aaa0b059d28ec77cca6046ff82714d53afee920e04fd8ed9229"
+      },
+      "verifier": {
+        "path": "scripts/verify_patch_contracts.py",
+        "sha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+      },
+      "completeProofDirectories": [
+        "formal/patch_contracts"
+      ]
+    }
+  ]
+}

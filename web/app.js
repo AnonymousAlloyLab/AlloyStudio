@@ -207,14 +207,20 @@ function abortableDelay(milliseconds, signal) {
 
 async function learnerJSON(url, payload, signal, current) {
   const serialized = JSON.stringify(payload);
-  const deadline = performance.now() + 120000;
+  // Leave room for the supported cold-worker + legacy explanation path through IIS.
+  // Retries still require an explicit refusal before analysis dispatch.
+  const requestBudget = 150000;
+  const deadline = performance.now() + requestBudget;
   const controller = new AbortController();
   const abort = () => controller.abort();
   signal.addEventListener('abort', abort, { once: true });
   let timedOut = false;
-  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 120000);
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, requestBudget);
+  // A channel-less fallback request is sent at most once (AP01-C06); only a
+  // channel-bound request may take the single explicit-capacity retry.
+  const attempts = typeof payload.channel === 'string' ? 2 : 1;
   try {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
       if (signal.aborted || !current() || performance.now() >= deadline) {
         throw new DOMException('Request superseded.', 'AbortError');
       }
@@ -228,7 +234,7 @@ async function learnerJSON(url, payload, signal, current) {
       if (data.status === 'expired' && data.code === 'channel_expired' && state.channel === payload.channel) {
         state.channel = null;
       }
-      const delay = retryDelay(response, data, attempt, performance.now(), deadline);
+      const delay = attempt + 1 < attempts ? retryDelay(response, data, attempt, performance.now(), deadline) : null;
       if (delay === null || !current()) return data;
       await abortableDelay(delay, controller.signal);
     }
@@ -242,26 +248,53 @@ async function learnerJSON(url, payload, signal, current) {
   }
 }
 
-async function ensureChannel() {
-  if (state.channel) return state.channel;
+// BEGIN CHANNEL FALLBACK POLICY
+// AP01-C06 (Identity.requestPlan): one channel attempt per check. Only an explicit
+// capacity refusal or an unreachable channel endpoint permits channel-less
+// requests; abort, authentication, malformed and other failures never fall back.
+function channelOutcome(status, redirected, data) {
+  if (redirected || status === 401 || status === 403) return 'authenticationFailure';
+  if (status === 200 && !redirected && data && data.status === 'ok' && typeof data.channel === 'string'
+    && /^[a-zA-Z0-9_-]{43}$/.test(data.channel)) return 'issued';
+  if ([429, 503].includes(status) && data && data.status === 'busy' && data.code === 'capacity') return 'explicitlyUnavailable';
+  return status === 200 ? 'malformed' : 'otherFailure';
+}
+
+function fallbackPermitted(outcome) {
+  return outcome === 'explicitlyUnavailable' || outcome === 'availabilityFailure';
+}
+// END CHANNEL FALLBACK POLICY
+
+async function ensureChannel(signal) {
+  if (state.channel) return { channel: state.channel };
   if (!state.channelPromise) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
-    state.channelPromise = fetchJSON('api/channel', {
-      method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: '{}',
-    }).then(result => {
-      if (result.status !== 'ok' || typeof result.channel !== 'string'
-        || !/^[a-zA-Z0-9_-]{32,256}$/.test(result.channel)) {
-        throw new Error('The editing session could not be started. Check your predicate again shortly.');
+    state.channelPromise = (async () => {
+      let response;
+      try {
+        response = await fetch(new URL('api/channel', APP_BASE), {
+          method: 'POST', signal: controller.signal, redirect: 'manual',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: '{}',
+        });
+      } catch (error) {
+        return { outcome: 'availabilityFailure' };  // unreachable or past the channel deadline
       }
-      state.channel = result.channel;
-      return result.channel;
-    }).catch(error => {
-      if (error.name === 'AbortError') throw new Error('The editing session timed out. Check your predicate again when ready.');
-      throw error;
-    }).finally(() => { clearTimeout(timer); state.channelPromise = null; });
+      let data = null;
+      try { data = await response.json(); } catch (error) { data = null; }
+      const outcome = channelOutcome(response.status, response.redirected || response.type === 'opaqueredirect',
+        data && typeof data === 'object' && !Array.isArray(data) ? data : null);
+      if (outcome === 'issued') state.channel = data.channel;
+      return { outcome, channel: outcome === 'issued' ? data.channel : null };
+    })().finally(() => { clearTimeout(timer); state.channelPromise = null; });
   }
-  return state.channelPromise;
+  const result = await state.channelPromise;
+  if (signal?.aborted) throw new DOMException('Request superseded.', 'AbortError');
+  if (result.outcome === 'issued') return { channel: result.channel };
+  if (fallbackPermitted(result.outcome)) return { channel: null };
+  throw new Error(result.outcome === 'authenticationFailure'
+    ? 'Access to the API requires attention. Sign in again or contact the server administrator.'
+    : 'The editing session could not be started. Check your predicate again shortly.');
 }
 
 function cancelChannel(revision) {
@@ -695,9 +728,11 @@ async function runPredicateCheck() {
   pending.append(spinner, node('span', '', 'Comparing your predicate with the correct answers…'));
   elements.result.replaceChildren(pending);
   try {
-    const channel = await ensureChannel();
+    const { channel } = await ensureChannel(controller.signal);
     if (!current()) return;
-    const result = await learnerJSON('api/feedback', { exerciseId, body, revision, metric, channel }, controller.signal, current);
+    // Fallback omits the channel field entirely; a present JSON null is rejected.
+    const channelField = channel ? { channel } : {};
+    const result = await learnerJSON('api/feedback', { exerciseId, body, revision, metric, ...channelField }, controller.signal, current);
     if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
     // Atom order is registered by SessionBridge.feedbackAtomNames.
     if (result.status === 'ok' && !verifiedPolicy('feedbackSuccess', [
@@ -737,9 +772,11 @@ async function runPredicateCheck() {
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
       const evidenceToken = typeof result.evidenceToken === 'string' && /^[a-f0-9]{64}$/.test(result.evidenceToken)
         ? result.evidenceToken : null;
-      await requestBehavior({ exerciseId, body, revision, metric, channel, ...(evidenceToken ? { evidenceToken } : {}) }, selection, true, metric);
-    } else if (result.status === 'unsupported') {
-      await requestBehavior({ exerciseId, body, revision, metric, channel }, selection, false, metric);
+      await requestBehavior({ exerciseId, body, revision, metric, ...channelField, ...(evidenceToken ? { evidenceToken } : {}) }, selection, true, metric);
+    } else if (result.status === 'unsupported' && !(Array.isArray(result.diagnostics)
+      && result.diagnostics.some((diagnostic) => diagnostic?.code === 'WORK_LIMIT'))) {
+      // A draft over the analysis work budget is not sent on to the solver.
+      await requestBehavior({ exerciseId, body, revision, metric, ...channelField }, selection, false, metric);
     }
   } catch (error) {
     if (error.name === 'AbortError' || revision !== state.revision || selection !== state.selection || metric !== state.metric) return;

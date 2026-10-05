@@ -1,0 +1,509 @@
+{
+  "schemaVersion": 1,
+  "id": "AP01",
+  "scope": "proposed-contracts",
+  "closesProductionObligations": false,
+  "baselineCommit": "521019eb898a6f203083ad629f1aef5ad513e331",
+  "claims": [
+    {
+      "id": "AP01-C01",
+      "statement": "Request-global fuel bounds all modeled executed prefixes; zero fuel prevents another step and oversize/exhaustion emits no partial payload.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.all_execution_paths_bounded",
+        "AlloyStudio.PatchContracts.Work.zero_cannot_act",
+        "AlloyStudio.PatchContracts.Work.atomic_charge_before_step",
+        "AlloyStudio.PatchContracts.Work.aggregate_exhaustion",
+        "AlloyStudio.PatchContracts.Work.oversize_unsupported",
+        "AlloyStudio.PatchContracts.Work.exhausted_no_partial_output"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c01-cumulative-work-budget",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C02",
+      "statement": "Successful bounded complete traversal and minimum fold equal their unrestricted counterparts; completed payload is preserved.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.complete_exact",
+        "AlloyStudio.PatchContracts.Work.accepted_traversal_complete",
+        "AlloyStudio.PatchContracts.Work.bounded_minimum_exact",
+        "AlloyStudio.PatchContracts.Work.accepted_payload_preserved",
+        "AlloyStudio.PatchContracts.Work.later_closer_candidate_cannot_be_truncated"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c02-preserve-complete-pool-results",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C03",
+      "statement": "Reachable per-lane states preserve capacity and per-epoch launch bounds; timeout does not charge startup failure; reap owns release; modeled renewal permits conditional retry.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.reachable_capacity_and_spawn_bound",
+        "AlloyStudio.PatchContracts.Work.reachable_attempts_bounded",
+        "AlloyStudio.PatchContracts.Work.every_start_charged",
+        "AlloyStudio.PatchContracts.Work.timeout_does_not_poison_startup_circuit",
+        "AlloyStudio.PatchContracts.Work.only_startup_failure_increases_circuit",
+        "AlloyStudio.PatchContracts.Work.retirement_retains_capacity_reservation",
+        "AlloyStudio.PatchContracts.Work.bounded_modeled_recovery",
+        "AlloyStudio.PatchContracts.Work.renewal_cannot_repeat",
+        "AlloyStudio.PatchContracts.Work.both_lanes_remain_bounded",
+        "AlloyStudio.PatchContracts.Work.feedback_cannot_consume_behavior_budget",
+        "AlloyStudio.PatchContracts.Work.unlimited_churn_reachable",
+        "AlloyStudio.PatchContracts.Work.unlimited_retry_churn",
+        "AlloyStudio.PatchContracts.Work.shared_twelve_start_interference"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c03-worker-recovery-without-unbounded-churn",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C04",
+      "statement": "Default-empty exact proxy trust, bounded decoded chains and right-to-left nearest-untrusted selection reject malformed trusted metadata and ignore forged metadata from untrusted peers.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.default_proxy_trust_empty",
+        "AlloyStudio.PatchContracts.Identity.accepted_chain_bounded",
+        "AlloyStudio.PatchContracts.Identity.unknown_proxy_header_noninfluence",
+        "AlloyStudio.PatchContracts.Identity.trusted_invalid_header_never_falls_back",
+        "AlloyStudio.PatchContracts.Identity.selected_hop_is_untrusted",
+        "AlloyStudio.PatchContracts.Identity.spoofed_left_prefix_noninfluence",
+        "AlloyStudio.PatchContracts.Identity.bad_leftmost_spoof_counterexample"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c04-proxy-identity-with-an-explicit-trust-boundary",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C05",
+      "statement": "Reachable channel allocation is bounded per identity and globally; distinct identities do not consume each other's identity allowance below the global bound.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.reachable_channel_bounds",
+        "AlloyStudio.PatchContracts.Identity.honest_tabs_reachable",
+        "AlloyStudio.PatchContracts.Identity.honest_33rd_tab_refused",
+        "AlloyStudio.PatchContracts.Identity.full_peer_quota_does_not_block_distinct_identity",
+        "AlloyStudio.PatchContracts.Identity.global_bound_refuses_even_fresh_identity",
+        "AlloyStudio.PatchContracts.Identity.nat_collision_witness"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c05-channel-quota-preservation",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C06",
+      "statement": "Modeled browser operation makes at most one channel attempt and one permitted fallback; fallback omits channel/cancel and all response modes reject stale snapshots.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.operation_channel_attempt_at_most_one",
+        "AlloyStudio.PatchContracts.Identity.operation_fallback_request_at_most_one",
+        "AlloyStudio.PatchContracts.Identity.fallback_only_for_availability",
+        "AlloyStudio.PatchContracts.Identity.abort_auth_malformed_never_fallback",
+        "AlloyStudio.PatchContracts.Identity.fallback_omits_channel_and_never_cancels",
+        "AlloyStudio.PatchContracts.Identity.present_null_is_not_omission",
+        "AlloyStudio.PatchContracts.Identity.stale_browser_response_discarded",
+        "AlloyStudio.PatchContracts.Identity.unconditional_fallback_counterexample"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c06-bounded-browser-fallback",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C07",
+      "statement": "Current verification requires nonempty independently approved inventory, exact complete observed list equality with unique paths, and bound report/verifier; missing/changed/extra/duplicate entries reject without changing historical record.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.checked_entry_exact",
+        "AlloyStudio.PatchContracts.Governance.missing_entry_blocks",
+        "AlloyStudio.PatchContracts.Governance.current_requires_complete_equality",
+        "AlloyStudio.PatchContracts.Governance.empty_inventory_not_verified",
+        "AlloyStudio.PatchContracts.Governance.current_changed_input_rejected",
+        "AlloyStudio.PatchContracts.Governance.source_drift_does_not_rewrite_history",
+        "AlloyStudio.PatchContracts.Governance.self_attestation_counterexample",
+        "AlloyStudio.PatchContracts.Governance.current_requires_exact_inventory",
+        "AlloyStudio.PatchContracts.Governance.unexpected_inventory_rejected",
+        "AlloyStudio.PatchContracts.Governance.duplicate_inventory_rejected",
+        "AlloyStudio.PatchContracts.Governance.extra_current_entry_regression",
+        "AlloyStudio.PatchContracts.Governance.duplicate_path_regression"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c07-complete-current-source-freshness",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C08",
+      "statement": "Pure typed dispatch rejects invalid input without callback and preserves ingress trace under replacement of a validated-request business callback.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.rejected_request_not_dispatched",
+        "AlloyStudio.PatchContracts.Governance.successful_request_exactly_once",
+        "AlloyStudio.PatchContracts.Governance.business_replacement_preserves_ingress"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c08-separate-ingress-from-business-logic",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C09",
+      "statement": "Append-only abstract evidence insertion rejects identifier collisions and preserves all existing identifier-to-digest lookups.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.evidence_collision_refused",
+        "AlloyStudio.PatchContracts.Governance.evidence_append_preserves_existing",
+        "AlloyStudio.PatchContracts.Governance.evidence_append_records_new"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c09-retain-evidence-in-the-repository",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C10",
+      "statement": "Private aggregate diagnostic projection is control-only, retains state/ownership, excludes arbitrary private payloads, and distinguishes sampled capacity/cold-start/uncertainty states.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Observability.ready_requires_idle_worker",
+        "AlloyStudio.PatchContracts.Observability.zero_workers_need_not_mean_unavailable",
+        "AlloyStudio.PatchContracts.Observability.no_capacity_unavailable",
+        "AlloyStudio.PatchContracts.Observability.retained_ownership_visible",
+        "AlloyStudio.PatchContracts.Observability.stopping_dominates",
+        "AlloyStudio.PatchContracts.Observability.public_diagnostics_denied",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_do_not_mutate",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_do_not_release_retained",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_no_private_content",
+        "AlloyStudio.PatchContracts.Observability.control_snapshot_exact",
+        "AlloyStudio.PatchContracts.Observability.generation_preserved",
+        "AlloyStudio.PatchContracts.Observability.diagnostic_counter_bounded",
+        "AlloyStudio.PatchContracts.Observability.constant_liveness_counterexample"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c10-useful-private-diagnostics",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    },
+    {
+      "id": "AP01-C11",
+      "statement": "Default-deny admin network admission precedes protected attempt-state changes; arbitrary unallowed traces preserve quota, while allowed sources may still interfere.",
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.administration_default_deny",
+        "AlloyStudio.PatchContracts.Identity.edge_backend_share_all_route_policy",
+        "AlloyStudio.PatchContracts.Identity.arbitrary_unallowed_requests_preserve_auth_quota",
+        "AlloyStudio.PatchContracts.Identity.untrusted_nonallowlisted_peer_cannot_forge_auth_admission",
+        "AlloyStudio.PatchContracts.Identity.five_synthetic_failures_deny_next_client",
+        "AlloyStudio.PatchContracts.Identity.allowed_clients_can_still_share_lockout"
+      ],
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c11-administration-admission-before-shared-login-work",
+      "passCondition": "Every named theorem has exactly the frozen type, is kernel checked in both clean offline builds with no transitive axioms; complete inputs/provenance and deterministic artifacts pass registered gate.",
+      "blockConditions": [
+        "missing/mutated input or theorem",
+        "nonempty axiom set",
+        "failed build/negative control/witness",
+        "nondeterminism",
+        "stale review or orphan provenance",
+        "scope leak to production implementation"
+      ],
+      "trustedDependencies": [
+        "TCB-LEAN",
+        "TCB-VERIFIERS",
+        "TCB-SHA256",
+        "TCB-PYTHON",
+        "TCB-OS",
+        "TCB-HARDWARE",
+        "TCB-REVIEW-PROVENANCE"
+      ]
+    }
+  ],
+  "productionBridges": [
+    {
+      "id": "AP01-B01",
+      "status": "OPEN",
+      "statement": "Instrument all actual Java atomic work/allocation and establish complete bounded scheduling, including parser/native operations and calibrated limits."
+    },
+    {
+      "id": "AP01-B02",
+      "status": "OPEN",
+      "statement": "Preserve full correct-pool metric semantics, argmin/tie order, positions and redacted public payload; prove schedule completeness and initial minimum bound."
+    },
+    {
+      "id": "AP01-B03",
+      "status": "OPEN",
+      "statement": "Bind locked spawn/startup/timeout/reap/clock events and per-lane epoch quotas to actual lifecycle, global process budget and all JVM consumers."
+    },
+    {
+      "id": "AP01-B04",
+      "status": "OPEN",
+      "statement": "Implement strict canonical wire IP parsing and validate explicit deployed proxy trust/header chain; separately configure bounded TCP-peer ingress aggregation."
+    },
+    {
+      "id": "AP01-B05",
+      "status": "OPEN",
+      "statement": "Bind application identities to atomic scheduler quota allocation, expiry and channel ownership."
+    },
+    {
+      "id": "AP01-B06",
+      "status": "OPEN",
+      "statement": "Bind browser error classes, serialization omission, captured snapshot equality, abort/echo guards and bounded fallback across feedback/behavior/explanation."
+    },
+    {
+      "id": "AP01-B07",
+      "status": "OPEN",
+      "statement": "Integrate independently frozen complete manifest/report/verifier freshness into CI/status without rewriting historical closure."
+    },
+    {
+      "id": "AP01-B08",
+      "status": "OPEN",
+      "statement": "Implement typed ingress/business capability boundary including actual exceptions, raw socket exclusion, ownership and bounded output correspondence."
+    },
+    {
+      "id": "AP01-B09",
+      "status": "OPEN",
+      "statement": "Preserve immutable in-repo evidence by unique paths and checked content retrieval; no migration/deletion/history rewrite."
+    },
+    {
+      "id": "AP01-B10",
+      "status": "OPEN",
+      "statement": "Implement control-only atomic aggregate snapshot, bounded DTO and side-effect-free diagnostics with actual counter/route correspondence."
+    },
+    {
+      "id": "AP01-B11",
+      "status": "OPEN",
+      "statement": "Enforce complete IIS and backend operator-network admission before admin bootstrap/login work; retain auth/KDF/aggregate guards and test actual deployment bypasses."
+    }
+  ],
+  "trusted": [
+    {
+      "id": "TCB-LEAN",
+      "description": "Exactly pinned installed Lean 4.34.1 kernel, elaborator, compiler and Std/Lean libraries; theorem/definition transitive axiom sets are audited empty."
+    },
+    {
+      "id": "TCB-VERIFIERS",
+      "description": "Registered Python verification/audit/extraction implementations and claim interpretation; pure contract proofs do not establish production semantic correspondence."
+    },
+    {
+      "id": "TCB-SHA256",
+      "description": "SHA-256 implementation and collision resistance bind inputs, provenance, reviews and immutable artifacts; not proved by digest atoms."
+    },
+    {
+      "id": "TCB-PYTHON",
+      "description": "Python interpreter and standard-library execution, filesystem and bounded witness substitutions."
+    },
+    {
+      "id": "TCB-OS",
+      "description": "Linux network namespaces, filesystem isolation, monotonic/process behavior used by verifier; production OS/IIS remains outside closure."
+    },
+    {
+      "id": "TCB-HARDWARE",
+      "description": "Execution hardware and storage correctness."
+    },
+    {
+      "id": "TCB-REVIEW-PROVENANCE",
+      "description": "Orchestrator reports actual reviewer model/identity. Hash checks bind advisory notes but do not prove their authorship; reviewers never discharge claims."
+    }
+  ],
+  "inputs": [
+    "README.md",
+    "admin_auth.py",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/Counterexample.lean",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/Governance.lean",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/block.json",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-a.json",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-a.md",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-b.json",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-b.md",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/report.json",
+    "closure/patch-contracts/source-assessment.json",
+    "closure/patch-contracts/source-feedback.txt",
+    "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/manifest.json",
+    "deploy/iis/web.config",
+    "docs/claude-feedback-patch-contracts.md",
+    "engine/src/is/fivefivefive/CanDis/LiveTrace.java",
+    "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+    "engine/src/live/LiveFeedback.java",
+    "engine_workers.py",
+    "formal/ingress_admission/IngressRouteExtracted.lean",
+    "formal/ingress_admission/dispatch-template.py.txt",
+    "runtime_dependencies.py",
+    "scripts/claude_feedback_witnesses.py",
+    "scripts/strict_ingress_bridge.py",
+    "server.py",
+    "traffic_http.py",
+    "traffic_limits.py",
+    "traffic_profile.py",
+    "traffic_scheduler.py",
+    "web/app.js"
+  ],
+  "evidencePolicy": "All historical and new evidence remains in the repository; never overwrite prior paths.",
+  "excluded": [
+    "production implementation closure",
+    "actual default-timeout overload reproduction",
+    "universal availability or timing/RSS bounds",
+    "proxy deployment enforcement",
+    "learning efficacy",
+    "unlisted future source revisions"
+  ],
+  "determinism": {
+    "required": true,
+    "permittedNondeterminism": [
+      "run directory and timestamps",
+      "network witness namespace identifiers",
+      "advisory reviewer prose before freezing"
+    ],
+    "compare": [
+      "declaration inventory",
+      "olean artifacts",
+      "witness results",
+      "claim map",
+      "input hashes"
+    ]
+  }
+}

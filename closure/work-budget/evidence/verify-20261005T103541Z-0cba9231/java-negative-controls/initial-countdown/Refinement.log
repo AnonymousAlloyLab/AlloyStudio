@@ -1,0 +1,10 @@
+Refinement.lean:6:0: error: Not a definitional equality: the left-hand side
+  Generated.initialChecks
+is not definitionally equal to the right-hand side
+  1024
+Refinement.lean:7:60: error: Type mismatch
+  rfl
+has type
+  ?m.5 = ?m.5
+but is expected to have type
+  Generated.initialChecks = 1024

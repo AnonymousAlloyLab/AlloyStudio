@@ -248,6 +248,7 @@ public class IRAgent {
             seen.add(root);
             pending.add(root);
             while (!pending.isEmpty() && !seen.contains(target)) {
+                is.fivefivefive.CanDis.WorkBudget.charge(1);
                 AugmentedNode current = pending.removeFirst();
                 for (MASGEdge edge : outgoing.getOrDefault(current, List.of())) {
                     AugmentedNode next = edge.getTarget();
@@ -487,6 +488,7 @@ public class IRAgent {
             int[] nextId,
             Set<String> activePath,
             Map<AugmentedNode, EGraphNode> letBindings) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         Opcode opcode = opcodeOf(node);
         ExactAlloyType exactType = node.getExactType(graph, tov);
         String activeKey = node.hashCode() + "@" + tov;
@@ -643,6 +645,7 @@ public class IRAgent {
             List<NormalForm.PhaseLocalBindingImport> phaseLocalImports,
             int[] nextVarId,
             DiagnosticsObserver observer) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         normalForm.installPhaseLocalBindingImports(phaseLocalImports);
         Map<String, QuantiVar> visible = new HashMap<>(inherited);
         for (NormalForm.PhaseLocalBindingImport imported : phaseLocalImports) {

@@ -1,0 +1,21 @@
+{
+  "cold_request": {
+    "result": "EngineTimeout",
+    "seconds": 0.2513
+  },
+  "same_warm_request": {
+    "result": "ok",
+    "seconds": 0.1204
+  },
+  "capacity_wait_poison": {
+    "launches": 0,
+    "failedStarts": 3,
+    "resultAfterCapacityReleased": "The analysis worker failed to start repeatedly."
+  },
+  "queue_expiry": {
+    "queueSeconds": 0.08,
+    "observedAfterSeconds": 0.1403,
+    "completedAtObservation": false,
+    "eventualResult": "CapacityError"
+  }
+}

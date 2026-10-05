@@ -1,0 +1,42 @@
+{
+  "interpretation": "Changed actual Java semantics compile, then fail the independent Lean refinement.",
+  "semanticMutants": [
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "89a6c4a45fac6024dd62eae196ba07143283fe6adad8751bbbaf2ce2b4d757a3",
+      "name": "expiry-equality",
+      "refinementRejected": true
+    },
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "2bc76d2297f9aa0b95cf650837b97503fbe6804b6d3c6b766482182af61eaf31",
+      "name": "exact-fuel",
+      "refinementRejected": true
+    },
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "827fb012a491d561089fa77a7e75872194d92fb8d96f01df91335781833cfc14",
+      "name": "spending-direction",
+      "refinementRejected": true
+    },
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "a6c07c59f58538f26f6bd3398efd08753de18b1825e1ea5d028616f767f500e4",
+      "name": "sampling-cadence",
+      "refinementRejected": true
+    },
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "d9f7f728d823685ac5981557c4a6a4d790e3a040d9e5d24523c2ad38cf9d769e",
+      "name": "initial-countdown",
+      "refinementRejected": true
+    },
+    {
+      "generatedCompiled": true,
+      "generatedSha256": "f2f68956e37aa298960c9f208269a1eee6ba6f4d9c5fd8f1ec2f2b1f5571b71f",
+      "name": "clock-subtraction",
+      "refinementRejected": true
+    }
+  ],
+  "status": "PASS"
+}

@@ -228,10 +228,11 @@ class DashboardTests(unittest.TestCase):
         self.write('package-lock.json',{'version':'0.0.4-f1-alpha','packages':{'':{'version':'0.0.4-f2-alpha'}}})
         self.assertFalse(release_preflight.validate(self.root,'refs/tags/v0.0.4.f1-alpha'))
 
-    def test_workflows_pin_actions_and_publish_only_dashboard_allowlist(self):
+    def test_workflows_pin_actions_and_publish_only_safe_summary_allowlists(self):
         allowed = {'build/ci-dashboard/index.html', 'build/ci-dashboard/app.js',
                    'build/ci-dashboard/styles.css', 'build/ci-dashboard/data.json'}
         for path in sorted((ROOT / '.github/workflows').glob('*.yml')):
+            expected = {'build/native-iis/public-summary.json'} if path.name == 'iis.yml' else allowed
             workflow = path.read_text()
             self.assertNotRegex(workflow, r'permissions:[^\n]*write|(?:contents|actions|id-token|packages):\s*write')
             self.assertNotIn('secrets.', workflow)
@@ -243,7 +244,7 @@ class DashboardTests(unittest.TestCase):
             uploads = re.findall(r'          path: \|\n((?:            [^\n]+\n)+)', workflow)
             self.assertTrue(uploads)
             for block in uploads:
-                self.assertEqual({line.strip() for line in block.splitlines()}, allowed)
+                self.assertEqual({line.strip() for line in block.splitlines()}, expected)
 
     def test_browser_dashboard_contract(self):
         result = subprocess.run(['node', 'tests/dashboard.mjs'], cwd=ROOT, capture_output=True,

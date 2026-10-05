@@ -23,6 +23,7 @@ public final class OrderedTreeEditDistance {
         Objects.requireNonNull(adapter, "tree adapter");
         IndexedTree<T> leftTree = IndexedTree.create(left, adapter);
         IndexedTree<T> rightTree = IndexedTree.create(right, adapter);
+        is.fivefivefive.CanDis.WorkBudget.chargeCells(leftTree.size() + 1L, rightTree.size() + 1L);
         int[][] treeDistance = new int[leftTree.size() + 1][rightTree.size() + 1];
 
         for (int leftRoot : leftTree.keyroots) {
@@ -43,6 +44,7 @@ public final class OrderedTreeEditDistance {
             Adapter<T> adapter) {
         int leftBase = left.leftmost[leftRoot];
         int rightBase = right.leftmost[rightRoot];
+        is.fivefivefive.CanDis.WorkBudget.chargeCells(leftRoot - leftBase + 2L, rightRoot - rightBase + 2L);
         int[][] forestDistance = new int[
                 leftRoot - leftBase + 2][rightRoot - rightBase + 2];
 
@@ -125,6 +127,7 @@ public final class OrderedTreeEditDistance {
                 List<T> postorder,
                 List<Integer> leftmost) {
             Objects.requireNonNull(node, "tree node");
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             List<? extends T> children = Objects.requireNonNull(
                     adapter.children(node), "ordered children");
             int firstLeaf = 0;

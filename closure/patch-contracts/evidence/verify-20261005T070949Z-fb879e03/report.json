@@ -1,0 +1,961 @@
+{
+  "axiomPolicy": {
+    "allProjectDeclarationsAudited": true,
+    "allowed": []
+  },
+  "blockSha256": "5eea585967c67134dcb967a342b5c76c9c387892423239423c6df2808cb17cfc",
+  "blockingReasons": [],
+  "boundedWitnesses": [
+    {
+      "result": {
+        "admin": {
+          "attackerWrongPasswordStatuses": [
+            401,
+            401,
+            401,
+            401,
+            401
+          ],
+          "correctPasswordAcceptedAtSeconds": 60,
+          "differentPeerCorrectPasswordStatus": 429,
+          "scope": "Production bootstrap/CSRF/authorize/login logic with synthetic HTTPS config, cheap deterministic KDF and clock. Actual deployment configuration/reachability unknown."
+        },
+        "channels": {
+          "channelLessCurrent": true,
+          "channelsAfterExpiry": 2,
+          "differentPeerAccepted": true,
+          "expiredSamePeerRecoveredAtSeconds": 900,
+          "samePeer33rdRejectedAtSeconds": [
+            0,
+            899
+          ],
+          "samePeerAccepted": 32,
+          "scope": "Real Scheduler channel methods; scheduling threads replaced by inert objects."
+        },
+        "health": {
+          "availableAdmissionCounters": {
+            "acceptedConnections": 1,
+            "activeHandlers": 1,
+            "handlerLimit": 30,
+            "peakHandlers": 1,
+            "peerEntries": 1,
+            "rejectedConnections": 0
+          },
+          "health": [
+            {
+              "body": {
+                "engine": "ACGN / CanDis Fast Rewrite IR",
+                "exercises": 0,
+                "status": "ok"
+              },
+              "controlListener": false,
+              "status": 200,
+              "unchangedWhenWorkersVary": true
+            },
+            {
+              "body": {
+                "engine": "ACGN / CanDis Fast Rewrite IR",
+                "exercises": 0,
+                "status": "ok"
+              },
+              "controlListener": true,
+              "status": 200,
+              "unchangedWhenWorkersVary": true
+            }
+          ],
+          "scope": "Actual extracted do_GET health branches (header parsing bypassed) and actual reaper with synthetic thread error; no network listener.",
+          "uncertainObservationCalls": 1,
+          "uncertainOwnerRetained": true
+        },
+        "method": "bounded mocked/source witnesses",
+        "networkSocketsOpened": 0,
+        "productionProcessesLaunched": 0,
+        "proposedFixCounterexamples": {
+          "blindForwardedIdentity": {
+            "distinctAttackerChosenKeys": 33,
+            "tcpPeers": 1,
+            "violation": "Trusting arbitrary XFF lets one source bypass a per-peer channel quota."
+          },
+          "scope": "Pure bounded countermodels for proposed policy, not production executions.",
+          "startupFailureOnlyLimiter": {
+            "concurrentHighWater": 1,
+            "countedFailedStarts": 0,
+            "launchesInOneSyntheticWindow": 13,
+            "violation": "13 launches pass a claimed 12/window launch envelope despite concurrency=1."
+          }
+        },
+        "restart": {
+          "beforeExpiry": {
+            "busy": 0,
+            "closed": false,
+            "completed": 0,
+            "failures": 12,
+            "launches": 12,
+            "processBudget": {
+              "synthetic": true
+            },
+            "recycled": 0,
+            "starting": 0,
+            "unreaped": 0,
+            "workers": {
+              "behavior": 0,
+              "feedback": 0
+            }
+          },
+          "normalRequestsBlocked": {
+            "behavior": "The analysis worker restart limit was reached.",
+            "feedback": "The analysis worker restart limit was reached."
+          },
+          "recoveryAtSeconds": 60,
+          "scope": "Production EnginePool accounting with immediate timeout stub and frozen clock; not real canonical-timeout reachability.",
+          "syntheticTimeouts": 12
+        },
+        "staleBridge": {
+          "currentHashMatchesFrozen": true,
+          "historicalManifestEntries": 524,
+          "mutantHashMatchesFrozen": false,
+          "mutatedSource": "engine_workers.py",
+          "mutation": "deque(maxlen=12) to deque(maxlen=13), scratch overlay only",
+          "scope": "Bridge-only acceptance despite unrelated pinned-source drift; whole CI was not run. Full verify_strict_ingress.inputs does hash every registered input.",
+          "strictIngressBridge": "PASS"
+        }
+      },
+      "resultSha256": "521f32ce83a1e003f21346fccf68c9b085a4846bd4c3f0e1ce5d22f259f1e63c"
+    },
+    {
+      "result": {
+        "admin": {
+          "attackerWrongPasswordStatuses": [
+            401,
+            401,
+            401,
+            401,
+            401
+          ],
+          "correctPasswordAcceptedAtSeconds": 60,
+          "differentPeerCorrectPasswordStatus": 429,
+          "scope": "Production bootstrap/CSRF/authorize/login logic with synthetic HTTPS config, cheap deterministic KDF and clock. Actual deployment configuration/reachability unknown."
+        },
+        "channels": {
+          "channelLessCurrent": true,
+          "channelsAfterExpiry": 2,
+          "differentPeerAccepted": true,
+          "expiredSamePeerRecoveredAtSeconds": 900,
+          "samePeer33rdRejectedAtSeconds": [
+            0,
+            899
+          ],
+          "samePeerAccepted": 32,
+          "scope": "Real Scheduler channel methods; scheduling threads replaced by inert objects."
+        },
+        "health": {
+          "availableAdmissionCounters": {
+            "acceptedConnections": 1,
+            "activeHandlers": 1,
+            "handlerLimit": 30,
+            "peakHandlers": 1,
+            "peerEntries": 1,
+            "rejectedConnections": 0
+          },
+          "health": [
+            {
+              "body": {
+                "engine": "ACGN / CanDis Fast Rewrite IR",
+                "exercises": 0,
+                "status": "ok"
+              },
+              "controlListener": false,
+              "status": 200,
+              "unchangedWhenWorkersVary": true
+            },
+            {
+              "body": {
+                "engine": "ACGN / CanDis Fast Rewrite IR",
+                "exercises": 0,
+                "status": "ok"
+              },
+              "controlListener": true,
+              "status": 200,
+              "unchangedWhenWorkersVary": true
+            }
+          ],
+          "scope": "Actual extracted do_GET health branches (header parsing bypassed) and actual reaper with synthetic thread error; no network listener.",
+          "uncertainObservationCalls": 1,
+          "uncertainOwnerRetained": true
+        },
+        "method": "bounded mocked/source witnesses",
+        "networkSocketsOpened": 0,
+        "productionProcessesLaunched": 0,
+        "proposedFixCounterexamples": {
+          "blindForwardedIdentity": {
+            "distinctAttackerChosenKeys": 33,
+            "tcpPeers": 1,
+            "violation": "Trusting arbitrary XFF lets one source bypass a per-peer channel quota."
+          },
+          "scope": "Pure bounded countermodels for proposed policy, not production executions.",
+          "startupFailureOnlyLimiter": {
+            "concurrentHighWater": 1,
+            "countedFailedStarts": 0,
+            "launchesInOneSyntheticWindow": 13,
+            "violation": "13 launches pass a claimed 12/window launch envelope despite concurrency=1."
+          }
+        },
+        "restart": {
+          "beforeExpiry": {
+            "busy": 0,
+            "closed": false,
+            "completed": 0,
+            "failures": 12,
+            "launches": 12,
+            "processBudget": {
+              "synthetic": true
+            },
+            "recycled": 0,
+            "starting": 0,
+            "unreaped": 0,
+            "workers": {
+              "behavior": 0,
+              "feedback": 0
+            }
+          },
+          "normalRequestsBlocked": {
+            "behavior": "The analysis worker restart limit was reached.",
+            "feedback": "The analysis worker restart limit was reached."
+          },
+          "recoveryAtSeconds": 60,
+          "scope": "Production EnginePool accounting with immediate timeout stub and frozen clock; not real canonical-timeout reachability.",
+          "syntheticTimeouts": 12
+        },
+        "staleBridge": {
+          "currentHashMatchesFrozen": true,
+          "historicalManifestEntries": 524,
+          "mutantHashMatchesFrozen": false,
+          "mutatedSource": "engine_workers.py",
+          "mutation": "deque(maxlen=12) to deque(maxlen=13), scratch overlay only",
+          "scope": "Bridge-only acceptance despite unrelated pinned-source drift; whole CI was not run. Full verify_strict_ingress.inputs does hash every registered input.",
+          "strictIngressBridge": "PASS"
+        }
+      },
+      "resultSha256": "521f32ce83a1e003f21346fccf68c9b085a4846bd4c3f0e1ce5d22f259f1e63c"
+    }
+  ],
+  "builds": [
+    {
+      "artifacts": {
+        "Governance.olean": "62cc7c7f67f7b8ac995d8d29c23296c48ddfb9b954899dc8fb6fdd79d4d96886",
+        "Identity.olean": "bb6afd5bf0a58179dc170e818510a2d2503f169c1931d2078d5da2ca05a3acb2",
+        "Observability.olean": "134671e593413b216d2d4f5b80fd7b426412d32a15e7942d13b2e765a24cfdd7",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "declarations": 1330,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "inventorySha256": "4256aeaaab8e647a13738f54f3e3f030f4e51b6cd32371218880004a0f657bf2",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "theorems": 451
+    },
+    {
+      "artifacts": {
+        "Governance.olean": "62cc7c7f67f7b8ac995d8d29c23296c48ddfb9b954899dc8fb6fdd79d4d96886",
+        "Identity.olean": "bb6afd5bf0a58179dc170e818510a2d2503f169c1931d2078d5da2ca05a3acb2",
+        "Observability.olean": "134671e593413b216d2d4f5b80fd7b426412d32a15e7942d13b2e765a24cfdd7",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "declarations": 1330,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "inventorySha256": "4256aeaaab8e647a13738f54f3e3f030f4e51b6cd32371218880004a0f657bf2",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "theorems": 451
+    }
+  ],
+  "claimCounts": {
+    "blocked": 0,
+    "mappedDistinctTheorems": 82,
+    "note": "The full audit also counts compiler-generated theorems; theorem count is not semantic coverage.",
+    "passed": 11,
+    "sourceWrittenTheoremDeclarations": 133,
+    "total": 11
+  },
+  "claims": [
+    {
+      "claimId": "AP01-C01",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c01-cumulative-work-budget",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.all_execution_paths_bounded",
+        "AlloyStudio.PatchContracts.Work.zero_cannot_act",
+        "AlloyStudio.PatchContracts.Work.atomic_charge_before_step",
+        "AlloyStudio.PatchContracts.Work.aggregate_exhaustion",
+        "AlloyStudio.PatchContracts.Work.oversize_unsupported",
+        "AlloyStudio.PatchContracts.Work.exhausted_no_partial_output"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C02",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c02-preserve-complete-pool-results",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.complete_exact",
+        "AlloyStudio.PatchContracts.Work.accepted_traversal_complete",
+        "AlloyStudio.PatchContracts.Work.bounded_minimum_exact",
+        "AlloyStudio.PatchContracts.Work.accepted_payload_preserved",
+        "AlloyStudio.PatchContracts.Work.later_closer_candidate_cannot_be_truncated"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C03",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c03-worker-recovery-without-unbounded-churn",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Work.reachable_capacity_and_spawn_bound",
+        "AlloyStudio.PatchContracts.Work.reachable_attempts_bounded",
+        "AlloyStudio.PatchContracts.Work.every_start_charged",
+        "AlloyStudio.PatchContracts.Work.timeout_does_not_poison_startup_circuit",
+        "AlloyStudio.PatchContracts.Work.only_startup_failure_increases_circuit",
+        "AlloyStudio.PatchContracts.Work.retirement_retains_capacity_reservation",
+        "AlloyStudio.PatchContracts.Work.bounded_modeled_recovery",
+        "AlloyStudio.PatchContracts.Work.renewal_cannot_repeat",
+        "AlloyStudio.PatchContracts.Work.both_lanes_remain_bounded",
+        "AlloyStudio.PatchContracts.Work.feedback_cannot_consume_behavior_budget",
+        "AlloyStudio.PatchContracts.Work.unlimited_churn_reachable",
+        "AlloyStudio.PatchContracts.Work.unlimited_retry_churn",
+        "AlloyStudio.PatchContracts.Work.shared_twelve_start_interference"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C04",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c04-proxy-identity-with-an-explicit-trust-boundary",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.default_proxy_trust_empty",
+        "AlloyStudio.PatchContracts.Identity.accepted_chain_bounded",
+        "AlloyStudio.PatchContracts.Identity.unknown_proxy_header_noninfluence",
+        "AlloyStudio.PatchContracts.Identity.trusted_invalid_header_never_falls_back",
+        "AlloyStudio.PatchContracts.Identity.selected_hop_is_untrusted",
+        "AlloyStudio.PatchContracts.Identity.spoofed_left_prefix_noninfluence",
+        "AlloyStudio.PatchContracts.Identity.bad_leftmost_spoof_counterexample"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C05",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c05-channel-quota-preservation",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.reachable_channel_bounds",
+        "AlloyStudio.PatchContracts.Identity.honest_tabs_reachable",
+        "AlloyStudio.PatchContracts.Identity.honest_33rd_tab_refused",
+        "AlloyStudio.PatchContracts.Identity.full_peer_quota_does_not_block_distinct_identity",
+        "AlloyStudio.PatchContracts.Identity.global_bound_refuses_even_fresh_identity",
+        "AlloyStudio.PatchContracts.Identity.nat_collision_witness"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C06",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c06-bounded-browser-fallback",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.operation_channel_attempt_at_most_one",
+        "AlloyStudio.PatchContracts.Identity.operation_fallback_request_at_most_one",
+        "AlloyStudio.PatchContracts.Identity.fallback_only_for_availability",
+        "AlloyStudio.PatchContracts.Identity.abort_auth_malformed_never_fallback",
+        "AlloyStudio.PatchContracts.Identity.fallback_omits_channel_and_never_cancels",
+        "AlloyStudio.PatchContracts.Identity.present_null_is_not_omission",
+        "AlloyStudio.PatchContracts.Identity.stale_browser_response_discarded",
+        "AlloyStudio.PatchContracts.Identity.unconditional_fallback_counterexample"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C07",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c07-complete-current-source-freshness",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.checked_entry_exact",
+        "AlloyStudio.PatchContracts.Governance.missing_entry_blocks",
+        "AlloyStudio.PatchContracts.Governance.current_requires_complete_equality",
+        "AlloyStudio.PatchContracts.Governance.empty_inventory_not_verified",
+        "AlloyStudio.PatchContracts.Governance.current_changed_input_rejected",
+        "AlloyStudio.PatchContracts.Governance.source_drift_does_not_rewrite_history",
+        "AlloyStudio.PatchContracts.Governance.self_attestation_counterexample",
+        "AlloyStudio.PatchContracts.Governance.current_requires_exact_inventory",
+        "AlloyStudio.PatchContracts.Governance.unexpected_inventory_rejected",
+        "AlloyStudio.PatchContracts.Governance.duplicate_inventory_rejected",
+        "AlloyStudio.PatchContracts.Governance.extra_current_entry_regression",
+        "AlloyStudio.PatchContracts.Governance.duplicate_path_regression"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C08",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c08-separate-ingress-from-business-logic",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.rejected_request_not_dispatched",
+        "AlloyStudio.PatchContracts.Governance.successful_request_exactly_once",
+        "AlloyStudio.PatchContracts.Governance.business_replacement_preserves_ingress"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C09",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c09-retain-evidence-in-the-repository",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Governance.evidence_collision_refused",
+        "AlloyStudio.PatchContracts.Governance.evidence_append_preserves_existing",
+        "AlloyStudio.PatchContracts.Governance.evidence_append_records_new"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C10",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c10-useful-private-diagnostics",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Observability.ready_requires_idle_worker",
+        "AlloyStudio.PatchContracts.Observability.zero_workers_need_not_mean_unavailable",
+        "AlloyStudio.PatchContracts.Observability.no_capacity_unavailable",
+        "AlloyStudio.PatchContracts.Observability.retained_ownership_visible",
+        "AlloyStudio.PatchContracts.Observability.stopping_dominates",
+        "AlloyStudio.PatchContracts.Observability.public_diagnostics_denied",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_do_not_mutate",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_do_not_release_retained",
+        "AlloyStudio.PatchContracts.Observability.diagnostics_no_private_content",
+        "AlloyStudio.PatchContracts.Observability.control_snapshot_exact",
+        "AlloyStudio.PatchContracts.Observability.generation_preserved",
+        "AlloyStudio.PatchContracts.Observability.diagnostic_counter_bounded",
+        "AlloyStudio.PatchContracts.Observability.constant_liveness_counterexample"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    },
+    {
+      "claimId": "AP01-C11",
+      "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+      "publicClaim": "docs/claude-feedback-patch-contracts.md#ap01-c11-administration-admission-before-shared-login-work",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsHaveNoAxiomDependencies": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.PatchContracts.Identity.administration_default_deny",
+        "AlloyStudio.PatchContracts.Identity.edge_backend_share_all_route_policy",
+        "AlloyStudio.PatchContracts.Identity.arbitrary_unallowed_requests_preserve_auth_quota",
+        "AlloyStudio.PatchContracts.Identity.untrusted_nonallowlisted_peer_cannot_forge_auth_admission",
+        "AlloyStudio.PatchContracts.Identity.five_synthetic_failures_deny_next_client",
+        "AlloyStudio.PatchContracts.Identity.allowed_clients_can_still_share_lockout"
+      ],
+      "status": "PASS",
+      "verifierId": "V-PATCH-CONTRACTS",
+      "verifierSha256": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28"
+    }
+  ],
+  "closesProductionObligations": false,
+  "closureBoundary": {
+    "checked": "Input hashes, complete declaration inventory, empty axioms and deterministic builds",
+    "excluded": [
+      "Production patches and refinement",
+      "Wall-clock liveness",
+      "Learner outcomes"
+    ],
+    "interpretation": "VERIFIED applies only to this finite proposed-contract surface under the explicit TCB.",
+    "proved": "Frozen constructive Lean models and mapped theorem types",
+    "tested": "Bounded source/mocked-transition witnesses; not real JVM workload reachability"
+  },
+  "closureId": "patch-contracts-prepare-20261005T065742Z-2ae280be",
+  "correspondence": {
+    "requiredObjects": 0,
+    "scope": "No production semantic correspondence claimed"
+  },
+  "dependencies": {
+    "python": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "trusted": [
+      {
+        "description": "Exactly pinned installed Lean 4.34.1 kernel, elaborator, compiler and Std/Lean libraries; theorem/definition transitive axiom sets are audited empty.",
+        "id": "TCB-LEAN"
+      },
+      {
+        "description": "Registered Python verification/audit/extraction implementations and claim interpretation; pure contract proofs do not establish production semantic correspondence.",
+        "id": "TCB-VERIFIERS"
+      },
+      {
+        "description": "SHA-256 implementation and collision resistance bind inputs, provenance, reviews and immutable artifacts; not proved by digest atoms.",
+        "id": "TCB-SHA256"
+      },
+      {
+        "description": "Python interpreter and standard-library execution, filesystem and bounded witness substitutions.",
+        "id": "TCB-PYTHON"
+      },
+      {
+        "description": "Linux network namespaces, filesystem isolation, monotonic/process behavior used by verifier; production OS/IIS remains outside closure.",
+        "id": "TCB-OS"
+      },
+      {
+        "description": "Execution hardware and storage correctness.",
+        "id": "TCB-HARDWARE"
+      },
+      {
+        "description": "Orchestrator reports actual reviewer model/identity. Hash checks bind advisory notes but do not prove their authorship; reviewers never discharge claims.",
+        "id": "TCB-REVIEW-PROVENANCE"
+      }
+    ],
+    "undeclared": []
+  },
+  "determinism": "PASS",
+  "evidenceInputRootSha256": "82bd64af2ccd0aaa0b059d28ec77cca6046ff82714d53afee920e04fd8ed9229",
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-Dbackward.match.sparseCases=false",
+      "-j1"
+    ],
+    "leanToolchain": "leanprover/lean4:v4.34.1",
+    "networkDuringProofAndWitnessProcesses": "isolated Linux namespace; loopback only",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+  },
+  "infrastructureErrors": [],
+  "inputRootSha256": "1fadb0a02554c10df3f8c99d6e3a3583b2fdc852d99a15321710c958c1bb819f",
+  "inputs": {
+    "README.md": "2d5b7239a9a9645901291aa392d205949353058b0da0b32d70df5635f9e076c8",
+    "admin_auth.py": "8dd1218b98ed35a34451b36277082825ca7ba8a0cfec733949b76d0df32a2ea1",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/Counterexample.lean": "53f4c86a8928909af1df17d12b1bc5f2baf12b0a647c162b0d5abafa78a51a5e",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/Governance.lean": "b5068a8b8b9fe7241731b2ec6230b643c86ebdd1a1003c2eb298f1a20018fd99",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/block.json": "684e505341eef4b975b0f5e00f935841456a4372fb32508f449e2577c9b80c3e",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-a.json": "def730d6ee289efd9c6779966e8d9ab737105a070fd20620ea6797faa0a8e072",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-a.md": "d017e7f7437747b0ff298bfe4cdd638ec98a983518ea9cef33f179f7493f532e",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-b.json": "e6453c8a52a242f1cdb26de5e6f7ef823eb08f11386344ca11ccd4f1db497c18",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/luna-b.md": "af1fc620370d0489f2885cf9eec6debc67ba8b6c78e50d10855be92cc7afed05",
+    "closure/patch-contracts/evidence/rejected-c07-684e5053/report.json": "4a31d6a201ef53da5001d4967000bb4edddf894d0419b24bb7d2012b334726c2",
+    "closure/patch-contracts/source-assessment.json": "a11e2b1078fca599a19bc2bc155b8d39c70b25448d39649ffc2e1e7b9f2237a1",
+    "closure/patch-contracts/source-feedback.txt": "a621493e8e20a1ae9ea86553704e6037b74f3a5a044b28e5a4e730388043640a",
+    "closure/patch-contracts/spec.json": "6c6de2820501057ac81b2a667875291c31b79eae790110507986e90857b25bc4",
+    "closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/manifest.json": "e16e94a4d82de1808815d86854e02057f79cf627d0c1ad3848d616581cecb622",
+    "deploy/iis/web.config": "4f2c8f3aacf0871a94937d72bb4813c85bd0ac43524c24d52007f5c3d7c0ab4d",
+    "docs/claude-feedback-patch-contracts.md": "bfd845f00905ceed798e163ad833188d2fc25bd3ec752f7e69ac2a66f723db6e",
+    "engine/src/is/fivefivefive/CanDis/LiveTrace.java": "77eda68b72fc2fdf0963ae68675c2d52679fa7c7280582979d19c31a8c3fb443",
+    "engine/src/is/fivefivefive/CanDis/RawAstTrace.java": "6b500406eba6deecf8c5998dfa01349cf2a831c22dc865d1df397451257022bb",
+    "engine/src/live/LiveFeedback.java": "956502bedb21b0a888b64084377d86729aae660358690ad242da591e87b15f99",
+    "engine_workers.py": "66e5d239301c285210a5b4dfbb4b2b7766fe1de6d54907e18f171a0dc8c36b7c",
+    "formal/ingress_admission/IngressRouteExtracted.lean": "30f373bf7cfce00534c432a7167b0c56977afeb275b037a0c420b3d61599d8ee",
+    "formal/ingress_admission/dispatch-template.py.txt": "7763d666951780d51dd1d00db4aa344a85d1c3b31d71808ef0f3ce37a52e7c32",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/patch_contracts/Audit.lean": "75834512ed00a20860da06aaffe683dc74f3c894fecbc4cc78d4dcee0da153ef",
+    "formal/patch_contracts/Governance.lean": "6ac91dd74490793df19cad145c75fb903d9252a09637960087bf910c37fe4f9b",
+    "formal/patch_contracts/Identity.lean": "963d67574c963700c3e21bfcd5d01d72f082f6eaa0a52b2c944e16e5cd8695ec",
+    "formal/patch_contracts/Observability.lean": "d1b2b82064173f732b502e305a39f729c09e880e85b2604495863f81660aed3f",
+    "formal/patch_contracts/Work.lean": "18ca6af1917dc10283d2aa74d25d9888479954073c843fb51d5183907205e90b",
+    "formal/patch_contracts/block.json": "5eea585967c67134dcb967a342b5c76c9c387892423239423c6df2808cb17cfc",
+    "formal/patch_contracts/theorems.json": "396df3649ee23494b1b861157652bd32fe6cda1b4a61895fa288574c6a33f495",
+    "formal/reviews/AP01/astra-a.json": "443f0eeddfef807ca225b4eae6f772124638181e5c453e49a8a0ea7e231720a4",
+    "formal/reviews/AP01/astra-a.md": "39601452482414e878a87a01956adfdd8b6f96f81a514f69ef7bbb2ea8d1951b",
+    "formal/reviews/AP01/astra-b.json": "8d608348eb1830ea8ac1de77211501466ce713ca993f0d48c2900f004a5856a2",
+    "formal/reviews/AP01/astra-b.md": "f050c2e533c7c89f47eb30ecb81cda5dd74dab92266fd64b96c2c01b4265f535",
+    "formal/reviews/AP01/luna-a.json": "9165de4ad8c516eb00ae06d2cd14dae71d4b6318ecff08a0eeee621249663da7",
+    "formal/reviews/AP01/luna-a.md": "e7a90407867a5507fd48ca0feb5e6b6ee90101dc943a102ddc0a5fa683c036af",
+    "formal/reviews/AP01/luna-b.json": "04c182a525376112cfaca3e13f35c736998cea75dfe9d4ce9abe33bff46c7c35",
+    "formal/reviews/AP01/luna-b.md": "b78c468cf579de162f045ef8b384711e3384a817c7464122e6fa6cd861c657a0",
+    "formal/reviews/AP01/sol-a.json": "25162280a542fa25fda14b1ffacf6c668ded6b842d623a7ed203ce34bf0d2e20",
+    "formal/reviews/AP01/sol-a.md": "5c45f651f7d8871cb5516fde5682689b1f679ea9ebe7d0a2f38141cd8453acf3",
+    "formal/reviews/AP01/sol-b.json": "bcd2bcc36fce93ac587d6a9525665cd420b90768d5bb543c37a03122b8bf1093",
+    "formal/reviews/AP01/sol-b.md": "43854a976b72c6335061b63d9d961183c3967e8b5db7244e4b16198765b72793",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "runtime_dependencies.py": "2fe10b1c6aa7c5eadb53135e61e2487fd5d0861c81fb98a581276e4f7406b974",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/claude_feedback_witnesses.py": "469720a2133011ea8f3e5f615b3cb3990dcd0bd8dd0bbcdd7833f3c11532a834",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/review_ladder.py": "583e38ccb665ecb8107c169f41bda0639805e8c8aa9ae24d4b445c162a8f477a",
+    "scripts/strict_ingress_bridge.py": "a92a38b23854c5bf72df3b265897074e156223d9ecd9cab75d6c57ab6497b684",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_patch_contracts.py": "750fd27c1627cec306c475cd7ef18362f9d4b88020e4de37c7a40379a946af28",
+    "server.py": "3a5683cfe1fa1b442f24d8fe3f540f72322d8eb22d1cebb852e3cfa76f3764da",
+    "tests/test_patch_contract_verifier.py": "62f3a851147025f03903ad315ca0c13370031f94cfecfb59987132445f6fe53f",
+    "tests/test_review_ladder.py": "041b1e8abe7dd31daf3e910b074b6f59822e60bded2f9312548aae9b6368b4de",
+    "traffic_http.py": "f99a209a40e827472a6d70fab7e414ff19e6112b92b0f775a8788f5aca4b9dca",
+    "traffic_limits.py": "29de7273d7c6ba8639f7f8487926968820dd016847269e719b260e378105389c",
+    "traffic_profile.py": "8a36b1cd393d47c371dd27b311e98a617b4adf7a3f45f9749b4b2174c9f1edbd",
+    "traffic_scheduler.py": "5e84ef9a88d7e099e0aedf8001b214d995a3386341308077afd291ba261ea867",
+    "web/app.js": "61082ae883967de5a55cafa8c1a3c775aad43c210454f57082c60bb0080cf58f"
+  },
+  "negativeControls": {
+    "customAxiomAndDependentTheorem": "REJECTED",
+    "falseWithoutPlaceholder": "REJECTED",
+    "placeholder": "REJECTED"
+  },
+  "productionBridges": [
+    {
+      "id": "AP01-B01",
+      "statement": "Instrument all actual Java atomic work/allocation and establish complete bounded scheduling, including parser/native operations and calibrated limits.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B02",
+      "statement": "Preserve full correct-pool metric semantics, argmin/tie order, positions and redacted public payload; prove schedule completeness and initial minimum bound.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B03",
+      "statement": "Bind locked spawn/startup/timeout/reap/clock events and per-lane epoch quotas to actual lifecycle, global process budget and all JVM consumers.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B04",
+      "statement": "Implement strict canonical wire IP parsing and validate explicit deployed proxy trust/header chain; separately configure bounded TCP-peer ingress aggregation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B05",
+      "statement": "Bind application identities to atomic scheduler quota allocation, expiry and channel ownership.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B06",
+      "statement": "Bind browser error classes, serialization omission, captured snapshot equality, abort/echo guards and bounded fallback across feedback/behavior/explanation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B07",
+      "statement": "Integrate independently frozen complete manifest/report/verifier freshness into CI/status without rewriting historical closure.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B08",
+      "statement": "Implement typed ingress/business capability boundary including actual exceptions, raw socket exclusion, ownership and bounded output correspondence.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B09",
+      "statement": "Preserve immutable in-repo evidence by unique paths and checked content retrieval; no migration/deletion/history rewrite.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B10",
+      "statement": "Implement control-only atomic aggregate snapshot, bounded DTO and side-effect-free diagnostics with actual counter/route correspondence.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B11",
+      "statement": "Enforce complete IIS and backend operator-network admission before admin bootstrap/login work; retain auth/KDF/aggregate guards and test actual deployment bypasses.",
+      "status": "OPEN"
+    }
+  ],
+  "provenance": {
+    "fullyBound": 11,
+    "orphanClaims": 0,
+    "publicClaims": 11
+  },
+  "reviews": {
+    "records": {
+      "formal/reviews/AP01/astra-a.json": "443f0eeddfef807ca225b4eae6f772124638181e5c453e49a8a0ea7e231720a4",
+      "formal/reviews/AP01/astra-a.md": "39601452482414e878a87a01956adfdd8b6f96f81a514f69ef7bbb2ea8d1951b",
+      "formal/reviews/AP01/astra-b.json": "8d608348eb1830ea8ac1de77211501466ce713ca993f0d48c2900f004a5856a2",
+      "formal/reviews/AP01/astra-b.md": "f050c2e533c7c89f47eb30ecb81cda5dd74dab92266fd64b96c2c01b4265f535",
+      "formal/reviews/AP01/luna-a.json": "9165de4ad8c516eb00ae06d2cd14dae71d4b6318ecff08a0eeee621249663da7",
+      "formal/reviews/AP01/luna-a.md": "e7a90407867a5507fd48ca0feb5e6b6ee90101dc943a102ddc0a5fa683c036af",
+      "formal/reviews/AP01/luna-b.json": "04c182a525376112cfaca3e13f35c736998cea75dfe9d4ce9abe33bff46c7c35",
+      "formal/reviews/AP01/luna-b.md": "b78c468cf579de162f045ef8b384711e3384a817c7464122e6fa6cd861c657a0",
+      "formal/reviews/AP01/sol-a.json": "25162280a542fa25fda14b1ffacf6c668ded6b842d623a7ed203ce34bf0d2e20",
+      "formal/reviews/AP01/sol-a.md": "5c45f651f7d8871cb5516fde5682689b1f679ea9ebe7d0a2f38141cd8453acf3",
+      "formal/reviews/AP01/sol-b.json": "bcd2bcc36fce93ac587d6a9525665cd420b90768d5bb543c37a03122b8bf1093",
+      "formal/reviews/AP01/sol-b.md": "43854a976b72c6335061b63d9d961183c3967e8b5db7244e4b16198765b72793"
+    },
+    "role": "advisory only"
+  },
+  "schemaVersion": 1,
+  "scope": "proposed-contracts",
+  "status": "VERIFIED"
+}

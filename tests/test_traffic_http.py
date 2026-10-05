@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 
 import server
+from tests.route_services_fixture import install_route_fixture
 from traffic_http import (Admission, BoundedHTTPServer, DeadlineReader, HTTPInputError,
                           PublicViews, TokenBucket, TrafficProfile, bounded_json)
 
@@ -118,10 +119,7 @@ class HTTPBoundaryTests(unittest.TestCase):
                                 traffic_profile=profile, control=control, shared_app=shared_app)
         record = {name: '' for name in server.PUBLIC_FIELDS}
         record.update(id='example-inv1', title='Example', predicate='inv1', starter='some Node')
-        app.root = self.root
-        app.exercises = {record['id']: record}
-        app.snapshot = SimpleNamespace(exercises=app.exercises)
-        app.public_origins = frozenset()
+        install_route_fixture(app, {record['id']: record}, root=self.root)
         thread = threading.Thread(target=app.serve_forever, kwargs={'poll_interval': .005}, daemon=True)
         thread.start()
         self.apps.append((app, thread))
@@ -130,6 +128,7 @@ class HTTPBoundaryTests(unittest.TestCase):
     def tearDown(self):
         for app, thread in self.apps:
             app.shutdown(); app.server_close(); thread.join(2)
+            self.assertEqual(app.unexpected_route_calls, [])
         self.temporary.cleanup()
 
     def request(self, method, path, body=None, headers=None, app=None, *, allow_peer_close=False):

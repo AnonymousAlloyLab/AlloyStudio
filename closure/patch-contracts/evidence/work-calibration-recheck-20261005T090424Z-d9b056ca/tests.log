@@ -1,0 +1,15 @@
+test_complete_response_hash_mismatch_is_not_preserved (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_different_or_missing_requests_cannot_claim_preservation (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_resume_refuses_changed_classes (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_resume_refuses_changed_requests (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_resume_refuses_incomplete_results (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_resume_refuses_results_that_required_more_than_production_fuel (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_resume_retains_only_identical_complete_phase (tests.test_work_budget.CalibrationBindingTests) ... ok
+test_java_boundary_self_test (tests.test_work_budget.WorkBudgetTests) ... ok
+test_server_projection_keeps_work_limit_explicit (tests.test_work_budget.WorkBudgetTests) ... ok
+test_slow_draft_is_bounded_and_worker_survives (tests.test_work_budget.WorkBudgetTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 4.817s
+
+OK

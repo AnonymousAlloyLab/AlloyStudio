@@ -9,6 +9,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'scripts')]
+# TRF-01 is VERIFIED at this recorded source root. AP01 changed the current
+# checkout (scripts/source_freshness.py classifies it STALE); this historical
+# correspondence is replayed against the frozen evidence inputs, read-only.
+HISTORICAL = ROOT / 'closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/inputs'
 import wire_ingress_bridge as bridge
 import strict_ingress_bridge
 from lean_offline import installed_toolchain, isolated_command, clean_environment
@@ -28,7 +32,7 @@ class BytesConnection:
 
 class WireCorrespondenceTests(unittest.TestCase):
     def test_source_wire_identity_bridge(self):
-        result = bridge.check(ROOT)
+        result = bridge.check(HISTORICAL)
         self.assertEqual((result['status'], result['unmapped'], result['ambiguous']), ('PASS', 0, 0))
         self.assertEqual(len(result['bindings']), 6)
 
@@ -66,16 +70,16 @@ class WireCorrespondenceTests(unittest.TestCase):
                     parse_headers(reader)
 
     def test_source_mutation_and_body_byte_aliases_are_rejected(self):
-        source = (ROOT / 'server.py').read_text()
-        traffic = (ROOT / 'traffic_http.py').read_text()
+        source = (HISTORICAL / 'server.py').read_text()
+        traffic = (HISTORICAL / 'traffic_http.py').read_text()
         for before, after in [("self.request_headers(mutation=self.command == 'POST')", 'self.request_headers(mutation=False)'),
                               ('strict_request_line(self.raw_requestline)', "strict_request_line(b'GET / HTTP/1.1\\r\\n')"),
                               ("bounded_json(b''.join(chunks),", "bounded_json(b'{}',"),
                               ('self.headers.raw_items()', 'self.headers.items()')]:
             with self.subTest(before=before), self.assertRaises((bridge.BridgeRejected, strict_ingress_bridge.BridgeRejected)):
-                bridge.check(ROOT, server_source=source.replace(before, after))
+                bridge.check(HISTORICAL, server_source=source.replace(before, after))
         with self.assertRaises((bridge.BridgeRejected, strict_ingress_bridge.BridgeRejected)):
-            bridge.check(ROOT, traffic_source=traffic.replace('self.header_remaining -= len(result)',
+            bridge.check(HISTORICAL, traffic_source=traffic.replace('self.header_remaining -= len(result)',
                                                               'self.header_remaining -= 0'))
 
     @unittest.skipUnless(sys.platform == 'linux', 'Offline Lean controls require Linux namespaces')
@@ -93,7 +97,7 @@ class WireCorrespondenceTests(unittest.TestCase):
             lean = str(toolchain / 'bin' / 'lean')
             flags = ['-DgenInjectivity=false', '-DmaxRecDepth=8192', '-DmaxHeartbeats=4000000']
             for name in ('DecoderModel', 'DecoderExtracted', 'DecoderContract', 'Decoder', 'IngressWire'):
-                shutil.copyfile(ROOT / 'formal/ingress_admission' / (name + '.lean'), target / (name + '.lean'))
+                shutil.copyfile(HISTORICAL / 'formal/ingress_admission' / (name + '.lean'), target / (name + '.lean'))
                 result = subprocess.run(isolated_command([lean, *flags, '-o', str(target / (name + '.olean')),
                     str(target / (name + '.lean'))]), env=env, capture_output=True, text=True, timeout=30)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

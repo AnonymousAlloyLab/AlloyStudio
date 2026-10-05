@@ -1,0 +1,268 @@
+{
+  "adversarial": [
+    {
+      "allocated": 45501,
+      "bytes": 1412,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv4",
+      "kind": "joined-and-19",
+      "metric": "canonical",
+      "seconds": 2.256,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 1412,
+      "code": "",
+      "id": "socialMedia-inv4",
+      "kind": "joined-and-19",
+      "metric": "ast",
+      "seconds": 0.922,
+      "status": "ok",
+      "units": 91889281
+    },
+    {
+      "allocated": 52713,
+      "bytes": 3085,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv4",
+      "kind": "joined-and-40",
+      "metric": "canonical",
+      "seconds": 1.195,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 3085,
+      "code": "AST_UNAVAILABLE",
+      "id": "socialMedia-inv4",
+      "kind": "joined-and-40",
+      "metric": "ast",
+      "seconds": 0.004,
+      "status": "unsupported",
+      "units": 4330
+    },
+    {
+      "allocated": 6091,
+      "bytes": 2313,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv4",
+      "kind": "joined-or-30",
+      "metric": "canonical",
+      "seconds": 0.139,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 2313,
+      "code": "",
+      "id": "socialMedia-inv4",
+      "kind": "joined-or-30",
+      "metric": "ast",
+      "seconds": 1.022,
+      "status": "ok",
+      "units": 155724214
+    },
+    {
+      "allocated": 94197,
+      "bytes": 1265,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv4",
+      "kind": "nested-quantifiers-30",
+      "metric": "canonical",
+      "seconds": 1.277,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 1265,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv4",
+      "kind": "nested-quantifiers-30",
+      "metric": "ast",
+      "seconds": 1.047,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 93810,
+      "bytes": 2053,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv7",
+      "kind": "joined-and-19",
+      "metric": "canonical",
+      "seconds": 2.0,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 2053,
+      "code": "",
+      "id": "socialMedia-inv7",
+      "kind": "joined-and-19",
+      "metric": "ast",
+      "seconds": 0.633,
+      "status": "ok",
+      "units": 102889961
+    },
+    {
+      "allocated": 0,
+      "bytes": 4207,
+      "code": "SYNTAX_ERROR",
+      "id": "socialMedia-inv7",
+      "kind": "joined-and-40",
+      "metric": "canonical",
+      "seconds": 0.002,
+      "status": "invalid",
+      "units": 4428
+    },
+    {
+      "allocated": 0,
+      "bytes": 4207,
+      "code": "SYNTAX_ERROR",
+      "id": "socialMedia-inv7",
+      "kind": "joined-and-40",
+      "metric": "ast",
+      "seconds": 0.002,
+      "status": "invalid",
+      "units": 4428
+    },
+    {
+      "allocated": 15342,
+      "bytes": 3143,
+      "code": "WORK_LIMIT",
+      "id": "socialMedia-inv7",
+      "kind": "joined-or-30",
+      "metric": "canonical",
+      "seconds": 0.247,
+      "status": "unsupported",
+      "units": 250000000
+    },
+    {
+      "allocated": 0,
+      "bytes": 3143,
+      "code": "AST_UNAVAILABLE",
+      "id": "socialMedia-inv7",
+      "kind": "joined-or-30",
+      "metric": "ast",
+      "seconds": 0.004,
+      "status": "unsupported",
+      "units": 4388
+    }
+  ],
+  "allocationHeadroom": 10.55,
+  "catalogue": {
+    "ast": {
+      "heaviest": [
+        {
+          "bytes": 328,
+          "id": "socialMedia-inv7",
+          "kind": "correct",
+          "pool": 177,
+          "units": 14507346
+        },
+        {
+          "bytes": 321,
+          "id": "socialMedia-inv7",
+          "kind": "correct",
+          "pool": 177,
+          "units": 13913253
+        },
+        {
+          "bytes": 171,
+          "id": "socialMedia-inv3",
+          "kind": "correct",
+          "pool": 277,
+          "units": 12251195
+        },
+        {
+          "bytes": 241,
+          "id": "socialMedia-inv7",
+          "kind": "correct",
+          "pool": 177,
+          "units": 11880754
+        },
+        {
+          "bytes": 240,
+          "id": "socialMedia-inv7",
+          "kind": "correct",
+          "pool": 177,
+          "units": 11880753
+        }
+      ],
+      "maxAllocated": 0,
+      "maxSeconds": 0.448,
+      "maxUnits": 14507346,
+      "medianUnits": 165953,
+      "p99Units": 8438920,
+      "requests": 2137,
+      "statuses": {
+        "ok": 2137
+      }
+    },
+    "canonical": {
+      "heaviest": [
+        {
+          "bytes": 166,
+          "id": "trainStationNew-inv5",
+          "kind": "correct",
+          "pool": 77,
+          "units": 14215229
+        },
+        {
+          "bytes": 275,
+          "id": "productionLine_v2-inv9",
+          "kind": "correct",
+          "pool": 83,
+          "units": 7341310
+        },
+        {
+          "bytes": 221,
+          "id": "productionLine_v2-inv9",
+          "kind": "correct",
+          "pool": 83,
+          "units": 6643015
+        },
+        {
+          "bytes": 321,
+          "id": "socialMedia-inv7",
+          "kind": "correct",
+          "pool": 177,
+          "units": 5503800
+        },
+        {
+          "bytes": 277,
+          "id": "productionLine_v2-inv9",
+          "kind": "correct",
+          "pool": 83,
+          "units": 4575017
+        }
+      ],
+      "maxAllocated": 94778,
+      "maxSeconds": 0.525,
+      "maxUnits": 14215229,
+      "medianUnits": 72760,
+      "p99Units": 1742185,
+      "requests": 2137,
+      "statuses": {
+        "ok": 2137
+      }
+    }
+  },
+  "constants": {
+    "ALLOCATION_LIMIT": 1000000,
+    "WORK_BUDGET": 250000000
+  },
+  "headroom": {
+    "ast": 17.23,
+    "canonical": 17.59
+  },
+  "interpretation": "Abstract work units on this host; not a wall-clock, RSS or liveness guarantee.",
+  "schemaVersion": 1,
+  "scratch": "build/work-calibration/20261005T082912Z-7z3fk688"
+}

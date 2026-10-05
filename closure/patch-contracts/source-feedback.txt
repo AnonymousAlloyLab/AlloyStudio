@@ -1,0 +1,34 @@
+I analysed the repo at 521019e (v0.0.4.f1-alpha). All of its test suites pass. But a large share of recent effort has gone into formal proofs and committed evidence rather than the product, and that has left two availability problems in the documented IIS deployment. I reproduced both.
+- Product: a local web portal for practising Alloy predicates. A learner's draft is compared, by edit distance, against a pool of known-correct answers (181 exercises, 7,731 candidates; the largest pool has 338). It also shows SAT-solver example instances and AI explanations from "Luna" (OpenAI).
+- Product code is small: about 5.5K lines of Python (standard-library HTTP server, scheduler, persistent JVM worker pool), 3.9K of Java (adapter over the vendored ACGN engine) and 2.5K of plain JavaScript.
+- Verification is larger than the product: about 22K lines of tests, 11K of proof-bridge and verifier scripts, and 10K of Lean.
+- Evidence dominates the repo: 6,176 of 7,104 tracked files and 759 of 851 MB in a fresh checkout are proof-evidence snapshots. There are nine full snapshots of about 83 MB each, every one copying the JARs, the SQLite database and the pool JSON. Seven of them are attempts from the afternoon of Oct 4.
+- History: 35 commits from Sep 25 to Oct 4. Product work ran to 09-28, proofs and benchmarks to 09-30, performance on 10-03, then two commits on 10-04 added about 2.4M lines of evidence.
+None of these runs changed tracked files; they wrote only to the gitignored build/ directory.
+1. One client can take feedback down (reproduced). The raw-AST mode has size limits (RawAstTrace.java:27-28); the default canonical mode has none. I built valid drafts by joining correct answers with and, using socialMedia-inv4:
+Each timeout kills that Java worker. Workers can only be restarted 12 times per rolling minute, and that limit is shared by all worker types (engine_workers.py:327). Using the real worker pool, 12 slow drafts left zero workers, and the next normal request failed with "restart limit reached". Even before that limit trips, two slow drafts at once occupy both feedback workers, and other users' queued requests are rejected after 5 s.
+- Fix: cap canonical-mode work in Java and return "unsupported" early, as AST mode does. Count only workers that fail to start against the restart limit, not ones retired because a request timed out.
+2. Behind IIS, per-user limits become site-wide (reproduced). IIS forwards every request from 127.0.0.1, and forwarded headers are deliberately ignored. The scheduler allows 32 editing channels per client address (traffic_scheduler.py:151). A channel stays reserved for 15 minutes after last use, every tab or page reload takes one, and the browser cannot check a draft without one (web/app.js:698). So the 33rd tab across the whole site gets "The editing session could not be started". A single classroom can hit this. The IIS guide doesn't mention it.
+- Fix: trust X-Forwarded-For only from a configured proxy address. Have the browser fall back to channel-less requests, which the server already accepts.
+3. "VERIFIED" can go out of date without anyone noticing. The TRF-01 claim covers 460 pinned source files, but CI checks only three of them, comparing their syntax trees against frozen copies (test_strict_ingress_bridge.py:11). You could edit luna.py, engine_workers.py or admin_auth.py and CI would still pass, while the README still says VERIFIED.
+- Fix: a test that re-hashes the pinned files and fails if any changed.
+4. The proof link is "unchanged since frozen" plus a hand-written Lean model, and it locks the whole request handler. strict_ingress_bridge.py:105-107 checks that the code matches a frozen copy, then outputs a fixed Lean text. The docs acknowledge that whether the Lean model matches Python's real behaviour is taken on trust.
+- The whole Handler class is frozen. That covers routing plus the feedback, explain and admin logic. Fixing #2 means editing it, and keeping the claim then requires a new proof run: two Lean builds, six AI reviews and another ~83 MB snapshot. This is the main drag on development speed.
+- Some headline numbers overstate what is proved. The "9,224 kernel-checked theorems" are truth-table rows for a 10-input AND, a 13-input AND and two 2-input rules (1,024 + 8,192 + 4 + 4; see web/app.js:4). The TRF-01 theorems, by contrast, are substantial: connection accounting, decoder soundness, and proofs that earlier designs were wrong.
+- Fix: move business logic out of Handler so only the low-level request parsing stays frozen. Store evidence outside git and keep only its hashes in the repo.
+5. Operators can't see failures. Logging is off by design. /api/health, including the private control port, always says "ok" (server.py:871), even when #1 has left no workers. The internal counters are read only by tests. A deliberate policy of keeping a connection slot reserved until restart when a thread's state is uncertain (traffic_http.py:247) also loses capacity without any signal.
+- Fix: report those counters (no learner content) on the control port.
+6. The admin login can be locked out from outside. The failed-login limit is 5 per minute for everyone combined (admin_auth.py:360), and any client can obtain a pre-login cookie and CSRF token. Restrict /api/admin/ at the IIS level.
+7. No evidence yet that the hints help people learn. The "100% hint availability" figure comes from the design: comparing against a correct pool always produces an edit list. Across all incorrect submissions, hints have a median of 9 steps (95th percentile 31). About 15% have more than 20 steps, and 83–86% repeat the same wording. There is no learner study, and the docs say so.
+Smaller issues
+- .env.example is not tracked but the README refers to it (README.md:421).
+- The README is 678 lines, and setup instructions don't start until line 103.
+- There is no linter or formatter configured.
+- Strict, bounded request handling: exact header grammar, a deadline on every socket read, size-limited JSON and responses, and a Content Security Policy.
+- Explicit allowlists at every boundary, so oracle answers never reach the browser.
+- Well-isolated Java workers. Shutdown left zero processes behind in all my runs.
+- CI actions pinned to exact versions with read-only permissions.
+- Documentation that is unusually honest about its limits.
+1. Cap canonical-mode work and fix how restarts are counted (#1).
+2. Fix client identity behind the proxy and add the channel fallback (#2). This touches the frozen handler, so first decide how much proof ceremony a bug fix needs (#4).
+3. Add the staleness test (#3) and the health counters (#5).

@@ -1,0 +1,59 @@
+name: Native IIS acceptance
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: iis-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  OPENAI_DISABLED: '1'
+jobs:
+  iis:
+    name: Windows Server 2022 IIS 10 and ARR
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+      - name: Build private distribution locally on Windows
+        run: python scripts/ci_check.py build
+      - name: Parse deployment scripts with native PowerShell
+        shell: powershell
+        run: |
+          $targets = @(Get-ChildItem deploy/iis -Filter *.ps1) + @(Get-Item scripts/test_native_iis.ps1)
+          foreach ($target in $targets) {
+            $parseErrors = $null
+            [Management.Automation.Language.Parser]::ParseFile($target.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw ('PowerShell syntax check failed: ' + $target.Name) }
+          }
+      - name: Native Windows deployment path regressions
+        shell: powershell
+        run: ./tests/iis_paths.Tests.ps1
+      - name: Exercise actual IIS and Local Service deployment
+        shell: powershell
+        run: ./scripts/test_native_iis.ps1
+      - name: Upload sanitized native acceptance summary only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-iis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/native-iis/public-summary.json
+          if-no-files-found: error
+          retention-days: 30

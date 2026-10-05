@@ -1,0 +1,109 @@
+package is . fivefivefive . CanDis ;
+ import java . util . function . LongSupplier ;
+ public final class WorkBudget {
+ public static final class Exhausted extends RuntimeException {
+ private Exhausted ( ) {
+ super ( "Request work budget exhausted" , null , false , false ) ;
+ }
+ }
+ private static final Exhausted EXHAUSTED = new Exhausted ( ) ;
+ private static final ThreadLocal < State > STATE = new ThreadLocal < > ( ) ;
+ private static final int CLOCK_CHECK_CALLS = SEMANTIC_CADENCE ;
+ private static final class State {
+ private final long initial ;
+ private final long allocationLimit ;
+ private long remaining ;
+ private long allocated ;
+ private boolean exhausted ;
+ private final LongSupplier clock ;
+ private final long startedNanos ;
+ private final long limitNanos ;
+ private int clockChecks = SEMANTIC_INITIAL_CHECKS ;
+ private State ( long initial , long allocationLimit ) {
+ this ( initial , allocationLimit , null , 0 ) ;
+ }
+ private State ( long initial , long allocationLimit , LongSupplier clock , long limitNanos ) {
+ this . initial = initial ;
+ this . remaining = initial ;
+ this . allocationLimit = allocationLimit ;
+ this . clock = clock ;
+ this . limitNanos = limitNanos ;
+ this . startedNanos = clock == null ? 0 : clock . getAsLong ( ) ;
+ }
+ }
+ private WorkBudget ( ) {
+ }
+ public static void begin ( long fuel ) {
+ begin ( fuel , Long . MAX_VALUE ) ;
+ }
+ public static void begin ( long fuel , long allocationLimit ) {
+ if ( fuel < 0 || allocationLimit < 0 ) throw new IllegalArgumentException ( "Negative work budget" ) ;
+ if ( STATE . get ( ) != null ) throw new IllegalStateException ( "Work budget already active" ) ;
+ STATE . set ( new State ( fuel , allocationLimit ) ) ;
+ }
+ public static void begin ( long fuel , long allocationLimit , long workMillis ) {
+ beginTimed ( fuel , allocationLimit , workMillis , System :: nanoTime ) ;
+ }
+ private static void beginTimed ( long fuel , long allocationLimit , long workMillis , LongSupplier clock ) {
+ if ( fuel < 0 || allocationLimit < 0 || workMillis < 1 || workMillis > 60_000 ) throw new IllegalArgumentException ( "Invalid timed work budget" ) ;
+ if ( STATE . get ( ) != null ) throw new IllegalStateException ( "Work budget already active" ) ;
+ STATE . set ( new State ( fuel , allocationLimit , clock , workMillis * 1_000_000L ) ) ;
+ }
+ public static void checkpoint ( ) {
+ SEMANTIC_checkpoint }
+ private static void sampleClock ( State state ) {
+ SEMANTIC_sampleClock }
+ public static long end ( ) {
+ State state = STATE . get ( ) ;
+ STATE . remove ( ) ;
+ return state == null ? - 1 : state . initial - state . remaining ;
+ }
+ public static boolean active ( ) {
+ return STATE . get ( ) != null ;
+ }
+ public static boolean exhausted ( ) {
+ State state = STATE . get ( ) ;
+ return state != null && state . exhausted ;
+ }
+ public static long allocated ( ) {
+ State state = STATE . get ( ) ;
+ return state == null ? 0 : state . allocated ;
+ }
+ public static long used ( ) {
+ State state = STATE . get ( ) ;
+ return state == null ? 0 : state . initial - state . remaining ;
+ }
+ public static void charge ( long units ) {
+ SEMANTIC_charge }
+ public static void allocate ( long entries ) {
+ State state = STATE . get ( ) ;
+ if ( state == null ) return ;
+ if ( entries < 0 ) throw new IllegalArgumentException ( "Negative retained allocation" ) ;
+ if ( entries > state . allocationLimit - state . allocated ) {
+ state . exhausted = true ;
+ throw EXHAUSTED ;
+ }
+ charge ( entries ) ;
+ state . allocated += entries ;
+ }
+ public static void requireRetained ( long entries , long limit ) {
+ State state = STATE . get ( ) ;
+ if ( state == null ) return ;
+ if ( entries < 0 || limit < 0 ) throw new IllegalArgumentException ( "Negative retained bound" ) ;
+ if ( state . exhausted || entries > limit ) {
+ state . exhausted = true ;
+ throw EXHAUSTED ;
+ }
+ }
+ public static void chargeCells ( long rows , long columns ) {
+ State state = STATE . get ( ) ;
+ if ( state == null ) return ;
+ if ( rows < 0 || columns < 0 ) throw new IllegalArgumentException ( "Negative work dimension" ) ;
+ if ( rows != 0 && columns > Long . MAX_VALUE / rows ) {
+ state . exhausted = true ;
+ throw EXHAUSTED ;
+ }
+ charge ( rows * columns ) ;
+ }
+ }
+

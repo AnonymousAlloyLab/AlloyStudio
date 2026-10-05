@@ -10,8 +10,18 @@ param(
     [string[]]$PublicUrl,
     [string]$RuntimeRoot = "$env:ProgramData\AlloyStudio",
     [ValidatePattern('^[A-Za-z0-9_-]+$')][string]$TaskName = 'AlloyStudioBackend',
-    [ValidateRange(1, 32)][int]$Workers = 4,
+    # Zero selects the resource profile's worker count; existing explicit values remain supported.
+    [ValidateRange(0, 32)][int]$Workers = 0,
     [ValidateRange(1, 30)][int]$EngineTimeout = 12,
+    [ValidateSet('constrained', 'standard')][string]$ResourceProfile = 'constrained',
+    [ValidateRange(0, 30)][int]$StartupTimeout = 0,
+    [ValidateSet('persistent', 'oneshot')][string]$EngineMode = 'persistent',
+    [ValidateRange(0, 65535)][ValidateScript({ $_ -ne 8080 })][int]$ControlPort = 0,
+    # Exact canonical proxy addresses whose X-Forwarded-For is honoured (default none).
+    [string[]]$TrustedProxy = @(),
+    # CIDR blocks allowed to reach /admin and /api/admin (default deny). Configure the
+    # edge addresses in the web.config administration rule; see deploy/iis/README.md.
+    [string[]]$AdminNetwork = @(),
     [switch]$EnableLuna
 )
 . (Join-Path $PSScriptRoot 'Common.ps1')
@@ -83,6 +93,10 @@ if ($Action -eq 'Install') {
         (Join-Path $BackendRoot 'exercise_store.py'), (Join-Path $BackendRoot 'exercise_sql.py'),
         (Join-Path $BackendRoot 'admin_auth.py'), (Join-Path $BackendRoot 'admin_upload.py'),
         (Join-Path $BackendRoot 'admin_luna.py'), (Join-Path $BackendRoot 'admin_service.py'),
+        (Join-Path $BackendRoot 'traffic_identity.py'), (Join-Path $BackendRoot 'portal_routes.py'),
+        (Join-Path $BackendRoot 'execution_profile.py'),
+        (Join-Path $BackendRoot 'web\admin\index.html'), (Join-Path $BackendRoot 'web\admin\app.js'),
+        (Join-Path $BackendRoot 'web\admin\styles.css'),
         (Join-Path $BackendRoot 'sql\schema.json'), (Join-Path $BackendRoot 'sql\queries.json'),
         (Join-Path $BackendRoot 'sql\compiled-queries.json'),
         (Join-Path $BackendRoot 'vendor\sqlean\provenance.json'),
@@ -94,9 +108,16 @@ if ($Action -eq 'Install') {
     if (@(Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue).Count) {
         throw 'Port 8080 is occupied. Stop the existing backend or choose a different host for this deployment.'
     }
+    if ($ControlPort -and @(Get-NetTCPConnection -State Listen -LocalPort $ControlPort -ErrorAction SilentlyContinue).Count) {
+        throw 'The requested private control port is occupied; choose another unused port.'
+    }
     $origins = @($PublicUrl | ForEach-Object { Get-PublicOrigin -PublicUrl $_ } | Select-Object -Unique)
     & $PythonExe -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'
     if ($LASTEXITCODE -ne 0) { throw 'Python 3.10 or newer is required.' }
+    $networkPolicy = @{ trusted_proxies = @($TrustedProxy); admin_networks = @($AdminNetwork) } | ConvertTo-Json -Compress
+    $networkValidator = 'import json,sys; sys.dont_write_bytecode=True; sys.path.insert(0,sys.argv[1]); from traffic_identity import trusted_proxies,AdminNetworkPolicy; p=json.load(sys.stdin); trusted_proxies(p["trusted_proxies"]); AdminNetworkPolicy(p["admin_networks"])'
+    $networkPolicy | & $PythonExe -I -c $networkValidator $BackendRoot
+    if ($LASTEXITCODE -ne 0) { throw 'Invalid trusted proxy address or administration network; no task configuration was installed.' }
     # --version writes to stdout; -version uses stderr in Windows PowerShell.
     $javaVersion = (& $JavaExe --version) -join "`n"
     if ($LASTEXITCODE -ne 0 -or $javaVersion -notmatch '(?im)^(?:openjdk|java)\s+(\d+)' -or
@@ -120,9 +141,15 @@ if ($Action -eq 'Install') {
         key_file = (Join-Path $RuntimeRoot 'secrets\openai.key')
         log_directory = (Join-Path $RuntimeRoot 'logs')
         engine_timeout = $EngineTimeout
-        workers = $Workers
+        resource_profile = $ResourceProfile
+        engine_mode = $EngineMode
+        control_port = $ControlPort
         enable_luna = [bool]$EnableLuna
+        trusted_proxies = @($TrustedProxy)
+        admin_networks = @($AdminNetwork)
     }
+    if ($Workers -gt 0) { $config.workers = $Workers }
+    if ($StartupTimeout -gt 0) { $config.startup_timeout = $StartupTimeout }
     [IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 4), (New-Object Text.UTF8Encoding($false)))
     Set-RestrictedAcl -Path $configPath
     $launcher = Join-Path $scriptRoot 'run_backend.py'
@@ -181,6 +208,20 @@ switch ($Action) {
             Select-Object LocalAddress, LocalPort, OwningProcess
         try { Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/health' -TimeoutSec 3 }
         catch { Write-Output 'Backend health endpoint is unavailable.' }
+        if (Test-Path -LiteralPath $configPath -PathType Leaf) {
+            $statusConfig = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            [pscustomobject]@{
+                ResourceProfile = $(if ($statusConfig.PSObject.Properties.Name -contains 'resource_profile') { $statusConfig.resource_profile } else { 'constrained' })
+                FeedbackWorkers = $(if ($statusConfig.PSObject.Properties.Name -contains 'workers') { [Math]::Min(2, [int]$statusConfig.workers) } else { 'profile default' })
+                StartupTimeout = $(if ($statusConfig.PSObject.Properties.Name -contains 'startup_timeout') { $statusConfig.startup_timeout } else { 'profile default' })
+                EngineTimeout = $statusConfig.engine_timeout
+            }
+            if ($statusConfig.PSObject.Properties.Name -contains 'control_port' -and [int]$statusConfig.control_port -gt 0) {
+                $diagnosticsUrl = 'http://127.0.0.1:' + [int]$statusConfig.control_port + '/api/diagnostics'
+                try { Invoke-RestMethod -Uri $diagnosticsUrl -TimeoutSec 3 }
+                catch { Write-Output 'Private backend diagnostics are unavailable.' }
+            }
+        }
     }
     'Uninstall' {
         Stop-BackendTask

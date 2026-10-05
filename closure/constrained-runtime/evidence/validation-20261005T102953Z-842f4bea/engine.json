@@ -1,0 +1,301 @@
+{
+  "classes": [
+    {
+      "path": "build/engine/classes/live/EngineWorker.class",
+      "sha256": "3e340865d487ad13956b7bbeb6bf332484c66bbc55186f7e01ed069ba8f325d2",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/WorkerJson.class",
+      "sha256": "9e0f122aa68bc77d42ed09a9ecf02d50b6f28a88d11a5bab371df7a44941f330",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/WorkerSafety.class",
+      "sha256": "418c4a062af969c61f7bbb6f0f5d7086d11b16f7de35d856721bdb0f27465367",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/WorkerSafety$PoisonedWorker.class",
+      "sha256": "d078edccd44f0e8f5f7338376422c3540f83bfd1c835472de3fc54c6183e886a",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/UploadInspector.class",
+      "sha256": "fd317f0eafbc7ab9432e6adfec137d15173b9c5ac0389cc5edc087a0a117e460",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/UploadInspector$Declaration.class",
+      "sha256": "14599dbbbcaf1cd5b035fae746cfcd64c9317e75bdb52cb0905be64d0f9d248c",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/ExerciseValidator.class",
+      "sha256": "fe56d89f0ad9c629b45aa0ecf8bda27f09f4ea554456295217dff1c0d2ffb1ef",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/ExerciseValidator$Rejected.class",
+      "sha256": "3fec7cd3a9ee0fd50bfdeacd16ebae97a3be0e642997b6fe7af69e9b78286f41",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/BridgePolicies.class",
+      "sha256": "f6cad1b27a714d5b16cced73e0088eda673e60dad25ee5bce7006160e644609f",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/VerifiedPoolSelection.class",
+      "sha256": "5feba428a665260fbe392588b74273bca5d056357fee16200b2c9c1ee2cdd71a",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/VerifiedPoolSelection$Result.class",
+      "sha256": "14c36a874317d6d5611ec24c8b3a3e3c7f21499ceeee80dab3ce7f8c3a9586f0",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/LiveFeedback$Candidate.class",
+      "sha256": "1f084c767aae07679b0def83612dd18d67466b95ad42b37425ea9dadef8d259f",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/AstFeedback$Candidate.class",
+      "sha256": "4b0d6f4ab305794d1cca3c794d00cd72db86f7241baabd08d8b1ca6d0c7f18bb",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/LiveFeedback.class",
+      "sha256": "a9ae3957419f2faf5003363d9968125f2749b776fd7054a8e6915b8b210e7ba9",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/EngineSelfTest.class",
+      "sha256": "0f6a676d1dca273a678b084cffc548878d1e377327cb5238405897ccce051982",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/BehaviorFeedback.class",
+      "sha256": "92e4999cc1aba3ef228928b7883a498a7689343138f97829337ad54f455790ae",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/SourceLocator.class",
+      "sha256": "f5f3d8e5a487c2ddafe3b86b8abcc0c5af2a7231029274cd65b6814f5e509e2c",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/SourceLocator$Range.class",
+      "sha256": "d8f3ee84eacf9412088cdc020a0dc8fa36dbcef766155a7578894cf0c24895a3",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/SourceLocator$1.class",
+      "sha256": "9d392f8436916d1628422969b7681cff7553396662f36d278664fc43f95b6787",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator.class",
+      "sha256": "babd480fa79bff9593e5b5ff8d3df8cb8d9df8ddf47a11658982bb3a0f7d509e",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator$Token.class",
+      "sha256": "2c88eb93403c5f4c1af6a34a655b444d9541cded96d9ddb3cf294f6b20b8a408",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator$Group.class",
+      "sha256": "3d294e9f55706eb5619037dd3ab0ab8151350fe5077e2161401f4c8fab5e9d0e",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator$Span.class",
+      "sha256": "64b32d1c24d543f41eac91a560bf63846c10367611c501b15a93feb42e76bb13",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator$FormIndex.class",
+      "sha256": "41906e7047814f6aa6b687f2593b15db54f69975b2eefa614103b55b2a0b4a2d",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/CanonicalLocator$1.class",
+      "sha256": "66366e08aa4ff9eb013f09f5a4b6bf37936f19b349c306dcf48e7eebd256d0e2",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/LiveTrace.class",
+      "sha256": "b36330013c7f3cd31a509a4b45992779aadc75f9362f55bfb69ebf71364bb8f5",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/WorkBudget.class",
+      "sha256": "d66339e8c3e7912140b420988590046e95dbf17b96dfbefda59e554e1a252354",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/WorkBudget$Exhausted.class",
+      "sha256": "5ed08a8ba8be84635aeab6dfc9d184119d7cbe116f9783db23551eaa2acd43bb",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/WorkBudget$State.class",
+      "sha256": "126996ce9a1db0ef924cf3efcf7284d32ec9dc05f399a5638f93db700d0710df",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/core/EGraphNode$SourceOrigin.class",
+      "sha256": "c4b154ea1ea4e0137918a7e0bc23f079c8ad5a9da4489b5b7c1109dfaae3688c",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$1.class",
+      "sha256": "8e206f8ddab0583b001384060735927d65b5677c2ff7ffc4f07db67d4828f22e",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/ACGN/visitor/MASGVisitor$2.class",
+      "sha256": "20e12ae428cfc17d4e7321c340e9264e34878eba8df78988b4ad4eef4b87eb51",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/AstFeedback.class",
+      "sha256": "c13de0cadf38f3429d4411815e87d101f417588b113896618cd80a12d2d70f7f",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/live/AstFeedback$Locations.class",
+      "sha256": "7c178d236f8cdf24dd5cc1651172ba7717f0059cb72719576f58f97eb92f460f",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace.class",
+      "sha256": "2d20baf2fb3343e1d91504d909f17221dab25e368c7d52be362716bce1749109",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$1.class",
+      "sha256": "34bd71fddf0159ff7aabf9778bf6921d212cd88cd66eaba46842295921a1fd3d",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Edit.class",
+      "sha256": "cf4476350ac6bf3393d1944bb642f43690cad53e3e7091512b715d92894f2e7c",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Index.class",
+      "sha256": "9ae93658cd3ccd2d39a51e663b345dc9b5e483ae5d0986d35fd1b56811c2a1f0",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Mutable.class",
+      "sha256": "a80c8fbba48bd3177a4b61cd45def6e8b8cbff6dd557a255031083ac1d6001e0",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Prepared.class",
+      "sha256": "cc36ff9645c49438cccef076ced86713636bd58a7b86ddcf1cd88dadaf9f157a",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$PrivateEdit.class",
+      "sha256": "4b54d80b005c51fc12fc120ff693fe43acf6769c753a977de01e2851c94fb858",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Result.class",
+      "sha256": "a832bfb55f7e1717f28ccde0d55b0c56aef74d346ee8173db71e17f6c67de819",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Solver.class",
+      "sha256": "80c8c5eb518bfbf45bffa549c6171f9a126006f80564f54d8a453857c1e7b0df",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/RawAstTrace$Tree.class",
+      "sha256": "9652c87a3cd6c27a62ad5f7d1349527318b37189b4fef354e303ede33bd5b0bb",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/DatasetConventions.class",
+      "sha256": "af873e2ed93ee9375126addf5880153f4f19b9248e929b00aef4d59a8f5459be",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.class",
+      "sha256": "4c5d3ae164482798e54a347f8bda1fb4f6f51beca6ded9178592f37626ffe79e",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance$Adapter.class",
+      "sha256": "e2dffc54d1b6f389c53d48ccc5680ed30056c6ddc5cae5222196dc63cb72fec7",
+      "status": "PASS"
+    },
+    {
+      "path": "build/engine/classes/is/fivefivefive/CanDis/core/OrderedTreeEditDistance$IndexedTree.class",
+      "sha256": "f29d228cc97a1fccb6bdbde6c6d531399344506aad09c07edb7ecdfd8c601ae4",
+      "status": "PASS"
+    }
+  ],
+  "dependencies": [
+    {
+      "expectedSha256": "8d245fd222bbca8af797842d349502e1f46f7a27f5dbd70489a4e622d10de3cd",
+      "name": "AlloyASG-Release.jar",
+      "path": "vendor/acgn/lib/AlloyASG-Release.jar",
+      "sha256": "8d245fd222bbca8af797842d349502e1f46f7a27f5dbd70489a4e622d10de3cd",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "5adc247bae551739bb61db848eb8ba6ee3292300f126e2b286c3a298a22c9dc6",
+      "name": "AlloyASG.jar",
+      "path": "vendor/acgn/lib/AlloyASG.jar",
+      "sha256": "5adc247bae551739bb61db848eb8ba6ee3292300f126e2b286c3a298a22c9dc6",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "be040bcd26ddcf042bb629f9c2a8c56e2f8bca0c829281c5cc0d07a047474fe3",
+      "name": "AlloyParser.jar",
+      "path": "vendor/acgn/lib/AlloyParser.jar",
+      "sha256": "be040bcd26ddcf042bb629f9c2a8c56e2f8bca0c829281c5cc0d07a047474fe3",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "ac0ee637172ed035a4ca43327d5e09c05990aa0d073887308e30f88c2471370c",
+      "name": "alloy.jar",
+      "path": "vendor/acgn/lib/alloy.jar",
+      "sha256": "ac0ee637172ed035a4ca43327d5e09c05990aa0d073887308e30f88c2471370c",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "fd3c7c9545a9cdb2051d1f9155c4f76b1e4ac5a57304404a6eedb578ffba7328",
+      "name": "commons-cli-1.4.jar",
+      "path": "vendor/acgn/lib/commons-cli-1.4.jar",
+      "sha256": "fd3c7c9545a9cdb2051d1f9155c4f76b1e4ac5a57304404a6eedb578ffba7328",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "9971d8e62ddf0e0db8baef94a920f099659b665058981e839f6500922f8a46dd",
+      "name": "json-java.jar",
+      "path": "vendor/acgn/lib/json-java.jar",
+      "sha256": "9971d8e62ddf0e0db8baef94a920f099659b665058981e839f6500922f8a46dd",
+      "status": "PASS"
+    },
+    {
+      "expectedSha256": "2f39bed943d624dfa8f4102d0571283a10870b6aa36f197a8a506f147010c10f",
+      "name": "slf4j-simple-1.7.36.jar",
+      "path": "vendor/acgn/lib/slf4j-simple-1.7.36.jar",
+      "sha256": "2f39bed943d624dfa8f4102d0571283a10870b6aa36f197a8a506f147010c10f",
+      "status": "PASS"
+    }
+  ],
+  "engine": {
+    "checks": 378,
+    "status": "PASS"
+  },
+  "errors": [],
+  "status": "PASS"
+}

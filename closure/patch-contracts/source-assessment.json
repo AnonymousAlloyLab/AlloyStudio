@@ -1,0 +1,96 @@
+{
+  "scope": "Independent bounded source audit of Claude findings 1, 2, 3, 5, 6. This is evidence, not a production fix, a Lean refinement proof, or a claim that whole CI passes modified production code.",
+  "reproduce": "OPENAI_DISABLED=1 python3 -B build/claude-contracts-20261005/evidence-audit/audit.py",
+  "safety": {
+    "productionFilesWritten": false,
+    "realJvmStarts": 0,
+    "realHttpListeners": 0,
+    "realPasswordKdfCalls": 0,
+    "credentialsRead": false,
+    "oldEvidenceModified": false,
+    "allowedWrites": "build/claude-contracts-20261005/evidence-audit/ only"
+  },
+  "findings": [
+    {
+      "id": 1,
+      "assessment": "Shared all-starts budget and timeout retirement supported. Exact claimed default-deployment 12 slow-draft outage not independently reproduced; no raw drafts/timing/timeout settings supplied.",
+      "witness": "results.json:restart: 12 immediate mocked timeouts at fixed time leave zero workers and block both lanes' normal requests; advancing clock to 60 permits recovery.",
+      "source": ["engine_workers.py:262", "engine_workers.py:282", "engine_workers.py:306", "engine_workers.py:327", "engine_workers.py:329", "engine_workers.py:381", "server.py:433", "traffic_scheduler.py:110", "engine/src/live/LiveFeedback.java:102", "engine/src/live/LiveFeedback.java:136", "engine/src/live/LiveFeedback.java:155", "engine/src/live/LiveFeedback.java:232", "engine/src/is/fivefivefive/CanDis/LiveTrace.java:160", "engine/src/is/fivefivefive/CanDis/LiveTrace.java:171", "engine/src/is/fivefivefive/CanDis/RawAstTrace.java:27", "engine/src/is/fivefivefive/CanDis/RawAstTrace.java:58"],
+      "caveats": [
+        "Default feedback timeout is 12 seconds and feedback concurrency is two. Twelve sequential default-duration timeouts span over a minute; even continuous two-worker 12-second timeouts yield roughly 10 feedback starts per 60-second rolling window. The fixed-clock mock does not establish reachability by this real workload.",
+        "Canonical mode has input/frame bytes, pool count, per-worker heap and parser-storage limits. The missing explicit bound is cumulative canonical normalization/mapping/distance/trace work, not all limits whatsoever.",
+        "Public draft bytes are capped at 8192 (server.py:36,396); JSON request bytes at 16384; Java input/frame limit is 1048576; reference count limit is 4096; owned parser source storage is 67108864 bytes (WorkerSafety.java:45).",
+        "No workload that deliberately consumes real CPU, worker capacity or restart budget was run. No canonical expensive-input witness is claimed."
+      ],
+      "patchContract": [
+        "Charge work before every potentially expensive phase, including normalization, binder search, every candidate and trace generation. A guard after prepare cannot bound prepare itself.",
+        "Retain aggregate launch-rate and process ownership bounds even if startup-failure circuit accounting is separated from request timeout accounting. Counted failed starts alone permits unlimited successful launch/timeout/reap churn; results.json contains a 13-launch/one-window pure countermodel with concurrency one.",
+        "Preserve complete pool evaluation and first-minimum ties for accepted workloads; exceeding any shared request budget yields unsupported without publishing partial comparison."
+      ]
+    },
+    {
+      "id": 2,
+      "assessment": "Supported conditional on documented proxy path: 32 editing channels are per TCP peer, IIS forwards to loopback, and feedback awaits channel allocation.",
+      "witness": "results.json:channels: 32 loopback allocations succeed, 33rd fails at synthetic times 0 and 899; different peer succeeds; time 900 frees idle slots.",
+      "source": ["deploy/iis/web.config:32", "traffic_scheduler.py:140", "traffic_scheduler.py:147", "server.py:927", "web/app.js:245", "web/app.js:698", "server.py:944", "server.py:950", "server.py:960", "traffic_scheduler.py:178", "traffic_http.py:215"],
+      "caveats": [
+        "Channels are allocated lazily on feedback, not automatically for every page/tab that merely opens.",
+        "Idle TTL is 900 seconds since seen; active observe calls renew it. Global channel cap remains 512.",
+        "A trusted proxy must remove/overwrite untrusted forwarding values and use a documented single-hop or trusted-chain interpretation. Blindly taking XFF permits spoofed quota keys.",
+        "HTTP ingress admission happens before request headers are parsed and separately keys client_address[0]; fixing Handler channel identity does not fix ingress per-peer rate aggregation."
+      ],
+      "patchContract": [
+        "Only configured trusted proxy peers may contribute a strictly parsed client identity; untrusted/malformed forwarding metadata cannot select a fresh arbitrary quota identity.",
+        "Fallback must omit the channel JSON key; explicitly sending channel:null is rejected by server.py:950.",
+        "Channel-less requests retain local revision/selection/body/metric/abort guards; they cannot promise channel supersession/cancellation because Scheduler.current(None, revision) is always true."
+      ]
+    },
+    {
+      "id": 3,
+      "assessment": "Narrow automatic-staleness coverage gap supported. Existing VERIFIED claims are explicitly historical/frozen, and full closure gate already checks all registered hashes.",
+      "witness": "results.json:staleBridge: mutate only scratch engine_workers.py maxlen 12 to 13; frozen source hash differs while strict_ingress_bridge.check still returns PASS.",
+      "source": ["scripts/strict_ingress_bridge.py:37", "scripts/strict_ingress_bridge.py:100", "tests/test_strict_ingress_bridge.py:11", "tests/test_strict_ingress_gate.py:13", "scripts/verify_strict_ingress.py:108", "scripts/ci_check.py:76", "scripts/verify_closure.py:638", "README.md:84", "README.md:95", "docs/ci-cd.md:5"],
+      "caveats": [
+        "Bridge-only witness does not prove arbitrary engine_workers.py/luna.py/admin_auth.py edits pass the entire CI suite; regression tests may detect behavior changes.",
+        "The source manifest contains the source closure; the final evidence manifest additionally contains verifier/proof inputs, so their entry counts differ.",
+        "README says VERIFIED at recorded source roots and source-bound report. Documentation also says historical closure never establishes a newer deployed build is verified. A proposed staleness gate must retain this distinction."
+      ],
+      "patchContract": [
+        "Current verification requires complete frozen-manifest equality plus bound verifier/evidence identity; any missing or changed required input yields stale/unbound, without changing historical result.",
+        "Do not allow a candidate manifest to self-attest a changed file; compare against an independently frozen registered manifest."
+      ]
+    },
+    {
+      "id": 5,
+      "assessment": "Unconditional health response and unexported uncertainty count supported; 'logging is off' requires qualification.",
+      "witness": "results.json:health: extracted production public/control health branches both return identical 200 ok for zero versus two mocked feedback workers. Actual reaper retains one synthetic uncertain owner permanently and does not re-probe it.",
+      "source": ["server.py:630", "server.py:852", "server.py:871", "engine_workers.py:401", "traffic_scheduler.py:307", "traffic_http.py:185", "traffic_http.py:247", "traffic_http.py:252", "traffic_http.py:124", "traffic_http.py:262"],
+      "caveats": [
+        "Access logs are disabled, but handle_error emits a fixed privacy-preserving stderr diagnostic. Operators are not wholly without any error signal.",
+        "Zero idle workers alone is not an outage: startup is lazy and available launch credit may recover capacity. Readiness needs stopped/busy/starting/unreaped/restart-credit context and cannot promise progress from counts alone.",
+        "Uncertain-owner retention is an intentional safety decision in the frozen proof, not a justified target for forced release. Admission active count includes retained reservations, but no dedicated uncertain count is returned."
+      ],
+      "patchContract": [
+        "Keep public health/liveness semantics explicit and export bounded aggregate diagnostic projections on the loopback control listener only.",
+        "Projection excludes learner source, oracle contents, tokens, peer addresses and credentials. Include uncertainty and worker/circuit/lane state without releasing uncertain ownership.",
+        "Use a consistent snapshot or expose sample epoch; separate component locks can produce a composite observation that never existed atomically."
+      ]
+    },
+    {
+      "id": 6,
+      "assessment": "Global failed-login interference supported for enabled and externally reachable HTTPS administration; actual deployment exposure was not inspected.",
+      "witness": "results.json:admin: production bootstrap/CSRF/authorize accepts two synthetic HTTPS peers; five wrong attempts from one yield five 401 responses; valid password for other principal gets 429 until synthetic time 60.",
+      "source": ["admin_auth.py:198", "admin_auth.py:239", "admin_auth.py:242", "admin_auth.py:308", "admin_auth.py:353", "admin_auth.py:360", "admin_auth.py:371", "server.py:785", "server.py:806", "deploy/iis/web.config:32"],
+      "caveats": [
+        "Administration is disabled without private configuration. HTTP administration additionally requires loopback, so external availability is conditional, not universal.",
+        "CSRF/origin checks protect browser behavior, but a non-browser client can supply Origin and obtain its own preauth cookie/token; those are not proof of trusted operator identity.",
+        "Existing authenticated sessions are not revoked merely by filling the failed-login list. The demonstrated denial concerns new sign-in."
+      ],
+      "patchContract": [
+        "Restrict the administrative route at an independently enforced deployment boundary or require a trusted operator admission capability before charging its protected login budget.",
+        "Per-source buckets alone still need a bounded aggregate KDF/concurrency envelope and do not give liveness against distributed sources or shared NAT without additional assumptions.",
+        "A proxy configuration model is conditional evidence; actual IIS enforcement and any bypass listener must be independently checked before claiming deployment closure."
+      ]
+    }
+  ]
+}

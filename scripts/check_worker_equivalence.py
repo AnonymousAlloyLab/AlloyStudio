@@ -74,7 +74,7 @@ def qualified_source(path, qualname):
 
 def source_identity(root):
     sources = {}
-    for name in ('engine_workers.py', 'runtime_dependencies.py', 'traffic_profile.py', 'traffic_limits.py',
+    for name in ('engine_workers.py', 'runtime_dependencies.py', 'traffic_profile.py', 'traffic_limits.py', 'execution_profile.py',
                  'scripts/check_worker_equivalence.py'):
         sources[name] = sha((root / name).read_bytes())
     for name in ('Portal._feedback', 'Portal.feedback_payload', 'model', 'compact_canonical_text',

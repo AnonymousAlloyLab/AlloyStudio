@@ -2,6 +2,7 @@
 from copy import deepcopy
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -18,6 +19,24 @@ def arms():
 
 
 class FunctionalComparisonTests(unittest.TestCase):
+    def test_current_arms_explicitly_admit_only_fixture_loopback_without_changing_archived_api(self):
+        for mode in ('archived-oneshot', 'oneshot', 'persistent'):
+            with self.subTest(mode=mode):
+                app = Mock()
+                module = SimpleNamespace(Portal=Mock(return_value=app))
+                thread = Mock()
+                thread.is_alive.return_value = False
+                root = Path('synthetic-root-never-opened')
+                with patch.object(harness.threading, 'Thread', return_value=thread):
+                    with harness.app_for(module, root, mode) as running:
+                        self.assertIs(running, app)
+                options = dict(root=root, timeout=12, workers=2)
+                if mode != 'archived-oneshot':
+                    options.update(engine_mode=mode, admin_networks=('127.0.0.1/32',))
+                module.Portal.assert_called_once_with(('127.0.0.1', 0), **options)
+                app.shutdown.assert_called_once_with()
+                app.server_close.assert_called_once_with()
+
     def test_empty_json_not_modified_response_is_not_decoded(self):
         connection = Mock()
         response = connection.getresponse.return_value

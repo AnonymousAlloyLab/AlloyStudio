@@ -1,0 +1,25 @@
+{
+  "reviewerModel": "gpt-6-luna",
+  "tier": 1,
+  "blockManifestSha256": "684e505341eef4b975b0f5e00f935841456a4372fb32508f449e2577c9b80c3e",
+  "priorReviews": {},
+  "verdict": "constructed_breach",
+  "findings": [
+    {
+      "id": "LUNA-B-AP01-C07-EXTRA-ENTRY",
+      "claim": "AP01-C07",
+      "theorem": "AlloyStudio.PatchContracts.Governance.current_requires_complete_equality",
+      "summary": "The modeled current-source check accepts extra observed paths absent from the independently approved inventory, despite the claim of complete equality.",
+      "counterexample": {
+        "approved": "ApprovedSurface root=100 entries=[(path=7,digest=1)]",
+        "record": "RecordedResult root=100 verifier=200 passed=true",
+        "observation": "path 7 -> digest 1; path 8 -> digest 2; all other paths -> none",
+        "constructed_result": "currentVerified approved 200 record observation = true",
+        "unexpected_entry": "observation 8 = some 2",
+        "reproduction": "build/claude-contracts-20261005/review-luna-b/Counterexample.lean"
+      },
+      "reason": "Observation is a total function, while checks traverses only ApprovedSurface.entries. It has no enumerable current inventory and never rejects an unlisted observed path."
+    }
+  ],
+  "notesSha256": "af1fc620370d0489f2885cf9eec6debc67ba8b6c78e50d10855be92cc7afed05"
+}

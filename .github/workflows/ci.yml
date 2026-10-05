@@ -54,6 +54,12 @@ jobs:
         run: python scripts/ci_check.py runtime
       - name: Python regressions
         run: python scripts/ci_check.py python
+      - name: Replay frozen charged-work refinement on the CI runtime
+        # Runtime-portability replay, never a renewal of local VERIFIED closure.
+        run: python scripts/verify_work_budget.py --replay
+      - name: Current-source freshness of historical closures
+        # Fails only on an invalid historical record; STALE is reported, never hidden.
+        run: python scripts/source_freshness.py --output build/freshness/report.json
       - name: Portal browser regressions
         run: python scripts/ci_check.py browser
       - name: Dashboard browser regressions
@@ -105,7 +111,7 @@ jobs:
           TMPDIR: ${{ github.workspace }}/build/ci/tmp
           TMP: ${{ github.workspace }}/build/ci/tmp
           TEMP: ${{ github.workspace }}/build/ci/tmp
-        run: python -m unittest test_engine_workers test_traffic_scheduler test_traffic_http test_ingress_deadlines test_strict_http_decode test_ingress_admission test_traffic_portal test_luna_sharing -v
+        run: python -m unittest test_engine_workers test_worker_lane_policy test_traffic_scheduler test_traffic_http test_traffic_identity test_ingress_deadlines test_strict_http_decode test_ingress_admission test_traffic_portal test_luna_sharing -v
       - name: Generate safe dashboard summary
         if: always()
         run: python scripts/ci_dashboard.py

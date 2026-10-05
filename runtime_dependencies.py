@@ -42,6 +42,8 @@ REQUIRED_CLASSES = (
     'live/CanonicalLocator.class', 'live/CanonicalLocator$Token.class', 'live/CanonicalLocator$Group.class',
     'live/CanonicalLocator$Span.class', 'live/CanonicalLocator$FormIndex.class', 'live/CanonicalLocator$1.class',
     'is/fivefivefive/CanDis/LiveTrace.class',
+    'is/fivefivefive/CanDis/WorkBudget.class', 'is/fivefivefive/CanDis/WorkBudget$Exhausted.class',
+    'is/fivefivefive/CanDis/WorkBudget$State.class',
     'is/fivefivefive/CanDis/core/EGraphNode$SourceOrigin.class',
     'is/fivefivefive/ACGN/visitor/MASGVisitor$1.class',
     'is/fivefivefive/ACGN/visitor/MASGVisitor$2.class',
@@ -147,13 +149,19 @@ def _root_key(root):
     return str(Path(root).resolve())
 
 
-def open_engine_admission(root=ROOT):
+def open_engine_admission(root=ROOT, *, java_processors=None):
     """A newly initialized backend may admit one-shot calls after prior drain."""
+    if java_processors is not None:
+        java_processors = validated_int(java_processors, maximum=2)
     key = _root_key(root)
     with _ONESHOT_CONDITION:
         state = _ONESHOT_ROOTS.setdefault(key, {'closed': False, 'active': 0})
         if state['closed'] and (state['active'] or state.get('unreaped', 0)):
             raise OSError('Previous engine calls have not drained')
+        if java_processors is not None:
+            if (state['active'] or state.get('unreaped', 0)) and state.get('java_processors') != java_processors:
+                raise OSError('Active engine configuration cannot change')
+            state['java_processors'] = java_processors
         state['closed'] = False
 
 
@@ -210,7 +218,12 @@ def _run_engine_registered(command, *, root, lane, state, **options):
             if state['closed']:
                 raise OSError('Engine admission is closed')
         directory = tempfile.mkdtemp(prefix='engine-', dir=engine_temp_root(root))
-        isolated = [command[0], '-Djava.io.tmpdir=' + directory, *command[1:]]
+        arguments = list(command[1:])
+        processors = state.get('java_processors')
+        if processors is not None:
+            arguments = [arg for arg in arguments if not arg.startswith('-XX:ActiveProcessorCount=')]
+            arguments.insert(0, '-XX:ActiveProcessorCount=' + str(processors))
+        isolated = [command[0], '-Djava.io.tmpdir=' + directory, *arguments]
         options['env'] = clean_java_environment(options.get('env'))
         options['timeout'] = max(0.001, timeout - (time.monotonic() - started))
         try:

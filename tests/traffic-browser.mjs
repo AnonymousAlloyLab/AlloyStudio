@@ -56,7 +56,7 @@ const server = createServer(async (request, response) => {
   const payload = raw ? JSON.parse(raw) : {};
   calls.push({ path: url.pathname, payload, raw });
   if (behavior && await behavior(url.pathname, payload, response)) return;
-  if (url.pathname === '/api/channel') return responseJSON(response, { status: 'ok', channel: String(++channelSerial).padStart(64, 'c') });
+  if (url.pathname === '/api/channel') return responseJSON(response, { status: 'ok', channel: String(++channelSerial).padStart(43, 'c') });
   if (url.pathname === '/api/cancel') return responseJSON(response, { status: 'ok' });
   if (url.pathname === '/api/feedback') return responseJSON(response, feedback(payload));
   if (url.pathname === '/api/behavior') return responseJSON(response, { exerciseId: payload.exerciseId, revision: payload.revision, status: 'unavailable' });
@@ -73,7 +73,11 @@ async function until(predicate) {
   const deadline = Date.now() + 5000;
   while (!predicate()) { if (Date.now() >= deadline) throw new Error('Traffic fixture deadline exceeded'); await delay(10); }
 }
-async function check(name, operation) { calls.length = 0; behavior = null; await operation(); passed.push(name); }
+async function check(name, operation) {
+  calls.length = 0; behavior = null;
+  try { await operation(); } catch (error) { error.message = `${name}: ${error.message}`; throw error; }
+  passed.push(name);
+}
 let browser;
 async function session(live = false) {
   const context = await browser.newContext();
@@ -248,7 +252,7 @@ try {
     let release;
     behavior = async (route, payload, response) => {
       if (route !== '/api/channel') return false;
-      release = () => responseJSON(response, { status: 'ok', channel: 'd'.repeat(64) }); return true;
+      release = () => responseJSON(response, { status: 'ok', channel: 'd'.repeat(43) }); return true;
     };
     const s = await session();
     try {
@@ -308,6 +312,29 @@ try {
       assert.equal(await s.editor.inputValue(), 'no Node');
     } finally { generation = 1; await s.context.close(); }
   });
+  await check('learner-request-aborts-on-the-shared-150-second-deadline-without-retry', async () => {
+    const source = assets.get('/app.js').bytes.toString('utf8').split('async function learnerJSON')[1].split('// BEGIN CHANNEL FALLBACK POLICY')[0];
+    let expire, timerDelay, cleared = false, requests = 0;
+    const evaluate = vm.runInNewContext(`async function learnerJSON${source}\nlearnerJSON`, {
+      AbortController, DOMException, performance: { now: () => 0 }, state: {},
+      setTimeout: (callback, delay) => { expire = callback; timerDelay = delay; return 42; },
+      clearTimeout: timer => { assert.equal(timer, 42); cleared = true; },
+      fetchJSONResponse: async (url, options) => {
+        requests += 1;
+        return new Promise((resolve, reject) => options.signal.addEventListener('abort',
+          () => reject(new DOMException('Aborted.', 'AbortError')), { once: true }));
+      },
+      retryDelay: () => { throw new Error('A timed-out dispatched request must not retry.'); },
+    });
+    const controller = new AbortController();
+    const pending = evaluate('api/feedback', { channel: 'c'.repeat(43) }, controller.signal, () => true);
+    assert.equal(timerDelay, 150000);
+    assert.equal(requests, 1);
+    expire();
+    await assert.rejects(pending, /analysis request timed out/);
+    assert.equal(requests, 1);
+    assert(cleared);
+  });
   await check('retry-policy-rejects-ambiguous-admission-and-preserves-absolute-deadline', async () => {
     const source = assets.get('/app.js').bytes.toString('utf8').split('// BEGIN TRAFFIC RETRY POLICY')[1].split('// END TRAFFIC RETRY POLICY')[0];
     const evaluate = vm.runInNewContext(`${source}\nretryDelay`, { Math, Number });
@@ -323,6 +350,146 @@ try {
     assert.equal(evaluate(response(), approved, 1, 0, 5000), null);
     assert.equal(evaluate(response(), approved, 0, 1000, 2000, () => 0), null);
     assert.equal(evaluate(response(), { ...approved, dispatched: true }, 0, 0, 5000), null);
+  });
+  const busy = { status: 'busy', code: 'capacity', retryable: true, dispatched: false };
+  const omitsChannel = call => !Object.hasOwn(call.payload, 'channel') && !call.raw.includes('"channel"');
+  await check('channel-capacity-refusal-sends-one-channel-less-request-and-never-cancels', async () => {
+    behavior = async (route, payload, response) => {
+      if (route !== '/api/channel') return false;
+      responseJSON(response, busy, 429, { 'Retry-After': '1' }); return true;
+    };
+    const s = await session();
+    try {
+      await s.check.click(); await ready(s.page);
+      assert.equal(count('channel').length, 1);
+      assert.equal(count('feedback').length, 1); assert(omitsChannel(count('feedback')[0]));
+      assert(count('behavior').every(omitsChannel)); assert(count('explain').every(omitsChannel));
+      await s.editor.fill('some Node // edited after fallback'); await delay(100);
+      assert.equal(count('cancel').length, 0);
+    } finally { await s.context.close(); }
+  });
+  await check('channel-less-request-is-sent-at-most-once-even-when-refused', async () => {
+    behavior = async (route, payload, response) => {
+      if (route === '/api/channel') { responseJSON(response, busy, 429, { 'Retry-After': '1' }); return true; }
+      if (route === '/api/feedback') { responseJSON(response, { ...busy, exerciseId: payload.exerciseId, revision: payload.revision }, 503, { 'Retry-After': '1' }); return true; }
+      return false;
+    };
+    const s = await session();
+    try {
+      await s.check.click();
+      await s.page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Server busy');
+      await delay(1500);
+      assert.equal(count('channel').length, 1); assert.equal(count('feedback').length, 1);
+      assert.equal(count('behavior').length, 0);
+    } finally { await s.context.close(); }
+  });
+  await check('channel-authentication-malformed-and-other-failures-never-fall-back', async () => {
+    for (const [status, body] of [[403, { status: 'forbidden' }], [401, { status: 'unauthorized' }],
+      [200, { status: 'ok', channel: 'short' }], [200, { status: 'ok' }],
+      [200, { status: 'ok', channel: 'c'.repeat(42) }], [200, { status: 'ok', channel: 'c'.repeat(44) }],
+      [400, { status: 'error', code: 'identity_rejected' }], [500, { status: 'error' }]]) {
+      calls.length = 0;
+      behavior = async (route, payload, response) => {
+        if (route !== '/api/channel') return false;
+        responseJSON(response, body, status); return true;
+      };
+      const s = await session();
+      try {
+        await s.check.click();
+        await s.page.waitForFunction(() => ['Unavailable'].includes(document.querySelector('#feedback-state').textContent));
+        await delay(100);
+        assert.equal(count('channel').length, 1, `one channel attempt for ${status}`);
+        assert.equal(count('feedback').length, 0, `no fallback for ${status} ${JSON.stringify(body)}`);
+      } finally { await s.context.close(); }
+    }
+  });
+  await check('unreachable-channel-endpoint-falls-back-once', async () => {
+    const s = await session();
+    let attempts = 0;
+    try {
+      // Refuse at the browser boundary: one failed fetch, no transport-level resend.
+      await s.page.route('**/api/channel', route => { attempts += 1; return route.abort('connectionrefused'); });
+      await s.check.click(); await ready(s.page);
+      assert.equal(attempts, 1); assert.equal(count('channel').length, 0); assert.equal(count('feedback').length, 1);
+      assert(omitsChannel(count('feedback')[0]));
+    } finally { await s.context.close(); }
+  });
+  await check('redirected-capacity-response-never-permits-channel-less-work', async () => {
+    behavior = async (route, payload, response) => {
+      if (route === '/api/channel') {
+        response.writeHead(302, { Location: '/channel-access' }); response.end(); return true;
+      }
+      if (route === '/channel-access') { responseJSON(response, busy, 503); return true; }
+      return false;
+    };
+    const s = await session();
+    try {
+      await s.check.click();
+      await s.page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Unavailable');
+      assert.equal(count('channel').length, 1);
+      assert.equal(calls.filter(call => call.path === '/channel-access').length, 0);
+      assert.equal(count('feedback').length, 0);
+      assert.equal(count('behavior').length, 0);
+    } finally { await s.context.close(); }
+  });
+  await check('work-limit-feedback-never-starts-behavior-or-explanation', async () => {
+    behavior = async (route, payload, response) => {
+      if (route !== '/api/feedback') return false;
+      responseJSON(response, { exerciseId: payload.exerciseId, revision: payload.revision,
+        requestedMetric: payload.metric, status: 'unsupported',
+        diagnostics: [{ code: 'WORK_LIMIT', message: 'This predicate needs more analysis work than live feedback allows.' }] });
+      return true;
+    };
+    const s = await session();
+    try {
+      for (const metric of ['canonical', 'ast']) {
+        await s.page.locator('#distance-metric').selectOption(metric);
+        if (metric === 'canonical') await s.check.click();  // Changing the metric schedules its own check.
+        await s.page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Unsupported');
+        await delay(100);
+        assert.equal(count('behavior').length, 0);
+        assert.equal(count('explain').length, 0);
+      }
+      assert.equal(count('feedback').length, 2);
+      assert.equal(await s.page.locator('.distance-result').count(), 0);
+    } finally { await s.context.close(); }
+  });
+  await check('stale-channel-less-response-cannot-change-the-visible-result', async () => {
+    let release;
+    behavior = async (route, payload, response) => {
+      if (route === '/api/channel') { responseJSON(response, busy, 429); return true; }
+      if (route === '/api/feedback' && !release) {
+        release = () => responseJSON(response, { ...feedback(payload), distance: 7 }); return true;
+      }
+      return false;
+    };
+    const s = await session();
+    try {
+      await s.check.click(); await until(() => release);
+      await s.editor.fill('no Node // newer draft'); release(); await delay(150);
+      assert.notEqual(await s.page.locator('#feedback-state').textContent(), 'Checked');
+      assert.equal(await s.page.locator('.distance-result').count(), 0);
+      await s.check.click(); await ready(s.page);
+      assert.equal(count('feedback').at(-1).payload.body, 'no Node // newer draft');
+      assert(count('feedback').every(omitsChannel));
+    } finally { await s.context.close(); }
+  });
+  await check('channel-fallback-policy-matches-the-modeled-request-plan', async () => {
+    const source = assets.get('/app.js').bytes.toString('utf8').split('// BEGIN CHANNEL FALLBACK POLICY')[1].split('// END CHANNEL FALLBACK POLICY')[0];
+    const [outcome, permitted] = vm.runInNewContext(`${source}\n[channelOutcome, fallbackPermitted]`, {});
+    const valid = { status: 'ok', channel: 'c'.repeat(43) };
+    assert.equal(outcome(200, false, valid), 'issued');
+    assert.equal(outcome(200, true, valid), 'authenticationFailure');
+    assert.equal(outcome(429, false, busy), 'explicitlyUnavailable');
+    assert.equal(outcome(503, false, busy), 'explicitlyUnavailable');
+    for (const status of [429, 503]) assert.equal(outcome(status, true, busy), 'authenticationFailure');
+    assert.equal(outcome(503, false, { ...busy, code: 'other' }), 'otherFailure');
+    assert.equal(outcome(503, false, null), 'otherFailure');
+    for (const status of [401, 403]) assert.equal(outcome(status, false, busy), 'authenticationFailure');
+    for (const data of [null, { status: 'ok' }, { status: 'ok', channel: 'x' }]) assert.equal(outcome(200, false, data), 'malformed');
+    for (const status of [400, 404, 500, 502]) assert.equal(outcome(status, false, { status: 'error' }), 'otherFailure');
+    for (const value of ['explicitlyUnavailable', 'availabilityFailure']) assert.equal(permitted(value), true);
+    for (const value of ['issued', 'aborted', 'authenticationFailure', 'malformed', 'otherFailure']) assert.equal(permitted(value), false);
   });
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ status: 'PASS', checks: passed.length, passed }));

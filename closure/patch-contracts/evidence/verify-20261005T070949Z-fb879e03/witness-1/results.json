@@ -1,0 +1,113 @@
+{
+  "admin": {
+    "attackerWrongPasswordStatuses": [
+      401,
+      401,
+      401,
+      401,
+      401
+    ],
+    "correctPasswordAcceptedAtSeconds": 60,
+    "differentPeerCorrectPasswordStatus": 429,
+    "scope": "Production bootstrap/CSRF/authorize/login logic with synthetic HTTPS config, cheap deterministic KDF and clock. Actual deployment configuration/reachability unknown."
+  },
+  "channels": {
+    "channelLessCurrent": true,
+    "channelsAfterExpiry": 2,
+    "differentPeerAccepted": true,
+    "expiredSamePeerRecoveredAtSeconds": 900,
+    "samePeer33rdRejectedAtSeconds": [
+      0,
+      899
+    ],
+    "samePeerAccepted": 32,
+    "scope": "Real Scheduler channel methods; scheduling threads replaced by inert objects."
+  },
+  "health": {
+    "availableAdmissionCounters": {
+      "acceptedConnections": 1,
+      "activeHandlers": 1,
+      "handlerLimit": 30,
+      "peakHandlers": 1,
+      "peerEntries": 1,
+      "rejectedConnections": 0
+    },
+    "health": [
+      {
+        "body": {
+          "engine": "ACGN / CanDis Fast Rewrite IR",
+          "exercises": 0,
+          "status": "ok"
+        },
+        "controlListener": false,
+        "status": 200,
+        "unchangedWhenWorkersVary": true
+      },
+      {
+        "body": {
+          "engine": "ACGN / CanDis Fast Rewrite IR",
+          "exercises": 0,
+          "status": "ok"
+        },
+        "controlListener": true,
+        "status": 200,
+        "unchangedWhenWorkersVary": true
+      }
+    ],
+    "scope": "Actual extracted do_GET health branches (header parsing bypassed) and actual reaper with synthetic thread error; no network listener.",
+    "uncertainObservationCalls": 1,
+    "uncertainOwnerRetained": true
+  },
+  "method": "bounded mocked/source witnesses",
+  "networkSocketsOpened": 0,
+  "productionProcessesLaunched": 0,
+  "proposedFixCounterexamples": {
+    "blindForwardedIdentity": {
+      "distinctAttackerChosenKeys": 33,
+      "tcpPeers": 1,
+      "violation": "Trusting arbitrary XFF lets one source bypass a per-peer channel quota."
+    },
+    "scope": "Pure bounded countermodels for proposed policy, not production executions.",
+    "startupFailureOnlyLimiter": {
+      "concurrentHighWater": 1,
+      "countedFailedStarts": 0,
+      "launchesInOneSyntheticWindow": 13,
+      "violation": "13 launches pass a claimed 12/window launch envelope despite concurrency=1."
+    }
+  },
+  "restart": {
+    "beforeExpiry": {
+      "busy": 0,
+      "closed": false,
+      "completed": 0,
+      "failures": 12,
+      "launches": 12,
+      "processBudget": {
+        "synthetic": true
+      },
+      "recycled": 0,
+      "starting": 0,
+      "unreaped": 0,
+      "workers": {
+        "behavior": 0,
+        "feedback": 0
+      }
+    },
+    "normalRequestsBlocked": {
+      "behavior": "The analysis worker restart limit was reached.",
+      "feedback": "The analysis worker restart limit was reached."
+    },
+    "recoveryAtSeconds": 60,
+    "scope": "Production EnginePool accounting with immediate timeout stub and frozen clock; not real canonical-timeout reachability.",
+    "syntheticTimeouts": 12
+  },
+  "staleBridge": {
+    "currentHashMatchesFrozen": true,
+    "historicalManifestEntries": 524,
+    "mutantHashMatchesFrozen": false,
+    "mutatedSource": "engine_workers.py",
+    "mutation": "deque(maxlen=12) to deque(maxlen=13), scratch overlay only",
+    "scope": "Bridge-only acceptance despite unrelated pinned-source drift; whole CI was not run. Full verify_strict_ingress.inputs does hash every registered input.",
+    "strictIngressBridge": "PASS"
+  }
+}

@@ -1,0 +1,6 @@
+falseWithoutPlaceholder.lean:2:30: error: Type mismatch
+  True.intro
+has type
+  True
+but is expected to have type
+  False

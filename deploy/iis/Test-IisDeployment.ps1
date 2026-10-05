@@ -6,6 +6,9 @@ param(
     [string]$RuntimeRoot = "$env:ProgramData\AlloyStudio",
     [ValidatePattern('^[A-Za-z0-9_-]+$')][string]$TaskName = 'AlloyStudioBackend',
     [string]$ReportPath,
+    [ValidateRange(130, 300)][int]$RequestTimeoutSeconds = 130,
+    [switch]$ExpectAdminAccess,
+    [switch]$CheckDiagnostics,
     [switch]$CheckLuna,
     [switch]$UseDefaultCredentials
 )
@@ -30,8 +33,8 @@ function Assert-Check {
 function Invoke-PortalRequest {
     param([string]$RelativePath, [object]$Payload = $null, [string]$RequestOrigin = $origin)
     $request = [Net.HttpWebRequest]::Create($baseUrl + $RelativePath)
-    $request.Timeout = 70000
-    $request.ReadWriteTimeout = 70000
+    $request.Timeout = $RequestTimeoutSeconds * 1000
+    $request.ReadWriteTimeout = $RequestTimeoutSeconds * 1000
     $request.AllowAutoRedirect = $false
     $request.UseDefaultCredentials = [bool]$UseDefaultCredentials
     if ($null -ne $Payload) {
@@ -146,14 +149,29 @@ try {
     Assert-Check $true 'private paths are outside IIS and ACLs exclude public readers'
 
     $stage = 'IIS static assets and proxy health'
+    Import-Module WebAdministration
+    $proxy = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy'
+    Assert-Check ([bool]$proxy.enabled -and ([TimeSpan]$proxy.timeout).TotalSeconds -ge 120) 'ARR proxy is enabled with a timeout of at least 120 seconds'
     foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
-        'admin/', 'admin/app.js', 'admin/styles.css')) {
+        'dashboard/index.html')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"
+    }
+    foreach ($asset in @('admin/', 'admin/app.js', 'admin/styles.css')) {
+        $response = Invoke-PortalRequest $asset
+        if ($ExpectAdminAccess) {
+            Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "authorized-network administration asset loads: $asset"
+        } else {
+            Assert-Check ($response.Status -eq 404) "default-deny administration asset is unavailable: $asset"
+        }
     }
     $response = Invoke-PortalRequest 'api/health'
     $health = $response.Body | ConvertFrom-Json
     Assert-Check ($response.Status -eq 200 -and $health.status -eq 'ok' -and $health.exercises -gt 0) 'IIS proxy reaches the exercise database'
+    $response = Invoke-PortalRequest 'api/channel' @{}
+    $channel = $response.Body | ConvertFrom-Json
+    Assert-Check ($response.Status -eq 200 -and $channel.status -eq 'ok' -and
+        $channel.channel -cmatch '^[A-Za-z0-9_-]{43}$') 'editing channel resolves a concrete admitted client identity through IIS'
 
     $stage = 'entire catalogue public projection'
     $listing = (Invoke-PortalRequest 'api/exercises').Body | ConvertFrom-Json
@@ -185,11 +203,66 @@ try {
     $after = $response.Body | ConvertFrom-Json
     Assert-Check ($response.Status -eq 200 -and $after.status -eq 'ok' -and $after.distance -eq 0) 'applying the shown operator reduces distance one to zero'
 
+    $stage = 'raw AST feedback and behavioral examples'
+    $payload.body = 'some (iden & adj)'
+    $payload.revision = 3
+    $payload.metric = 'ast'
+    $response = Invoke-PortalRequest 'api/feedback' $payload
+    $ast = $response.Body | ConvertFrom-Json
+    Assert-Check ($response.Status -eq 200 -and $ast.status -eq 'ok' -and
+        $ast.metric -eq 'acgn-raw-ast-zhang-shasha-distance' -and $ast.distance -gt 0 -and
+        $ast.operations.Count -gt 0 -and $ast.comparison.complete -eq $true) 'raw AST Zhang-Shasha feedback survives IIS'
+    Assert-Check (($ast.operations | Measure-Object cost -Sum).Sum -eq $ast.distance) 'raw AST operation costs sum to distance'
+    $response = Invoke-PortalRequest 'api/behavior' $payload
+    $behavior = $response.Body | ConvertFrom-Json
+    Assert-Check ($response.Status -eq 200 -and $behavior.status -eq 'ok' -and
+        $behavior.metric -eq 'acgn-reward' -and $behavior.scope.moduleFacts -eq $true -and
+        $behavior.categories.Count -eq 4) 'fact-constrained behavioral score and four categories survive IIS'
+    Assert-Check (@(Compare-Object @('both', 'undercoverage', 'overcoverage', 'neither') @($behavior.categories.id)).Count -eq 0) 'all four behavioral categories are present'
+    foreach ($category in $behavior.categories) {
+        Assert-Check (@($category.instances).Count -le 3) ("at most three rendering inputs: " + $category.id)
+        foreach ($instance in $category.instances) {
+            Assert-Check (@($instance.states).Count -gt 0) 'instance includes concrete graph-rendering state'
+        }
+    }
+    if ($CheckDiagnostics) {
+        $stage = 'private control diagnostics and persistent reuse'
+        Assert-Check ($config.PSObject.Properties.Name -contains 'control_port' -and [int]$config.control_port -gt 0) 'private control port is configured for acceptance'
+        $diagnosticsUrl = 'http://127.0.0.1:' + [int]$config.control_port + '/api/diagnostics'
+        $diagnostics = Invoke-RestMethod -Uri $diagnosticsUrl -TimeoutSec 5
+        Assert-Check ($diagnostics.lanes.feedback.ready -ge 1 -and $diagnostics.lanes.behavior.ready -eq 1) 'feedback and behavioral workers remain ready after requests'
+        $backendProcess = @(Get-NetTCPConnection -State Listen -LocalAddress '127.0.0.1' -LocalPort 8080)[0].OwningProcess
+        $engineProcesses = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId = " + $backendProcess + " AND Name = 'java.exe'") | Select-Object -ExpandProperty ProcessId | Sort-Object)
+        Assert-Check ($engineProcesses.Count -ge 2) 'persistent engine children belong to the scheduled backend'
+        $feedbackCredits = $diagnostics.lanes.feedback.launchCredits
+        $behaviorCredits = $diagnostics.lanes.behavior.launchCredits
+        # Different source bytes force fresh analysis rather than merely a cache hit.
+        $payload.body = 'some (iden & adj) // persistent reuse acceptance'
+        $payload.metric = 'canonical'
+        $payload.revision = 4
+        $response = Invoke-PortalRequest 'api/feedback' $payload
+        Assert-Check ($response.Status -eq 200 -and ($response.Body | ConvertFrom-Json).status -eq 'ok') 'second fresh canonical request succeeds'
+        $response = Invoke-PortalRequest 'api/behavior' $payload
+        Assert-Check ($response.Status -eq 200 -and ($response.Body | ConvertFrom-Json).status -eq 'ok') 'second fresh behavioral request succeeds'
+        $diagnostics = Invoke-RestMethod -Uri $diagnosticsUrl -TimeoutSec 5
+        $afterProcesses = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId = " + $backendProcess + " AND Name = 'java.exe'") | Select-Object -ExpandProperty ProcessId | Sort-Object)
+        Assert-Check (@(Compare-Object $engineProcesses $afterProcesses).Count -eq 0) 'fresh feedback and behavior preserve actual JVM process identities'
+        Assert-Check ($diagnostics.lanes.feedback.launchCredits -ge $feedbackCredits -and
+            $diagnostics.lanes.behavior.launchCredits -ge $behaviorCredits -and
+            $diagnostics.lanes.feedback.unreaped -eq 0 -and $diagnostics.lanes.behavior.unreaped -eq 0) 'fresh requests reuse workers without consuming further launch credits'
+        $response = Invoke-PortalRequest 'api/diagnostics'
+        Assert-Check ($response.Status -eq 404) 'private diagnostics are not reachable through IIS'
+    }
+
     $stage = 'request boundaries and private routes'
     $anonymousAdmin = Invoke-PortalRequest 'api/admin/prepare' @{}
     Assert-Check ($anonymousAdmin.Status -in @(401, 403, 404, 503)) 'anonymous administration is rejected'
-    Assert-Check ($anonymousAdmin.CacheControl -match 'no-store' -and $anonymousAdmin.CacheControl -match 'private' -and
-        -not $anonymousAdmin.AllowOrigin) 'admin rejection cannot be cached or read through CORS'
+    if ($ExpectAdminAccess) {
+        Assert-Check ($anonymousAdmin.CacheControl -match 'no-store' -and $anonymousAdmin.CacheControl -match 'private' -and
+            -not $anonymousAdmin.AllowOrigin) 'backend admin rejection cannot be cached or read through CORS'
+    } else {
+        Assert-Check ($anonymousAdmin.Status -eq 404 -and -not $anonymousAdmin.AllowOrigin) 'default-deny administration API remains unavailable'
+    }
     $response = Invoke-PortalRequest 'api/feedback' $payload 'https://attacker.invalid'
     Assert-Check ($response.Status -eq 403 -and $response.ContentType -match 'application/json') 'cross-origin rejection survives IIS as JSON'
     $payload.revision = $true
@@ -238,6 +311,8 @@ try {
         environment = 'Windows IIS 10 deployment acceptance; not a universal correctness claim'
         public_url = $baseUrl
         live_luna_requested = [bool]$CheckLuna
+        administration_network_access_expected = [bool]$ExpectAdminAccess
+        private_diagnostics_requested = [bool]$CheckDiagnostics
         runtime_dependencies = $runtimeDependencies
         checks = @($checks.ToArray())
     }

@@ -139,6 +139,7 @@ public final class CanonicalDistance {
             }
         }
         while (!pending.isEmpty()) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             EGraphNode node = pending.removeFirst();
             if (!seen.add(node)) {
                 continue;
@@ -262,6 +263,7 @@ public final class CanonicalDistance {
     }
 
     private static List<QuantiVar> canonicalQuantifierOrder(List<QuantiVar> variables) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + (long) variables.size() * variables.size());
         List<QuantiVar> ordered = new ArrayList<>(variables);
         for (int start = 0; start < ordered.size();) {
             QuantiVar.Quantifier quantifier = ordered.get(start).getQuantifier();
@@ -320,6 +322,7 @@ public final class CanonicalDistance {
         int j = right.size();
         List<String> reversed = new ArrayList<>();
         while (i > 0 || j > 0) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             if (i > 0 && dp[i][j] == dp[i - 1][j] + 1) {
                 reversed.add(path + "[" + (i - 1) + "]: delete " + quantifierFormula(left.get(i - 1)));
                 i--;
@@ -476,6 +479,8 @@ public final class CanonicalDistance {
             CoherentVariableSpace rightSpace) {
         boolean changed;
         do {
+            is.fivefivefive.CanDis.WorkBudget.charge(1L + (long) rightSpace.variables.size() * (leftNames.size() + 1L)
+                    + (long) leftSpace.variables.size() * (rightNames.size() + 1L));
             changed = false;
             for (Map.Entry<String, CoherentVariable> entry
                     : rightSpace.variables.entrySet()) {
@@ -525,6 +530,7 @@ public final class CanonicalDistance {
             EGraphMetadata leftMetadata,
             EGraphMetadata rightMetadata,
             BestCoherentMapping best) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightNames.size());
         if (index == leftNames.size()) {
             if (matched != requiredMatches) {
                 return;
@@ -603,6 +609,7 @@ public final class CanonicalDistance {
             CoherentVariable left,
             List<String> rightNames,
             CoherentVariableSpace rightSpace) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightNames.size());
         int count = 0;
         for (String rightName : rightNames) {
             if (left.compatibleWith(rightSpace.variables.get(rightName))) {
@@ -640,6 +647,7 @@ public final class CanonicalDistance {
             CoherentVariableSpace rightSpace,
             Map<String, String> matchedLeftByRight,
             Set<String> visitedRight) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightNames.size());
         CoherentVariable left = leftSpace.variables.get(leftName);
         for (String rightName : rightNames) {
             if (!visitedRight.add(rightName)
@@ -665,6 +673,7 @@ public final class CanonicalDistance {
 
     private static CoherentVariableSpace coherentVariableSpace(
             List<NormalForm> normalForms) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + normalForms.size());
         Map<String, CoherentVariable> all = new HashMap<>();
         for (int phase = 0; phase < normalForms.size(); phase++) {
             NormalForm normalForm = normalForms.get(phase);
@@ -831,6 +840,7 @@ public final class CanonicalDistance {
             int matched,
             int requiredMatches,
             BestMapping best) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightBindings.size());
         if (index == leftNames.size()) {
             if (matched != requiredMatches) {
                 return;
@@ -873,6 +883,7 @@ public final class CanonicalDistance {
             String leftName,
             Map<String, BindingDescriptor> leftBindings,
             Map<String, BindingDescriptor> rightBindings) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightBindings.size());
         int count = 0;
         BindingDescriptor leftBinding = leftBindings.get(leftName);
         for (BindingDescriptor rightBinding : rightBindings.values()) {
@@ -897,6 +908,7 @@ public final class CanonicalDistance {
             int best,
             EGraphMetadata leftMetadata,
             EGraphMetadata rightMetadata) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightBindings.size());
         if (index == leftNames.size()) {
             if (matched != requiredMatches) {
                 return best;
@@ -978,6 +990,7 @@ public final class CanonicalDistance {
             Map<String, BindingDescriptor> rightBindings,
             Map<String, String> matchedLeftByRight,
             Set<String> visitedRight) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + rightBindings.size());
         BindingDescriptor left = leftBindings.get(leftName);
         for (Map.Entry<String, BindingDescriptor> right : rightBindings.entrySet()) {
             if (!visitedRight.add(right.getKey())
@@ -1000,6 +1013,7 @@ public final class CanonicalDistance {
     }
 
     private static Map<String, BindingDescriptor> variableBindings(NormalForm nf) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         Map<String, BindingDescriptor> bindings = new HashMap<>();
         addBindings(bindings, nf.getParams(), BindingRole.PARAMETER);
         addBindings(bindings, nf.getMatrixQuantiVars(), BindingRole.MATRIX);
@@ -1012,6 +1026,7 @@ public final class CanonicalDistance {
             Map<String, BindingDescriptor> bindings,
             List<QuantiVar> variables,
             BindingRole role) {
+        is.fivefivefive.CanDis.WorkBudget.charge(variables.size());
         for (int i = 0; i < variables.size(); i++) {
             QuantiVar variable = variables.get(i);
             bindings.put(variable.getName(), new BindingDescriptor(variable, role, i));
@@ -1028,6 +1043,7 @@ public final class CanonicalDistance {
         if (node == null) {
             return;
         }
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         if (node.getOpcode() == EGraphNode.Opcode.VARIABLE) {
             names.add(variableName(node));
         }
@@ -1042,6 +1058,7 @@ public final class CanonicalDistance {
             Map<String, String> variableMapping,
             String path,
             List<String> edits) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         if (left == null) {
             collectInsertedEGraph(right, path, edits);
             return;
@@ -1094,6 +1111,7 @@ public final class CanonicalDistance {
         int j = right.size();
         List<String> reversed = new ArrayList<>();
         while (i > 0 || j > 0) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             if (i > 0 && dp[i][j] == dp[i - 1][j] + eGraphSize(left.get(i - 1))) {
                 collectDeletedEGraph(left.get(i - 1), path + "[" + (i - 1) + "]", reversed);
                 i--;
@@ -1135,6 +1153,7 @@ public final class CanonicalDistance {
         if (node == null) {
             return;
         }
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         edits.add(path + ": insert " + nodeSummary(node));
         for (int i = 0; i < node.getChildren().size(); i++) {
             collectInsertedEGraph(node.getChildren().get(i), path + ".child[" + i + "]", edits);
@@ -1145,6 +1164,7 @@ public final class CanonicalDistance {
         if (node == null) {
             return;
         }
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         edits.add(path + ": delete " + nodeSummary(node));
         for (int i = 0; i < node.getChildren().size(); i++) {
             collectDeletedEGraph(node.getChildren().get(i), path + ".child[" + i + "]", edits);
@@ -1167,6 +1187,7 @@ public final class CanonicalDistance {
     private static List<EGraphNode> sortedForMapping(
             List<EGraphNode> children,
             Map<String, String> variableMapping) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + (long) children.size() * children.size());
         List<EGraphNode> sorted = new ArrayList<>(children);
         Map<EGraphNode, String> keys = new IdentityHashMap<>();
         for (EGraphNode child : sorted) {
@@ -1177,6 +1198,7 @@ public final class CanonicalDistance {
     }
 
     private static String mappedSortKey(EGraphNode node, Map<String, String> variableMapping) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + node.getChildren().size());
         StringBuilder key = new StringBuilder(node.getOpcode().toString())
                 .append('{').append(node.getFlexibleArityKind()).append("}:");
         if (node.getOpcode() == EGraphNode.Opcode.VARIABLE) {
@@ -1198,6 +1220,7 @@ public final class CanonicalDistance {
                 members.add(mappedSortKey(child, variableMapping));
             }
             for (String member : members) {
+                is.fivefivefive.CanDis.WorkBudget.charge(member.length());
                 key.append(member).append(',');
             }
         } else if (node.isBagFlexibleArity()) {
@@ -1207,6 +1230,7 @@ public final class CanonicalDistance {
                 multiplicities.put(childKey, multiplicities.getOrDefault(childKey, 0) + 1);
             }
             for (Map.Entry<String, Integer> entry : multiplicities.entrySet()) {
+                is.fivefivefive.CanDis.WorkBudget.charge(entry.getKey().length());
                 key.append(entry.getKey());
                 if (entry.getValue() > 1) {
                     key.append('^').append(entry.getValue());
@@ -1215,7 +1239,9 @@ public final class CanonicalDistance {
             }
         } else {
             for (EGraphNode child : children) {
-                key.append(mappedSortKey(child, variableMapping)).append(',');
+                String childKey = mappedSortKey(child, variableMapping);
+                is.fivefivefive.CanDis.WorkBudget.charge(childKey.length());
+                key.append(childKey).append(',');
             }
         }
         return key.append(']').toString();
@@ -1291,6 +1317,7 @@ public final class CanonicalDistance {
             if (node == null || sizes.containsKey(node)) {
                 return;
             }
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             List<EGraphNode> children = node.getChildren();
             int size = 1;
             for (int i = 0; i < children.size(); i++) {
@@ -1330,6 +1357,7 @@ public final class CanonicalDistance {
         }
 
         private int distance(EGraphNode left, EGraphNode right) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             if (left == null) {
                 return nodeSize(right, false);
             }
@@ -1371,6 +1399,7 @@ public final class CanonicalDistance {
 
         private static int minimumAssignmentCost(int[][] costs) {
             int size = costs.length;
+            is.fivefivefive.CanDis.WorkBudget.chargeCells(size, size);
             for (int row = 0; row < size; row++) {
                 if (costs[row] == null || costs[row].length != size) {
                     throw new IllegalArgumentException(
@@ -1394,6 +1423,7 @@ public final class CanonicalDistance {
                 java.util.Arrays.fill(minimum, Long.MAX_VALUE);
                 boolean[] used = booleanArray(Math.addExact(size, 1));
                 do {
+                    is.fivefivefive.CanDis.WorkBudget.charge(2L * (size + 1));
                     used[column] = true;
                     int matchedRow = columnMatch[column];
                     long delta = Long.MAX_VALUE;
@@ -1496,6 +1526,7 @@ public final class CanonicalDistance {
         if (node == null) {
             return 0;
         }
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         int size = 1;
         List<EGraphNode> children = node.getChildren();
         for (int i = 0; i < children.size(); i++) {
@@ -1584,6 +1615,7 @@ public final class CanonicalDistance {
     }
 
     private static int temporalSize(TemporalTree node) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         int size = 1;
         for (TemporalTree child : node.children) {
             size += temporalSize(child);
@@ -1592,6 +1624,7 @@ public final class CanonicalDistance {
     }
 
     private static void temporalEdits(TemporalTree left, TemporalTree right, String path, List<String> edits) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         if (!safeEquals(left.label, right.label)) {
             edits.add(path + ": replace " + left.label + " -> " + right.label);
         }
@@ -1635,6 +1668,7 @@ public final class CanonicalDistance {
     }
 
     private static void collectInsertedTemporal(TemporalTree node, String path, List<String> edits) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         edits.add(path + ": insert temporal " + node.label);
         for (int i = 0; i < node.children.size(); i++) {
             collectInsertedTemporal(node.children.get(i), path + ".child[" + i + "]", edits);
@@ -1642,6 +1676,7 @@ public final class CanonicalDistance {
     }
 
     private static void collectDeletedTemporal(TemporalTree node, String path, List<String> edits) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         edits.add(path + ": delete temporal " + node.label);
         for (int i = 0; i < node.children.size(); i++) {
             collectDeletedTemporal(node.children.get(i), path + ".child[" + i + "]", edits);
@@ -1743,6 +1778,7 @@ public final class CanonicalDistance {
         if (node == null) {
             return "<empty>";
         }
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         switch (node.getOpcode()) {
             case VARIABLE:
                 return nodeVariableDisplay(node);
@@ -1914,17 +1950,20 @@ public final class CanonicalDistance {
     }
 
     private static int[][] intMatrix(int rows, int columns) {
+        is.fivefivefive.CanDis.WorkBudget.chargeCells(rows, columns);
         long bytes = alignedArrayBytes(rows, 8) + (long) rows * alignedArrayBytes(columns, 4);
         recordAllocation(bytes, rows + 1L, true);
         return new int[rows][columns];
     }
 
     private static int[] intArray(int length) {
+        is.fivefivefive.CanDis.WorkBudget.charge(length);
         recordAllocation(alignedArrayBytes(length, 4), 1, false);
         return new int[length];
     }
 
     private static boolean[] booleanArray(int length) {
+        is.fivefivefive.CanDis.WorkBudget.charge(length);
         recordAllocation(alignedArrayBytes(length, 1), 1, false);
         return new boolean[length];
     }

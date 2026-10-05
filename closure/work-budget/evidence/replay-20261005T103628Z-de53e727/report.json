@@ -1,0 +1,1085 @@
+{
+  "axiomPolicy": {
+    "actualDependencies": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "allProjectDeclarationsAudited": true,
+    "allowed": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "interpretation": "These three imported Lean foundations are explicit trust; no introduced project axioms or placeholders are admitted.",
+    "perDeclaration": {
+      "AlloyStudio.PatchContracts.Work.Event": [],
+      "AlloyStudio.PatchContracts.Work.Event._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.Event._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.Event.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Event.ctorElim": [],
+      "AlloyStudio.PatchContracts.Work.Event.ctorElimType": [],
+      "AlloyStudio.PatchContracts.Work.Event.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.Event.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Event.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.Event.plannedRetirement": [],
+      "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.ready": [],
+      "AlloyStudio.PatchContracts.Work.Event.ready.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.ready.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.reaped": [],
+      "AlloyStudio.PatchContracts.Work.Event.reaped.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.reaped.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.rec": [],
+      "AlloyStudio.PatchContracts.Work.Event.recOn": [],
+      "AlloyStudio.PatchContracts.Work.Event.renew": [],
+      "AlloyStudio.PatchContracts.Work.Event.renew.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.renew.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.requestTimeout": [],
+      "AlloyStudio.PatchContracts.Work.Event.requestTimeout.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.requestTimeout.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.start": [],
+      "AlloyStudio.PatchContracts.Work.Event.start.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.start.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.startupFailure": [],
+      "AlloyStudio.PatchContracts.Work.Event.startupFailure.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.startupFailure.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Event.tick": [],
+      "AlloyStudio.PatchContracts.Work.Event.tick.elim": [],
+      "AlloyStudio.PatchContracts.Work.Event.tick.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Event.tick.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Invariant": [],
+      "AlloyStudio.PatchContracts.Work.Lane": [],
+      "AlloyStudio.PatchContracts.Work.Lane._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.Lane._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.Lane.behavior": [],
+      "AlloyStudio.PatchContracts.Work.Lane.behavior.elim": [],
+      "AlloyStudio.PatchContracts.Work.Lane.behavior.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Lane.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Lane.ctorElim": [],
+      "AlloyStudio.PatchContracts.Work.Lane.ctorElimType": [],
+      "AlloyStudio.PatchContracts.Work.Lane.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.Lane.feedback": [],
+      "AlloyStudio.PatchContracts.Work.Lane.feedback.elim": [],
+      "AlloyStudio.PatchContracts.Work.Lane.feedback.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Lane.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Lane.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.Lane.rec": [],
+      "AlloyStudio.PatchContracts.Work.Lane.recOn": [],
+      "AlloyStudio.PatchContracts.Work.LaneState": [],
+      "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.attempts": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.failedStarts": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.live": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.mk": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.mk._flat_ctor": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.mk.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.mk.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.now": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.rec": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.recOn": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.renewal": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.starting": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.tokens": [],
+      "AlloyStudio.PatchContracts.Work.LaneState.unreaped": [],
+      "AlloyStudio.PatchContracts.Work.Limits": [],
+      "AlloyStudio.PatchContracts.Work.Limits._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.Limits._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.Limits.capacity": [],
+      "AlloyStudio.PatchContracts.Work.Limits.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Limits.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.Limits.failedStartLimit": [],
+      "AlloyStudio.PatchContracts.Work.Limits.mk": [],
+      "AlloyStudio.PatchContracts.Work.Limits.mk._flat_ctor": [],
+      "AlloyStudio.PatchContracts.Work.Limits.mk.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Limits.mk.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Limits.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Limits.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.Limits.period": [],
+      "AlloyStudio.PatchContracts.Work.Limits.rec": [],
+      "AlloyStudio.PatchContracts.Work.Limits.recOn": [],
+      "AlloyStudio.PatchContracts.Work.Limits.startsPerEpoch": [],
+      "AlloyStudio.PatchContracts.Work.Pool": [],
+      "AlloyStudio.PatchContracts.Work.Pool._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.Pool._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.Pool.behavior": [],
+      "AlloyStudio.PatchContracts.Work.Pool.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Pool.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.Pool.feedback": [],
+      "AlloyStudio.PatchContracts.Work.Pool.mk": [],
+      "AlloyStudio.PatchContracts.Work.Pool.mk._flat_ctor": [],
+      "AlloyStudio.PatchContracts.Work.Pool.mk.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Pool.mk.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Pool.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Pool.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.Pool.rec": [],
+      "AlloyStudio.PatchContracts.Work.Pool.recOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.behavior": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.feedback": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.mk": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.mk._flat_ctor": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.mk.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.mk.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.rec": [],
+      "AlloyStudio.PatchContracts.Work.PoolLimits.recOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.below": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.below.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.below.init": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.below.next": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.below.rec": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.brecOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.init": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.next": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.rec": [],
+      "AlloyStudio.PatchContracts.Work.PoolReachable.recOn": [],
+      "AlloyStudio.PatchContracts.Work.Reachable": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.below": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.below.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.below.init": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.below.next": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.below.rec": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.brecOn": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.init": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.next": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.rec": [],
+      "AlloyStudio.PatchContracts.Work.Reachable.recOn": [],
+      "AlloyStudio.PatchContracts.Work.Response": [],
+      "AlloyStudio.PatchContracts.Work.Response._sizeOf_1": [],
+      "AlloyStudio.PatchContracts.Work.Response._sizeOf_inst": [],
+      "AlloyStudio.PatchContracts.Work.Response.accepted": [],
+      "AlloyStudio.PatchContracts.Work.Response.accepted.elim": [],
+      "AlloyStudio.PatchContracts.Work.Response.accepted.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Response.accepted.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.Response.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.Response.ctorElim": [],
+      "AlloyStudio.PatchContracts.Work.Response.ctorElimType": [],
+      "AlloyStudio.PatchContracts.Work.Response.ctorIdx": [],
+      "AlloyStudio.PatchContracts.Work.Response.noConfusion": [],
+      "AlloyStudio.PatchContracts.Work.Response.noConfusionType": [],
+      "AlloyStudio.PatchContracts.Work.Response.rec": [],
+      "AlloyStudio.PatchContracts.Work.Response.recOn": [],
+      "AlloyStudio.PatchContracts.Work.Response.unsupported": [],
+      "AlloyStudio.PatchContracts.Work.Response.unsupported.elim": [],
+      "AlloyStudio.PatchContracts.Work.Response.unsupported.sizeOf_spec": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.init": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.next": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.rec": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.brecOn": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.casesOn": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.init": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.next": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.rec": [],
+      "AlloyStudio.PatchContracts.Work.UnlimitedReachable.recOn": [],
+      "AlloyStudio.PatchContracts.Work.accepted_payload_preserved": [],
+      "AlloyStudio.PatchContracts.Work.accepted_traversal_complete": [],
+      "AlloyStudio.PatchContracts.Work.aggregate_exhaustion": [],
+      "AlloyStudio.PatchContracts.Work.all_execution_paths_bounded": [],
+      "AlloyStudio.PatchContracts.Work.atomic_charge_before_step": [],
+      "AlloyStudio.PatchContracts.Work.behavior_cannot_consume_feedback_budget": [],
+      "AlloyStudio.PatchContracts.Work.both_lanes_remain_bounded": [],
+      "AlloyStudio.PatchContracts.Work.boundedFold": [],
+      "AlloyStudio.PatchContracts.Work.boundedFold._f": [],
+      "AlloyStudio.PatchContracts.Work.boundedFold._sunfold": [],
+      "AlloyStudio.PatchContracts.Work.boundedFold._unsafe_rec": [],
+      "AlloyStudio.PatchContracts.Work.boundedFold.match_1": [],
+      "AlloyStudio.PatchContracts.Work.bounded_minimum_exact": [],
+      "AlloyStudio.PatchContracts.Work.bounded_modeled_recovery": [],
+      "AlloyStudio.PatchContracts.Work.churnLimits": [],
+      "AlloyStudio.PatchContracts.Work.churnState": [],
+      "AlloyStudio.PatchContracts.Work.complete_exact": [],
+      "AlloyStudio.PatchContracts.Work.evaluationSteps": [],
+      "AlloyStudio.PatchContracts.Work.evaluationSteps._f": [],
+      "AlloyStudio.PatchContracts.Work.evaluationSteps._sunfold": [],
+      "AlloyStudio.PatchContracts.Work.evaluationSteps._unsafe_rec": [],
+      "AlloyStudio.PatchContracts.Work.evaluationSteps.match_1": [],
+      "AlloyStudio.PatchContracts.Work.every_start_charged": [],
+      "AlloyStudio.PatchContracts.Work.exhausted_no_partial_output": [],
+      "AlloyStudio.PatchContracts.Work.exhausted_rejects": [],
+      "AlloyStudio.PatchContracts.Work.failed_start_counts_once": [],
+      "AlloyStudio.PatchContracts.Work.feedback_cannot_consume_behavior_budget": [],
+      "AlloyStudio.PatchContracts.Work.fullFold": [],
+      "AlloyStudio.PatchContracts.Work.fullFold._f": [],
+      "AlloyStudio.PatchContracts.Work.fullFold._sunfold": [],
+      "AlloyStudio.PatchContracts.Work.fullFold._unsafe_rec": [],
+      "AlloyStudio.PatchContracts.Work.fullFold.eq_1": [],
+      "AlloyStudio.PatchContracts.Work.fullFold.eq_2": [],
+      "AlloyStudio.PatchContracts.Work.fullFold.eq_def": [],
+      "AlloyStudio.PatchContracts.Work.fullFold.match_1": [],
+      "AlloyStudio.PatchContracts.Work.full_traversal": [],
+      "AlloyStudio.PatchContracts.Work.initial": [],
+      "AlloyStudio.PatchContracts.Work.laneStep": [],
+      "AlloyStudio.PatchContracts.Work.laneStep.match_1": [],
+      "AlloyStudio.PatchContracts.Work.later_closer_candidate_cannot_be_truncated": [],
+      "AlloyStudio.PatchContracts.Work.minimumDistance": [],
+      "AlloyStudio.PatchContracts.Work.no_tokens_no_spawn": [],
+      "AlloyStudio.PatchContracts.Work.oldFeedbackStarts": [],
+      "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._f": [],
+      "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._sunfold": [],
+      "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._unsafe_rec": [],
+      "AlloyStudio.PatchContracts.Work.oldFeedbackStarts.match_1": [],
+      "AlloyStudio.PatchContracts.Work.oldSharedStart": [],
+      "AlloyStudio.PatchContracts.Work.only_startup_failure_increases_circuit": [],
+      "AlloyStudio.PatchContracts.Work.oversize_unsupported": [],
+      "AlloyStudio.PatchContracts.Work.planned_retirement_does_not_poison_startup_circuit": [],
+      "AlloyStudio.PatchContracts.Work.poolStep": [],
+      "AlloyStudio.PatchContracts.Work.poolStep.match_1": [],
+      "AlloyStudio.PatchContracts.Work.publish": [],
+      "AlloyStudio.PatchContracts.Work.publish.match_1": [],
+      "AlloyStudio.PatchContracts.Work.reachable_attempts_bounded": [],
+      "AlloyStudio.PatchContracts.Work.reachable_capacity_and_spawn_bound": [],
+      "AlloyStudio.PatchContracts.Work.renewal_cannot_repeat": [],
+      "AlloyStudio.PatchContracts.Work.renewal_requires_modeled_time": [],
+      "AlloyStudio.PatchContracts.Work.repeatedAndCost": [],
+      "AlloyStudio.PatchContracts.Work.repeatedAndCost._f": [],
+      "AlloyStudio.PatchContracts.Work.repeatedAndCost._sunfold": [],
+      "AlloyStudio.PatchContracts.Work.repeatedAndCost._unsafe_rec": [],
+      "AlloyStudio.PatchContracts.Work.repeatedAndCost.match_1": [],
+      "AlloyStudio.PatchContracts.Work.repeated_and_cost_grows": [],
+      "AlloyStudio.PatchContracts.Work.reserved": [],
+      "AlloyStudio.PatchContracts.Work.retirement_retains_capacity_reservation": [],
+      "AlloyStudio.PatchContracts.Work.runRequest": [],
+      "AlloyStudio.PatchContracts.Work.shared_twelve_start_interference": [],
+      "AlloyStudio.PatchContracts.Work.step_preserves_invariant": [],
+      "AlloyStudio.PatchContracts.Work.success_uses_at_most_initial_fuel": [],
+      "AlloyStudio.PatchContracts.Work.timeout_does_not_poison_startup_circuit": [],
+      "AlloyStudio.PatchContracts.Work.unlimitedCycle": [],
+      "AlloyStudio.PatchContracts.Work.unlimitedStep": [],
+      "AlloyStudio.PatchContracts.Work.unlimitedStep.match_1": [],
+      "AlloyStudio.PatchContracts.Work.unlimited_churn_reachable": [],
+      "AlloyStudio.PatchContracts.Work.unlimited_cycle_capacity": [],
+      "AlloyStudio.PatchContracts.Work.unlimited_cycle_exact": [],
+      "AlloyStudio.PatchContracts.Work.unlimited_retry_churn": [],
+      "AlloyStudio.PatchContracts.Work.zero_cannot_act": [],
+      "AlloyStudio.WorkBudget.Generated.charge": [],
+      "AlloyStudio.WorkBudget.Generated.checkpoint": [],
+      "AlloyStudio.WorkBudget.Generated.checkpoint.eq_1": [],
+      "AlloyStudio.WorkBudget.Generated.initialChecks": [],
+      "AlloyStudio.WorkBudget.Generated.sampleClock": [],
+      "AlloyStudio.WorkBudget.Generated.sampleClock.match_1": [],
+      "AlloyStudio.WorkBudget.Result": [],
+      "AlloyStudio.WorkBudget.Result._sizeOf_1": [],
+      "AlloyStudio.WorkBudget.Result._sizeOf_inst": [],
+      "AlloyStudio.WorkBudget.Result.casesOn": [],
+      "AlloyStudio.WorkBudget.Result.ctorElim": [],
+      "AlloyStudio.WorkBudget.Result.ctorElimType": [],
+      "AlloyStudio.WorkBudget.Result.ctorIdx": [],
+      "AlloyStudio.WorkBudget.Result.exhausted": [],
+      "AlloyStudio.WorkBudget.Result.exhausted.elim": [],
+      "AlloyStudio.WorkBudget.Result.exhausted.noConfusion": [],
+      "AlloyStudio.WorkBudget.Result.exhausted.sizeOf_spec": [],
+      "AlloyStudio.WorkBudget.Result.invalid": [],
+      "AlloyStudio.WorkBudget.Result.invalid.elim": [],
+      "AlloyStudio.WorkBudget.Result.invalid.noConfusion": [],
+      "AlloyStudio.WorkBudget.Result.invalid.sizeOf_spec": [],
+      "AlloyStudio.WorkBudget.Result.noConfusion": [],
+      "AlloyStudio.WorkBudget.Result.noConfusionType": [],
+      "AlloyStudio.WorkBudget.Result.ok": [],
+      "AlloyStudio.WorkBudget.Result.ok.elim": [],
+      "AlloyStudio.WorkBudget.Result.ok.noConfusion": [],
+      "AlloyStudio.WorkBudget.Result.ok.sizeOf_spec": [],
+      "AlloyStudio.WorkBudget.Result.rec": [],
+      "AlloyStudio.WorkBudget.Result.recOn": [],
+      "AlloyStudio.WorkBudget.State": [],
+      "AlloyStudio.WorkBudget.State._sizeOf_1": [],
+      "AlloyStudio.WorkBudget.State._sizeOf_inst": [],
+      "AlloyStudio.WorkBudget.State.active": [],
+      "AlloyStudio.WorkBudget.State.casesOn": [],
+      "AlloyStudio.WorkBudget.State.checks": [],
+      "AlloyStudio.WorkBudget.State.ctorIdx": [],
+      "AlloyStudio.WorkBudget.State.exhausted": [],
+      "AlloyStudio.WorkBudget.State.limit": [],
+      "AlloyStudio.WorkBudget.State.mk": [],
+      "AlloyStudio.WorkBudget.State.mk._flat_ctor": [],
+      "AlloyStudio.WorkBudget.State.mk.noConfusion": [],
+      "AlloyStudio.WorkBudget.State.mk.sizeOf_spec": [],
+      "AlloyStudio.WorkBudget.State.noConfusion": [],
+      "AlloyStudio.WorkBudget.State.noConfusionType": [],
+      "AlloyStudio.WorkBudget.State.rec": [],
+      "AlloyStudio.WorkBudget.State.recOn": [],
+      "AlloyStudio.WorkBudget.State.remaining": [],
+      "AlloyStudio.WorkBudget.State.started": [],
+      "AlloyStudio.WorkBudget.State.timed": [],
+      "AlloyStudio.WorkBudget.Valid": [],
+      "AlloyStudio.WorkBudget.Valid.eq_1": [],
+      "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.admitted_charge_cost": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_3": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.chargeSpec": [],
+      "AlloyStudio.WorkBudget.charge_preserves_valid": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_6": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_7": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.charge_refines": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.charge_refines._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.charge_refines._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.checkpointSpec": [],
+      "AlloyStudio.WorkBudget.checkpointSpec.eq_1": [],
+      "AlloyStudio.WorkBudget.checkpoint_refines": [
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.due_sample_observes_clock": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky": [
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.expired_publication_refused": [
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.initial_cadence": [],
+      "AlloyStudio.WorkBudget.javaInt": [],
+      "AlloyStudio.WorkBudget.javaInt_exact": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaInt_exact._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaInt_exact._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaInt_exact._proof_1_3": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaLong": [],
+      "AlloyStudio.WorkBudget.javaLong_exact": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaLong_exact._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaLong_exact._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.javaLong_exact._proof_1_3": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.longMax": [],
+      "AlloyStudio.WorkBudget.longMin": [],
+      "AlloyStudio.WorkBudget.resultState": [],
+      "AlloyStudio.WorkBudget.resultState.eq_1": [],
+      "AlloyStudio.WorkBudget.resultState.eq_2": [],
+      "AlloyStudio.WorkBudget.resultState.eq_3": [],
+      "AlloyStudio.WorkBudget.resultState.match_1": [],
+      "AlloyStudio.WorkBudget.sampleSpec": [],
+      "AlloyStudio.WorkBudget.sampleSpec.eq_1": [],
+      "AlloyStudio.WorkBudget.sample_preserves_valid": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_refines": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_refines._proof_1_1": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_refines._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.sample_refines._proof_1_4": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.timed_countdown_decreases": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "AlloyStudio.WorkBudget.timed_countdown_decreases._proof_1_2": [
+        "Quot.sound",
+        "propext"
+      ],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_1": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_2": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_3": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.splitter": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_ok_remaining": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_preserves_valid": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_1": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_2": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_3": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.splitter": [],
+      "_private.Refinement.0.AlloyStudio.WorkBudget.sample_ok_remaining": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.append_assoc": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.append_nil": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_1": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_2": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.splitter": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_left": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_right": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.retire_reservation": [],
+      "_private.Work.0.AlloyStudio.PatchContracts.Work.subtract_restore": []
+    },
+    "projectAxiomDeclarations": "forbidden"
+  },
+  "blockSha256": "33f00ba24311e83a2d2672fc07022f52a0e5c427a0af182a3b35b3b74771f989",
+  "blockingReasons": [],
+  "builds": [
+    {
+      "artifacts": {
+        "Generated.olean": "b2989419acf5e07e2eae7e3fdd98c6dc233c8f07a1021f6807844994779cedfc",
+        "Refinement.olean": "b08f415580eab6e5bcf9f94dcb0dd6da469121ee59a3fcf4380186926c0d54c7",
+        "Semantics.olean": "5a9c957915d304c84da69292dbe9b6eba2117dfedbec4a1698ffbd7e17ee4c3b",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "correspondence": {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      },
+      "declarations": 374,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "inventorySha256": "55907e4950e94a7d00841c93033c29e570d8ed04e0222d4dec8c7760a5a8905f",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "theorems": 119
+    },
+    {
+      "artifacts": {
+        "Generated.olean": "b2989419acf5e07e2eae7e3fdd98c6dc233c8f07a1021f6807844994779cedfc",
+        "Refinement.olean": "b08f415580eab6e5bcf9f94dcb0dd6da469121ee59a3fcf4380186926c0d54c7",
+        "Semantics.olean": "5a9c957915d304c84da69292dbe9b6eba2117dfedbec4a1698ffbd7e17ee4c3b",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "correspondence": {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      },
+      "declarations": 374,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "inventorySha256": "55907e4950e94a7d00841c93033c29e570d8ed04e0222d4dec8c7760a5a8905f",
+      "network": {
+        "interfaces": [
+          "lo"
+        ],
+        "ipv4Routes": 0,
+        "outboundConnectError": 101
+      },
+      "theorems": 119
+    }
+  ],
+  "claimCounts": {
+    "blocked": 0,
+    "mappedDistinctTheorems": 14,
+    "note": "The full audit also counts compiler-generated theorems; theorem count is not semantic coverage.",
+    "passed": 7,
+    "sourceWrittenTheoremDeclarations": 59,
+    "total": 7
+  },
+  "claims": [
+    {
+      "claimId": "LP05-WORK-C01",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c01",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.javaLong_exact",
+        "AlloyStudio.WorkBudget.javaInt_exact"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C02",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c02",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.checkpoint_refines"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C03",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c03",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.initial_cadence",
+        "AlloyStudio.WorkBudget.sample_refines",
+        "AlloyStudio.WorkBudget.timed_countdown_decreases",
+        "AlloyStudio.WorkBudget.due_sample_observes_clock"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C04",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c04",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.charge_refines",
+        "AlloyStudio.WorkBudget.admitted_charge_cost"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C05",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c05",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.sample_preserves_valid",
+        "AlloyStudio.WorkBudget.charge_preserves_valid"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C06",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c06",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    },
+    {
+      "claimId": "LP05-WORK-C07",
+      "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+      "executionEnvironment": {
+        "flags": [
+          "--trust=0",
+          "-DwarningAsError=true",
+          "-DgenInjectivity=false",
+          "-Dbackward.match.sparseCases=false",
+          "-j1"
+        ],
+        "leanToolchain": "leanprover/lean4:v4.34.1",
+        "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+        "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+        "python": {
+          "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+          "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+        },
+        "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+      },
+      "exitCode": 0,
+      "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c07",
+      "rawResult": {
+        "cleanBuilds": 2,
+        "declarationsUseOnlyRegisteredFoundationAxioms": true
+      },
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky",
+        "AlloyStudio.WorkBudget.expired_publication_refused"
+      ],
+      "status": "PASS",
+      "verifierId": "V-WORK-BUDGET",
+      "verifierSha256": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845"
+    }
+  ],
+  "closesAllProductionObligations": false,
+  "closureBoundary": {
+    "checked": "Input hashes, complete declaration/axiom inventory, exact imported-foundation allowlist and deterministic builds",
+    "excluded": [
+      "Whole-program Java/Python/browser refinement",
+      "Charge-site completeness",
+      "Wall-clock liveness",
+      "Allocation setup helpers",
+      "Learner outcomes"
+    ],
+    "interpretation": "REPLAY_PASS is a runtime-portability proof replay, not a closure verdict; every global AP01 production bridge remains OPEN.",
+    "proved": "Frozen charged-work transition refinements and admitted-batch connection to Work.boundedFold",
+    "tested": "Java control-flow mutation rejection and registered verifier regression controls"
+  },
+  "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+  "correspondence": {
+    "ambiguousObjects": 0,
+    "buildResults": [
+      {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      },
+      {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      }
+    ],
+    "mappedObjects": 3,
+    "requiredObjects": 3,
+    "scope": "Three parsed Java method bodies lower to generated Lean under the declared parser/runtime trust; publication guards are structurally checked only",
+    "unmappedObjects": 0
+  },
+  "dependencies": {
+    "python": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "trusted": [
+      {
+        "description": "Underlying processor and memory correctly execute the checker.",
+        "id": "TCB-HARDWARE"
+      },
+      {
+        "description": "The restricted Java lexer/parser, field/state interpretation and lowering to Lean are trusted translation machinery; unknown syntax is rejected and mutations are mechanically challenged.",
+        "id": "TCB-JAVA-LOWERING"
+      },
+      {
+        "description": "Normal Java compiler/JVM primitive semantics and same-thread ThreadLocal identity are trusted; clock observations are explicit inputs, not axioms or guarantees about wall time.",
+        "id": "TCB-JAVA-RUNTIME"
+      },
+      {
+        "description": "Installed pinned Lean 4.34.1 kernel/compiler and standard library; actual per-declaration axiom dependencies must be a subset of the three explicitly registered imported Lean foundations.",
+        "id": "TCB-LEAN"
+      },
+      {
+        "description": "Exactly the imported Lean foundations propext, Classical.choice and Quot.sound may occur in audited declaration dependency inventories. No project axiom declaration, sorry, native proof escape or additional axiom is allowed.",
+        "id": "TCB-LEAN-FOUNDATIONS"
+      },
+      {
+        "description": "Linux process/filesystem semantics, network namespace enforcement and tool invocation.",
+        "id": "TCB-OS"
+      },
+      {
+        "description": "Pinned Python executable and its standard-library execution semantics.",
+        "id": "TCB-PYTHON"
+      },
+      {
+        "description": "The orchestrator reports actual reviewer model identities; six bound review records are advisory and cannot discharge a proof.",
+        "id": "TCB-REVIEW-PROVENANCE"
+      },
+      {
+        "description": "SHA-256 implementation and collision resistance bind source, generated artifacts, proof types and review records.",
+        "id": "TCB-SHA256"
+      },
+      {
+        "description": "Hashed Python verifier, registered audit metaprogram, policy checks and negative-control runner implement the stated finite decision rule.",
+        "id": "TCB-VERIFIERS"
+      }
+    ],
+    "undeclared": []
+  },
+  "determinism": "PASS",
+  "evidenceInputRootSha256": "ef0476902a2c3ec530e68a7e5e3559237c2f7a504d93f0d44e8c9f0ce2a5e6d7",
+  "executionEnvironment": {
+    "flags": [
+      "--trust=0",
+      "-DwarningAsError=true",
+      "-DgenInjectivity=false",
+      "-Dbackward.match.sparseCases=false",
+      "-j1"
+    ],
+    "leanToolchain": "leanprover/lean4:v4.34.1",
+    "networkDuringProofAndMutationProcesses": "isolated Linux namespace; loopback only",
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "python": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+  },
+  "infrastructureErrors": [],
+  "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+  "inputs": {
+    "closure/work-budget/spec.json": "f2e446ef1a53d5e98df236c20b7946336c5e9d4bbafc9ec5ba2b06fc998575fb",
+    "engine/src/live/EngineWorker.java": "37666414aaae2c55872711ec92279db9dfcea1938ecf4e962091090246afa1f4",
+    "engine/src/live/LiveFeedback.java": "96268a48b072e93f9692f29daa86019d76b88871593fda409862a9074e0a3837",
+    "engine/test/WorkBudgetSelfTest.java": "7d6de6c4d1a306180d2599802fff25f6725e157a2452d0934ded4e13a1528f57",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/patch_contracts/Work.lean": "18ca6af1917dc10283d2aa74d25d9888479954073c843fb51d5183907205e90b",
+    "formal/reviews/LP05-WORK/astra-a.json": "15a5f2f6a4d9569c35f34d793eea21cfec5da7684a6504c1ba9509349ae9deaa",
+    "formal/reviews/LP05-WORK/astra-a.md": "9bce9ac2222899c8f859e5c1cf77a5f116426311baade5ce147c7aa9b25bb48b",
+    "formal/reviews/LP05-WORK/astra-b.json": "7bf416ccef016abce3fa8ef0b9e025bcc74a4a290d4ff740d3e14bd908c6ecfc",
+    "formal/reviews/LP05-WORK/astra-b.md": "f32c9d3a0eec241048eb9cfb9e966b4c6fe8e505992bde5569781a6ed21fec3e",
+    "formal/reviews/LP05-WORK/luna-a.json": "20a1a4f03ce5ab5f0b6686e383ca5434810d408d35c8594882122bde4fb53bc7",
+    "formal/reviews/LP05-WORK/luna-a.md": "395f9f203e27f19c4486ad421ff9da9c977c37efebc70e25d415f7a25ba5c645",
+    "formal/reviews/LP05-WORK/luna-b.json": "33c80c50d05d0bce2237982d5a2b8bd13c3d39022f84f3fc6dcd8edb26b94b5e",
+    "formal/reviews/LP05-WORK/luna-b.md": "dbcc5301c321e1c4d23d9dad28a47bbc2028a9c9e503c1857b4da2912fe682d2",
+    "formal/reviews/LP05-WORK/sol-a.json": "75fca0e09982496d3d7b41418065cd58e3e31079906d23157975ed7eb0e7d920",
+    "formal/reviews/LP05-WORK/sol-a.md": "9a4952ab038ffcbe3fc7c05e26695df7c41ab4102b76b386ea46e4ca5ea63fa7",
+    "formal/reviews/LP05-WORK/sol-b.json": "7e66cd84ddf134ce08506a030b3a478674b58e21ae2dbc4f1a41b7e1756953e6",
+    "formal/reviews/LP05-WORK/sol-b.md": "8fff4ce3207c98f5008e78b4cee880d812be4ba13d7f42ab0ec8910ceb02bb5c",
+    "formal/work_budget/Audit.lean": "af3f624edf51edf47a4cab6dfc48ad3f5838f332ae9b3962b3af66715ee2c173",
+    "formal/work_budget/Generated.lean": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+    "formal/work_budget/README.md": "9a29d9129d0fe2740206278687810a1fe4a458305ac671a6a57a9dbf58957154",
+    "formal/work_budget/Refinement.lean": "e7ef4f3dd824e3709f22dc4fc611602bdac7f5ffd111f037f5d7366097dc0f0f",
+    "formal/work_budget/Semantics.lean": "5b7a0fea359f37d2c0261e6f02801883db8d3841cb9ee71e7f19778f567f85f2",
+    "formal/work_budget/block.json": "33f00ba24311e83a2d2672fc07022f52a0e5c427a0af182a3b35b3b74771f989",
+    "formal/work_budget/publication-template.java.txt": "0cde919563a436cf76b85f8f2a724576412673ce3ebec5eacebd9d607ccfc3c9",
+    "formal/work_budget/theorems.json": "93ead1712ec2fb10785500c85819b1fa8565c7c09f85172f18ac5056526b71d8",
+    "formal/work_budget/work-budget-shell.java.txt": "eb75ad885b8d20e8f635c263e61920d9d5208c16116d1577599853ef68f312e7",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/check_work_budget_negative_controls.py": "f6f796ef2213b77cc570430aae83eefe2b5d593453e1905ac32bafae81058cc8",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/review_ladder.py": "583e38ccb665ecb8107c169f41bda0639805e8c8aa9ae24d4b445c162a8f477a",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_work_budget.py": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845",
+    "scripts/work_budget_bridge.py": "56d8af5d842ce47f4ef670f7c155b2eb9df2cc6a93bfb65a74f212aaa80f374e",
+    "tests/test_review_ladder.py": "041b1e8abe7dd31daf3e910b074b6f59822e60bded2f9312548aae9b6368b4de",
+    "tests/test_work_budget_bridge.py": "75c0a0d7cefc95d59fd7ff26fba45ebbf29a9c3c923f7f4bf77b4044ec029339",
+    "tests/test_work_budget_verifier.py": "b9e99073d089734a75e21fe99fc62f07403d7d0d194dbc07fc405b9afa9283a6",
+    "vendor/acgn/src/is/fivefivefive/CanDis/WorkBudget.java": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78"
+  },
+  "javaMutationControls": {
+    "interpretation": "Changed actual Java semantics compile, then fail the independent Lean refinement.",
+    "semanticMutants": [
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "89a6c4a45fac6024dd62eae196ba07143283fe6adad8751bbbaf2ce2b4d757a3",
+        "name": "expiry-equality",
+        "refinementRejected": true
+      },
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "2bc76d2297f9aa0b95cf650837b97503fbe6804b6d3c6b766482182af61eaf31",
+        "name": "exact-fuel",
+        "refinementRejected": true
+      },
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "827fb012a491d561089fa77a7e75872194d92fb8d96f01df91335781833cfc14",
+        "name": "spending-direction",
+        "refinementRejected": true
+      },
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "a6c07c59f58538f26f6bd3398efd08753de18b1825e1ea5d028616f767f500e4",
+        "name": "sampling-cadence",
+        "refinementRejected": true
+      },
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "d9f7f728d823685ac5981557c4a6a4d790e3a040d9e5d24523c2ad38cf9d769e",
+        "name": "initial-countdown",
+        "refinementRejected": true
+      },
+      {
+        "generatedCompiled": true,
+        "generatedSha256": "f2f68956e37aa298960c9f208269a1eee6ba6f4d9c5fd8f1ec2f2b1f5571b71f",
+        "name": "clock-subtraction",
+        "refinementRejected": true
+      }
+    ],
+    "status": "PASS"
+  },
+  "negativeControls": {
+    "customAxiomAndDependentTheorem": "REJECTED",
+    "falseWithoutPlaceholder": "REJECTED",
+    "placeholder": "REJECTED"
+  },
+  "productionBridges": [
+    {
+      "id": "LP05-WORK-B01",
+      "statement": "All production charge sites cover every algorithmic operation and allocation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B02",
+      "statement": "Whole Java program, setup/allocation helpers, parser/native solver and exception/lifecycle behavior refine Lean.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B03",
+      "statement": "Python scheduling/HTTP, browser/IIS/Cloudflare and provider transport refine the proof models.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B04",
+      "statement": "Wall-clock completion, CPU/RSS bounds and arbitrary future executions satisfy an absolute end-to-end deadline.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-GLOBAL",
+      "statement": "Every broader AP01 production bridge remains unclosed; this finite proof does not promote the historical implementation ledger.",
+      "status": "OPEN"
+    }
+  ],
+  "provenance": {
+    "fullyBound": 7,
+    "orphanClaims": 0,
+    "publicClaims": 7
+  },
+  "reviews": {
+    "records": {
+      "formal/reviews/LP05-WORK/astra-a.json": "15a5f2f6a4d9569c35f34d793eea21cfec5da7684a6504c1ba9509349ae9deaa",
+      "formal/reviews/LP05-WORK/astra-a.md": "9bce9ac2222899c8f859e5c1cf77a5f116426311baade5ce147c7aa9b25bb48b",
+      "formal/reviews/LP05-WORK/astra-b.json": "7bf416ccef016abce3fa8ef0b9e025bcc74a4a290d4ff740d3e14bd908c6ecfc",
+      "formal/reviews/LP05-WORK/astra-b.md": "f32c9d3a0eec241048eb9cfb9e966b4c6fe8e505992bde5569781a6ed21fec3e",
+      "formal/reviews/LP05-WORK/luna-a.json": "20a1a4f03ce5ab5f0b6686e383ca5434810d408d35c8594882122bde4fb53bc7",
+      "formal/reviews/LP05-WORK/luna-a.md": "395f9f203e27f19c4486ad421ff9da9c977c37efebc70e25d415f7a25ba5c645",
+      "formal/reviews/LP05-WORK/luna-b.json": "33c80c50d05d0bce2237982d5a2b8bd13c3d39022f84f3fc6dcd8edb26b94b5e",
+      "formal/reviews/LP05-WORK/luna-b.md": "dbcc5301c321e1c4d23d9dad28a47bbc2028a9c9e503c1857b4da2912fe682d2",
+      "formal/reviews/LP05-WORK/sol-a.json": "75fca0e09982496d3d7b41418065cd58e3e31079906d23157975ed7eb0e7d920",
+      "formal/reviews/LP05-WORK/sol-a.md": "9a4952ab038ffcbe3fc7c05e26695df7c41ab4102b76b386ea46e4ca5ea63fa7",
+      "formal/reviews/LP05-WORK/sol-b.json": "7e66cd84ddf134ce08506a030b3a478674b58e21ae2dbc4f1a41b7e1756953e6",
+      "formal/reviews/LP05-WORK/sol-b.md": "8fff4ce3207c98f5008e78b4cee880d812be4ba13d7f42ab0ec8910ceb02bb5c"
+    },
+    "role": "advisory only"
+  },
+  "runtimeBinding": {
+    "actualPython": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "actualToolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62",
+    "interpretation": "A replay checks the frozen source and theorems on the reported runtime; it never grants or renews VERIFIED.",
+    "mode": "runtime-agnostic-replay",
+    "registeredPython": {
+      "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+      "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+    },
+    "registeredToolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+  },
+  "schemaVersion": 1,
+  "scope": "restricted-java-charged-work",
+  "status": "REPLAY_PASS"
+}

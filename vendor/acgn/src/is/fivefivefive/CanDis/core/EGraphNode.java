@@ -253,6 +253,7 @@ public final class EGraphNode {
             int maxArity, boolean flexibleArity, Metatype metatype,
             SemanticProfile semanticProfile, boolean createEClass,
             EGraphArena arena) {
+        is.fivefivefive.CanDis.WorkBudget.allocate(1L + (children == null ? 0 : children.size()));
         this.id = id;
         this.opcode = opcode;
         this.arena = java.util.Objects.requireNonNull(arena, "e-graph arena");
@@ -510,6 +511,7 @@ public final class EGraphNode {
         return opcode;
     }
     public List<EGraphNode> getChildren() {
+        is.fivefivefive.CanDis.WorkBudget.charge(1);
         requireLiveNode();
         return childrenView;
     }
@@ -523,6 +525,7 @@ public final class EGraphNode {
     }
 
     private void replaceChildren(List<EGraphNode> children, boolean preserveDerivedAuthority) {
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + (children == null ? 0 : children.size()));
         arena.mutate(this, () -> {
             List<EClassRef> replacement = new ArrayList<>();
             if (children != null) {
@@ -788,6 +791,7 @@ public final class EGraphNode {
         ArrayDeque<EClass> pending = new ArrayDeque<>();
         pending.add(root.eClass);
         while (!pending.isEmpty()) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             EClass current = pending.removeFirst();
             current.requireLive();
             if (!visited.add(current)) {
@@ -985,6 +989,7 @@ public final class EGraphNode {
                 Set<Integer> expandedComponents = new HashSet<>();
                 ArrayDeque<EClass> pending = entry.getValue();
                 while (!pending.isEmpty()) {
+                    is.fivefivefive.CanDis.WorkBudget.charge(1);
                     EClass current = pending.removeFirst();
                     if (!visited.add(current)) {
                         continue;
@@ -1039,6 +1044,7 @@ public final class EGraphNode {
             }
         }
         while (!pending.isEmpty()) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             EClass eClass = pending.removeFirst();
             if (!classes.add(eClass)) {
                 continue;
@@ -1427,6 +1433,7 @@ public final class EGraphNode {
             ArrayDeque<EGraphNode> pending = new ArrayDeque<>();
             pending.add(this);
             while (!pending.isEmpty()) {
+                is.fivefivefive.CanDis.WorkBudget.charge(1);
                 EGraphNode node = pending.removeFirst();
                 if (!visited.add(node)) {
                     continue;
@@ -1508,6 +1515,7 @@ public final class EGraphNode {
         boolean changed;
         int iterations = 0;
         do {
+            is.fivefivefive.CanDis.WorkBudget.charge(1L + childClasses.size());
             changed = saturateOnce();
             iterations++;
         } while (changed && iterations < 32);
@@ -2995,6 +3003,7 @@ public final class EGraphNode {
             boolean changed = false;
             boolean reduced;
             do {
+                is.fivefivefive.CanDis.WorkBudget.charge(1L + (long) retained.size() * retained.size());
                 reduced = false;
                 outer:
                 for (int left = 0; left < retained.size(); left++) {
@@ -7456,6 +7465,7 @@ public final class EGraphNode {
             ArrayDeque<EClass> pending = new ArrayDeque<>();
             pending.add(Objects.requireNonNull(root, "certification root").eClass);
             while (!pending.isEmpty()) {
+                is.fivefivefive.CanDis.WorkBudget.charge(1);
                 EClass eClass = pending.removeFirst();
                 if (!visited.add(eClass)) {
                     continue;

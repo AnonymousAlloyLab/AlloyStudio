@@ -1,0 +1,3296 @@
+{
+  "AlloyStudio.PatchContracts.Work.Event": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.Event._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event._sizeOf_1",
+    "typeSha256": "7f644a5fb41c0d9de7f8358785cdae2ac95a83b65f9cfcbcd5c8516212d61dda"
+  },
+  "AlloyStudio.PatchContracts.Work.Event._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event._sizeOf_inst",
+    "typeSha256": "9b1cc77931333632d68c664f20d5ec9f276e9c4a298c1c4ba419b66691455259"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.casesOn",
+    "typeSha256": "626c9469879e43707e662de2ec39874a7874656c7e004205d444808978a1003d"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ctorElim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ctorElim",
+    "typeSha256": "6882f007b738d1ed95b0650925ecc95b13c4e26584ce1433f241bd34f7c79744"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ctorElimType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ctorElimType",
+    "typeSha256": "c39ba6e575afc98c57841f7f02f1306db6583596fdef6035c5766f8be7d05e6e"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ctorIdx",
+    "typeSha256": "30097635c14c1dcc2a40278ee5951e76fa603ca08fe7f37b99c2257718780faf"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.noConfusion",
+    "typeSha256": "13be2df767cfe1d3ca845f76fd0ddab1d3bdcfa616f63b17f1b77f952a5bd44e"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.noConfusionType",
+    "typeSha256": "e346579c9eb9d0cd4c14112d1596b338afd018d9d5406e7889415955fdac702a"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.plannedRetirement": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.plannedRetirement",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.elim",
+    "typeSha256": "ee8652e424ad9489d43ae462215881daaad477aea4de49dac46cce8c772e8fc3"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.plannedRetirement.sizeOf_spec",
+    "typeSha256": "25f60d85b104e94156cce2ac64268d8885f5f4662e8ab61468c62fe6ca687434"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ready": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ready",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ready.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ready.elim",
+    "typeSha256": "4b5d8130cfdbc047f1b3765841cb943f5720265e03d2d1df86f32055bc8c3354"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.ready.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.ready.sizeOf_spec",
+    "typeSha256": "e07502135b158b636ac1f1c8b20d0b05638d7e8d7b99eaa1a455ac31d8aa89e8"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.reaped": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.reaped",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.reaped.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.reaped.elim",
+    "typeSha256": "e3009544bd98628f5d2a506d1dfd28ceeb13d113e5adfd6d4a05b5ddd959e785"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.reaped.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.reaped.sizeOf_spec",
+    "typeSha256": "a1a0de66fe608027a47e322e756556a8706a33fb51cbe3b284abe00dc28bd4f0"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.rec",
+    "typeSha256": "8c6866e09a1404ec67920f8c6617ecf47563ed5f4f359e39d9f779a9b2668e4c"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.recOn",
+    "typeSha256": "626c9469879e43707e662de2ec39874a7874656c7e004205d444808978a1003d"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.renew": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.renew",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.renew.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.renew.elim",
+    "typeSha256": "b52e77f95cb8b9d1efe528721e77f9423fb8bf411ac225e73861bdf232ea135b"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.renew.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.renew.sizeOf_spec",
+    "typeSha256": "b05fbd72a49abef6db4db21b27a7ec672b8bfc8df241f271e8d44f701ed1a556"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.requestTimeout": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.requestTimeout",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.requestTimeout.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.requestTimeout.elim",
+    "typeSha256": "0290f5cd440e023a65ba2de391b5e8ba7f26a58206cebf09a021725b2cb76fdd"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.requestTimeout.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.requestTimeout.sizeOf_spec",
+    "typeSha256": "e7ca3290d1b2ce11dea5ed6199a39c103f9a483e36674590150fcc4776905794"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.start": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.start",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.start.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.start.elim",
+    "typeSha256": "639556ffa91bd81391574f77ffdb8d377dea1895b37a714b1164fe325b0dc9f3"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.start.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.start.sizeOf_spec",
+    "typeSha256": "25d6cab76c11f7c64ba57c897b36affc6aaa4938e2ad882a7461fa7ede3b8f12"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.startupFailure": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.startupFailure",
+    "typeSha256": "4eb944f59f15fd5292f546ba53567d5a6f9a68e445f3e02546867650c6e2e5ab"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.startupFailure.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.startupFailure.elim",
+    "typeSha256": "ef82055fa53e36340a407f001c126c323c5557f59ad0d75a55692fc7e4368b37"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.startupFailure.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.startupFailure.sizeOf_spec",
+    "typeSha256": "5c2af2a839deb1522e2c38efd9663e94e6d229e5daaca8ab0dd0157dd7bc1eb9"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.tick": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.tick",
+    "typeSha256": "92824bcdc558eeee149735bd20c0cb5ca81eaa0d695e101b51124b20a15cd6d4"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.tick.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.tick.elim",
+    "typeSha256": "0377556202174192e2b9c67e2b0ba03b2deadf78353012d491e288cb8e85d157"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.tick.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.tick.noConfusion",
+    "typeSha256": "6f56645715c56dfc66ef391f58cb8170422ef29f1662219d55add831e1713a1d"
+  },
+  "AlloyStudio.PatchContracts.Work.Event.tick.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Event.tick.sizeOf_spec",
+    "typeSha256": "067e70f9bc1ae61b7d95c234487012467720027e4367a23fcb9e3e585504bb04"
+  },
+  "AlloyStudio.PatchContracts.Work.Invariant": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Invariant",
+    "typeSha256": "17a7ced39203ed961e6f43ace03230c75a5c5f029107dbb65ab2bab9f0d2a33a"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane._sizeOf_1",
+    "typeSha256": "ad584e1bf6e58a3f6ce52f29ba3c6373dac78066ba4fe7f0e931ad55ec09908f"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane._sizeOf_inst",
+    "typeSha256": "bc9317c3d393a0a5d6b5e450a4b79c283d6896007849a6986ab8c71e9694c379"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.behavior": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.behavior",
+    "typeSha256": "d08f356d0f04f1c3f8da97a51ead4aee5515c469f46960db629c9af40b3dc04d"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.behavior.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.behavior.elim",
+    "typeSha256": "75275111b8f05a335b6616cbaebdd1d18d4093664470479b504599c8f02332d1"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.behavior.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.behavior.sizeOf_spec",
+    "typeSha256": "8e00430ef301db47412b00b2c5bfcb7acde303bd564f0c8d99671333fdfdbc50"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.casesOn",
+    "typeSha256": "3fe49be412f5f1b9f96fb7b1995471d3ddd83ecf5de41e259f60d9a36a4ac6f0"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.ctorElim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.ctorElim",
+    "typeSha256": "69b6af23ff8b90e03432d0e397ef9530173245a82bc85001539581fa6b5d3b36"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.ctorElimType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.ctorElimType",
+    "typeSha256": "e809659e3425de9efb8096bc13af678f32fe502fdcc6f80d3da9a728394f3ba7"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.ctorIdx",
+    "typeSha256": "f6a7a3b8093331dd459e1a8df8f2c134bf7dd4d5dd20b7c1ea70d55e994852ce"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.feedback": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.feedback",
+    "typeSha256": "d08f356d0f04f1c3f8da97a51ead4aee5515c469f46960db629c9af40b3dc04d"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.feedback.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.feedback.elim",
+    "typeSha256": "5fc61f8b0bae639b1a831d73f4c1e0e483f76408f71cb83babf7365faaed955d"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.feedback.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.feedback.sizeOf_spec",
+    "typeSha256": "68a48aedf0519fac1dfcc005a691b656224e3db8e2ccd0ec73e6ddbeaf24c56d"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "v._@.Work.2497006771._hygCtx._hyg.6"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.noConfusion",
+    "typeSha256": "e318de18ce581b8cdf57be98b3a6f842f25e43e0ca050a72ee2035ff80cc2f25"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "v._@.Work.2497006771._hygCtx._hyg.5"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.noConfusionType",
+    "typeSha256": "a3a8d3613a5dbba1732bea2fb608c7b40ba55d8abd98a50fa479f7cd61a6636e"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.rec",
+    "typeSha256": "170850ad651308e3e45c07cd2af385b6e8128947b4e8dd0ff3301889daf80f78"
+  },
+  "AlloyStudio.PatchContracts.Work.Lane.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Lane.recOn",
+    "typeSha256": "3fe49be412f5f1b9f96fb7b1995471d3ddd83ecf5de41e259f60d9a36a4ac6f0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_1",
+    "typeSha256": "7e8dccd5dbfc629bb8abaf7c7c42fe17c8be4b2f573c081155ab96d8f12f6518"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState._sizeOf_inst",
+    "typeSha256": "167e225c75e91aac8472cfc62768a3073c871febc11881efc711963c4443349c"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.attempts": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.attempts",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.casesOn",
+    "typeSha256": "33e7df69455ab96978d562a91204f1d2af2f16c4099b214608784f741bf36691"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.ctorIdx",
+    "typeSha256": "f56159b472a5fdcd14e3dc3bf9c722a588888bf86f55dc1513c7b8fe0afff7f1"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.failedStarts": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.failedStarts",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.live": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.live",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.mk": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.mk",
+    "typeSha256": "8a143eaffe5c188c9b36e26c59387f21bf76e5e4621dc5f0d6dd3de71c86479c"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.mk._flat_ctor": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.mk._flat_ctor",
+    "typeSha256": "8a143eaffe5c188c9b36e26c59387f21bf76e5e4621dc5f0d6dd3de71c86479c"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.mk.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.mk.noConfusion",
+    "typeSha256": "4135d2ae856728e3a641f7415eb4b4d7823b569ac82da0d5a12eb2bdb79965c1"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.mk.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.mk.sizeOf_spec",
+    "typeSha256": "6062a6f65008e179eb3504568bf2024049ba56be541168933cb019222d98de5b"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.noConfusion",
+    "typeSha256": "87db486bcaf90f813f4ff8b98fd70b50470c55f787dd2b202ad9b8eb8419c253"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.noConfusionType",
+    "typeSha256": "b3d1c63114942d625680701ba6a1c63cdf6d448378eee421c9fead3ad364ac4f"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.now": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.now",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.rec",
+    "typeSha256": "fb8b7185334df87bececf0643af7c053d00abb4ef53c4673efdab4b772dfb9ca"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.recOn",
+    "typeSha256": "33e7df69455ab96978d562a91204f1d2af2f16c4099b214608784f741bf36691"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.renewal": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.renewal",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.starting": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.starting",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.tokens": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.tokens",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.LaneState.unreaped": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.LaneState.unreaped",
+    "typeSha256": "1b05de899f0b4212a98a9fc9638e0c6d2dbe35e747e88137779db84274d04ac0"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits._sizeOf_1",
+    "typeSha256": "fa0c5cccc441a6288d17e65ff982dc40062ce40284e1f5be40552a80c6994eae"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits._sizeOf_inst",
+    "typeSha256": "77ae26c9ed9fb44eb11ad584a91305d165d329ed879d85b5bce0ae8835414a96"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.capacity": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.capacity",
+    "typeSha256": "9e6fceb0b5fb3de3efb5027a77b86baa9b99dff20b00d3e61bdc837f3fb6af9f"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.casesOn",
+    "typeSha256": "9e26dce09a23578d67ab75c31736edd5334adf44be483d69ea6c572eb0a25f23"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.ctorIdx",
+    "typeSha256": "0f438c8c2dcbddd8dc6d684c0b1a689fd0660352dc386a57a39ff0cad2f94d36"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.failedStartLimit": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.failedStartLimit",
+    "typeSha256": "9e6fceb0b5fb3de3efb5027a77b86baa9b99dff20b00d3e61bdc837f3fb6af9f"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.mk": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.mk",
+    "typeSha256": "70c574420850a56c161fa8334cbfa8a9ec811df6a5051747979001b84f149316"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.mk._flat_ctor": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.mk._flat_ctor",
+    "typeSha256": "70c574420850a56c161fa8334cbfa8a9ec811df6a5051747979001b84f149316"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.mk.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.mk.noConfusion",
+    "typeSha256": "4c44b197f0dda9385e9704d52a9ade24ad19182e8b4fd723fc5f842cd49bf774"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.mk.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.mk.sizeOf_spec",
+    "typeSha256": "a63ee1ebaaa9fcfe49016d106252769974398b2bcfa6a14c72f55bfc44a58b90"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.noConfusion",
+    "typeSha256": "5f64d921b88c2b453212e29749cf81d98a993fa4de40e86b0acf8e869ae0493e"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.noConfusionType",
+    "typeSha256": "52033ad40b48fb5504ba718ec8a5bf966269f2c3bf6a4969cf6191af5c2c6d48"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.period": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.period",
+    "typeSha256": "9e6fceb0b5fb3de3efb5027a77b86baa9b99dff20b00d3e61bdc837f3fb6af9f"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.rec",
+    "typeSha256": "fb7cb18d12fb318aa9cb0c7dd7c1495c0529a157225a6110370994d4c788173d"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.recOn",
+    "typeSha256": "9e26dce09a23578d67ab75c31736edd5334adf44be483d69ea6c572eb0a25f23"
+  },
+  "AlloyStudio.PatchContracts.Work.Limits.startsPerEpoch": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Limits.startsPerEpoch",
+    "typeSha256": "9e6fceb0b5fb3de3efb5027a77b86baa9b99dff20b00d3e61bdc837f3fb6af9f"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool._sizeOf_1",
+    "typeSha256": "9a717a6d3ea041da0ce555983021829108b5eda0aac9aa9078b40427b939bd71"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool._sizeOf_inst",
+    "typeSha256": "574b5f38f1099165f71f1d52a531ce0898f81849ed34699e4c2a50f788f7cf21"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.behavior": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.behavior",
+    "typeSha256": "2c0bc82592a622e82fc0ffb88f6ed67ef064d7a08660ac6f9aa171b89e61aa56"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.casesOn",
+    "typeSha256": "32ca0963208e55134a71730d4064540d1ff95cec36afc3d86e97daccc860ea37"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.ctorIdx",
+    "typeSha256": "99a220764641f3ddfffd3348e2c86337e355ea00a31142f794311cdc3f81c073"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.feedback": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.feedback",
+    "typeSha256": "2c0bc82592a622e82fc0ffb88f6ed67ef064d7a08660ac6f9aa171b89e61aa56"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.mk": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.mk",
+    "typeSha256": "0b9f72f8e886b5d2967d2e14ae8cb81730449e5937a7a54f2d129bcebf1ace89"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.mk._flat_ctor": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.mk._flat_ctor",
+    "typeSha256": "0b9f72f8e886b5d2967d2e14ae8cb81730449e5937a7a54f2d129bcebf1ace89"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.mk.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.mk.noConfusion",
+    "typeSha256": "ecc19e629a90c743f67ffb1283939bc0ab2620b883ff44ec6175857fb1a9e57b"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.mk.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.mk.sizeOf_spec",
+    "typeSha256": "d2ce94cfa8aae55328a1ca36b36c25cb04ded9470d2fc55bb0f30efe645555f3"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.noConfusion",
+    "typeSha256": "74700223afe9add20f32834efb9ff1b92df36a621ed305038d4df95301fba0f5"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.noConfusionType",
+    "typeSha256": "de9469f3c9075ce0c3dba6a807703cbab00bdbdeda11069d7e38e68685124bea"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.rec",
+    "typeSha256": "b44008671fa6b32f862b04d5f334f63d43f21e7061522c3495a6af06d53fb184"
+  },
+  "AlloyStudio.PatchContracts.Work.Pool.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Pool.recOn",
+    "typeSha256": "32ca0963208e55134a71730d4064540d1ff95cec36afc3d86e97daccc860ea37"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_1",
+    "typeSha256": "daa9dda7ab5d3d81b07602912d226f7bb1bc30d1a18caf70102ef2f01d7cd16d"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits._sizeOf_inst",
+    "typeSha256": "2712f14b637f8852bb851e1fac9166a498d4a9f6a306f292650d2c628d994a26"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.behavior": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.behavior",
+    "typeSha256": "45140bc99aeeefdec7a8841ddfdc323a7fafce057b4b1ccbf207dc02b7a4f1fe"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.casesOn",
+    "typeSha256": "5c61770d245e13fd9ca8224bd93178314a85b032f04676f83d5e3bf77dbf6b28"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.ctorIdx",
+    "typeSha256": "572d401747d0a2bf15645ff0084d391f38b86ee40dc60c55c82b93963c0e8ec9"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.feedback": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.feedback",
+    "typeSha256": "45140bc99aeeefdec7a8841ddfdc323a7fafce057b4b1ccbf207dc02b7a4f1fe"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.mk": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.mk",
+    "typeSha256": "674eb26574e21bd12f68303289f8d80692bbada5edfd60d8b45b84b72e7871e2"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.mk._flat_ctor": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.mk._flat_ctor",
+    "typeSha256": "674eb26574e21bd12f68303289f8d80692bbada5edfd60d8b45b84b72e7871e2"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.mk.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.mk.noConfusion",
+    "typeSha256": "b407ad55e0bc8428fbafe280f420afdbdda8039ade6e90be3b455ea5df535298"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.mk.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.mk.sizeOf_spec",
+    "typeSha256": "ef4fc39542cf8249354b80324583d728e1d99566c2d9df2acccbfd60260929ac"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusion",
+    "typeSha256": "53aa87ee7c1ec3080235c64656bc3f4927e00c219e3c21d800947845ef38bbe0"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.noConfusionType",
+    "typeSha256": "2770aea0707fd1f80386ddbe3d04844c49ff3898edbb53216588e54ccffc2e07"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.rec",
+    "typeSha256": "8e742bb9ef748a4107404711540700c0b870d6f53dcda87f2334fba2f914fc9a"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolLimits.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolLimits.recOn",
+    "typeSha256": "5c61770d245e13fd9ca8224bd93178314a85b032f04676f83d5e3bf77dbf6b28"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable",
+    "typeSha256": "ebd22abf400b4217f6b40ac3bb588966525af90aab46c5fb4d04c8ae26ef14f7"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.below": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.below",
+    "typeSha256": "2af1cc968745ec919e1f3b67bf38ab74e35627d8a8ce663e54f50f1037d29a43"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.below.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.below.casesOn",
+    "typeSha256": "73c1f2501e4f8ca7427e0f91b1dd6cf4ce4c780439589395ec6717ca6937401c"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.below.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.below.init",
+    "typeSha256": "55c4ea5e0b32c763004dbdef570b89f8fed6c1cb2c570f97eee405265955a6ab"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.below.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.below.next",
+    "typeSha256": "72cdda1059d6ae9b09cba0698ff4b7690ef7acd9e26cf4c01007e3c5fe5b1a41"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.below.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.below.rec",
+    "typeSha256": "e76bc1b86ed2725207e12e60008d6c09323bcd63c8f208584c88cde335cb0d02"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.brecOn": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.brecOn",
+    "typeSha256": "03c8ad2ccb6f1781e04179692c9414392418462126badcb3078de500cdc46710"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.casesOn",
+    "typeSha256": "6941622a5395d89a6cf7d72aff391fe1284330222e3b7367326c1ea8aed01a4b"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.init",
+    "typeSha256": "588664aff76986e4ca47e8a307d6f83ec8746ee013c0a2b98985c0d1354c3d6d"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.next",
+    "typeSha256": "dcd102d1e3a50614c98c4424d1e0fa2360e7e79291774caed823f8dbd4b20d3a"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.rec",
+    "typeSha256": "97b1ebccd81e305eb9574051acdebbed18db2eaddedf49a4a813bc7baa57e19e"
+  },
+  "AlloyStudio.PatchContracts.Work.PoolReachable.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.PoolReachable.recOn",
+    "typeSha256": "3456906fdde08e317033067b8e24040feb4b0668e4d3703ce7b53504a0327f10"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable",
+    "typeSha256": "e699c0cb2795c5fdf7851bf8ca79bb05715a1d6ad49f385ccf04e05e0275433a"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.below": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.below",
+    "typeSha256": "410fc351e842b99b597fa8fa697619bf3f6c1ce81a130722bd8458a42b9122bc"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.below.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.below.casesOn",
+    "typeSha256": "28b4dd9b19ba1a56c3ed3ed6dc90250daf19e0650f8edfd204edabc52a5848e5"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.below.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.below.init",
+    "typeSha256": "68c6d3418084f6c338e2d20cb7ee590e97ecb8cddb43a94e669771de0bc67030"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.below.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.below.next",
+    "typeSha256": "9bec5447f965c4b1694118236f917e39bb5dee706b8bbb176fda207128f54f29"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.below.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.below.rec",
+    "typeSha256": "bc95fc256857e20e59ba7189dc969e2205a9438356167ef319060b59bce88d70"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.brecOn": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.brecOn",
+    "typeSha256": "214d4414bd8112bd20571438cecd68fabde0985adb94146452c6ee18a6c99515"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.casesOn",
+    "typeSha256": "0124565ebed8e3fc32eb9de5f63decfc508eb06e408725219ee201795635a9dc"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.init",
+    "typeSha256": "6d2b6a3297a67e845dffdfbdda59566b0c92bead7b3da409d01678e02cfa8768"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.next",
+    "typeSha256": "9c672f730ec41e9fc1dd6343e360be3c49fa38ff77cd494f42ea0369c1ccb77f"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.rec",
+    "typeSha256": "c0db6930c34acc81b37c17200033e6145edf3e1f18cca1c83c1c64616a26fed4"
+  },
+  "AlloyStudio.PatchContracts.Work.Reachable.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Reachable.recOn",
+    "typeSha256": "188fd979d0b38e05d2b5b1360bd7eaff929db03ceec24b929b238a9493ec8954"
+  },
+  "AlloyStudio.PatchContracts.Work.Response": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response",
+    "typeSha256": "6eda026deeca3f16738dedf7098f450f878418136f6d5231030532011caafa75"
+  },
+  "AlloyStudio.PatchContracts.Work.Response._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response._sizeOf_1",
+    "typeSha256": "2386d9860176c777f817f9cc68979696149d5e11007f458b30b02b20640e1897"
+  },
+  "AlloyStudio.PatchContracts.Work.Response._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response._sizeOf_inst",
+    "typeSha256": "50f62aa803a75d22fa27417933e5efda6b6bbfe3f1097e1311ef4d9c64a7de92"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.accepted": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.accepted",
+    "typeSha256": "4f65c442a5d6abb917b6c09a75ae3dc41b944a011108cb4d540d2a2de9e49e54"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.accepted.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.accepted.elim",
+    "typeSha256": "5a2d777689c9a78e5d0f9b61ec6b63708701fdc329c6af019861b8dd04175764"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.accepted.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.accepted.noConfusion",
+    "typeSha256": "663e3dc16983f0749a493c870db5bb244e329eccfc64f9e984607052c3665d1a"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.accepted.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.accepted.sizeOf_spec",
+    "typeSha256": "d3be6dfbeca86dc2a4156ba06e0423f8d654d7b2277864060c00933c4ae85149"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.casesOn",
+    "typeSha256": "cddbb6c95d2275491c7826a6e63ebd96991ba10728e88c50634d9a55ff92a7a8"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.ctorElim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.ctorElim",
+    "typeSha256": "477a6321bf90b47a9402f2c19ed6db6c77e527e3c2d6ead7663276f0528b335b"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.ctorElimType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.ctorElimType",
+    "typeSha256": "99eaea2204af75a5579535f2b522485fc0703124ee48c437b0e1c94a76f5fc2c"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.ctorIdx",
+    "typeSha256": "6ea6f1d79175f494911855bd45b692c75103e1a6b9b088205c94b8a8a99c5e0d"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.noConfusion",
+    "typeSha256": "4688ae592f1c088d2d63acc783d9e7dbe7914dad2d556296ad7c8e942f38e92f"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.noConfusionType",
+    "typeSha256": "f05d7a94b39953eebe3809ae07b7a545d693226d218090655742e14941e44fb3"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.rec",
+    "typeSha256": "b1a18efb472ea2fe6ebd9abfca5785c5e76df12c557f5f3da2c972baa93d0ff8"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.recOn",
+    "typeSha256": "cddbb6c95d2275491c7826a6e63ebd96991ba10728e88c50634d9a55ff92a7a8"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.unsupported": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.unsupported",
+    "typeSha256": "9a66a4dc81a98d4f53352f111666a02ef98cf408058528c6ff00198684b070c3"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.unsupported.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.unsupported.elim",
+    "typeSha256": "0545cdd3a7aa73828ee85af58fe5dd33b6f0b824a3865e2e1feaf9f0e81c1b62"
+  },
+  "AlloyStudio.PatchContracts.Work.Response.unsupported.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.Response.unsupported.sizeOf_spec",
+    "typeSha256": "e9dd1e5971a32070c8ebbac99e150199666ed409978052b69b6ebf5d609c8a26"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable",
+    "typeSha256": "9aa19996c85ff601f3585d6bb96391c9a450f8155e51089cb6a135de5e8cdb35"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below",
+    "typeSha256": "820c81caa79ba974c6f52314295efce4c064c5968960522b96149f065bcb541f"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.casesOn",
+    "typeSha256": "9dc0acda3d6ac733615c7364c2754cd0236395d8cdea739af8841d898c8e88ac"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.init",
+    "typeSha256": "30bd996ea137689dbe1a6bdf6f10d502db6da9d1922689df3501fbbaffda0c8f"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.next",
+    "typeSha256": "4d39e06752d5f9b457178e78b7dcda5d64d87decf069bd89da47f56ac141125a"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.below.rec",
+    "typeSha256": "46e1e4d5b85a4e6ea37ae8bfc588e21e0e1e528cdcc8a27716870f1c2d212f6f"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.brecOn": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.brecOn",
+    "typeSha256": "0c62d46f46120b012931f8407f26d3df71515b9a0b03369b8bf814331dbfe436"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.casesOn",
+    "typeSha256": "ae446fada5a306742263aacdb85df91b36445919f07779a8b21722ab81dba79a"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.init": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.init",
+    "typeSha256": "181a078eb63263278516c3e976eec20d0d0eb5bad5712bf931803ef22fb5dea5"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.next": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.next",
+    "typeSha256": "fdace98c09a3f03dfc2d9936c877e7f0341052e6c47354b52b7a6eba7d194d87"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.rec",
+    "typeSha256": "7495d1bacb2daefc6c28e7c35ff55e8d1993f5dd320e72bdbd424f7dfe5ded27"
+  },
+  "AlloyStudio.PatchContracts.Work.UnlimitedReachable.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.UnlimitedReachable.recOn",
+    "typeSha256": "d1cea4485bfebaf03ae0d4532141a5485d450626a6e91515e7abcf7a47bde0a9"
+  },
+  "AlloyStudio.PatchContracts.Work.accepted_payload_preserved": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.accepted_payload_preserved",
+    "typeSha256": "daf5d0b0be1974163dcf682b58601032e911a683c01c37df39fcfec047e5fc64"
+  },
+  "AlloyStudio.PatchContracts.Work.accepted_traversal_complete": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.accepted_traversal_complete",
+    "typeSha256": "526182091c8e2fb2dd5ca77105416428d253fc4def3573ac3d1f462645f5d313"
+  },
+  "AlloyStudio.PatchContracts.Work.aggregate_exhaustion": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.aggregate_exhaustion",
+    "typeSha256": "cc39f4f314a00b8d822d727e64a9cadd542a8c21064e14250dbc48c68b8db2cb"
+  },
+  "AlloyStudio.PatchContracts.Work.all_execution_paths_bounded": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.all_execution_paths_bounded",
+    "typeSha256": "d3e5435374206e1d0fccf5f73a19537da412d9436589f4e60e1dde367aa42570"
+  },
+  "AlloyStudio.PatchContracts.Work.atomic_charge_before_step": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.atomic_charge_before_step",
+    "typeSha256": "fd51edc8ad2380f8a945da9be5823c42fcdc3a6c1761192c0646815a1b4aff3a"
+  },
+  "AlloyStudio.PatchContracts.Work.behavior_cannot_consume_feedback_budget": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.behavior_cannot_consume_feedback_budget",
+    "typeSha256": "f956fea8a1a3383885b385e74f87130fcdf6b2b1e230d4ebd64ce3749ffb1924"
+  },
+  "AlloyStudio.PatchContracts.Work.both_lanes_remain_bounded": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.both_lanes_remain_bounded",
+    "typeSha256": "c6e558b79f3751e18eeb495cd19fb41cda540700d293bfa1154faff4dc137b23"
+  },
+  "AlloyStudio.PatchContracts.Work.boundedFold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.boundedFold",
+    "typeSha256": "ae955abab142965d6486cbbb5498e6517a5db3d3baf6b76486e4d980d7f437af"
+  },
+  "AlloyStudio.PatchContracts.Work.boundedFold._f": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.boundedFold._f",
+    "typeSha256": "09286d300fcc0888ea1aac76133db6c7da9ecc62299c5e97052955a6fc78eae5"
+  },
+  "AlloyStudio.PatchContracts.Work.boundedFold._sunfold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.boundedFold._sunfold",
+    "typeSha256": "ae955abab142965d6486cbbb5498e6517a5db3d3baf6b76486e4d980d7f437af"
+  },
+  "AlloyStudio.PatchContracts.Work.boundedFold._unsafe_rec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.boundedFold._unsafe_rec",
+    "typeSha256": "ae955abab142965d6486cbbb5498e6517a5db3d3baf6b76486e4d980d7f437af"
+  },
+  "AlloyStudio.PatchContracts.Work.boundedFold.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.boundedFold.match_1",
+    "typeSha256": "2d366185ca787bbd884c3a6c658a121aafe1965c5e084a8316b5684fa22db875"
+  },
+  "AlloyStudio.PatchContracts.Work.bounded_minimum_exact": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.bounded_minimum_exact",
+    "typeSha256": "3ab9a33b55f3a7c519fbf5d9839f1f1cb21713cd2c6e1fef45191d7d5cb93a61"
+  },
+  "AlloyStudio.PatchContracts.Work.bounded_modeled_recovery": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.bounded_modeled_recovery",
+    "typeSha256": "94bbabd21787c422da8cb7963f2cb0b47a05463a7722017b1d8b3bc9318c36fd"
+  },
+  "AlloyStudio.PatchContracts.Work.churnLimits": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.churnLimits",
+    "typeSha256": "3f848023e5802972174d7fd949e5f8f8c560668127cd3041b34025ace5a72ada"
+  },
+  "AlloyStudio.PatchContracts.Work.churnState": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.churnState",
+    "typeSha256": "d5f6aefb63b0ef1719aa5e2f57b2038fe7d991e32c1c311c5a97aaf22056bafa"
+  },
+  "AlloyStudio.PatchContracts.Work.complete_exact": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.complete_exact",
+    "typeSha256": "89449fef2f12430e1a374c469e8d7cd24f935f2c1ef40a05d3cbf3c70217c540"
+  },
+  "AlloyStudio.PatchContracts.Work.evaluationSteps": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.evaluationSteps",
+    "typeSha256": "6b0b92b27ae2a9d53f4e73ad8722e8bef40be31b28e6548e17b6b47bc8bd5a68"
+  },
+  "AlloyStudio.PatchContracts.Work.evaluationSteps._f": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.evaluationSteps._f",
+    "typeSha256": "835861f0750744881a324fb7485985b32ff82928420bac470155da142d06bcd9"
+  },
+  "AlloyStudio.PatchContracts.Work.evaluationSteps._sunfold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.evaluationSteps._sunfold",
+    "typeSha256": "6b0b92b27ae2a9d53f4e73ad8722e8bef40be31b28e6548e17b6b47bc8bd5a68"
+  },
+  "AlloyStudio.PatchContracts.Work.evaluationSteps._unsafe_rec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.evaluationSteps._unsafe_rec",
+    "typeSha256": "6b0b92b27ae2a9d53f4e73ad8722e8bef40be31b28e6548e17b6b47bc8bd5a68"
+  },
+  "AlloyStudio.PatchContracts.Work.evaluationSteps.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.evaluationSteps.match_1",
+    "typeSha256": "3ca4fa358a3a5c9b57bb712d8344375ade85485eb702ec5a48d45a152e0a96ae"
+  },
+  "AlloyStudio.PatchContracts.Work.every_start_charged": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.every_start_charged",
+    "typeSha256": "1fb589161bc08e579fff7bad4901a6b4d0835447f0e0dbb89fa0fca6e4e82e55"
+  },
+  "AlloyStudio.PatchContracts.Work.exhausted_no_partial_output": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.exhausted_no_partial_output",
+    "typeSha256": "70090c7b9d492f0beffa82bb44532f2be5775d4955f1720ceadd05f673956c3d"
+  },
+  "AlloyStudio.PatchContracts.Work.exhausted_rejects": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.exhausted_rejects",
+    "typeSha256": "4aa1c5525017fd90407ead4ecd18db74ee30192910f823c10d31e6dc6611d106"
+  },
+  "AlloyStudio.PatchContracts.Work.failed_start_counts_once": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.failed_start_counts_once",
+    "typeSha256": "575224cf779ae9e2959e62d8019023c16e4324c7820d05aba7ddf70b60896f7c"
+  },
+  "AlloyStudio.PatchContracts.Work.feedback_cannot_consume_behavior_budget": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.feedback_cannot_consume_behavior_budget",
+    "typeSha256": "0d705ebf36b323b22aedfa8aae3ee35d12ff8cec0d3e5897a059897754a29f4b"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold",
+    "typeSha256": "2ed2e5765fd793294705cabfe091a388c69e29bdab52e3b5bef6cf01edf2e2e4"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold._f": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold._f",
+    "typeSha256": "44ba719151e1a84246e5d72252f61e694ea7bd741fb4e3d96c662884b01fcd76"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold._sunfold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold._sunfold",
+    "typeSha256": "2ed2e5765fd793294705cabfe091a388c69e29bdab52e3b5bef6cf01edf2e2e4"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold._unsafe_rec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold._unsafe_rec",
+    "typeSha256": "2ed2e5765fd793294705cabfe091a388c69e29bdab52e3b5bef6cf01edf2e2e4"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold.eq_1",
+    "typeSha256": "f90a5476ed04e8c1b60280ef083eee38d2abfd23e8445810e550c5a63acb5e09"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold.eq_2": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold.eq_2",
+    "typeSha256": "5def24ff5bae4eb33fa539e5423d1cdcc82befbdd54f750931e4d18e4f52cb8a"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold.eq_def": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold.eq_def",
+    "typeSha256": "34719c65c177c82fc0d2bd0f6aa46fe8e1fbeb342d259a974210b354ba167c57"
+  },
+  "AlloyStudio.PatchContracts.Work.fullFold.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.fullFold.match_1",
+    "typeSha256": "b6f910209d9f7fecd973b0a20f1a1cc9f1ff7910ce7e00b88af0e7cf8aa82291"
+  },
+  "AlloyStudio.PatchContracts.Work.full_traversal": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.full_traversal",
+    "typeSha256": "f7108698742234c7294cced75b965a43007595ea7ef7061e4fdb7bbb7cca8fc0"
+  },
+  "AlloyStudio.PatchContracts.Work.initial": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.initial",
+    "typeSha256": "e31bcf7bc02dad52c8aedcf41579a900afbe8a42585b5318f1aa564ccd05ca63"
+  },
+  "AlloyStudio.PatchContracts.Work.laneStep": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.laneStep",
+    "typeSha256": "0decb82f060561bf8201107ae484f2adceabc1c6689692aef53ec04e0c139409"
+  },
+  "AlloyStudio.PatchContracts.Work.laneStep.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.laneStep.match_1",
+    "typeSha256": "4bd9b98b01896a3046d70ebc85eeaed2e369cd0a7a02170c30a284ec68bf42b6"
+  },
+  "AlloyStudio.PatchContracts.Work.later_closer_candidate_cannot_be_truncated": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.later_closer_candidate_cannot_be_truncated",
+    "typeSha256": "bf41d73924169eedf260c1bc4b8e75edb633a26b067f551dc5c1c2b6e0195527"
+  },
+  "AlloyStudio.PatchContracts.Work.minimumDistance": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.minimumDistance",
+    "typeSha256": "0717b3f20c10a1366477d73dbbe5d9955c4fdc464cb8d4e4b8da16d44ca6f801"
+  },
+  "AlloyStudio.PatchContracts.Work.no_tokens_no_spawn": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.no_tokens_no_spawn",
+    "typeSha256": "b292c3f13ed649b62426e1a809d8b25e3020ffc50fc03d0e981bde6bb9967b2e"
+  },
+  "AlloyStudio.PatchContracts.Work.oldFeedbackStarts": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldFeedbackStarts",
+    "typeSha256": "1e3fe735b73646f01f1703229fa284dd88677b2b325e8ff5bbfbc21a6f3180c6"
+  },
+  "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._f": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._f",
+    "typeSha256": "966af6e314d18e3bc5cdff5fea7dc8df8ed019e85a6dc49cd14252320dec199d"
+  },
+  "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._sunfold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._sunfold",
+    "typeSha256": "1e3fe735b73646f01f1703229fa284dd88677b2b325e8ff5bbfbc21a6f3180c6"
+  },
+  "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._unsafe_rec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldFeedbackStarts._unsafe_rec",
+    "typeSha256": "1e3fe735b73646f01f1703229fa284dd88677b2b325e8ff5bbfbc21a6f3180c6"
+  },
+  "AlloyStudio.PatchContracts.Work.oldFeedbackStarts.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldFeedbackStarts.match_1",
+    "typeSha256": "6770dcfe922ab7ca8df2630f770aa60ffa1e138950d68817399c87f2c315cad1"
+  },
+  "AlloyStudio.PatchContracts.Work.oldSharedStart": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oldSharedStart",
+    "typeSha256": "d3cd992756b4ab5991434500deb0e0369dc2095cd097fd00c32b7734e48fee23"
+  },
+  "AlloyStudio.PatchContracts.Work.only_startup_failure_increases_circuit": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.only_startup_failure_increases_circuit",
+    "typeSha256": "8ce7061c607ead955c0f78594754f8be806d561f40b68f0fb7db02fcb493e73e"
+  },
+  "AlloyStudio.PatchContracts.Work.oversize_unsupported": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.oversize_unsupported",
+    "typeSha256": "60a6dba320812b0937de8953052d53fed17c0c0180f77c4fa0d19d4455d692f0"
+  },
+  "AlloyStudio.PatchContracts.Work.planned_retirement_does_not_poison_startup_circuit": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.planned_retirement_does_not_poison_startup_circuit",
+    "typeSha256": "450ae1615ba4ee01ddc8abd3d8d141ec50ce5c058ff46e349ace54949031ccd0"
+  },
+  "AlloyStudio.PatchContracts.Work.poolStep": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.poolStep",
+    "typeSha256": "5730f14c7c4de20431aea22b5d7d5ab33843f2e144e803dda84b7b53f68b5845"
+  },
+  "AlloyStudio.PatchContracts.Work.poolStep.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.poolStep.match_1",
+    "typeSha256": "580f50601a6ef1c4e723689a9e62bfe1ecd90e98fe832022bba6acc3265cc094"
+  },
+  "AlloyStudio.PatchContracts.Work.publish": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.publish",
+    "typeSha256": "8ad5ba23174185397cc5406505b319ae28da94319d04dc88b923d3df6e29a47f"
+  },
+  "AlloyStudio.PatchContracts.Work.publish.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.publish.match_1",
+    "typeSha256": "291b578f6829301df4d5ab80d4a96179b3866f6f6ac713af5115c13c5c9974d2"
+  },
+  "AlloyStudio.PatchContracts.Work.reachable_attempts_bounded": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.reachable_attempts_bounded",
+    "typeSha256": "55dd830f1f11ab481782ac5c1bbb55c0d18b808ef445c0ff45c420270d46f0c3"
+  },
+  "AlloyStudio.PatchContracts.Work.reachable_capacity_and_spawn_bound": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.reachable_capacity_and_spawn_bound",
+    "typeSha256": "6059e9a481f86810d3169c0d06b77cde586d988d7aca8c43c08434680a440c9c"
+  },
+  "AlloyStudio.PatchContracts.Work.renewal_cannot_repeat": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.renewal_cannot_repeat",
+    "typeSha256": "1ff44023eee3474ff139527b587b64fd4425811085cd5802f3f6f0cb57665bbb"
+  },
+  "AlloyStudio.PatchContracts.Work.renewal_requires_modeled_time": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.renewal_requires_modeled_time",
+    "typeSha256": "4292cf8f721c50a8b7d8cefddf4127450d10f4a30e4c30023ba2ffc1bb7fc869"
+  },
+  "AlloyStudio.PatchContracts.Work.repeatedAndCost": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeatedAndCost",
+    "typeSha256": "e2aa04b5dbcde90dac959502e8d8fa0046c9d754e461bf6e56e3479a43180ccd"
+  },
+  "AlloyStudio.PatchContracts.Work.repeatedAndCost._f": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeatedAndCost._f",
+    "typeSha256": "98e98319e2b18f6ca55f2820cea9ae34861b72ed632cc9bd77e521939e02affc"
+  },
+  "AlloyStudio.PatchContracts.Work.repeatedAndCost._sunfold": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeatedAndCost._sunfold",
+    "typeSha256": "e2aa04b5dbcde90dac959502e8d8fa0046c9d754e461bf6e56e3479a43180ccd"
+  },
+  "AlloyStudio.PatchContracts.Work.repeatedAndCost._unsafe_rec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeatedAndCost._unsafe_rec",
+    "typeSha256": "e2aa04b5dbcde90dac959502e8d8fa0046c9d754e461bf6e56e3479a43180ccd"
+  },
+  "AlloyStudio.PatchContracts.Work.repeatedAndCost.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeatedAndCost.match_1",
+    "typeSha256": "4b51b38d561285e5c31d50dcb754884edb006e7a604692544e4956a9b8b7f055"
+  },
+  "AlloyStudio.PatchContracts.Work.repeated_and_cost_grows": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.repeated_and_cost_grows",
+    "typeSha256": "b0280a9845c88e7021bf3f99900a3c0025cc8a52c61d7abacfa62c79b53f4a0c"
+  },
+  "AlloyStudio.PatchContracts.Work.reserved": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.reserved",
+    "typeSha256": "620b217655ae58a041f58d6ec1e65172e70c53bf22a54cc2db351aea4089273b"
+  },
+  "AlloyStudio.PatchContracts.Work.retirement_retains_capacity_reservation": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.retirement_retains_capacity_reservation",
+    "typeSha256": "c86764a4b4a5c07c6ee7c990fb85b57af39b92ce60f21615914232b1210d42e9"
+  },
+  "AlloyStudio.PatchContracts.Work.runRequest": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.runRequest",
+    "typeSha256": "531b6c12f6c624f9b1371de988d440b1667aaa89bec8574d9d96d16d5ca6f995"
+  },
+  "AlloyStudio.PatchContracts.Work.shared_twelve_start_interference": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.shared_twelve_start_interference",
+    "typeSha256": "ad4277fc77bc1d2893321ef58ac6fb6c5db1ab96469181876c2ad30c9b69efcf"
+  },
+  "AlloyStudio.PatchContracts.Work.step_preserves_invariant": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.step_preserves_invariant",
+    "typeSha256": "fbb98e0ec15e1fbe062c0d9e636adeb8e028a530277f0ecd53fe1a3c129ae749"
+  },
+  "AlloyStudio.PatchContracts.Work.success_uses_at_most_initial_fuel": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.success_uses_at_most_initial_fuel",
+    "typeSha256": "c36dc513ec33bb2cc2de79632691a0079d8d76af9911c9248bfc41a56dd949ce"
+  },
+  "AlloyStudio.PatchContracts.Work.timeout_does_not_poison_startup_circuit": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.timeout_does_not_poison_startup_circuit",
+    "typeSha256": "eb82c81a0fcad81ced4559b69745daa682962af3d731448e8749b060cf6d2ab3"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimitedCycle": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimitedCycle",
+    "typeSha256": "d34c1a9990b1b09937737849c8324554166e9ee9f2c6593c13a33f0e5e1639e2"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimitedStep": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimitedStep",
+    "typeSha256": "0decb82f060561bf8201107ae484f2adceabc1c6689692aef53ec04e0c139409"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimitedStep.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimitedStep.match_1",
+    "typeSha256": "880f112ab8c267bfc203cce099a91843634f7751b8fc807d90df60223636acfc"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimited_churn_reachable": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimited_churn_reachable",
+    "typeSha256": "bf7bfa706519f152d8815bd61aa7fae280bceb1e7e5e11ffb24d5fdf9c3e21ae"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimited_cycle_capacity": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimited_cycle_capacity",
+    "typeSha256": "31c65a5ffffc30bf02f05de2f9b070e582ed085e00dbbae4b60e8d67080f29af"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimited_cycle_exact": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimited_cycle_exact",
+    "typeSha256": "d5eeecd1891746f728370082528dad90841800331c888c4ff24fb2b1c6b0f7fb"
+  },
+  "AlloyStudio.PatchContracts.Work.unlimited_retry_churn": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.unlimited_retry_churn",
+    "typeSha256": "402963a3acc38f6a1da16986bd458a2b7562dca335a321ba1a9670feefd68913"
+  },
+  "AlloyStudio.PatchContracts.Work.zero_cannot_act": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "AlloyStudio.PatchContracts.Work.zero_cannot_act",
+    "typeSha256": "d6877ff3fbd52904364b78ddc23d1027d9a23621341596bb9d510b13f43e3a74"
+  },
+  "AlloyStudio.WorkBudget.Generated.charge": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Generated",
+    "name": "AlloyStudio.WorkBudget.Generated.charge",
+    "typeSha256": "b6a913c96fce476646660127e498389f8eb51faf6cbe74939b7761c1e3a5632e"
+  },
+  "AlloyStudio.WorkBudget.Generated.checkpoint": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Generated",
+    "name": "AlloyStudio.WorkBudget.Generated.checkpoint",
+    "typeSha256": "3f33df579fe390a2c2f4513113156253e3fffdcd54ac7d1c0d4bfd1ee3e4ea3a"
+  },
+  "AlloyStudio.WorkBudget.Generated.checkpoint.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.Generated.checkpoint.eq_1",
+    "typeSha256": "5f5d1a23e0d8c85ad63f0a51ab378bf6fb1d68f3d7eaf088828ac153e45d1499"
+  },
+  "AlloyStudio.WorkBudget.Generated.initialChecks": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Generated",
+    "name": "AlloyStudio.WorkBudget.Generated.initialChecks",
+    "typeSha256": "7746391a05f7b5ef5fdb33f924d073e8362bdb365f0decb77fc5af364bf152b6"
+  },
+  "AlloyStudio.WorkBudget.Generated.sampleClock": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Generated",
+    "name": "AlloyStudio.WorkBudget.Generated.sampleClock",
+    "typeSha256": "b6a913c96fce476646660127e498389f8eb51faf6cbe74939b7761c1e3a5632e"
+  },
+  "AlloyStudio.WorkBudget.Generated.sampleClock.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Generated",
+    "name": "AlloyStudio.WorkBudget.Generated.sampleClock.match_1",
+    "typeSha256": "9e2b45ba4085fa7c8708a44753961b9bba9d752310c3af2467c7104806244999"
+  },
+  "AlloyStudio.WorkBudget.Result": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.WorkBudget.Result._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result._sizeOf_1",
+    "typeSha256": "93c61d5042e558505baed0b1b795c6ca25c0c4c8797da9587c1b94b3ec932227"
+  },
+  "AlloyStudio.WorkBudget.Result._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result._sizeOf_inst",
+    "typeSha256": "eb5aad429ef4b39366911e74d535c0480c970c5f4585bf637b612e3b4191c5d4"
+  },
+  "AlloyStudio.WorkBudget.Result.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.casesOn",
+    "typeSha256": "4aca041d47daf431373c1aad786606ec3ef18c24cd94d5a92f12ce1267b7c5a4"
+  },
+  "AlloyStudio.WorkBudget.Result.ctorElim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ctorElim",
+    "typeSha256": "a50fdd63a26e4ba453cd0447a9e08b83481ab91ac885fb82d03a6c86d6233c4a"
+  },
+  "AlloyStudio.WorkBudget.Result.ctorElimType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ctorElimType",
+    "typeSha256": "a6ff382d22b599b16aa769229bda9d519949f078e1260a6cabd7c7185542a08d"
+  },
+  "AlloyStudio.WorkBudget.Result.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ctorIdx",
+    "typeSha256": "d59766a4dbeebb265b7139d4448fdc618b8a4b3b6e8eded1c8ecbdcb89b2b1db"
+  },
+  "AlloyStudio.WorkBudget.Result.exhausted": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.exhausted",
+    "typeSha256": "a4b1d6c7a73485ad40076f70e78c62a436a04d518995b71293d57a55fe36310a"
+  },
+  "AlloyStudio.WorkBudget.Result.exhausted.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.exhausted.elim",
+    "typeSha256": "a79e03373a4e79c7692924d26fec9fcde771efccf0947ef6d2ff88926808ab48"
+  },
+  "AlloyStudio.WorkBudget.Result.exhausted.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.exhausted.noConfusion",
+    "typeSha256": "16e2002a38dc45dbdee73eb6e8fcc269870d5643c00dc7c46cea8c4a9686f116"
+  },
+  "AlloyStudio.WorkBudget.Result.exhausted.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.exhausted.sizeOf_spec",
+    "typeSha256": "7c2b224e2de11e8af8a6509a750011659d742035ed6ba40d20bb1539261d13c5"
+  },
+  "AlloyStudio.WorkBudget.Result.invalid": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.invalid",
+    "typeSha256": "a4b1d6c7a73485ad40076f70e78c62a436a04d518995b71293d57a55fe36310a"
+  },
+  "AlloyStudio.WorkBudget.Result.invalid.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.invalid.elim",
+    "typeSha256": "2a11965fe6ce07951486cd4423d531ef54a4a8ed2dce13a1757bc24751bfb758"
+  },
+  "AlloyStudio.WorkBudget.Result.invalid.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.invalid.noConfusion",
+    "typeSha256": "9741ecd360286bf2dbb2273f0b87d139bb097a6347a77fd68e5a2d58ab5e9e37"
+  },
+  "AlloyStudio.WorkBudget.Result.invalid.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.invalid.sizeOf_spec",
+    "typeSha256": "5764980395debe4304b4b8175bda5d2ab5eabfef2ab7ad19b71ae9ef6d6b719a"
+  },
+  "AlloyStudio.WorkBudget.Result.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.noConfusion",
+    "typeSha256": "1e2d30610736ed619f19c508a00ff0d7f5274860b8431045d02d8c2c13e47e34"
+  },
+  "AlloyStudio.WorkBudget.Result.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.noConfusionType",
+    "typeSha256": "d0347e8da250039d2bc7a403ff1b001f9d6a85680783c150c3a668bda7906245"
+  },
+  "AlloyStudio.WorkBudget.Result.ok": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ok",
+    "typeSha256": "a4b1d6c7a73485ad40076f70e78c62a436a04d518995b71293d57a55fe36310a"
+  },
+  "AlloyStudio.WorkBudget.Result.ok.elim": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ok.elim",
+    "typeSha256": "9bc75d82412da04a1bf44be7b988330b71f6ed7142bfe30db08eb115e4b5a41d"
+  },
+  "AlloyStudio.WorkBudget.Result.ok.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ok.noConfusion",
+    "typeSha256": "c117449b73f9840df52322d9e3adcd2868eb3d34943f6b43dfc20f2b57512778"
+  },
+  "AlloyStudio.WorkBudget.Result.ok.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.ok.sizeOf_spec",
+    "typeSha256": "b5fd22339304a17803c0e896f1b6e85bfbd37c2b4ac2656c4127e66024a25e93"
+  },
+  "AlloyStudio.WorkBudget.Result.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.rec",
+    "typeSha256": "66f5004ef40b025b5f1ac80d1532debd54ca7fe086be4daf71576b36c66fce7e"
+  },
+  "AlloyStudio.WorkBudget.Result.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Result.recOn",
+    "typeSha256": "4aca041d47daf431373c1aad786606ec3ef18c24cd94d5a92f12ce1267b7c5a4"
+  },
+  "AlloyStudio.WorkBudget.State": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State",
+    "typeSha256": "b4611575b2b62eb57ff8b514cf96bf01666158b035ac2fcc89065136260d1e05"
+  },
+  "AlloyStudio.WorkBudget.State._sizeOf_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State._sizeOf_1",
+    "typeSha256": "1de72565ba145fb8364a1480336864a983adefc5a2cce48b5c05ebbf902bf005"
+  },
+  "AlloyStudio.WorkBudget.State._sizeOf_inst": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State._sizeOf_inst",
+    "typeSha256": "2fe73e3899efe9c78fa1b621c70d26c495f56180315d58ef1a8137008986b76b"
+  },
+  "AlloyStudio.WorkBudget.State.active": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.active",
+    "typeSha256": "4bf80079caf605bade8bae186bb827055033e77423ecc41262b20d21999f4615"
+  },
+  "AlloyStudio.WorkBudget.State.casesOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.casesOn",
+    "typeSha256": "95bd71a93083067982bee6955e998a0c6fc928b68f239bd49589270a9907c916"
+  },
+  "AlloyStudio.WorkBudget.State.checks": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.checks",
+    "typeSha256": "caef72f1916c24892144fa160cc334cf44a83ab26d479096f5c6dd457bbb265f"
+  },
+  "AlloyStudio.WorkBudget.State.ctorIdx": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.ctorIdx",
+    "typeSha256": "bfc6759019933acb42dc9d1fe5be68b154a814de0211107ca1042c9781321bf8"
+  },
+  "AlloyStudio.WorkBudget.State.exhausted": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.exhausted",
+    "typeSha256": "4bf80079caf605bade8bae186bb827055033e77423ecc41262b20d21999f4615"
+  },
+  "AlloyStudio.WorkBudget.State.limit": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.limit",
+    "typeSha256": "caef72f1916c24892144fa160cc334cf44a83ab26d479096f5c6dd457bbb265f"
+  },
+  "AlloyStudio.WorkBudget.State.mk": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.mk",
+    "typeSha256": "470e80943bed61d8c4f1bd3cc5b56cb26e286a0da018701cfa26e66a14c3ae8b"
+  },
+  "AlloyStudio.WorkBudget.State.mk._flat_ctor": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.mk._flat_ctor",
+    "typeSha256": "470e80943bed61d8c4f1bd3cc5b56cb26e286a0da018701cfa26e66a14c3ae8b"
+  },
+  "AlloyStudio.WorkBudget.State.mk.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.mk.noConfusion",
+    "typeSha256": "8818fa0942c3d97343cf374e2921621dd32cde3f10c2789e6e8c2cbdae745ccc"
+  },
+  "AlloyStudio.WorkBudget.State.mk.sizeOf_spec": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.mk.sizeOf_spec",
+    "typeSha256": "9a16569f6e191d0890d8e8cc103ce4a3ccb9fbcc51f65e1b0ebd05b6d9c4099c"
+  },
+  "AlloyStudio.WorkBudget.State.noConfusion": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.noConfusion",
+    "typeSha256": "72b83352e3ed9d27984db5fb5af1e4414617622ed2b1fe4cd4516a3d6b67dc0e"
+  },
+  "AlloyStudio.WorkBudget.State.noConfusionType": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.noConfusionType",
+    "typeSha256": "850e4ca944a8a3f876999a1f377156474236e8354fcfd6ea4393b6f29224011e"
+  },
+  "AlloyStudio.WorkBudget.State.rec": {
+    "axioms": [],
+    "kind": "structural",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.rec",
+    "typeSha256": "97f1df518d6c7f7aa9ea61ea769b4be49061c512f214c845c4050dfa9b116d53"
+  },
+  "AlloyStudio.WorkBudget.State.recOn": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.recOn",
+    "typeSha256": "95bd71a93083067982bee6955e998a0c6fc928b68f239bd49589270a9907c916"
+  },
+  "AlloyStudio.WorkBudget.State.remaining": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.remaining",
+    "typeSha256": "caef72f1916c24892144fa160cc334cf44a83ab26d479096f5c6dd457bbb265f"
+  },
+  "AlloyStudio.WorkBudget.State.started": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.started",
+    "typeSha256": "caef72f1916c24892144fa160cc334cf44a83ab26d479096f5c6dd457bbb265f"
+  },
+  "AlloyStudio.WorkBudget.State.timed": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.State.timed",
+    "typeSha256": "4bf80079caf605bade8bae186bb827055033e77423ecc41262b20d21999f4615"
+  },
+  "AlloyStudio.WorkBudget.Valid": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.Valid",
+    "typeSha256": "5fb5aedb4a91d43de761f7aa772f0b9552f3ce3a86e60973a377c5d4556dced1"
+  },
+  "AlloyStudio.WorkBudget.Valid.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.Valid.eq_1",
+    "typeSha256": "e24057ae4b3f4f7386431cc50c04836501071579717519a20955a33cbfc0414f"
+  },
+  "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract",
+    "typeSha256": "4c8e64188f054626ea779fb33e583cbaf21b03a4d4b927efed40a660431fb306"
+  },
+  "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract._proof_1_1",
+    "typeSha256": "9d2d689f05d6966d0d44bd2fd0c6ca408ddff70c76764a8675c46ee9c0c89e79"
+  },
+  "AlloyStudio.WorkBudget.admitted_charge_cost": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.admitted_charge_cost",
+    "typeSha256": "4b11c2a391441a4c771b24d5e2fc2aacd76dd98f7adace2ebd4dfacd05eb3279"
+  },
+  "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_2",
+    "typeSha256": "bfb58340227fb1e51995bf95c7ff9b94f225a1a52fe7c93761be8abd55f3e5e9"
+  },
+  "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_3": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.admitted_charge_cost._proof_1_3",
+    "typeSha256": "840a7dfdc9ef0939985c4d856461bfb999cb4547d6d34ace2179b69afbe036e0"
+  },
+  "AlloyStudio.WorkBudget.chargeSpec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.chargeSpec",
+    "typeSha256": "b6a913c96fce476646660127e498389f8eb51faf6cbe74939b7761c1e3a5632e"
+  },
+  "AlloyStudio.WorkBudget.charge_preserves_valid": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_preserves_valid",
+    "typeSha256": "ad4f67c480b9b1bd2b568a49ffa8b6ffbfb4c812ba06a27e6f7024aacf9c2627"
+  },
+  "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_6": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_6",
+    "typeSha256": "110aaf47dcc492ad4329b23b2d6f5d2b03742694d0379f27100712c56a9cfdff"
+  },
+  "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_7": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_preserves_valid._proof_1_7",
+    "typeSha256": "f023baabaff18e313d6c49bbdd1ba53f18e533c6bb1e556b3d365ce9a5dd2789"
+  },
+  "AlloyStudio.WorkBudget.charge_refines": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_refines",
+    "typeSha256": "ff9d07d0e881d46168edbcf8863985b689b865995e5f488cedaffd75f8aee33f"
+  },
+  "AlloyStudio.WorkBudget.charge_refines._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_refines._proof_1_1",
+    "typeSha256": "2ea8749cc48c4e809748e48c5ca4f6601e06557a342f8f8c697d256aff50c601"
+  },
+  "AlloyStudio.WorkBudget.charge_refines._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.charge_refines._proof_1_2",
+    "typeSha256": "392ea417782fe6c2ee07e9396ede11fa610d13898cf4ee0af08e4fd8604545d0"
+  },
+  "AlloyStudio.WorkBudget.checkpointSpec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.checkpointSpec",
+    "typeSha256": "41b977e623ac685da440f66941ae113d292148acb4506b17005b2693ad806113"
+  },
+  "AlloyStudio.WorkBudget.checkpointSpec.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.checkpointSpec.eq_1",
+    "typeSha256": "692bf247e3a873fdc4caa497f4e195bad883347d6b594277e70d12055d9117be"
+  },
+  "AlloyStudio.WorkBudget.checkpoint_refines": {
+    "axioms": [
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.checkpoint_refines",
+    "typeSha256": "376a7b68eae49f9fa0c7ebf9526f5b3c11a875bc714cf61a953f87c1bb2bb1f0"
+  },
+  "AlloyStudio.WorkBudget.due_sample_observes_clock": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.due_sample_observes_clock",
+    "typeSha256": "c2b1266db92b5669bd44e1d8db88be06c367a70f678b0e28fa2686eb0aa11548"
+  },
+  "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky": {
+    "axioms": [
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky",
+    "typeSha256": "435734da61222b46eebe00e560a633ef3caa4a750c75387ef4af3e30315bc3ec"
+  },
+  "AlloyStudio.WorkBudget.expired_publication_refused": {
+    "axioms": [
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.expired_publication_refused",
+    "typeSha256": "71c99780d29f504967274693ac84db139914202ebbab48d1481dc328b807c81d"
+  },
+  "AlloyStudio.WorkBudget.initial_cadence": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.initial_cadence",
+    "typeSha256": "05280f7eae5b10a61a2b8d6f4ec6f4f174a41623869144ed3df698db4a888cd3"
+  },
+  "AlloyStudio.WorkBudget.javaInt": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaInt",
+    "typeSha256": "ce6c6461b4093b173d32f4e2938d43fbdd2df553b1c85f39bf04e9d082b9ce3f"
+  },
+  "AlloyStudio.WorkBudget.javaInt_exact": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaInt_exact",
+    "typeSha256": "25901447e5e1f9ce34519b316e12bb0d1beb0231d609d31381c1e09a08a8c137"
+  },
+  "AlloyStudio.WorkBudget.javaInt_exact._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaInt_exact._proof_1_1",
+    "typeSha256": "fff1b1833f52eee580e48e09405141ea642b78da1f6bba7759ad5a350b657d15"
+  },
+  "AlloyStudio.WorkBudget.javaInt_exact._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaInt_exact._proof_1_2",
+    "typeSha256": "4a94795ae21f6f68ca3747a313e146a48ff219d98bbeee71b1796a56270f3155"
+  },
+  "AlloyStudio.WorkBudget.javaInt_exact._proof_1_3": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaInt_exact._proof_1_3",
+    "typeSha256": "7d07fa4ef34117951b45860aedeba0fdbee51ad0aa92f013c8d3f73b1b9a6a02"
+  },
+  "AlloyStudio.WorkBudget.javaLong": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaLong",
+    "typeSha256": "ce6c6461b4093b173d32f4e2938d43fbdd2df553b1c85f39bf04e9d082b9ce3f"
+  },
+  "AlloyStudio.WorkBudget.javaLong_exact": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaLong_exact",
+    "typeSha256": "27eb65113917c1c70c0854cf614eb7beb9ec3fdc45ea2a13197e6d310fb777ca"
+  },
+  "AlloyStudio.WorkBudget.javaLong_exact._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaLong_exact._proof_1_1",
+    "typeSha256": "b5940f216eb7405af2297f2b1b06144684179ed7c4a1285c5cccd30aa6764b24"
+  },
+  "AlloyStudio.WorkBudget.javaLong_exact._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaLong_exact._proof_1_2",
+    "typeSha256": "10c665a5fb4af00c92b87a7dd1c1a874ee31e01c3bd6b9386f2288e1a2e09d9a"
+  },
+  "AlloyStudio.WorkBudget.javaLong_exact._proof_1_3": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.javaLong_exact._proof_1_3",
+    "typeSha256": "5956eb62f42bc8d4d3e1746458a231f88934f7b6a57c728285d1fe66d2b3df57"
+  },
+  "AlloyStudio.WorkBudget.longMax": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.longMax",
+    "typeSha256": "7746391a05f7b5ef5fdb33f924d073e8362bdb365f0decb77fc5af364bf152b6"
+  },
+  "AlloyStudio.WorkBudget.longMin": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.longMin",
+    "typeSha256": "7746391a05f7b5ef5fdb33f924d073e8362bdb365f0decb77fc5af364bf152b6"
+  },
+  "AlloyStudio.WorkBudget.resultState": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.resultState",
+    "typeSha256": "948cd69a053618a3617711d96cdaa533c7167aef2c20bb592bfdc16a35b90f2a"
+  },
+  "AlloyStudio.WorkBudget.resultState.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.resultState.eq_1",
+    "typeSha256": "0763a12a5c0ad3d549c8dad6c270a5197661885147d33ae1694b967581e9e6ae"
+  },
+  "AlloyStudio.WorkBudget.resultState.eq_2": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.resultState.eq_2",
+    "typeSha256": "a1f03a7d2314f4dcb3c9cc3967f002c22a834943ba6bd4f4ed972d635118d96c"
+  },
+  "AlloyStudio.WorkBudget.resultState.eq_3": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.resultState.eq_3",
+    "typeSha256": "e718d84399b88f13a4040b50cd76383309e0c2dc177c886aa292362cebcbf2a8"
+  },
+  "AlloyStudio.WorkBudget.resultState.match_1": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.resultState.match_1",
+    "typeSha256": "19c61a087bc72f6e82f764734df9705704c7edb3b230a9c308befbd33a6bb752"
+  },
+  "AlloyStudio.WorkBudget.sampleSpec": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [],
+    "module": "Semantics",
+    "name": "AlloyStudio.WorkBudget.sampleSpec",
+    "typeSha256": "41b977e623ac685da440f66941ae113d292148acb4506b17005b2693ad806113"
+  },
+  "AlloyStudio.WorkBudget.sampleSpec.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sampleSpec.eq_1",
+    "typeSha256": "8011bd1fc6c5449e2da84f0507587e1ed124f5d57fb13a1b296733a7d36ea543"
+  },
+  "AlloyStudio.WorkBudget.sample_preserves_valid": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_preserves_valid",
+    "typeSha256": "30fc95c1f913fdf7c43f3d275acdcfbf773a214440983da5c7c1addd20b7bda4"
+  },
+  "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_1",
+    "typeSha256": "59d8cdef8a0b2176f046adb54ef31e7b13a63a447da8fa5477b5099b0cf3c14e"
+  },
+  "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_preserves_valid._proof_1_2",
+    "typeSha256": "de036f1e1c0d3767e4cba39a0b8dfb66464ae81b1496eb330c1333ec66477656"
+  },
+  "AlloyStudio.WorkBudget.sample_refines": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_refines",
+    "typeSha256": "680720001086cf53e1a41d8e9ab34df0fcd59b2bdeb7c7291a7ffe11cee1f5af"
+  },
+  "AlloyStudio.WorkBudget.sample_refines._proof_1_1": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_refines._proof_1_1",
+    "typeSha256": "1dd00a55b45fc82de0a0dd59ab86c5806433cbc91cef58ec447351fde9e932f7"
+  },
+  "AlloyStudio.WorkBudget.sample_refines._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_refines._proof_1_2",
+    "typeSha256": "649eb385f93b88934525b162aab4799f6c01ece175ed9482efe0b491943465a4"
+  },
+  "AlloyStudio.WorkBudget.sample_refines._proof_1_4": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.sample_refines._proof_1_4",
+    "typeSha256": "6c48428efeda975e6b992394d73de4ddfbff2fe0c962eef9f4e01ead9238dd47"
+  },
+  "AlloyStudio.WorkBudget.timed_countdown_decreases": {
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.timed_countdown_decreases",
+    "typeSha256": "199e092e737171a03111a96ef654121677f27a12c6612ad340a4db47dc71d9f9"
+  },
+  "AlloyStudio.WorkBudget.timed_countdown_decreases._proof_1_2": {
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "AlloyStudio.WorkBudget.timed_countdown_decreases._proof_1_2",
+    "typeSha256": "880d728349da8e8d5a4b5841e37feb26110ef6f5749e23606d32ff58c63bfe42"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_1",
+    "typeSha256": "64d4562bffb7c926e94aee490a1f8374a4071d49f5d9f9e1074352aa49db0959"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_2": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_2",
+    "typeSha256": "85a5ccb4640418df3864b94bb08771c542bfbc64308647679a7e522c2685ed89"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_3": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.eq_3",
+    "typeSha256": "f9d1cb32a64e65f328f330b32e7cfe3f17ba16982918a7e4676a51ba53ea860f"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.splitter": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.Generated.sampleClock.match_1.splitter",
+    "typeSha256": "9e2b45ba4085fa7c8708a44753961b9bba9d752310c3af2467c7104806244999"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_ok_remaining": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_ok_remaining",
+    "typeSha256": "0782345feacf7b600541fb9f1c2904c0e0cc8385aa42bdeabc8c3c57e4a2b23f"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_preserves_valid": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.checkpoint_preserves_valid",
+    "typeSha256": "a6597c8141a3ccad839328973c0a304519889c3b9bfd479606fefa2ea18a6116"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_1",
+    "typeSha256": "a6260657623f54359cace313efe0a240198e7b43b0e4ca7963f9180163557514"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_2": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_2",
+    "typeSha256": "84e2b0f225d5c308fc39bda385471690577d9ad19daa4a8569046485cd119488"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_3": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.eq_3",
+    "typeSha256": "f554ff377d839042036b7268eb9097cfa8f919e04baba1eaa3892ae9e025caeb"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.splitter": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.resultState.match_1.splitter",
+    "typeSha256": "19c61a087bc72f6e82f764734df9705704c7edb3b230a9c308befbd33a6bb752"
+  },
+  "_private.Refinement.0.AlloyStudio.WorkBudget.sample_ok_remaining": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Refinement",
+    "name": "_private.Refinement.0.AlloyStudio.WorkBudget.sample_ok_remaining",
+    "typeSha256": "1e4e6e661656fb25131ac91e4312e5c02288365ad17ec14513fec70a4bcb9843"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.append_assoc": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.append_assoc",
+    "typeSha256": "4785e3b97368ef47595ab7d9cec3042400c9cef584330ef5083fb11db77632cf"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.append_nil": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.append_nil",
+    "typeSha256": "6dc55091854337c28696f254896bd1a3c802cd015a50acb608adec03922ff78d"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_1": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_1",
+    "typeSha256": "7b993d143dd3cc94cf822eabce7776fdb10453251234852659ac5074080854ed"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_2": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.eq_2",
+    "typeSha256": "5591614c67140cc9540ef4d7935c9ae3fc5b4c6271e470d9a936de2037169136"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.splitter": {
+    "axioms": [],
+    "kind": "definition",
+    "levelParameters": [
+      "u_1"
+    ],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.fullFold.match_1.splitter",
+    "typeSha256": "b6f910209d9f7fecd973b0a20f1a1cc9f1ff7910ce7e00b88af0e7cf8aa82291"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_left": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_left",
+    "typeSha256": "3cfda1f39a25ae79e9c029b0d91ddd9069549e11f522f7154a89daf93862b5b1"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_right": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.move_unit_right",
+    "typeSha256": "b5eb9e7a5f9659cf0b469c71e53d71fb6d61c7528f5bc0cfe38500582cbc1c79"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.retire_reservation": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.retire_reservation",
+    "typeSha256": "ae87bd0c0e37b588f31cb2d56e6163c016d3efd9157110593138343a2065ebdf"
+  },
+  "_private.Work.0.AlloyStudio.PatchContracts.Work.subtract_restore": {
+    "axioms": [],
+    "kind": "theorem",
+    "levelParameters": [],
+    "module": "Work",
+    "name": "_private.Work.0.AlloyStudio.PatchContracts.Work.subtract_restore",
+    "typeSha256": "08e32f9ef955f4cd0ed9ef9d178c177e1bc1bba4efce1d039b245432fd587d78"
+  }
+}

@@ -39,11 +39,13 @@ It is disabled until a host administrator configures a password; see
 `backend/docs/admin-setup.md` in the extracted package. Keep import files outside
 every IIS public directory, and preserve the installed database when updating code.
 
-This deployment support was developed on Linux. Cross-platform tests and
-PowerShell syntax checks do not establish that a particular Windows server is
-configured correctly. Run the Windows acceptance script below and the lifecycle
-checks on the actual target before recording deployment acceptance. No Windows
-host was changed or claimed as verified during development.
+The `Native IIS acceptance` Actions workflow provisions Windows Server 2022,
+IIS 10, URL Rewrite 2.1 and ARR 3.0, then installs the packaged backend as a real
+LOCAL SERVICE task. Its sanitized report is separate from the portable Linux,
+macOS and Windows tests. A successful native run validates that runner and
+revision; it does not establish that a particular production server is configured
+correctly. Run the acceptance script below on the actual target as well. The
+workflow does not upload the private package, database, logs or credentials.
 
 ## Administration boundary
 
@@ -70,7 +72,65 @@ API response should enter a shared cache. Production requires HTTPS, and no
 forwarded Host/protocol header chooses authentication authority. Same-origin
 applications are trusted; a URL path cannot isolate an untrusted sibling app.
 Preparation and suggestions use bounded jobs so their API requests do not stay
-open through a full solver/provider run. No global ARR timeout change is needed.
+open through a full solver/provider run. These administration jobs do not require
+an additional ARR timeout increase beyond the analysis budget documented below.
+
+### Administration network admission (default deny)
+
+Administration is denied at both the IIS edge and the backend unless an operator
+network is configured (AP01-C11). By default every `/admin` and `/api/admin`
+request returns 404 before any sign-in cookie, CSRF token or failed-login count
+is created. The admin UI also passes through the backend; IIS does not serve an
+admitted `/admin` request directly from its static directory.
+
+For a browser connecting directly to IIS, configure **both** layers:
+
+1. In the deployed `wwwroot/web.config`, add one negated condition per address to
+   the `Administration network policy` rule, for example
+   `<add input="{REMOTE_ADDR}" pattern="^192\.0\.2\.10$" negate="true" />`.
+2. Configure ARR to append canonical client addresses without ports, as described
+   [below](#client-identity-for-editing-channels-optional). Add
+   `-TrustedProxy 127.0.0.1 -AdminNetwork 192.0.2.10/32` to the task's `Install`
+   command. Trusting the local IIS hop is required: otherwise the backend sees
+   `127.0.0.1`, which does not belong to the operator's network.
+
+Keep the private `deploy/iis/web.config` reference unchanged.
+`Start-AlloyStudio.ps1` accepts only these exact, canonical `REMOTE_ADDR`
+conditions in the public configuration. It rejects wildcard patterns,
+forwarded-header conditions and changes to any other XML setting. Each address
+needs its own negated condition; the conditions use `MatchAll`, so an address
+matching any configured exception bypasses the edge deny rule. The backend
+additionally accepts canonical CIDR blocks; the packaged edge customization
+supports exact addresses only.
+When upgrading a package, record these edge exceptions and reapply them to the
+new public template; replacing `wwwroot/web.config` restores default deny.
+
+Behind Cloudflare, `REMOTE_ADDR` at IIS is the connecting Cloudflare edge,
+whereas the backend's administration policy must select the original client.
+Restrict the administration paths at Cloudflare, permit only the connecting
+edge addresses in the IIS rule, and configure the backend's `-TrustedProxy`
+with `127.0.0.1` **and every exact trusted forwarding hop**. Keep `-AdminNetwork`
+limited to the operator's client network. Allowing an edge address at IIS alone
+does not admit an operator at the backend; changing only Cloudflare policy also
+does not override the default IIS deny rule. Inspect the actual forwarding chain
+before enabling this path. Direct origin access for administration is another
+option when its network policy permits it.
+Use the public HTTPS origin in administrator configuration. The local HTTP
+exception applies to a resolved loopback client only; forwarding through the
+local IIS process does not make an external client eligible for HTTP admin.
+From an unlisted address, `/admin/` and `/api/admin/session` must return 404; from
+a listed address the sign-in page loads. Allowed sources still share the
+five-failure sign-in limit. Verifying the deployed network path remains an
+operator acceptance step.
+
+Optional `-ControlPort 8081` on `Manage-AlloyStudio.ps1 -Action Install` enables
+the private loopback diagnostics listener, provided that port is unused.
+`-Action Status` then includes `/api/diagnostics`; IIS continues to proxy only
+the application port. `-EngineMode persistent` is the default; `oneshot` remains
+an explicit rollback option. Installation validates proxy/network spellings
+before creating task configuration. Existing task configurations must be
+updated through the documented stop/uninstall/install procedure to change these
+options; a normal restart preserves them.
 
 ## 1. Build and transfer the package
 
@@ -283,18 +343,74 @@ Import-Module WebAdministration
 $AppCmd = "$env:windir\System32\inetsrv\appcmd.exe"
 & $AppCmd list modules
 # Confirm RewriteModule and ApplicationRequestRouting are listed.
-& $AppCmd set config -section:system.webServer/proxy /enabled:true /timeout:00:01:00 /commit:apphost
+& $AppCmd set config -section:system.webServer/proxy /enabled:true /commit:apphost
 if ($LASTEXITCODE -ne 0) { throw 'ARR proxy configuration failed.' }
+$Proxy = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy'
+# Preserve a longer timeout already required by another website.
+if (([TimeSpan]$Proxy.timeout).TotalSeconds -lt 120) {
+    & $AppCmd set config -section:system.webServer/proxy /timeout:00:02:00 /commit:apphost
+    if ($LASTEXITCODE -ne 0) { throw 'ARR timeout configuration failed.' }
+}
 ```
 
 This changes ARR's **server-wide** proxy setting, which is shared with other IIS
-sites. The 60-second timeout exceeds the default 12-second canonical calculation
-plus the 40-second Luna request; retain at least 60 seconds. The behavioral check
-uses a separate request before educational guidance is requested. The included
-`web.config` has only a fixed loopback upstream. Its second rule allows only the
-known portal, dashboard and admin public assets. No wildcard filesystem handler exposes the backend.
+sites; the command retains any existing timeout longer than 120 seconds. Retain
+at least 120 seconds: the largest supported IIS analysis envelope is a 30-second
+worker acquisition/startup budget, 30-second calculation, five-second scheduler
+queue, one-second completion allowance and five-second response-write budget
+(71.25 seconds including up to 0.25 seconds of request cleanup). The browser
+bounds each analysis request at 150 seconds. Default
+constrained-profile startup is 20 seconds; feedback calculation remains 12
+seconds and behavior 30 seconds. Startup no longer consumes the calculation
+budget. The browser normally supplies an evidence token for Luna, avoiding a
+second feedback computation. A legacy explanation request without that token
+may first recompute feedback and then call the provider with a 40-second socket
+timeout: the nominal phase-budget sum is 111.25 seconds (83.25 with default
+budgets). The provider timeout is not a proven absolute bound on the entire
+response read; network progress and runtime preemption can extend it. Behavioral
+examples use their own request. These sums are planning targets, exclude host
+scheduling delays, and are not a guaranteed end-to-end deadline. ARR and the
+browser retain their independent outer timeouts. The included
+`web.config` has only a fixed loopback upstream. Administration is gated first,
+API/admin requests are proxied next, and the final rule limits public assets.
+No wildcard filesystem handler exposes the backend.
 Application-relative rewrite matching also supports `/alloy/api/...`; see the
 [URL Rewrite configuration reference](https://learn.microsoft.com/en-us/iis/extensions/url-rewrite-module/url-rewrite-module-configuration-reference).
+
+For proxied Cloudflare DNS, its [published origin connection limits](https://developers.cloudflare.com/fundamentals/reference/connection-limits/)
+list a 125-second proxy read timeout and 30-second proxy write timeout (checked
+2026-10-05). The nominal 111.25-second legacy explanation phase sum fits that
+published read limit, but it is not an absolute provider-read guarantee. Verify
+the actual zone and any other upstream proxy
+settings. Raising ARR or the browser deadline does not raise Cloudflare's limit.
+The deployment scripts do not modify Cloudflare. Slow or overloaded origins can
+still trigger [Cloudflare 524](https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-524/).
+
+### Client identity for editing channels (optional)
+
+By default the backend trusts no proxy, so every request forwarded by IIS shares
+the loopback identity for the 32-channel editing quota (512 site-wide). When that
+quota is full, browsers fall back to channel-less checks for that operation: they
+keep all local stale-result guards, but the server cannot supersede or cancel
+their work. To give each client its own quota identity (AP01-C04/C05):
+
+```powershell
+& $AppCmd set config -section:system.webServer/proxy /includePortInXForwardedFor:false /commit:apphost
+if ($LASTEXITCODE -ne 0) { throw 'ARR X-Forwarded-For configuration failed.' }
+```
+
+This ARR setting is server-wide; account for the other sites on the Windows
+host before changing it. Then install the backend task with
+`-TrustedProxy 127.0.0.1`. The backend accepts
+exactly one `X-Forwarded-For` field of at most 4096 bytes and 32 canonical
+addresses (no ports or zones), scans from the nearest hop, and skips only listed
+proxies. Malformed or absent metadata from a trusted proxy rejects channel
+creation; it never falls back to the proxy address. With Cloudflare in front,
+either list each exact Cloudflare address you rely on with `-TrustedProxy`, or
+accept the Cloudflare edge address as the quota identity. A header never grants
+trust by itself. Connection admission still counts the TCP peer (IIS), so size
+the traffic profile for the proxy's aggregate load. Confirm on the target how
+each proxy appends and sanitizes the header before relying on per-client quotas.
 
 ## 3. Create the HTTPS website or IIS application
 
@@ -426,11 +542,20 @@ the task. Start and Restart repeat it before changing task state, using the
 Python executable recorded in the scheduled task and the configured Java runtime.
 If a required JAR is missing, a running backend is not stopped by Restart.
 
-The default engine mode is `persistent`: two feedback JVMs and one behavioral
-JVM remain alive between edits, with a separate administrator process slot.
-The shared backend budget permits at most four engine children. Existing task
-configurations with `workers: 4` remain valid; feedback concurrency is capped at
-two. A 12-second feedback timeout and `127.0.0.1:8080` remain the defaults.
+The default engine mode is `persistent`. The default `constrained` resource
+profile retains one feedback JVM and one behavioral JVM, with a separate
+administrator process slot; each Java child is told to use one processor.
+`-ResourceProfile standard` retains two feedback JVMs and one behavioral JVM,
+with two processors available per Java child. Both profiles preserve the same
+complete correct-pool comparison, canonical/AST algorithms, work limits and
+behavioral examples. Existing explicit `workers: 4` values remain valid and are
+capped at two feedback workers. `-Workers 0` (the installer default) selects the
+profile default without writing an override. A 12-second feedback calculation
+timeout and `127.0.0.1:8080` remain the defaults. `-StartupTimeout 1..30` overrides
+the acquisition/startup budget; zero omits the override (20 seconds constrained,
+10 seconds standard). `-EngineTimeout 1..30` controls the calculation budget
+separately. The installer and task launcher reject larger IIS budgets so they
+fit the 120-second proxy envelope.
 The port is intentionally shared with the fixed rewrite
 rule. This recipe installs one backend per Windows host. The task starts at
 boot, ignores overlapping starts, has no execution time limit, and retries
@@ -440,16 +565,19 @@ unexpected failures up to 999 times at one-minute intervals. Microsoft documents
 and [unlimited task runtime](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-executiontimelimit).
 The account must retain the Windows policy permission to run scheduled tasks.
 
-The private `backend-task.json` accepts two optional runtime fields without
+The private `backend-task.json` accepts optional runtime fields without
 changing the provider key or administrator password configuration:
 
 ```json
 "engine_mode": "persistent",
-"control_port": 0
+"control_port": 0,
+"resource_profile": "constrained"
 ```
 
 Add these fields to the existing JSON object, preserving its other fields and
-restricted ACLs. Older files that omit them use these defaults. To roll back to
+restricted ACLs. Older files that omit them use these defaults; explicit existing
+`workers` values are retained. An optional `startup_timeout` is a positive number
+at most 30; omit it to use the profile default. To roll back to
 per-request Java execution, change `engine_mode` to `"oneshot"` and restart the
 backend task. This retains request validation, work-sharing and output checks;
 it changes the Java process lifecycle. The source launcher exposes the same
@@ -579,6 +707,10 @@ path generated from `-RuntimeRoot`. It does not select another user's config.
 
 ```powershell
 & "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot
+# When the operator address is explicitly admitted by both network policies:
+& "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot -ExpectAdminAccess
+# Optional, with an installed nonzero ControlPort; checks actual worker PID reuse:
+& "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot -CheckDiagnostics
 # Optional: makes a real Luna request using the configured credential.
 & "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot -CheckLuna
 ```
@@ -589,13 +721,30 @@ details remain in `runtime_dependencies` even when a dependency failure prevents
 HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
 binding, configured origin, private ACLs and paths, all public exercise
 projections, UTF-8 processing, and a real operator repair that reduces canonical
-distance from 1 to 0. It checks that denied cross-origin and malformed requests
+distance from 1 to 0, raw AST edits, and the four fact-constrained behavioral
+categories with at most three concrete graph inputs each. It checks the actual
+ARR setting is at least 120 seconds and allows 130 seconds for its own request
+probe. Default administration must return 404; use `-ExpectAdminAccess` only
+when the current operator network has been configured at both layers. The
+optional `-CheckDiagnostics` mode requires persistent workers and a configured
+private control port, verifies ready lanes and stable Java process IDs across
+fresh analyses, and checks IIS cannot expose private diagnostics.
+It checks that denied cross-origin and malformed requests
 remain JSON errors and that private routes cannot be downloaded. IIS preserves
 backend errors through [`existingResponse="PassThrough"`](https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httperrors/).
 The report is `$RuntimeRoot\deployment-check.json` (by default,
 `C:\ProgramData\AlloyStudio\deployment-check.json`); a failure
 exits with code 1. It contains no HTTP response bodies or credentials. The
 optional Luna check verifies availability, not correctness of generated prose.
+
+The native Actions harness `scripts/test_native_iis.ps1` runs only on a disposable
+Windows Actions runner. It pins both Microsoft installers by SHA-256 and checks
+their Authenticode signatures, installs a separate sentinel site, then executes
+the real package's installer, startup and acceptance scripts. The sentinel must
+retain its binding and response after Alloy starts and stops. Only fixed check
+names/statuses and runner revision enter the uploaded summary. Its HTTP-loopback
+test does not validate production TLS, Cloudflare, Windows client editions,
+machine reboot or a particular user's host configuration.
 
 Also check lifecycle behavior on this server:
 

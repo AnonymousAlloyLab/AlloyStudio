@@ -53,6 +53,7 @@ final class SourceLocator {
         try { locator = new SourceLocator(source, module, predicate); }
         catch (RuntimeException | StackOverflowError ignored) { /* Location failure cannot alter metric feedback. */ }
         for (int i = 0; i < operations.length(); i++) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1);
             JSONObject operation = operations.getJSONObject(i);
             JSONObject location;
             try {
@@ -78,6 +79,7 @@ final class SourceLocator {
         // Parentheses and the predicate's brace wrapper can have the same token
         // sequence as a child. Keep the smallest parsed expression for each
         // occurrence, retaining every separate repeated occurrence.
+        is.fivefivefive.CanDis.WorkBudget.chargeCells(candidates.size(), candidates.size());
         List<Range> minimal = new ArrayList<>();
         for (Range candidate : candidates) {
             boolean enclosesSmaller = false;
@@ -161,6 +163,7 @@ final class SourceLocator {
         // occurrences. Their NOOP wrappers carry the actual use-site positions.
         if (expression instanceof Sig || expression instanceof ExprVar) return;
         Range span = range(expression.span());
+        is.fivefivefive.CanDis.WorkBudget.charge(1L + Math.max(0, span.end - span.start));
         if (insideBody(span)) add(expressions, tokens(slice(span)), span);
         if (expression instanceof ExprUnary unary) visit(unary.sub);
         else if (expression instanceof ExprBinary binary) { visit(binary.left); visit(binary.right); }

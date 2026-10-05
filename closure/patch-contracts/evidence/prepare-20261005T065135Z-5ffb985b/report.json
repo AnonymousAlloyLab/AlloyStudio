@@ -1,0 +1,80 @@
+{
+  "blockSha256": "b62702245e431f72d70035c308c783f126820fe227279f6182e935d9869e559c",
+  "build": {
+    "artifacts": {
+      "Governance.olean": "3000d74de45a5f7a10ebe78ec6093a145672b32ffcbb78f476437fa07cc95823",
+      "Identity.olean": "bb6afd5bf0a58179dc170e818510a2d2503f169c1931d2078d5da2ca05a3acb2",
+      "Observability.olean": "134671e593413b216d2d4f5b80fd7b426412d32a15e7942d13b2e765a24cfdd7",
+      "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+    },
+    "declarations": 1313,
+    "inventorySha256": "de5ab1e1adee48c88f853c0279354343a8bedae3952445e65d2fd8e32c003e19",
+    "network": {
+      "interfaces": [
+        "lo"
+      ],
+      "ipv4Routes": 0,
+      "outboundConnectError": 101
+    },
+    "theorems": 445
+  },
+  "closureId": "patch-contracts-prepare-20261005T065135Z-5ffb985b",
+  "phase": "PREPARED",
+  "productionBridges": [
+    {
+      "id": "AP01-B01",
+      "statement": "Instrument all actual Java atomic work/allocation and establish complete bounded scheduling, including parser/native operations and calibrated limits.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B02",
+      "statement": "Preserve full correct-pool metric semantics, argmin/tie order, positions and redacted public payload; prove schedule completeness and initial minimum bound.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B03",
+      "statement": "Bind locked spawn/startup/timeout/reap/clock events and per-lane epoch quotas to actual lifecycle, global process budget and all JVM consumers.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B04",
+      "statement": "Implement strict canonical wire IP parsing and validate explicit deployed proxy trust/header chain; separately configure bounded TCP-peer ingress aggregation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B05",
+      "statement": "Bind application identities to atomic scheduler quota allocation, expiry and channel ownership.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B06",
+      "statement": "Bind browser error classes, serialization omission, captured snapshot equality, abort/echo guards and bounded fallback across feedback/behavior/explanation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B07",
+      "statement": "Integrate independently frozen complete manifest/report/verifier freshness into CI/status without rewriting historical closure.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B08",
+      "statement": "Implement typed ingress/business capability boundary including actual exceptions, raw socket exclusion, ownership and bounded output correspondence.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B09",
+      "statement": "Preserve immutable in-repo evidence by unique paths and checked content retrieval; no migration/deletion/history rewrite.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B10",
+      "statement": "Implement control-only atomic aggregate snapshot, bounded DTO and side-effect-free diagnostics with actual counter/route correspondence.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-B11",
+      "statement": "Enforce complete IIS and backend operator-network admission before admin bootstrap/login work; retain auth/KDF/aggregate guards and test actual deployment bypasses.",
+      "status": "OPEN"
+    }
+  ]
+}

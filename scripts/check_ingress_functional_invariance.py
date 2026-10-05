@@ -5,6 +5,9 @@ Only a synthetic corpus and copied runtime/public assets are staged. No private
 deployment configuration is read, no provider is contacted, and no source file
 is rewritten. The archived Python baseline and both current modes use the same
 current compiled Java artifacts: this is not a historical engine benchmark.
+Current arms explicitly admit the synthetic loopback administrator network, so
+this compares permitted-network business behavior. AP01's intentional default
+network denial is covered separately by test_ap01_http.py, not normalized away.
 """
 from contextlib import contextmanager
 import hashlib
@@ -41,7 +44,8 @@ run over
 run under
 '''
 SOURCES = ('server.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits.py',
-           'traffic_decode.py', 'engine_workers.py', 'traffic_scheduler.py', 'runtime_dependencies.py',
+           'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'engine_workers.py',
+           'traffic_scheduler.py', 'runtime_dependencies.py', 'execution_profile.py',
            'luna.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
            'exercise_store.py', 'exercise_sql.py', 'scripts/import_exercises.py',
            'scripts/import_correct_pools.py', 'scripts/traffic_observation.py',
@@ -114,6 +118,9 @@ def app_for(module, root, mode):
     kwargs = dict(root=root, timeout=12, workers=2)
     if mode != 'archived-oneshot':
         kwargs['engine_mode'] = mode
+        # Keep the archived API untouched. Match its permitted-network business
+        # precondition without removing the new production default-deny policy.
+        kwargs['admin_networks'] = ('127.0.0.1/32',)
     app = module.Portal(('127.0.0.1', 0), **kwargs)
     thread = threading.Thread(target=lambda: app.serve_forever(poll_interval=.01), daemon=True)
     thread.start()
@@ -291,10 +298,16 @@ def run(root=ROOT, output=None):
         sources=before,sourceIdentitySha256=sha(encoded(before)),sourceIdentityStable=stable,
         execution=dict(python=platform.python_version(),platform=platform.platform(),
                        elapsedSeconds=round(time.monotonic()-started,6),providersDisabled=True),
+        preconditions=dict(currentAdministratorNetworks=['127.0.0.1/32'],
+                           archivedAdministratorNetworkPolicy='unchanged',
+                           administratorConfiguration='absent in every synthetic arm',
+                           comparisonScope='permitted-network business behavior',
+                           defaultDenyRegression='tests/test_ap01_http.py'),
         arms=arms,comparison=comparison,
         limitations=['Synthetic single exercise; all-181 checks and enabled administrator tests are separate.',
                      'Archived Python baseline and current modes use identical current compiled Java artifacts.',
                      'Finite successful requests and deterministic invalid drafts; not arbitrary-history equivalence.',
+                     'Current arms explicitly admit only the synthetic loopback administrator network; intentional default-deny differences are tested separately, not ignored by comparison.',
                      'Linux execution only; not native Windows/macOS or deployed proxy validation.',
                      'No private deployment configuration or provider credentials are copied/read.'])
     target = owned / 'functional-invariance.json' if output is None else Path(output)

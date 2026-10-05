@@ -17,6 +17,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from runtime_dependencies import ENGINE_CHECKS, JAR_FILES, check_runtime
+from execution_profile import resolve_profile
+from traffic_limits import validated_seconds
 from scripts.prepare_private_data import PreparationError, prepare
 
 JAVA_ENV = frozenset(('CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS',
@@ -153,17 +155,28 @@ def main(argv=None):
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--timeout', type=float, default=12)
-    parser.add_argument('--workers', type=int, default=2,
+    parser.add_argument('--resource-profile', choices=('constrained', 'standard'), default='constrained')
+    parser.add_argument('--startup-timeout', type=float)
+    parser.add_argument('--workers', type=int,
                         help='Feedback workers (capped at 2; behavior and admin reserve separate lanes)')
     parser.add_argument('--engine-mode', choices=('persistent', 'oneshot'), default='persistent',
                         help='Reuse Java workers by default; oneshot restores per-request JVM execution')
     parser.add_argument('--control-port', type=int, default=0,
                         help='Optional separate loopback health listener; 0 disables it')
     parser.add_argument('--public-origin', action='append', default=[])
+    parser.add_argument('--trusted-proxy', action='append', default=[],
+                        help='Exact proxy address whose X-Forwarded-For is honoured (default none)')
+    parser.add_argument('--admin-network', action='append', default=[],
+                        help='CIDR allowed to reach administration, e.g. 127.0.0.1/32 (default deny)')
     args = parser.parse_args(argv)
+    try:
+        validated_seconds(args.timeout, maximum=120)
+        resolve_profile(args.resource_profile, args.workers, args.startup_timeout)
+    except ValueError as error:
+        parser.error(str(error))
     if (not 0 <= args.port <= 65535 or not 0 <= args.control_port <= 65535
             or args.control_port and args.control_port == args.port
-            or args.timeout <= 0 or args.workers < 1):
+            or args.timeout <= 0 or args.workers is not None and args.workers < 1):
         parser.error('ports must be 0..65535 and distinct when enabled; timeout and workers must be positive')
     try:
         runtime = setup(ROOT, source_root=args.source_root, bundle=args.from_bundle,
@@ -176,10 +189,18 @@ def main(argv=None):
             return 0
         command = [sys.executable, '-E', '-s', str(ROOT / 'server.py'),
                    '--java', str(runtime), '--host', args.host, '--port', str(args.port),
-                   '--timeout', str(args.timeout), '--workers', str(args.workers),
+                   '--timeout', str(args.timeout), '--resource-profile', args.resource_profile,
                    '--engine-mode', args.engine_mode, '--control-port', str(args.control_port)]
+        if args.workers is not None:
+            command.extend(('--workers', str(args.workers)))
+        if args.startup_timeout is not None:
+            command.extend(('--startup-timeout', str(args.startup_timeout)))
         for origin in args.public_origin:
             command.extend(('--public-origin', origin))
+        for address in args.trusted_proxy:
+            command.extend(('--trusted-proxy', address))
+        for network in args.admin_network:
+            command.extend(('--admin-network', network))
         # Replace this process: terminal signals reach the server directly.
         os.execve(sys.executable, command, clean_environment())
     except PreparationError as error:

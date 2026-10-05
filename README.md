@@ -34,6 +34,16 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Alpha `v0.0.5-alpha`** adds a constrained-host profile, separate startup and
+execution deadlines, prompt queue expiry and cooperative feedback time limits
+that keep a reusable JVM alive. Both hint modes and all supporting features are
+retained. Finite two/four-core runs preserved 1,448 complete responses across all
+181 exercises; 12 simultaneous identical edits shared one computation. The
+[implementation and measurements](docs/constrained-runtime-implementation.md),
+[specification](docs/constrained-runtime-spec.md) and
+[release notes](docs/releases/v0.0.5-alpha.md) distinguish measured performance,
+the narrow Java/Lean correspondence, and native IIS acceptance.
+
 **Maintenance alpha `v0.0.4.f1-alpha`** closes TRF-01 for the frozen ingress
 implementation under its declared trust boundary. It repairs strict HTTP
 decoding, sampled deadlines and thread-lifetime accounting, including interrupted
@@ -41,6 +51,27 @@ thread-status observations. Validation includes 1,053 Python regressions, 378
 engine checks, 77 portal and 7 dashboard checks, and 69 bounded functional
 comparisons. Persistent JVM reuse and the hint algorithms are preserved.
 See the [release notes](docs/releases/v0.0.4.f1-alpha.md).
+
+The [Claude feedback patch contracts](docs/claude-feedback-patch-contracts.md)
+(AP01) formalize work budgets, proxy/fallback behavior, freshness, diagnostics
+and administration admission as Lean models. The current checkout implements
+their production bridges in code, with regression tests; see the
+[implementation report](docs/ap01-implementation.md). A request-global analysis
+work budget returns an explicit `WORK_LIMIT` on exhaustion while retaining the
+persistent JVM; separate request deadlines remain in force. Persistent worker launches have
+per-lane budgets with a separate startup-failure circuit. Editing channels use a
+strict trusted-proxy identity (no proxy is trusted by default) with a bounded
+browser fallback that rejects redirects and malformed channels. Administration
+is denied by network unless configured; proxy-forwarded external clients cannot
+use the local HTTP administration exception. The
+private control listener offers diagnostics, business routes sit behind a
+validated request and named-services boundary, and CI reports current-source freshness.
+The earlier AP01 calibration found 4,274 byte-identical complete responses against
+`521019e` across both metrics. Whole-production formal refinement and acceptance
+on the operator's actual IIS/Cloudflare deployment remain open. The
+[sealed local regression record](closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json)
+reports 1,178 Python tests, 378 engine checks, 106 browser checks and 69 HTTP
+comparisons passing. Existing evidence stays in the repository.
 
 **Alpha v0.0.4** (`v0.0.4-alpha`) reuses a bounded pool of JVM workers across edits,
 shares identical pending analyses, and caches exact-context results. Browser
@@ -99,6 +130,20 @@ from execution history; a failed observation retains its bounded slot until
 restart. Earlier candidates, counterexamples and regression results are preserved.
 New proof blocks use two GPT-6 Luna, two GPT-6.1 Sol and two GPT-6 Astra reviewers
 in that order, with source-bound records and constructed breach witnesses.
+
+Current-source freshness ([`scripts/source_freshness.py`](scripts/source_freshness.py),
+run in CI) compares each historical approved inventory with this checkout. STALE
+never rewrites a historical result; it means that result applies to its recorded
+root, not to the current source. TRF-00 was already stale at the tagged
+`v0.0.4.f1-alpha` commit, and the AP01 implementation changes inputs of all three:
+
+<!-- BEGIN CURRENT-SOURCE FRESHNESS (scripts/source_freshness.py --readme-block) -->
+| Closure | Historical record | Current source |
+| --- | --- | --- |
+| TRF-00 | VERIFIED at its recorded root | STALE |
+| TRF-01 | VERIFIED at its recorded root | STALE |
+| AP01 | VERIFIED at its recorded root | STALE |
+<!-- END CURRENT-SOURCE FRESHNESS -->
 
 On Linux or macOS, install **Python 3.10+ and a JDK 17+** (including `javac`).
 From a new clone, run:
@@ -179,6 +224,11 @@ deployment with an interactive backend command:
 python3 scripts/configure_admin.py --origin http://127.0.0.1:8080
 ```
 
+Administration is also denied by network until an operator address is allowed:
+start the backend with `--admin-network`, for example
+`./scripts/run.sh --admin-network 127.0.0.1/32` on a workstation. Behind IIS,
+allow the same address in the edge rule as well; see the
+[IIS guide](deploy/iis/README.md#administration-network-admission-default-deny).
 Use the site's exact HTTPS origin in production. The password is stored only as
 a private salted hash; no password or OpenAI key belongs in the public web root.
 `inv1C0`, `inv1C1`, … become one `inv1` exercise after every variant passes the

@@ -15,6 +15,8 @@ public final class SlotPermutationGroup {
     private List<String> slots = new ArrayList<>();
     private final List<Map<String, String>> generators = new ArrayList<>();
     private Set<List<String>> elements = identityElements(Collections.emptyList());
+    /** Retained closure entries (elements x slots) permitted in a budgeted comparison. */
+    static final long BUDGETED_RETAINED_ENTRIES = 400_000L;
 
     public SlotPermutationGroup(Set<String> slots) {
         setSlots(slots);
@@ -116,10 +118,16 @@ public final class SlotPermutationGroup {
         elements.add(encode(identity));
         pending.add(identity);
         while (!pending.isEmpty()) {
+            is.fivefivefive.CanDis.WorkBudget.charge(1L + (long) generators.size() * (2L * slots.size() + 1));
             Map<String, String> current = pending.remove();
             for (Map<String, String> generator : generators) {
                 Map<String, String> composed = compose(current, generator);
-                if (elements.add(encode(composed))) {
+                List<String> encoded = encode(composed);
+                if (!elements.contains(encoded)) {
+                    // Symmetric slot blocks generate n! elements; never materialize
+                    // past the retained bound inside a budgeted comparison.
+                    is.fivefivefive.CanDis.WorkBudget.requireRetained((elements.size() + 1L) * Math.max(1, slots.size()), BUDGETED_RETAINED_ENTRIES);
+                    elements.add(encoded);
                     pending.add(composed);
                 }
             }

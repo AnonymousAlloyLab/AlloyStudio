@@ -1,0 +1,17 @@
+Refinement.lean:11:63: error: unsolved goals
+case true.false.true
+s : State
+units now : Int
+ha : s.active = true
+he : s.exhausted = false
+ht : s.timed = true
+⊢ (if javaLong (now - s.started) < 0 ∨ s.limit < javaLong (now - s.started) then
+      Result.exhausted
+        { active := true, remaining := s.remaining, exhausted := true, timed := true, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else Result.ok s) =
+    if javaLong (now - s.started) < 0 ∨ s.limit ≤ javaLong (now - s.started) then
+      Result.exhausted
+        { active := true, remaining := s.remaining, exhausted := true, timed := true, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else Result.ok s

@@ -106,7 +106,7 @@ class IisPackageTests(unittest.TestCase):
         self.write('LICENSE', 'Portal licence')
         self.write('server.py', '"""Private backend."""\n')
         self.write('luna.py', '"""Private explanation client."""\n')
-        for module in ('engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py'):
+        for module in ('engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
             self.write(module, (ROOT / module).read_bytes())
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
@@ -177,6 +177,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertTrue(all(b'PRIVATE_CORRECT_EXPRESSION' not in data for name, data in entries.items()
                             if name.startswith('wwwroot/')))
         self.assertIn('backend/server.py', entries)
+        self.assertIn('backend/execution_profile.py', entries)
         self.assertIn('backend/runtime_dependencies.py', entries)
         self.assertEqual(json.loads(entries['backend/openai.example.json']), {'api_key': ''})
         self.assertNotIn('backend/openai.local.json', entries)
@@ -185,6 +186,8 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual({name for name in entries if name.startswith('backend/scripts/')},
                          {f'backend/scripts/{name}' for name in RUNTIME_HELPERS})
         self.assertNotIn('backend/web/index.html', entries)
+        for name in ('index.html', 'app.js', 'styles.css'):
+            self.assertEqual(entries['backend/web/admin/' + name], entries['wwwroot/admin/' + name])
 
     def test_manifest_hashes_every_payload_and_binds_provenance(self):
         result, entries = self.archive()
@@ -405,6 +408,13 @@ class IisPackageTests(unittest.TestCase):
         self.assertIn('$health.exercises -gt 0', startup)
         self.assertIn('@($listing.exercises).Count -ne $health.exercises', startup)
         self.assertIn("Compare-Object @('index.html', 'app.js', 'styles.css') @($adminAssets.Name)", startup)
+        self.assertIn('--check-web-config', startup)
+        self.assertLess(startup.index('--check-web-config'), startup.index('Start-Service -Name'))
+        for option in ('engine_mode = $EngineMode', 'control_port = $ControlPort',
+                       'trusted_proxies = @($TrustedProxy)', 'admin_networks = @($AdminNetwork)',
+                       'resource_profile = $ResourceProfile', '$config.startup_timeout = $StartupTimeout'):
+            self.assertIn(option, manager)
+        self.assertLess(manager.index('$networkPolicy | & $PythonExe'), manager.index('Register-ScheduledTask -TaskName'))
 
     def test_upgrade_permission_migration_changes_only_stopped_private_data_acl(self):
         manager = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text()
@@ -739,12 +749,24 @@ class IisPackageTests(unittest.TestCase):
         documents = server.findall('defaultDocument/files/add')
         self.assertEqual([item.get('value') for item in documents], ['index.html'])
         rules = server.findall('rewrite/rules/rule')
-        self.assertEqual(len(rules), 2)
-        proxy, boundary = rules
+        self.assertEqual(len(rules), 3)
+        administration, proxy, boundary = rules
+        # AP01-C11: the edge denies every administration route unless the operator
+        # adds an allow condition; it runs before the API proxy can forward.
+        self.assertEqual(administration.get('stopProcessing'), 'true')
+        self.assertEqual(administration.find('conditions').findall('add'), [])
+        self.assertEqual(administration.find('action').get('statusCode'), '404')
+        denied = re.compile(administration.find('match').get('url'), re.IGNORECASE)
+        for path in ('admin', 'admin/', 'admin/index.html', 'ADMIN/app.js', 'api/admin/session', 'api/admin/login',
+                     'api/Admin/prepare'):
+            self.assertIsNotNone(denied.fullmatch(path))
+        for path in ('', 'index.html', 'api/health', 'api/feedback', 'administrator', 'api/adminx', 'dashboard/'):
+            self.assertIsNone(denied.fullmatch(path))
         self.assertEqual(proxy.get('stopProcessing'), 'true')
         self.assertEqual(proxy.find('match').get('ignoreCase'), 'false')
         expression = re.compile(proxy.find('match').get('url'))
-        for path in ('api', 'api/health', 'api/exercises/graphs-inv1', 'api/feedback', 'api/explain', 'api/admin/session', 'api/admin/prepare'):
+        for path in ('api', 'api/health', 'api/exercises/graphs-inv1', 'api/feedback', 'api/explain', 'api/admin/session', 'api/admin/prepare',
+                     'admin', 'admin/', 'admin/index.html', 'admin/app.js', 'admin/styles.css'):
             self.assertIsNotNone(expression.fullmatch(path))
         for path in ('other-api/health', 'apiX/health', 'alloy/api/health', '/api/health', 'server.py'):
             self.assertIsNone(expression.fullmatch(path))

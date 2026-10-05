@@ -1,0 +1,27 @@
+Refinement.lean:65:18: error: unsolved goals
+case isFalse.isFalse.isFalse.ok
+s : State
+units now : Int
+valid : Valid s
+remLo : 0 ≤ s.remaining
+remHi : s.remaining ≤ longMax
+active : ¬s.active = false
+negative : ¬units < 0
+refused : ¬(s.exhausted = true ∨ units > s.remaining)
+next : State
+h : sampleSpec s now = Result.ok next
+remains : next.remaining = s.remaining
+exact : javaLong (next.remaining - units) = next.remaining - units
+⊢ Result.ok
+      { active := next.active, remaining := javaLong (next.remaining + units), exhausted := next.exhausted,
+        timed := next.timed, started := next.started, limit := next.limit, checks := next.checks } =
+    Result.ok
+      { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+        started := next.started, limit := next.limit, checks := next.checks }
+Refinement.lean:69:21: error: This simp argument is unused:
+  exact
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`

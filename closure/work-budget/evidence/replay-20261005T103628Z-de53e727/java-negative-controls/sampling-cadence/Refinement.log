@@ -1,0 +1,103 @@
+Refinement.lean:6:0: error: Not a definitional equality: the left-hand side
+  Generated.initialChecks
+is not definitionally equal to the right-hand side
+  1024
+Refinement.lean:7:60: error: Type mismatch
+  rfl
+has type
+  ?m.5 = ?m.5
+but is expected to have type
+  Generated.initialChecks = 1024
+Refinement.lean:27:61: error: Tactic `rfl` failed: The left-hand side
+  match
+    checkpointSpec
+      { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed, started := s.started,
+        limit := s.limit, checks := 1025 }
+      now with
+  | Result.ok s => Result.ok s
+  | Result.invalid s => Result.invalid s
+  | Result.exhausted s => Result.exhausted s
+is not definitionally equal to the right-hand side
+  Result.ok state✝
+
+case isFalse.isTrue.ok
+s : State
+units now : Int
+lo : 1 ≤ s.checks
+hi : s.checks ≤ 1024
+wrapped : javaInt (s.checks - 1) = s.checks - 1
+timed : ¬s.timed = false
+one : s.checks - 1 = 0 ↔ s.checks = 1
+count : s.checks = 1
+state✝ : State
+⊢ (match
+      checkpointSpec
+        { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed,
+          started := s.started, limit := s.limit, checks := 1025 }
+        now with
+    | Result.ok s => Result.ok s
+    | Result.invalid s => Result.invalid s
+    | Result.exhausted s => Result.exhausted s) =
+    Result.ok state✝
+Refinement.lean:27:61: error: Tactic `rfl` failed: The left-hand side
+  match
+    checkpointSpec
+      { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed, started := s.started,
+        limit := s.limit, checks := 1025 }
+      now with
+  | Result.ok s => Result.ok s
+  | Result.invalid s => Result.invalid s
+  | Result.exhausted s => Result.exhausted s
+is not definitionally equal to the right-hand side
+  Result.invalid state✝
+
+case isFalse.isTrue.invalid
+s : State
+units now : Int
+lo : 1 ≤ s.checks
+hi : s.checks ≤ 1024
+wrapped : javaInt (s.checks - 1) = s.checks - 1
+timed : ¬s.timed = false
+one : s.checks - 1 = 0 ↔ s.checks = 1
+count : s.checks = 1
+state✝ : State
+⊢ (match
+      checkpointSpec
+        { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed,
+          started := s.started, limit := s.limit, checks := 1025 }
+        now with
+    | Result.ok s => Result.ok s
+    | Result.invalid s => Result.invalid s
+    | Result.exhausted s => Result.exhausted s) =
+    Result.invalid state✝
+Refinement.lean:27:61: error: Tactic `rfl` failed: The left-hand side
+  match
+    checkpointSpec
+      { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed, started := s.started,
+        limit := s.limit, checks := 1025 }
+      now with
+  | Result.ok s => Result.ok s
+  | Result.invalid s => Result.invalid s
+  | Result.exhausted s => Result.exhausted s
+is not definitionally equal to the right-hand side
+  Result.exhausted state✝
+
+case isFalse.isTrue.exhausted
+s : State
+units now : Int
+lo : 1 ≤ s.checks
+hi : s.checks ≤ 1024
+wrapped : javaInt (s.checks - 1) = s.checks - 1
+timed : ¬s.timed = false
+one : s.checks - 1 = 0 ↔ s.checks = 1
+count : s.checks = 1
+state✝ : State
+⊢ (match
+      checkpointSpec
+        { active := s.active, remaining := s.remaining, exhausted := s.exhausted, timed := s.timed,
+          started := s.started, limit := s.limit, checks := 1025 }
+        now with
+    | Result.ok s => Result.ok s
+    | Result.invalid s => Result.invalid s
+    | Result.exhausted s => Result.exhausted s) =
+    Result.exhausted state✝

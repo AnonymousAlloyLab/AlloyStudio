@@ -1,0 +1,79 @@
+{
+  "archive": {
+    "archive": "build/iis/alloy-studio-iis-20261005-092311-050172Z.zip",
+    "bytes": 60832954,
+    "files": 251,
+    "privateArchive": true,
+    "sha256": "e9ca841a019a825a47876d6039819950da5a2ac66c74890548ecf3892ea7dddd"
+  },
+  "baselineCommit": "521019eb898a6f203083ad629f1aef5ad513e331",
+  "calibration": {
+    "changedCalibrationHelperInputs": [
+      "scripts/calibrate_work_budget.py",
+      "server.py"
+    ],
+    "completeResponseMatches": 4274,
+    "interpretation": "Current engine classes exactly match measured classes. The later calibration reuse guard is separately rechecked; later server routing changes are covered by current HTTP/browser tests, not inferred from calibration.",
+    "recheck": "closure/patch-contracts/evidence/work-calibration-recheck-20261005T090424Z-d9b056ca/report.json",
+    "report": "closure/patch-contracts/evidence/work-calibration-20261005T090137Z-f76c415f/summary.json",
+    "sameCompiledEngineClasses": 181,
+    "sha256": "ce3a2d9c34cb797e1c320c5849f253fb0829b99ee3898033cffb2ac3f0ec4df0"
+  },
+  "checks": {
+    "adminBrowser": 14,
+    "dashboardBrowser": 7,
+    "engine": 378,
+    "functionalObservations": 69,
+    "publicBrowser": 85,
+    "python": 1178
+  },
+  "execution": {
+    "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+    "providersDisabled": true,
+    "python": "3.10.11"
+  },
+  "formalRefinement": "NOT_ESTABLISHED",
+  "interpretation": "Finite local tests of AP01 implementation; not a formal closure or production Lean refinement.",
+  "kind": "implementation-regression-record",
+  "limitations": [
+    "No universal wall-clock, heap/RSS or arbitrary-history equivalence guarantee.",
+    "Persistent lane launch policy does not govern explicit one-shot or administrator one-shot JVMs.",
+    "Selected work/allocation charge sites; parser, solver and behavioral analysis retain separate deadline boundaries.",
+    "Named Python services and AST drift guard are not a sandbox or semantic refinement proof.",
+    "Actual Cloudflare/IIS forwarding, PowerShell execution and Windows reaping require target-host validation.",
+    "Evidence helper excludes independent external writers, cross-process races and crash durability."
+  ],
+  "retainedEarlierResults": {
+    "firstFunctional": {
+      "differences": 6,
+      "path": "build/ap01-resume-20261005/root/functional-invariance.json",
+      "resolution": "New default-deny administration is intentionally different. Final strict comparison permits synthetic loopback explicitly; default-deny is separately tested.",
+      "sha256": "780c76765e9f8a176f88f711eecb1dcd9fcb29df1d22cd1fd0eb4037f5e60bb8"
+    },
+    "firstPython": {
+      "failedCases": [
+        "test_ingress_admission.SocketAdmissionTests.test_enabled_pair_actual_saturation_control_health_and_limits",
+        "test_ingress_admission.SocketAdmissionTests.test_live_thread_tail_retains_reservation_and_blocks_next_allocator",
+        "test_ingress_deadlines.HandlerDeadlineTests.test_valid_request_retains_channel_dispatch",
+        "test_strict_http_decode.StrictDecoderSocketTests.test_valid_browser_and_http10_compatibility",
+        "test_traffic_http.HTTPBoundaryTests.test_catalogue_detail_html_revalidation_and_publication_invalidation",
+        "test_traffic_http.HTTPBoundaryTests.test_forwarded_addresses_do_not_reset_source_or_total_credits",
+        "test_traffic_http.HTTPBoundaryTests.test_gate_precedes_thread_and_control_survives_public_saturation",
+        "test_traffic_http.HTTPBoundaryTests.test_publication_between_capture_and_cache_lookup_cannot_poison_new_generation",
+        "test_traffic_http.HTTPBoundaryTests.test_slow_response_reader_cannot_retain_handler_past_write_budget"
+      ],
+      "path": "build/ap01-resume-20261005/root/unittest-private.json",
+      "resolution": "Socket-only fixtures now explicitly provide named route capabilities; assertions and production behavior were not weakened.",
+      "sha256": "326a74fd433844e55bbcaa284b8dfddd1ad6c434fdcb6d09d58c75a280d3cc2a"
+    }
+  },
+  "schemaVersion": 1,
+  "status": "PASS",
+  "validationInputs": {
+    "count": 760,
+    "scope": "Selected production, test, helper, runtime, schema and registry files; historical proof evidence has its own registry.",
+    "sha256": "a7dbfc426f4c16d7524be2b909fd1ea4bf44769e7a386fa61982d5352c37569c",
+    "unchanged": true
+  },
+  "windowsIisRuntimeValidation": "NOT_PERFORMED"
+}

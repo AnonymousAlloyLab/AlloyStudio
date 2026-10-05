@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "contracts": "closure/patch-contracts/spec.json",
+  "report": "docs/ap01-implementation.md",
+  "interpretation": "Production code and regression tests for each AP01 bridge. IMPLEMENTED_TESTED is not VERIFIED: no Lean refinement of this code exists, and deployment checks on the target host remain open. The AP01 spec keeps every bridge OPEN by design.",
+  "formalRefinement": "NOT_ESTABLISHED",
+  "deploymentValidation": "NOT_PERFORMED",
+  "bridges": [
+    {
+      "id": "AP01-B01",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "vendor/acgn/src/is/fivefivefive/CanDis/WorkBudget.java",
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/is/fivefivefive/CanDis/LiveTrace.java",
+        "engine/src/is/fivefivefive/CanDis/RawAstTrace.java",
+        "engine/src/live/SourceLocator.java",
+        "engine/src/live/WorkerSafety.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/EGraphNode.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
+        "vendor/acgn/src/is/fivefivefive/CanDis/ir/IRAgent.java",
+        "vendor/acgn/src/is/fivefivefive/ACGN/asg/AugmentedNode.java",
+        "vendor/acgn/snapshot.json"
+      ],
+      "tests": [
+        "engine/test/WorkBudgetSelfTest.java",
+        "tests/test_work_budget.py",
+        "tests/test_repository.py"
+      ],
+      "evidence": [
+        "scripts/calibrate_work_budget.py",
+        "engine/test/WorkCalibration.java",
+        "closure/patch-contracts/evidence/work-calibration-20261005T090137Z-f76c415f/summary.json",
+        "closure/patch-contracts/evidence/work-calibration-recheck-20261005T090424Z-d9b056ca/report.json",
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Charge-site completeness is a manual audit, not a mechanical proof.",
+        "The Alloy parser and SAT4J remain separately bounded boundaries (input caps, deadlines).",
+        "The behavioral lane is bounded by its deadline, not by work fuel.",
+        "Abstract units do not establish wall-clock or RSS bounds.",
+        "Allocation counters cover selected retained structures, not all Java heap allocations or RSS.",
+        "The two invalid adversarial rows demonstrate syntax rejection, not work-budget exhaustion."
+      ]
+    },
+    {
+      "id": "AP01-B02",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "engine/src/live/LiveFeedback.java",
+        "engine/src/live/VerifiedPoolSelection.java"
+      ],
+      "tests": [
+        "engine/test/WorkBudgetSelfTest.java",
+        "tests/test_pool_bridge.py",
+        "tests/test_nearest_correct.py",
+        "tests/test_work_budget.py"
+      ],
+      "evidence": [
+        "docs/ap01-implementation.md#complete-pool-preservation",
+        "closure/patch-contracts/evidence/work-calibration-20261005T090137Z-f76c415f/summary.json",
+        "closure/patch-contracts/evidence/work-calibration-recheck-20261005T090424Z-d9b056ca/report.json",
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Argmin identity and tie order are tested over the catalogue, not proved."
+      ]
+    },
+    {
+      "id": "AP01-B03",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "engine_workers.py"
+      ],
+      "tests": [
+        "tests/test_worker_lane_policy.py",
+        "tests/test_engine_workers.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Timely OS reaping and JVM startup are not established.",
+        "Quota numbers are calibrated by judgement against the shared process budget.",
+        "Lane launch tokens apply only to persistent feedback/behavior workers; explicit one-shot and administrator JVMs retain separate process-capacity accounting."
+      ]
+    },
+    {
+      "id": "AP01-B04",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "traffic_identity.py",
+        "server.py",
+        "deploy/iis/run_backend.py",
+        "deploy/iis/Manage-AlloyStudio.ps1"
+      ],
+      "tests": [
+        "tests/test_traffic_identity.py",
+        "tests/test_ap01_http.py",
+        "tests/test_iis_launcher.py"
+      ],
+      "evidence": [
+        "deploy/iis/README.md#client-identity-for-editing-channels-optional",
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "The deployed Cloudflare to IIS to backend header chain has not been validated.",
+        "TCP-peer ingress aggregation for a trusted proxy needs a separately sized profile.",
+        "IIS/ARR and PowerShell execution were not performed; Linux launcher/XML tests cover only their portable portions."
+      ]
+    },
+    {
+      "id": "AP01-B05",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "portal_routes.py",
+        "traffic_scheduler.py"
+      ],
+      "tests": [
+        "tests/test_ap01_http.py",
+        "tests/test_ingress_boundary_bridge.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Idle expiry is the existing scheduler implementation; the allocation model does not cover it."
+      ]
+    },
+    {
+      "id": "AP01-B06",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "web/app.js"
+      ],
+      "tests": [
+        "tests/traffic-browser.mjs",
+        "tests/browser.mjs"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Channel-less mode has no server-side supersession or cancellation."
+      ]
+    },
+    {
+      "id": "AP01-B07",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "scripts/source_freshness.py",
+        "closure/freshness-registry.json",
+        ".github/workflows/ci.yml",
+        "README.md"
+      ],
+      "tests": [
+        "tests/test_source_freshness.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "SHA-256, filesystem reads and the Python checker are trusted."
+      ]
+    },
+    {
+      "id": "AP01-B08",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "portal_routes.py",
+        "server.py",
+        "scripts/ingress_boundary_bridge.py",
+        "closure/patch-contracts/ingress-boundary.json"
+      ],
+      "tests": [
+        "tests/test_ingress_boundary_bridge.py",
+        "tests/test_strict_ingress_bridge.py",
+        "tests/test_admission_bridge.py",
+        "tests/test_ingress_wire.py",
+        "tests/test_traffic_identity.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Dispatch separation is a structural check under ordinary Python semantics, not a Lean refinement.",
+        "TRF-01 correspondence replays against its recorded root; the current Handler class is a new surface.",
+        "Named services retain trusted bound operations; this is not a sandbox against arbitrary Python introspection.",
+        "ValidatedRequest freezes field bindings and projected headers; its JSON body remains ordinary business data."
+      ]
+    },
+    {
+      "id": "AP01-B09",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "scripts/evidence_store.py"
+      ],
+      "tests": [
+        "tests/test_evidence_store.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "External filesystem writers, independent-process races and crash durability are outside this helper's guarantee."
+      ]
+    },
+    {
+      "id": "AP01-B10",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "server.py",
+        "engine_workers.py",
+        "portal_routes.py",
+        "deploy/iis/Manage-AlloyStudio.ps1",
+        "deploy/iis/run_backend.py"
+      ],
+      "tests": [
+        "tests/test_ap01_http.py",
+        "tests/test_worker_lane_policy.py",
+        "tests/test_iis_launcher.py"
+      ],
+      "evidence": [
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Engine and handler counters are two separately locked samples, labelled as non-atomic."
+      ]
+    },
+    {
+      "id": "AP01-B11",
+      "status": "IMPLEMENTED_TESTED",
+      "code": [
+        "traffic_identity.py",
+        "server.py",
+        "deploy/iis/web.config",
+        "deploy/iis/run_backend.py",
+        "deploy/iis/Manage-AlloyStudio.ps1",
+        "portal_routes.py",
+        "deploy/iis/Start-AlloyStudio.ps1",
+        "scripts/package_iis.py"
+      ],
+      "tests": [
+        "tests/test_ap01_http.py",
+        "tests/test_iis_package.py",
+        "tests/test_iis_launcher.py",
+        "tests/test_admin_http.py",
+        "tests/test_traffic_identity.py"
+      ],
+      "evidence": [
+        "deploy/iis/README.md#administration-network-admission-default-deny",
+        "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+      ],
+      "open": [
+        "Actual IIS enforcement and the deployed network path have not been validated on Windows.",
+        "Allowed sources can still share the five-failure sign-in limit.",
+        "Only canonical exact REMOTE_ADDR edge exceptions are supported by the public web.config preflight.",
+        "Configured HTTPS administration is required for external resolved clients; the HTTP exception remains loopback-only."
+      ]
+    }
+  ],
+  "regressionEvidence": "closure/patch-contracts/evidence/implementation-20261005T092516Z-20c783aa/report.json"
+}

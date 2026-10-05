@@ -1,0 +1,8 @@
+{
+  "status": "BLOCKED",
+  "claimId": "AP01-C07",
+  "blockSha256": "684e505341eef4b975b0f5e00f935841456a4372fb32508f449e2577c9b80c3e",
+  "reason": "Old observation function cannot establish rejection of extra observed paths; strengthen to complete enumerable inventory equality.",
+  "witness": "Counterexample.lean",
+  "productionChanges": false
+}

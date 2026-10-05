@@ -1,0 +1,9 @@
+{
+  "blockManifestSha256": "e70631448285a7b3bb26f38fa24be5a4597315d4ce4ec1fa2911631536aefc9f",
+  "findings": [],
+  "notesSha256": "5ccded37ebb3eb54c8f2ad6ea694b02cc55b21becbed432aa5a15291550a5bbe",
+  "priorReviews": {},
+  "reviewerModel": "gpt-6-luna",
+  "tier": 1,
+  "verdict": "no_constructed_breach"
+}

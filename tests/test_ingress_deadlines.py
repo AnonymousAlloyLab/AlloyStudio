@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import patch
 
 import server
+from tests.route_services_fixture import install_route_fixture
 from traffic_http import BoundedHTTPServer, DeadlineReader, HTTPInputError
 from traffic_profile import TrafficProfile
 
@@ -247,9 +248,7 @@ class HandlerDeadlineTests(unittest.TestCase):
 
         self.app = BoundedHTTPServer(('127.0.0.1', 0), server.Handler,
             traffic_profile=replace(TrafficProfile(), public_burst=1000, peer_burst=1000))
-        self.app.exercises = TrackedExercises()
-        self.app.public_origins = frozenset()
-        self.app.scheduler = SimpleNamespace(issue_channel=self.issue_channel)
+        install_route_fixture(self.app, TrackedExercises(), issue_channel=self.issue_channel)
         self.worker = threading.Thread(target=self.app.serve_forever,
             kwargs={'poll_interval': .001}, daemon=True)
         self.worker.start()
@@ -260,6 +259,7 @@ class HandlerDeadlineTests(unittest.TestCase):
         self.app.server_close()
         self.worker.join(2)
         self.assertFalse(self.worker.is_alive())
+        self.assertEqual(self.app.unexpected_route_calls, [])
 
     def issue_channel(self, peer):
         self.dispatches.append('channel')

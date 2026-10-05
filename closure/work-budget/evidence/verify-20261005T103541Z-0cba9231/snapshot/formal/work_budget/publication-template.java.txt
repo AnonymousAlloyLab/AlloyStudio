@@ -1,0 +1,19 @@
+private static JSONObject evaluateBudgeted ( JSONObject request , long fuel , long workMillis ) {
+ String metric = request . opt ( "metric" ) instanceof String selected && selected . equals ( "ast" ) ? AstFeedback . METRIC : METRIC ;
+ if ( workMillis == 0 ) WorkBudget . begin ( fuel , ALLOCATION_LIMIT ) ;
+ else WorkBudget . begin ( fuel , ALLOCATION_LIMIT , workMillis ) ;
+ try {
+ JSONObject response = compare ( request ) ;
+ if ( WorkBudget . exhausted ( ) || ! responseFits ( response ) ) return workLimit ( metric ) ;
+ WorkBudget . checkpoint ( ) ;
+ return response ;
+ }
+ catch ( WorkBudget . Exhausted exhausted ) {
+ return workLimit ( metric ) ;
+ }
+ finally {
+ LAST_ALLOCATED . set ( WorkBudget . allocated ( ) ) ;
+ LAST_WORK_UNITS . set ( WorkBudget . end ( ) ) ;
+ }
+ }
+

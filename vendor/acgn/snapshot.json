@@ -136,7 +136,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/asg/AugmentedNode.java",
-      "sha256": "61900e3fe8ee7799d2b4e8962d7c70fc163a88fc60cc1d7e742462f89880abf4"
+      "sha256": "a7f9008d7bc4acabc62d1b41b1729656a3a923e0217ade650dd4127f73571c3c"
     },
     {
       "path": "src/is/fivefivefive/ACGN/asg/MASGEdge.java",
@@ -544,11 +544,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-      "sha256": "85dbbbeb547775419495ec76ef82e8ed79b17525d499739fd46d0f5e0244b39b"
+      "sha256": "546c17ce62b802acfad0901c010e9e0713e0481f73859ef659260fa815cf0b96"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-      "sha256": "899074d10420729a087ccbe990c36c2ef2dc3d79e4b479d59533cc36e392691f"
+      "sha256": "932a55dc7b20ad8f4fd3e7b65f72fb4ed47ee7286d93807275d3d888ee8eca09"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
@@ -556,7 +556,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
-      "sha256": "644d1f705d8dac6fda90e41e30a76802eae948bf859176efbb2f6c02ffb9a994"
+      "sha256": "1ba868449dec221a15f7696737e419c31d4ede0e09d767eb082c00608f8e156c"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
@@ -568,7 +568,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java",
-      "sha256": "95db42194d614b7f716f708c9bac999932f8fb7cc7ed66f3729d2990d626efa8"
+      "sha256": "3b1af313dce3e371f44170992bc2c1b3f8eb554492765fbbc15af8d608fd8c65"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/egraph/AblationEngine.java",
@@ -632,7 +632,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
-      "sha256": "983b41317f78575dc39b3b0a47cde94af395a33d54c23cd55de61fb9ae369c90"
+      "sha256": "eb7eaa9dea9d6f267e6edb8fc3b698774dd3f5e4e14d21f9fc6e8fe6b01f4114"
     },
     {
       "path": "src/is/fivefivefive/CanDis/macros/ModelEnv.java",
@@ -1421,6 +1421,10 @@
     {
       "path": "src/is/fivefivefive/CanDis/theory/package-info.java",
       "sha256": "f268b007a006556c71d68a2db81a1835481501a787871533e66e42c95eb7cc93"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/WorkBudget.java",
+      "sha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78"
     }
   ],
   "localPatches": [
@@ -1461,6 +1465,40 @@
         {
           "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
           "baseSha256": "9396337563551660ac237ab7d3c271bd10174bf73204b806f422937664c32e40"
+        }
+      ]
+    },
+    {
+      "id": "request-work-budget",
+      "description": "AP01-C01 request-global work fuel: charges before normalization, binder search, tree/assignment cells, edit reconstruction and rendering, plus retained-allocation bounds. Outside a budgeted comparison every charge is a no-op; metric semantics are unchanged.",
+      "files": [
+        {
+          "path": "src/is/fivefivefive/ACGN/asg/AugmentedNode.java",
+          "baseSha256": "61900e3fe8ee7799d2b4e8962d7c70fc163a88fc60cc1d7e742462f89880abf4"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/WorkBudget.java",
+          "added": true
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
+          "baseSha256": "85dbbbeb547775419495ec76ef82e8ed79b17525d499739fd46d0f5e0244b39b"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
+          "baseSha256": "899074d10420729a087ccbe990c36c2ef2dc3d79e4b479d59533cc36e392691f"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
+          "baseSha256": "644d1f705d8dac6fda90e41e30a76802eae948bf859176efbb2f6c02ffb9a994"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java",
+          "baseSha256": "95db42194d614b7f716f708c9bac999932f8fb7cc7ed66f3729d2990d626efa8"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
+          "baseSha256": "983b41317f78575dc39b3b0a47cde94af395a33d54c23cd55de61fb9ae369c90"
         }
       ]
     }

@@ -95,7 +95,7 @@ try {
     const exit = await stopBackend(); assert.equal(exit.code, 0);
     const stats = JSON.parse(await readFile(statsPath, 'utf8'));
     assert.equal(stats.mode, 'persistent');
-    assert.equal(stats.before.launches, 3); assert.equal(stats.before.completed, 4);
+    assert.equal(stats.before.launches, 2); assert.equal(stats.before.completed, 4);
     assert.equal(stats.before.failures, 0); assert.equal(stats.before.recycled, 0);
     assert.equal(stats.scheduler.computations, 4); assert.equal(stats.scheduler.cacheHits, 2);
     assert.equal(stats.scheduler.jobs, 0); assert.equal(stats.scheduler.subscribers, 0);

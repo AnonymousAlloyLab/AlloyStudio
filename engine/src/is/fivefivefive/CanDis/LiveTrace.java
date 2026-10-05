@@ -89,6 +89,7 @@ public final class LiveTrace {
         @SuppressWarnings("unchecked") Set<String> lockedRight = (Set<String>) field(alignment, "lockedRightNames");
         int total = 0;
         for (int phase = 0; phase < Math.max(left.size(), right.size()); phase++) {
+            WorkBudget.charge(1);
             EGraphNode l = phase < left.size() ? left.get(phase).getMatrixEGraph() : null;
             EGraphNode r = phase < right.size() ? right.get(phase).getMatrixEGraph() : null;
             @SuppressWarnings("unchecked") Map<String, String> mapping = l != null && r != null
@@ -126,6 +127,7 @@ public final class LiveTrace {
             if (node == null) return 0;
             Integer known = sizes.get(node);
             if (known != null) return known;
+            WorkBudget.charge(1 + node.getChildren().size());
             int size = 1;
             for (EGraphNode child : node.getChildren()) size = Math.addExact(size, size(child));
             sizes.put(node, size);
@@ -137,6 +139,7 @@ public final class LiveTrace {
         int distance(EGraphNode left, EGraphNode right) {
             if (left == null) return size(right);
             if (right == null) return size(left);
+            WorkBudget.charge(1);
             IdentityHashMap<EGraphNode, Integer> row = memo.computeIfAbsent(left, ignored -> new IdentityHashMap<>());
             Integer known = row.get(right);
             if (known != null) return known;
@@ -149,6 +152,7 @@ public final class LiveTrace {
                 for (int i = 0; i < matching.length; i++) childCost = Math.addExact(childCost, costs[i][matching[i]]);
             } else childCost = orderedCosts(lc, rc)[lc.size()][rc.size()];
             int cost = Math.addExact(update(left, right), childCost);
+            WorkBudget.allocate(1);
             row.put(right, cost);
             return cost;
         }
@@ -158,6 +162,7 @@ public final class LiveTrace {
         }
 
         int[][] orderedCosts(List<EGraphNode> left, List<EGraphNode> right) {
+            WorkBudget.chargeCells(left.size() + 1L, right.size() + 1L);
             int[][] dp = new int[left.size() + 1][right.size() + 1];
             for (int i = 1; i <= left.size(); i++) dp[i][0] = dp[i - 1][0] + size(left.get(i - 1));
             for (int j = 1; j <= right.size(); j++) dp[0][j] = dp[0][j - 1] + size(right.get(j - 1));
@@ -170,6 +175,7 @@ public final class LiveTrace {
 
         int[][] assignmentCosts(List<EGraphNode> left, List<EGraphNode> right) {
             int n = left.size() + right.size();
+            WorkBudget.chargeCells(n, n);
             int[][] costs = new int[n][n];
             for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) {
                 costs[i][j] = i < left.size() ? (j < right.size() ? distance(left.get(i), right.get(j)) : size(left.get(i)))
@@ -179,6 +185,7 @@ public final class LiveTrace {
         }
 
         ReplayNode trace(EGraphNode left, EGraphNode right, String path, EGraphNode insertionAnchor, String anchorPath) {
+            WorkBudget.charge(1);
             if (left == null) return insert(right, insertionAnchor, anchorPath == null ? path : anchorPath);
             if (right == null) { delete(left, path); return null; }
             String replayLabel = label(left, true);
@@ -226,6 +233,7 @@ public final class LiveTrace {
 
         ReplayNode insert(EGraphNode node, EGraphNode learnerAnchor, String path) {
             if (node == null) return null;
+            WorkBudget.charge(1);
             output.put(matrixOperation("insert", learnerAnchor, null, path, "insertion-anchor"));
             List<ReplayNode> children = new ArrayList<>();
             for (EGraphNode child : node.getChildren()) children.add(insert(child, learnerAnchor, path));
@@ -233,6 +241,7 @@ public final class LiveTrace {
         }
 
         void delete(EGraphNode node, String path) {
+            WorkBudget.charge(1);
             output.put(matrixOperation("delete", node, null, path, "affected"));
             for (int i = 0; i < node.getChildren().size(); i++) delete(node.getChildren().get(i), path + ".child[" + i + "]");
         }
@@ -253,6 +262,7 @@ public final class LiveTrace {
 
         ReplayNode snapshot(EGraphNode node, boolean learner) {
             if (node == null) return null;
+            WorkBudget.charge(1);
             List<ReplayNode> children = new ArrayList<>();
             for (EGraphNode child : node.getChildren()) children.add(snapshot(child, learner));
             return new ReplayNode(label(node, learner), List.copyOf(children));
@@ -309,11 +319,13 @@ public final class LiveTrace {
         long[] u = new long[n + 1], v = new long[n + 1];
         int[] p = new int[n + 1], way = new int[n + 1];
         for (int row = 1; row <= n; row++) {
+            WorkBudget.charge(n + 1L);
             p[0] = row;
             int column = 0;
             long[] minimum = new long[n + 1]; Arrays.fill(minimum, Long.MAX_VALUE);
             boolean[] used = new boolean[n + 1];
             do {
+                WorkBudget.charge(2L * (n + 1));
                 used[column] = true;
                 int currentRow = p[column], next = 0;
                 long delta = Long.MAX_VALUE;
@@ -339,6 +351,7 @@ public final class LiveTrace {
     private static void quantifierTrace(NormalForm left, NormalForm right, int phase, JSONArray output) {
         List<QuantiVar> l = left == null ? List.of() : (List<QuantiVar>) invoke(QUANTIFIER_ORDER, left.getMatrixQuantiVars());
         List<QuantiVar> r = right == null ? List.of() : (List<QuantiVar>) invoke(QUANTIFIER_ORDER, right.getMatrixQuantiVars());
+        WorkBudget.chargeCells(l.size() + 1L, r.size() + 1L);
         int[][] dp = new int[l.size() + 1][r.size() + 1];
         for (int i = 0; i <= l.size(); i++) dp[i][0] = i;
         for (int j = 0; j <= r.size(); j++) dp[0][j] = j;
@@ -347,6 +360,7 @@ public final class LiveTrace {
                     Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1));
         int i = l.size(), j = r.size();
         while (i > 0 || j > 0) {
+            WorkBudget.charge(1);
             String kind; QuantiVar source = null, target = null;
             if (i > 0 && j > 0 && dp[i][j] == dp[i - 1][j - 1] + (Integer) invoke(QUANTIFIER_UPDATE, l.get(i - 1), r.get(j - 1))) {
                 source = l.get(--i); target = r.get(--j);
@@ -408,6 +422,7 @@ public final class LiveTrace {
     }
 
     private static String renderSource(EGraphNode node) {
+        WorkBudget.charge(1);
         List<EGraphNode> children = node.getChildren();
         switch (node.getOpcode()) {
             case VARIABLE: case GLOBALBINDING: case CONSTANT: case REF:

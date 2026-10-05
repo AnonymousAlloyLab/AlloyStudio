@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 import server
+from tests.route_services_fixture import install_route_fixture
 from traffic_http import Admission, BoundedHTTPServer, TrafficProfile
 
 
@@ -62,7 +63,7 @@ class SocketAdmissionTests(unittest.TestCase):
     def make_app(self, profile=None, handler=server.Handler, **kwargs):
         app = BoundedHTTPServer(('127.0.0.1', 0), handler,
                                 traffic_profile=profile or TrafficProfile(), **kwargs)
-        app.exercises = {}
+        install_route_fixture(app, {})
         thread = threading.Thread(target=app.serve_forever, kwargs={'poll_interval': .005}, daemon=True)
         thread.start()
         self.apps.append((app, thread))
@@ -77,6 +78,7 @@ class SocketAdmissionTests(unittest.TestCase):
             app._reap_request_threads()
             self.assertEqual(app.http_admission.active, getattr(app, '_expected_retained', 0))
             self.assertEqual(len(app._request_threads), getattr(app, '_expected_retained', 0))
+            self.assertEqual(app.unexpected_route_calls, [])
 
     def wait_for(self, predicate):
         deadline = time.monotonic() + 3

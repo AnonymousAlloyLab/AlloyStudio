@@ -48,6 +48,7 @@ class EngineTempIntegrationTests(unittest.TestCase):
     def test_feedback_and_behavior_use_the_configured_backend_root(self):
         portal = object.__new__(server.Portal)
         portal.root, portal.java, portal.timeout, portal.engine_mode = self.root, 'java', 5, 'oneshot'
+        portal.execution_profile = server.resolve_profile()
         record = dict(id='fixture', environmentBefore='sig A {}\n', predicateHeader='pred inv1 ',
                       environmentAfter='', predicate='inv1', oracleBody='some A')
         with patch.object(runtime_dependencies.subprocess, 'run', side_effect=self.fake_run):

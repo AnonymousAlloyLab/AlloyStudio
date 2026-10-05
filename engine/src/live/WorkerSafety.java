@@ -35,6 +35,9 @@ final class WorkerSafety {
     }
 
     static CompModule parse(String source) {
+        // The external Alloy parser is a separately bounded boundary: its input
+        // is capped upstream, and its size is charged before any parse work.
+        is.fivefivefive.CanDis.WorkBudget.charge(source.length());
         Path directory = JOB.get();
         if (directory == null) return CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
         // This is exactly CompUtil.parseEverything_fromString's parser path,

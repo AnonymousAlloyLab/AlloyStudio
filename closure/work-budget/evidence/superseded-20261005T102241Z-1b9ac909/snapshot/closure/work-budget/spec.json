@@ -1,0 +1,152 @@
+{
+  "allowlistedAxioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "claims": [
+    {
+      "id": "LP05-WORK-C01",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c01",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.javaLong_exact",
+        "AlloyStudio.WorkBudget.javaInt_exact"
+      ],
+      "statement": "Signed 64-bit and 32-bit wrap models are identities on their represented signed ranges."
+    },
+    {
+      "id": "LP05-WORK-C02",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c02",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.checkpoint_refines"
+      ],
+      "statement": "The parsed checkpoint branches equal the independent checkpoint contract for every modeled state and observation."
+    },
+    {
+      "id": "LP05-WORK-C03",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c03",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.initial_cadence",
+        "AlloyStudio.WorkBudget.sample_refines",
+        "AlloyStudio.WorkBudget.timed_countdown_decreases",
+        "AlloyStudio.WorkBudget.due_sample_observes_clock"
+      ],
+      "statement": "For a valid countdown, the parsed sampling method equals its contract, the source initializer is 1024, each earlier timed call decrements, and a due call observes the clock."
+    },
+    {
+      "id": "LP05-WORK-C04",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c04",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.charge_refines",
+        "AlloyStudio.WorkBudget.admitted_charge_cost"
+      ],
+      "statement": "For a valid state, parsed charge equals the independent charge contract; a successful active charge admits its entire nonnegative cost and subtracts exactly that cost."
+    },
+    {
+      "id": "LP05-WORK-C05",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c05",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.sample_preserves_valid",
+        "AlloyStudio.WorkBudget.charge_preserves_valid"
+      ],
+      "statement": "Sample and charge preserve the declared remaining-fuel and countdown invariant."
+    },
+    {
+      "id": "LP05-WORK-C06",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c06",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract"
+      ],
+      "statement": "An admitted batch length satisfies the existing Work.boundedFold complete-batch contract."
+    },
+    {
+      "id": "LP05-WORK-C07",
+      "publicClaim": "formal/work_budget/README.md#lp05-work-c07",
+      "requiredTheorems": [
+        "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky",
+        "AlloyStudio.WorkBudget.expired_publication_refused"
+      ],
+      "statement": "An exhausted active checkpoint remains exhausted; a timed active checkpoint rejects an observation at or beyond its limit."
+    }
+  ],
+  "closesAllProductionObligations": false,
+  "id": "LP05-WORK",
+  "inputs": [
+    "formal/work_budget/README.md",
+    "vendor/acgn/src/is/fivefivefive/CanDis/WorkBudget.java",
+    "engine/src/live/LiveFeedback.java",
+    "engine/src/live/EngineWorker.java",
+    "engine/test/WorkBudgetSelfTest.java"
+  ],
+  "productionBridges": [
+    {
+      "id": "LP05-WORK-B01",
+      "statement": "All production charge sites cover every algorithmic operation and allocation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B02",
+      "statement": "Whole Java program, setup/allocation helpers, parser/native solver and exception/lifecycle behavior refine Lean.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B03",
+      "statement": "Python scheduling/HTTP, browser/IIS/Cloudflare and provider transport refine the proof models.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B04",
+      "statement": "Wall-clock completion, CPU/RSS bounds and arbitrary future executions satisfy an absolute end-to-end deadline.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-GLOBAL",
+      "statement": "Every broader AP01 production bridge remains unclosed; this finite proof does not promote the historical implementation ledger.",
+      "status": "OPEN"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "restricted-java-charged-work",
+  "trusted": [
+    {
+      "description": "Underlying processor and memory correctly execute the checker.",
+      "id": "TCB-HARDWARE"
+    },
+    {
+      "description": "The restricted Java lexer/parser, field/state interpretation and lowering to Lean are trusted translation machinery; unknown syntax is rejected and mutations are mechanically challenged.",
+      "id": "TCB-JAVA-LOWERING"
+    },
+    {
+      "description": "Normal Java compiler/JVM primitive semantics and same-thread ThreadLocal identity are trusted; clock observations are explicit inputs, not axioms or guarantees about wall time.",
+      "id": "TCB-JAVA-RUNTIME"
+    },
+    {
+      "description": "Installed pinned Lean 4.34.1 kernel/compiler and standard library; actual per-declaration axiom dependencies must be a subset of the three explicitly registered imported Lean foundations.",
+      "id": "TCB-LEAN"
+    },
+    {
+      "description": "Exactly the imported Lean foundations propext, Classical.choice and Quot.sound may occur in audited declaration dependency inventories. No project axiom declaration, sorry, native proof escape or additional axiom is allowed.",
+      "id": "TCB-LEAN-FOUNDATIONS"
+    },
+    {
+      "description": "Linux process/filesystem semantics, network namespace enforcement and tool invocation.",
+      "id": "TCB-OS"
+    },
+    {
+      "description": "Pinned Python executable and its standard-library execution semantics.",
+      "id": "TCB-PYTHON"
+    },
+    {
+      "description": "The orchestrator reports actual reviewer model identities; six bound review records are advisory and cannot discharge a proof.",
+      "id": "TCB-REVIEW-PROVENANCE"
+    },
+    {
+      "description": "SHA-256 implementation and collision resistance bind source, generated artifacts, proof types and review records.",
+      "id": "TCB-SHA256"
+    },
+    {
+      "description": "Hashed Python verifier, registered audit metaprogram, policy checks and negative-control runner implement the stated finite decision rule.",
+      "id": "TCB-VERIFIERS"
+    }
+  ]
+}

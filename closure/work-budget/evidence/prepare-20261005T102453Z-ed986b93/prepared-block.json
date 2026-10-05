@@ -1,0 +1,86 @@
+{
+  "allowlistedAxioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "closesAllProductionObligations": false,
+  "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-Dbackward.match.sparseCases=false",
+    "-j1"
+  ],
+  "id": "LP05-WORK",
+  "inputRootSha256": "dc3a8d6f85e2f0a31bff417dc41597008d88132f2a358d41ff7704739a0137b9",
+  "inputs": {
+    "closure/work-budget/spec.json": "f2e446ef1a53d5e98df236c20b7946336c5e9d4bbafc9ec5ba2b06fc998575fb",
+    "engine/src/live/EngineWorker.java": "37666414aaae2c55872711ec92279db9dfcea1938ecf4e962091090246afa1f4",
+    "engine/src/live/LiveFeedback.java": "96268a48b072e93f9692f29daa86019d76b88871593fda409862a9074e0a3837",
+    "engine/test/WorkBudgetSelfTest.java": "7d6de6c4d1a306180d2599802fff25f6725e157a2452d0934ded4e13a1528f57",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/patch_contracts/Work.lean": "18ca6af1917dc10283d2aa74d25d9888479954073c843fb51d5183907205e90b",
+    "formal/work_budget/Audit.lean": "af3f624edf51edf47a4cab6dfc48ad3f5838f332ae9b3962b3af66715ee2c173",
+    "formal/work_budget/Generated.lean": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+    "formal/work_budget/README.md": "9a29d9129d0fe2740206278687810a1fe4a458305ac671a6a57a9dbf58957154",
+    "formal/work_budget/Refinement.lean": "e7ef4f3dd824e3709f22dc4fc611602bdac7f5ffd111f037f5d7366097dc0f0f",
+    "formal/work_budget/Semantics.lean": "5b7a0fea359f37d2c0261e6f02801883db8d3841cb9ee71e7f19778f567f85f2",
+    "formal/work_budget/publication-template.java.txt": "0cde919563a436cf76b85f8f2a724576412673ce3ebec5eacebd9d607ccfc3c9",
+    "formal/work_budget/theorems.json": "93ead1712ec2fb10785500c85819b1fa8565c7c09f85172f18ac5056526b71d8",
+    "formal/work_budget/work-budget-shell.java.txt": "eb75ad885b8d20e8f635c263e61920d9d5208c16116d1577599853ef68f312e7",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/check_work_budget_negative_controls.py": "f6f796ef2213b77cc570430aae83eefe2b5d593453e1905ac32bafae81058cc8",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/review_ladder.py": "583e38ccb665ecb8107c169f41bda0639805e8c8aa9ae24d4b445c162a8f477a",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_work_budget.py": "650f71c3d2bd69d082a40e16e169781c02815b6678776604326a36eaf6685845",
+    "scripts/work_budget_bridge.py": "56d8af5d842ce47f4ef670f7c155b2eb9df2cc6a93bfb65a74f212aaa80f374e",
+    "tests/test_review_ladder.py": "041b1e8abe7dd31daf3e910b074b6f59822e60bded2f9312548aae9b6368b4de",
+    "tests/test_work_budget_bridge.py": "75c0a0d7cefc95d59fd7ff26fba45ebbf29a9c3c923f7f4bf77b4044ec029339",
+    "tests/test_work_budget_verifier.py": "b9e99073d089734a75e21fe99fc62f07403d7d0d194dbc07fc405b9afa9283a6",
+    "vendor/acgn/src/is/fivefivefive/CanDis/WorkBudget.java": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78"
+  },
+  "interpretation": "Candidate preparation only. No whole-production closure. Six fresh reviews required.",
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "python": {
+    "sha256": "3f209e14ae320d5025eb988dd5ed7fbabd7e45d518a3e19c39bc3887341d8420",
+    "version": "3.10.11 (main, Apr 20 2023, 19:02:41) [GCC 11.2.0]"
+  },
+  "requiredCleanBuilds": 2,
+  "requiredTheorems": {
+    "LP05-WORK-C01": [
+      "AlloyStudio.WorkBudget.javaLong_exact",
+      "AlloyStudio.WorkBudget.javaInt_exact"
+    ],
+    "LP05-WORK-C02": [
+      "AlloyStudio.WorkBudget.checkpoint_refines"
+    ],
+    "LP05-WORK-C03": [
+      "AlloyStudio.WorkBudget.initial_cadence",
+      "AlloyStudio.WorkBudget.sample_refines",
+      "AlloyStudio.WorkBudget.timed_countdown_decreases",
+      "AlloyStudio.WorkBudget.due_sample_observes_clock"
+    ],
+    "LP05-WORK-C04": [
+      "AlloyStudio.WorkBudget.charge_refines",
+      "AlloyStudio.WorkBudget.admitted_charge_cost"
+    ],
+    "LP05-WORK-C05": [
+      "AlloyStudio.WorkBudget.sample_preserves_valid",
+      "AlloyStudio.WorkBudget.charge_preserves_valid"
+    ],
+    "LP05-WORK-C06": [
+      "AlloyStudio.WorkBudget.admitted_batch_matches_atomic_contract"
+    ],
+    "LP05-WORK-C07": [
+      "AlloyStudio.WorkBudget.exhausted_checkpoint_sticky",
+      "AlloyStudio.WorkBudget.expired_publication_refused"
+    ]
+  },
+  "schemaVersion": 1,
+  "scope": "restricted-java-charged-work",
+  "toolchainRootSha256": "644fab0f46aea00c5628f4dfabe2ad592298766871f63988eca9cf6ed99bcd62"
+}

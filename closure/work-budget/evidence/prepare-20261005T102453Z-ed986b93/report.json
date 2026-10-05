@@ -1,0 +1,61 @@
+{
+  "blockSha256": "33f00ba24311e83a2d2672fc07022f52a0e5c427a0af182a3b35b3b74771f989",
+  "build": {
+    "artifacts": {
+      "Generated.olean": "b2989419acf5e07e2eae7e3fdd98c6dc233c8f07a1021f6807844994779cedfc",
+      "Refinement.olean": "b08f415580eab6e5bcf9f94dcb0dd6da469121ee59a3fcf4380186926c0d54c7",
+      "Semantics.olean": "5a9c957915d304c84da69292dbe9b6eba2117dfedbec4a1698ffbd7e17ee4c3b",
+      "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+    },
+    "correspondence": {
+      "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+      "methods": [
+        "charge",
+        "sampleClock",
+        "checkpoint"
+      ],
+      "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+      "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+      "status": "PASS"
+    },
+    "declarations": 374,
+    "inventorySha256": "55907e4950e94a7d00841c93033c29e570d8ed04e0222d4dec8c7760a5a8905f",
+    "network": {
+      "interfaces": [
+        "lo"
+      ],
+      "ipv4Routes": 0,
+      "outboundConnectError": 101
+    },
+    "theorems": 119
+  },
+  "closureId": "work-budget-prepare-20261005T102453Z-ed986b93",
+  "phase": "PREPARED",
+  "productionBridges": [
+    {
+      "id": "LP05-WORK-B01",
+      "statement": "All production charge sites cover every algorithmic operation and allocation.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B02",
+      "statement": "Whole Java program, setup/allocation helpers, parser/native solver and exception/lifecycle behavior refine Lean.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B03",
+      "statement": "Python scheduling/HTTP, browser/IIS/Cloudflare and provider transport refine the proof models.",
+      "status": "OPEN"
+    },
+    {
+      "id": "LP05-WORK-B04",
+      "statement": "Wall-clock completion, CPU/RSS bounds and arbitrary future executions satisfy an absolute end-to-end deadline.",
+      "status": "OPEN"
+    },
+    {
+      "id": "AP01-GLOBAL",
+      "statement": "Every broader AP01 production bridge remains unclosed; this finite proof does not promote the historical implementation ledger.",
+      "status": "OPEN"
+    }
+  ]
+}

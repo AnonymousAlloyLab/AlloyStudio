@@ -1,0 +1,177 @@
+Refinement.lean:60:8: error: Tactic `rfl` failed: The left-hand side
+  have s :=
+    { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+      limit := s.limit, checks := s.checks };
+  Result.exhausted s
+is not definitionally equal to the right-hand side
+  if s.exhausted = true ∨ s.remaining < units then
+    Result.exhausted
+      { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+        limit := s.limit, checks := s.checks }
+  else
+    match sampleSpec s now with
+    | Result.ok next =>
+      Result.ok
+        { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+          started := next.started, limit := next.limit, checks := next.checks }
+    | Result.invalid next => Result.invalid next
+    | Result.exhausted next => Result.exhausted next
+
+case isFalse.isFalse.isTrue
+s : State
+units now : Int
+valid : Valid s
+remLo : 0 ≤ s.remaining
+remHi : s.remaining ≤ longMax
+active : ¬s.active = false
+negative : ¬units < 0
+refused : s.exhausted = true ∨ units ≥ s.remaining
+⊢ (have s :=
+      { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+        limit := s.limit, checks := s.checks };
+    Result.exhausted s) =
+    if s.exhausted = true ∨ s.remaining < units then
+      Result.exhausted
+        { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else
+      match sampleSpec s now with
+      | Result.ok next =>
+        Result.ok
+          { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted,
+            timed := next.timed, started := next.started, limit := next.limit, checks := next.checks }
+      | Result.invalid next => Result.invalid next
+      | Result.exhausted next => Result.exhausted next
+Refinement.lean:63:26: error: Tactic `rfl` failed: The left-hand side
+  match Result.invalid next with
+  | Result.ok s =>
+    have s :=
+      { active := s.active, remaining := javaLong (s.remaining - units), exhausted := s.exhausted, timed := s.timed,
+        started := s.started, limit := s.limit, checks := s.checks };
+    Result.ok s
+  | Result.invalid s => Result.invalid s
+  | Result.exhausted s => Result.exhausted s
+is not definitionally equal to the right-hand side
+  if s.exhausted = true ∨ s.remaining < units then
+    Result.exhausted
+      { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+        limit := s.limit, checks := s.checks }
+  else
+    match Result.invalid next with
+    | Result.ok next =>
+      Result.ok
+        { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+          started := next.started, limit := next.limit, checks := next.checks }
+    | Result.invalid next => Result.invalid next
+    | Result.exhausted next => Result.exhausted next
+
+case isFalse.isFalse.isFalse.invalid
+s : State
+units now : Int
+valid : Valid s
+remLo : 0 ≤ s.remaining
+remHi : s.remaining ≤ longMax
+active : ¬s.active = false
+negative : ¬units < 0
+refused : ¬(s.exhausted = true ∨ units ≥ s.remaining)
+next : State
+h : sampleSpec s now = Result.invalid next
+⊢ (match Result.invalid next with
+    | Result.ok s =>
+      have s :=
+        { active := s.active, remaining := javaLong (s.remaining - units), exhausted := s.exhausted, timed := s.timed,
+          started := s.started, limit := s.limit, checks := s.checks };
+      Result.ok s
+    | Result.invalid s => Result.invalid s
+    | Result.exhausted s => Result.exhausted s) =
+    if s.exhausted = true ∨ s.remaining < units then
+      Result.exhausted
+        { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else
+      match Result.invalid next with
+      | Result.ok next =>
+        Result.ok
+          { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted,
+            timed := next.timed, started := next.started, limit := next.limit, checks := next.checks }
+      | Result.invalid next => Result.invalid next
+      | Result.exhausted next => Result.exhausted next
+Refinement.lean:64:28: error: Tactic `rfl` failed: The left-hand side
+  match Result.exhausted next with
+  | Result.ok s =>
+    have s :=
+      { active := s.active, remaining := javaLong (s.remaining - units), exhausted := s.exhausted, timed := s.timed,
+        started := s.started, limit := s.limit, checks := s.checks };
+    Result.ok s
+  | Result.invalid s => Result.invalid s
+  | Result.exhausted s => Result.exhausted s
+is not definitionally equal to the right-hand side
+  if s.exhausted = true ∨ s.remaining < units then
+    Result.exhausted
+      { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+        limit := s.limit, checks := s.checks }
+  else
+    match Result.exhausted next with
+    | Result.ok next =>
+      Result.ok
+        { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+          started := next.started, limit := next.limit, checks := next.checks }
+    | Result.invalid next => Result.invalid next
+    | Result.exhausted next => Result.exhausted next
+
+case isFalse.isFalse.isFalse.exhausted
+s : State
+units now : Int
+valid : Valid s
+remLo : 0 ≤ s.remaining
+remHi : s.remaining ≤ longMax
+active : ¬s.active = false
+negative : ¬units < 0
+refused : ¬(s.exhausted = true ∨ units ≥ s.remaining)
+next : State
+h : sampleSpec s now = Result.exhausted next
+⊢ (match Result.exhausted next with
+    | Result.ok s =>
+      have s :=
+        { active := s.active, remaining := javaLong (s.remaining - units), exhausted := s.exhausted, timed := s.timed,
+          started := s.started, limit := s.limit, checks := s.checks };
+      Result.ok s
+    | Result.invalid s => Result.invalid s
+    | Result.exhausted s => Result.exhausted s) =
+    if s.exhausted = true ∨ s.remaining < units then
+      Result.exhausted
+        { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else
+      match Result.exhausted next with
+      | Result.ok next =>
+        Result.ok
+          { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted,
+            timed := next.timed, started := next.started, limit := next.limit, checks := next.checks }
+      | Result.invalid next => Result.invalid next
+      | Result.exhausted next => Result.exhausted next
+Refinement.lean:65:18: error: unsolved goals
+case isFalse.isFalse.isFalse.ok
+s : State
+units now : Int
+valid : Valid s
+remLo : 0 ≤ s.remaining
+remHi : s.remaining ≤ longMax
+active : ¬s.active = false
+negative : ¬units < 0
+refused : ¬(s.exhausted = true ∨ units ≥ s.remaining)
+next : State
+h : sampleSpec s now = Result.ok next
+remains : next.remaining = s.remaining
+exact : javaLong (next.remaining - units) = next.remaining - units
+⊢ Result.ok
+      { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+        started := next.started, limit := next.limit, checks := next.checks } =
+    if s.exhausted = true ∨ s.remaining < units then
+      Result.exhausted
+        { active := s.active, remaining := s.remaining, exhausted := true, timed := s.timed, started := s.started,
+          limit := s.limit, checks := s.checks }
+    else
+      Result.ok
+        { active := next.active, remaining := next.remaining - units, exhausted := next.exhausted, timed := next.timed,
+          started := next.started, limit := next.limit, checks := next.checks }

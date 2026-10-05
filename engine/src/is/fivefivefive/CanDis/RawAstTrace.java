@@ -56,6 +56,7 @@ public final class RawAstTrace {
 
     private static Tree from(Node node, int[] count, int depth) {
         if (node == null || ++count[0] > MAX_NODES || depth > 256) throw new IllegalArgumentException("AST limit");
+        WorkBudget.charge(1);
         List<Tree> children = new ArrayList<>();
         for (Node child : DatasetConventions.rawAstChildren(node)) children.add(from(child, count, depth + 1));
         return new Tree(DatasetConventions.rawAstLabel(node), children, node);
@@ -139,6 +140,7 @@ public final class RawAstTrace {
         }
         int append(Tree tree, int depth) {
             if (depth > 256 || ids.containsKey(tree)) throw new IllegalArgumentException("AST must be a finite occurrence tree");
+            WorkBudget.charge(1);
             ids.put(tree, 0);
             int first = 0;
             for (Tree child : tree.children) {
@@ -166,6 +168,7 @@ public final class RawAstTrace {
         final int[] leftToRight, rightToLeft;
         Solver(Index left, Index right) {
             this.left = left; this.right = right;
+            WorkBudget.chargeCells(left.size() + 1L, right.size() + 1L);
             treeDistance = new int[left.size() + 1][right.size() + 1];
             leftToRight = new int[left.size() + 1]; rightToLeft = new int[right.size() + 1];
             for (int l : left.keyroots) for (int r : right.keyroots) forest(l, r, true);
@@ -173,6 +176,7 @@ public final class RawAstTrace {
         int distance() { return treeDistance[left.size()][right.size()]; }
         int[][] forest(int l, int r, boolean store) {
             int lb = left.leftmost[l], rb = right.leftmost[r];
+            WorkBudget.chargeCells(l - lb + 2L, r - rb + 2L);
             int[][] fd = new int[l - lb + 2][r - rb + 2];
             for (int i = 1; i < fd.length; i++) fd[i][0] = i;
             for (int j = 1; j < fd[0].length; j++) fd[0][j] = j;
@@ -192,6 +196,7 @@ public final class RawAstTrace {
             int[][] fd = forest(l, r, false);
             int a = l, b = r;
             while (a >= lb || b >= rb) {
+                WorkBudget.charge(1);
                 int i = a - lb + 1, j = b - rb + 1;
                 if (a >= lb && b >= rb) {
                     boolean roots = left.leftmost[a] == lb && right.leftmost[b] == rb;
@@ -227,6 +232,7 @@ public final class RawAstTrace {
     /** A real edit replay, including intermediate forests under a virtual root. */
     private static List<PrivateEdit> replay(Index left, Index right, int[] ltr, int[] rtl) {
         List<PrivateEdit> edits = new ArrayList<>();
+        WorkBudget.charge(3L * (left.size() + 1));
         Mutable[] originals = new Mutable[left.size() + 1];
         for (int i = 1; i <= left.size(); i++) {
             originals[i] = new Mutable(left.node(i).label, ltr[i]);
@@ -239,6 +245,7 @@ public final class RawAstTrace {
         virtual.children.add(originals[left.size()]); originals[left.size()].parent = virtual;
         for (int i = 1; i <= left.size(); i++) if (ltr[i] == 0) {
             Mutable deleted = originals[i], parent = deleted.parent;
+            WorkBudget.charge(1L + parent.children.size() + deleted.children.size());
             int slot = parent.children.indexOf(deleted);
             if (slot < 0) throw new IllegalStateException("Missing deletion node");
             parent.children.remove(slot); parent.children.addAll(slot, deleted.children);
@@ -261,6 +268,7 @@ public final class RawAstTrace {
 
     private static void insertTarget(int target, Mutable parent, int slot, Index right, int[] rtl,
                                      Mutable[] originals, List<PrivateEdit> edits) {
+        WorkBudget.charge(1L + parent.children.size());
         Mutable current;
         if (rtl[target] != 0) {
             current = originals[rtl[target]];
@@ -282,6 +290,7 @@ public final class RawAstTrace {
     }
 
     private static boolean sameTree(Mutable actual, Tree expected) {
+        WorkBudget.charge(1);
         if (!actual.label.equals(expected.label) || actual.children.size() != expected.children.size()) return false;
         for (int i = 0; i < actual.children.size(); i++) if (!sameTree(actual.children.get(i), expected.children.get(i))) return false;
         return true;

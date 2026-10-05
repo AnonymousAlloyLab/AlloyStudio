@@ -10,6 +10,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
+# TRF-01 is VERIFIED at this recorded source root. AP01 changed the current
+# checkout (scripts/source_freshness.py classifies it STALE); this historical
+# correspondence is replayed against the frozen evidence inputs, read-only.
+HISTORICAL = ROOT / 'closure/traffic-refinement/evidence/ting02-20261004T201301Z-9d697815/inputs'
 import admission_bridge as bridge
 from traffic_http import Admission, TrafficProfile
 from dataclasses import replace
@@ -17,13 +21,13 @@ from dataclasses import replace
 
 class AdmissionBridgeTests(unittest.TestCase):
     def setUp(self):
-        self.http = (ROOT / 'traffic_http.py').read_text()
-        self.profile = (ROOT / 'traffic_profile.py').read_text()
-        self.server = (ROOT / 'server.py').read_text()
+        self.http = (HISTORICAL / 'traffic_http.py').read_text()
+        self.profile = (HISTORICAL / 'traffic_profile.py').read_text()
+        self.server = (HISTORICAL / 'server.py').read_text()
 
     def test_actual_source_projection_is_exact_and_closed(self):
-        self.assertEqual(bridge.check(ROOT)['status'], 'PASS')
-        data = bridge.extract(ROOT)
+        self.assertEqual(bridge.check(HISTORICAL)['status'], 'PASS')
+        data = bridge.extract(HISTORICAL)
         self.assertEqual(data['paths']['allocation'], ['reserve','allocate','register','attempt','identify','start'])
         self.assertEqual(data['paths']['reaping'], ['markObservation','joinReturned','terminate','clearObservation','unregister','release'])
         self.assertEqual(data['paths']['retainedOnUnstartedJoin'],
@@ -58,7 +62,7 @@ class AdmissionBridgeTests(unittest.TestCase):
             with self.subTest(old=old):
                 self.assertIn(old,self.http)
                 with self.assertRaises(bridge.BridgeRejected):
-                    bridge.generate(ROOT, {'traffic_http.py':self.http.replace(old,new,1)})
+                    bridge.generate(HISTORICAL, {'traffic_http.py':self.http.replace(old,new,1)})
 
     def test_allocation_reorder_release_loss_and_namespace_escape_rejected(self):
         originals = [
@@ -71,7 +75,7 @@ class AdmissionBridgeTests(unittest.TestCase):
         ]
         for source in originals:
             with self.assertRaises(bridge.BridgeRejected):
-                bridge.generate(ROOT, {'traffic_http.py':source})
+                bridge.generate(HISTORICAL, {'traffic_http.py':source})
 
     def reject_with_registered_bounded_shape(self, source):
         """The semantic adapter must reject, even after its class digest changes."""
@@ -84,7 +88,7 @@ class AdmissionBridgeTests(unittest.TestCase):
                                ('server.py',self.server)]:
                 (scratch/name).write_text(value)
             path=scratch/bridge.CONTRACT;path.parent.mkdir(parents=True)
-            contract=json.loads((ROOT/bridge.CONTRACT).read_text())
+            contract=json.loads((HISTORICAL/bridge.CONTRACT).read_text())
             cls=bridge.unique(bridge.parse(source),'BoundedHTTPServer',ast.ClassDef)
             contract['shapes']['BoundedHTTPServer']=bridge.sha(bridge.dump(cls))
             path.write_text(json.dumps(contract))
@@ -132,7 +136,7 @@ class AdmissionBridgeTests(unittest.TestCase):
             ('traffic_profile.py',self.profile,"'owners': set()", "'owners': {1}"),
         ]:
             with self.subTest(old=old), self.assertRaises(bridge.BridgeRejected):
-                bridge.generate(ROOT,{path:source.replace(old,new,1)})
+                bridge.generate(HISTORICAL,{path:source.replace(old,new,1)})
 
     def test_profile_postinit_mutation_and_portal_override_are_closed(self):
         malicious_profile = self.profile.replace('    def __post_init__(self):\n',
@@ -141,7 +145,7 @@ class AdmissionBridgeTests(unittest.TestCase):
             'class Portal(BoundedHTTPServer):\n    def process_request(self, request, client_address):\n        return None\n', 1)
         for path, source in [('traffic_profile.py', malicious_profile), ('server.py', malicious_portal)]:
             with self.assertRaises(bridge.BridgeRejected):
-                bridge.generate(ROOT, {path: source})
+                bridge.generate(HISTORICAL, {path: source})
 
     def test_actual_numeric_operators_are_translated_not_approved_by_shape(self):
         cases = [
@@ -153,9 +157,9 @@ class AdmissionBridgeTests(unittest.TestCase):
         ]
         for path,source,old,new,expected in cases:
             with self.subTest(old=old):
-                generated=bridge.generate(ROOT,{path:source.replace(old,new,1)})
+                generated=bridge.generate(HISTORICAL,{path:source.replace(old,new,1)})
                 self.assertIn(expected,generated)
-                self.assertNotEqual(generated,bridge.generate(ROOT))
+                self.assertNotEqual(generated,bridge.generate(HISTORICAL))
 
     def test_translated_mutants_fail_independent_lean_obligations_offline(self):
         cases = [
@@ -177,7 +181,7 @@ class AdmissionBridgeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='admission-mutants-',dir=scratch_parent) as temporary:
             scratch=Path(temporary)
             for name in ('AdmissionModel.lean','AdmissionSpec.lean'):
-                (scratch/name).write_bytes((ROOT/'formal/ingress_admission'/name).read_bytes())
+                (scratch/name).write_bytes((HISTORICAL/'formal/ingress_admission'/name).read_bytes())
             def compile_(name):
                 return subprocess.run([sys.executable,str(ROOT/'scripts/lean_offline.py'),
                     '--cwd',str(scratch),'--lean-path',str(scratch),'--','-DgenInjectivity=false',
@@ -186,7 +190,7 @@ class AdmissionBridgeTests(unittest.TestCase):
             self.assertEqual(model.returncode,0,model.stdout)
             for path,source,old,new in cases:
                 with self.subTest(old=old):
-                    (scratch/'AdmissionExtracted.lean').write_text(bridge.generate(ROOT,{path:source.replace(old,new,1)}))
+                    (scratch/'AdmissionExtracted.lean').write_text(bridge.generate(HISTORICAL,{path:source.replace(old,new,1)}))
                     extracted=compile_('AdmissionExtracted')
                     self.assertEqual(extracted.returncode,0,extracted.stdout)
                     spec=compile_('AdmissionSpec')
@@ -194,9 +198,9 @@ class AdmissionBridgeTests(unittest.TestCase):
                     self.assertIn('error:',spec.stdout)
             # This mutant parses and compiles, but independently specified
             # join-refusal/identified-phase obligations reject its semantics.
-            source=bridge.generate(ROOT).replace('reclaimable .joined phase',
+            source=bridge.generate(HISTORICAL).replace('reclaimable .joined phase',
                                                  'reclaimable .identityOnly phase')
-            self.assertNotEqual(source,bridge.generate(ROOT))
+            self.assertNotEqual(source,bridge.generate(HISTORICAL))
             (scratch/'AdmissionExtracted.lean').write_text(source)
             extracted=compile_('AdmissionExtracted')
             self.assertEqual(extracted.returncode,0,extracted.stdout)
@@ -206,9 +210,9 @@ class AdmissionBridgeTests(unittest.TestCase):
             # Clearing uncertainty after an exceptional observation recreates
             # a ready entry whose runtime liveness metadata is poisoned. The
             # reachable-history and explicit counterexample obligations fail.
-            source=bridge.generate(ROOT).replace('stickyObservationFailure : Bool := true',
+            source=bridge.generate(HISTORICAL).replace('stickyObservationFailure : Bool := true',
                                                  'stickyObservationFailure : Bool := false')
-            self.assertNotEqual(source,bridge.generate(ROOT))
+            self.assertNotEqual(source,bridge.generate(HISTORICAL))
             (scratch/'AdmissionExtracted.lean').write_text(source)
             extracted=compile_('AdmissionExtracted')
             self.assertEqual(extracted.returncode,0,extracted.stdout)

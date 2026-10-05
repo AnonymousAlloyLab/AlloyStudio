@@ -146,13 +146,15 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
     public_asset_versions.update(version_public_assets(entries))
     public_asset_versions.update(version_public_assets(entries, 'dashboard/'))
     public_asset_versions.update(version_public_assets(entries, 'admin/'))
+    for name in ('index.html', 'app.js', 'styles.css'):
+        entries['backend/web/admin/' + name] = entries['wwwroot/admin/' + name]
     for name in DEPLOY_FILES:
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
     entries['LICENSE'] = read_source(root, 'LICENSE')
     for name in ('server.py', 'luna.py', 'runtime_dependencies.py', 'engine_workers.py',
                  'traffic_scheduler.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits.py',
-                 'traffic_decode.py'):
+                 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
         entries[f'backend/{name}'] = read_source(root, name)
     for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):
         entries[f'backend/{name}'] = read_source(root, name)

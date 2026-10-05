@@ -1,0 +1,35 @@
+{
+  "baseline": {
+    "adapter": "Only outer workMillis stripped; request/context unchanged",
+    "classInventory": "input-manifest.json: baseline.classes",
+    "localPreservedClasses": "build/work-calibration/20261005T085652Z-8w251hyi/engine-classes",
+    "reportSha256": "ce3a2d9c34cb797e1c320c5849f253fb0829b99ee3898033cffb2ac3f0ec4df0",
+    "sealedDirectory": "closure/patch-contracts/evidence/work-calibration-20261005T090137Z-f76c415f",
+    "sealedManifestRoot": "368cc6c001123c8a146aacfb7341e95c24ae3da7cd68fe46bc3011544af258fa"
+  },
+  "classification": "Finite empirical testing; no formal-closure decision",
+  "excluded": [
+    "Windows or IIS execution",
+    "RAM limits or exact unsampled RSS peaks",
+    "Physical core isolation or other-host timing predictions",
+    "All 61598 dataset models",
+    "Provider calls and authenticated administration",
+    "New formal implementation-to-Lean correspondence or universal liveness"
+  ],
+  "historicalWitness": "timeout-audit-before.json was generated before the v0.0.5 changes; it is preserved, not regenerated, and does not claim a complete historical source manifest.",
+  "inputManifestSha256": "7ba2996e84f564063e02e8c59e60289f50acc90470dcf84d42ad558a247bd491",
+  "publication": {
+    "caseIdsAndCompleteResponseHashes": true,
+    "completeResponseBodies": false,
+    "credentials": false,
+    "modelBodies": false,
+    "privateConfigs": false
+  },
+  "sourceRun": "build/v005-refinement/bench/20261005T100520Z-1h2dk6ui",
+  "trusted": [
+    "Linux scheduling, process, monotonic clock and /proc interfaces",
+    "CPython and standard library JSON, SHA-256, subprocess, threading",
+    "OpenJDK and fixed Alloy/runtime JARs hashed by input-manifest.json",
+    "Physical machine execution and available logical CPU identifiers"
+  ]
+}

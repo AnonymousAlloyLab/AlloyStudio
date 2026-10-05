@@ -1,0 +1,8 @@
+{
+  "actual": "runner exit 2; INFRASTRUCTURE_FAILURE before mutant compilation; outer gate.run raised Rejected",
+  "closureEffect": "No PASS or closure; frozen verifier must be repaired and refrozen",
+  "command": "gate.run([sys.executable, -I, scripts/check_work_budget_negative_controls.py, --output-root, java-negative-controls, --modules, build-1/objects], ROOT, clean_environment(toolchain), java-negative-controls.log)",
+  "evidence": "build/v005-refinement/reviews/sol-b/java-negative-controls.log",
+  "expected": "Registered nested Java mutation runner compiles six mutants and rejects each independent refinement",
+  "reason": "ELAN_HOME stripped; outer user namespace identity 0 chooses /root/.elan; Lean binary execution permission denied"
+}

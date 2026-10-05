@@ -1,0 +1,15 @@
+{
+  "astSha256": {
+    "Handler.admin_GET": "ef778cd632a514141f015a8a854418e534d8d8763d3d7cc0de81d4d5bd536605",
+    "Handler.admin_POST": "20a58e6ed0e29c1a69594c9b721f588ee62075a9f234d57763d711b0f4f3cf9c",
+    "Handler.admitted_administration": "de98f54550dc31d6d77cf39092b21035b84252d551f38bbd77fa13adaccff157",
+    "Handler.deliver": "1b45d7b142f407b7e814ad2090585a6177491af46a7a228ecfebb331e9e6c111",
+    "Handler.do_GET": "aa46f9843bb4053b9b19dd32fdae9b6674a5d11bb960f510d921c1907d8ab13c",
+    "Handler.do_POST": "bbec5b6d3f6c159e14e04755598bd169f4643fdef344b2aa10a926b3c37413fa",
+    "Handler.validated": "ac5dec5425f25ddaf2612a97b7ca8ea2c0876a5b1c008497f793174956b87b2c",
+    "RouteServices": "bf0a0cb5fb63da669dcaae50358714166ccdd525f19385a00876cd8c0c612bbd",
+    "route_services": "32696218352b134115eb8c065ddab79be059ddc9a214e14aafb643a7cca83103"
+  },
+  "schemaVersion": 1,
+  "scope": "Reviewed dispatcher and named service AST drift guard; no Lean production refinement claimed."
+}

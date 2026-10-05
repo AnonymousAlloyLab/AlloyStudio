@@ -39,7 +39,7 @@ run over
 run under
 '''
 RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
-RUNTIME_FILES = ('traffic_profile.py', 'traffic_limits.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
+RUNTIME_FILES = ('traffic_profile.py', 'traffic_limits.py', 'execution_profile.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
                  'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
                  'scripts/configure_admin.py', 'docs/admin-setup.md', 'docs/admin-security-spec.md',
                  'scripts/manage_exercises.py', 'docs/private-exercises.md',
@@ -291,7 +291,8 @@ class RuntimeOptionTests(unittest.TestCase):
         argv = self.invoke([])
         self.assertEqual(argv[argv.index('--engine-mode') + 1], 'persistent')
         self.assertEqual(argv[argv.index('--control-port') + 1], '0')
-        self.assertEqual(argv[argv.index('--workers') + 1], '2')
+        self.assertEqual(argv[argv.index('--resource-profile') + 1], 'constrained')
+        self.assertNotIn('--workers', argv)
 
     def test_rollback_and_separate_control_listener_are_forwarded(self):
         argv = self.invoke(['--engine-mode', 'oneshot', '--control-port', '9091', '--port', '9090', '--workers', '4'])
@@ -302,7 +303,9 @@ class RuntimeOptionTests(unittest.TestCase):
 
     def test_invalid_or_colliding_control_ports_are_rejected_before_setup(self):
         for arguments in (['--control-port', '-1'], ['--control-port', '65536'],
-                          ['--control-port', '8080'], ['--engine-mode', 'unknown']):
+                          ['--control-port', '8080'], ['--engine-mode', 'unknown'],
+                          ['--resource-profile', 'unknown'], ['--startup-timeout', 'nan'],
+                          ['--startup-timeout', '31'], ['--timeout', 'nan']):
             with self.subTest(arguments=arguments), patch.object(local_portal, 'setup') as setup, \
                     contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as caught:

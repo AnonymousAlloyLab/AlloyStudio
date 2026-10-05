@@ -1,0 +1,62 @@
+{
+  "actual": "PASS",
+  "authoritativeNestedControlAttempt": "INFRASTRUCTURE_FAILURE; toolchain execution permission denied; preserved java-negative-controls.log",
+  "builds": {
+    "1": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "correspondence": {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      },
+      "declarations": 374,
+      "inventoryRawSha256": "d48a45915d3623722f55042b6f12b605e3be703cad422271be9e997b78414c85",
+      "objects": {
+        "Generated.olean": "b2989419acf5e07e2eae7e3fdd98c6dc233c8f07a1021f6807844994779cedfc",
+        "Refinement.olean": "b08f415580eab6e5bcf9f94dcb0dd6da469121ee59a3fcf4380186926c0d54c7",
+        "Semantics.olean": "5a9c957915d304c84da69292dbe9b6eba2117dfedbec4a1698ffbd7e17ee4c3b",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "theorems": 119
+    },
+    "2": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "correspondence": {
+        "generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273",
+        "methods": [
+          "charge",
+          "sampleClock",
+          "checkpoint"
+        ],
+        "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust",
+        "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78",
+        "status": "PASS"
+      },
+      "declarations": 374,
+      "inventoryRawSha256": "d48a45915d3623722f55042b6f12b605e3be703cad422271be9e997b78414c85",
+      "objects": {
+        "Generated.olean": "b2989419acf5e07e2eae7e3fdd98c6dc233c8f07a1021f6807844994779cedfc",
+        "Refinement.olean": "b08f415580eab6e5bcf9f94dcb0dd6da469121ee59a3fcf4380186926c0d54c7",
+        "Semantics.olean": "5a9c957915d304c84da69292dbe9b6eba2117dfedbec4a1698ffbd7e17ee4c3b",
+        "Work.olean": "99c50c46e10cd6761d68627e8d8005dcfc339c9bc65f64441ffdd0176923494b"
+      },
+      "theorems": 119
+    }
+  },
+  "expected": "Two builds agree exactly on complete inventory, objects and correspondence",
+  "hostEntryControls": "separate diagnostic execution only; no authoritative verifier verdict"
+}

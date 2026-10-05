@@ -1,0 +1,20 @@
+{
+  "checks": 14,
+  "passed": [
+    "disabled-admin-has-no-upload-authority",
+    "login-failure-clears-password-and-success-rotates-csrf",
+    "upload-preserves-bom-unicode-crlf-and-protected-group-names",
+    "provider-prose-renders-only-as-text-or-form-values",
+    "publication-requires-review-and-submits-metadata-only",
+    "invalid-utf8-nul-extension-and-size-fail-before-upload",
+    "teaching-goal-enforces-utf8-byte-limit",
+    "single-predicate-also-gets-automatic-luna-metadata",
+    "provider-unavailable-keeps-manual-review-usable",
+    "discard-and-rejected-preparation-never-publish-or-call-luna",
+    "expired-session-clears-draft-source-and-returns-to-login",
+    "logout-clears-authority-and-private-page-state",
+    "narrow-iis-subapplication-keeps-assets-api-and-layout-in-scope",
+    "offline-browser-has-no-external-requests-or-script-errors"
+  ],
+  "status": "PASS"
+}

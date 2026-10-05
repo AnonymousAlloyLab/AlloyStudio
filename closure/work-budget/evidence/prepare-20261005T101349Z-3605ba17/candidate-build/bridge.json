@@ -1,0 +1,1 @@
+{"generatedSha256": "a7f6b1d1c257e6adf18f038a0a9ce9e660e8c70d9022317338a2f5ea14180273", "methods": ["charge", "sampleClock", "checkpoint"], "scope": "restricted Java charged-work/checkpoint bodies; explicit compiler/parser/runtime/clock trust", "sourceSha256": "840d06390ae34f5bc1e1d2e5bcdd301614350521a54971471fb1ec94b58bab78", "status": "PASS"}

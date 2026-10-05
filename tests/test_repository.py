@@ -33,7 +33,26 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(snapshot['commit'], '1e2667351532b0c632166fa21ae5fbc7308a8fe7')
         patches = snapshot['localPatches']
         self.assertEqual([patch['id'] for patch in patches],
-                         ['parser-source-origins', 'canonical-residual-quantifier-rendering'])
+                         ['parser-source-origins', 'canonical-residual-quantifier-rendering',
+                          'request-work-budget'])
+        budget = patches[2]['files']
+        self.assertEqual({entry['path'] for entry in budget}, {
+            'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
+            'src/is/fivefivefive/CanDis/WorkBudget.java',
+            'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
+            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+            'src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java',
+            'src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java',
+            'src/is/fivefivefive/CanDis/ir/IRAgent.java',
+        })
+        for entry in budget:
+            if entry.get('added'):
+                # A file the local patch introduces has no upstream base.
+                self.assertEqual(set(entry), {'path', 'added'})
+                self.assertIn(entry['path'], expected)
+                continue
+            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
         files = patches[0]['files']
         self.assertEqual({entry['path'] for entry in files}, {
             'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',

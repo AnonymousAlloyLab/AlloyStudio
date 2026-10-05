@@ -70,10 +70,6 @@ if (@(Compare-Object @('index.html', 'app.js', 'styles.css') @($adminAssets.Name
     throw 'The admin directory must contain only its three packaged public files.'
 }
 foreach ($asset in $adminAssets) { Get-LocalPath -Path $asset.FullName | Out-Null }
-if ((Get-FileHash -LiteralPath (Join-Path $WebRoot 'web.config') -Algorithm SHA256).Hash -ne
-    (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'web.config') -Algorithm SHA256).Hash) {
-    throw 'The public web.config does not match this installed distribution.'
-}
 $publicRoots = @(Get-IisPhysicalRoots)
 foreach ($privatePath in @($RuntimeRoot, $config.backend_root, $config.key_file, $config.log_directory, $PSScriptRoot)) {
     Assert-PrivatePath -Path (Get-LocalPath -Path $privatePath) -PublicRoots $publicRoots
@@ -97,6 +93,9 @@ if ($principal -notmatch '^S-1-') {
 if ($principal -ne 'S-1-5-19') { throw 'The installed backend task must run as LOCAL SERVICE.' }
 Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
     -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe) | Out-Null
+& ([string]$task.Actions[0].Execute) -I $launcher `
+    --check-web-config (Join-Path $WebRoot 'web.config') --template (Join-Path $PSScriptRoot 'web.config')
+if ($LASTEXITCODE -ne 0) { throw 'The public web.config differs from the packaged administration policy.' }
 
 # These are the two IIS prerequisite services; no service startup policy changes.
 foreach ($serviceName in @('WAS', 'W3SVC')) {

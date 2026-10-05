@@ -46,6 +46,7 @@ public class AugmentedNode implements Serializable {
         return sourceOrigins == null ? null : sourceOrigins.get(Pair.of(graph, timeOfVisit));
     }
     public AugmentedNode(int syntactic, int semantic, Symbol symbol) throws IllegalArgumentException {
+        is.fivefivefive.CanDis.WorkBudget.allocate(1);
         if (syntactic > 127 || syntactic < -128) {
             throw new IllegalArgumentException("Syntactic is a single byte! ");
         }
@@ -64,6 +65,7 @@ public class AugmentedNode implements Serializable {
     }
     // Create a shadow node to resolve self loops
     public AugmentedNode(AugmentedNode original) {
+        is.fivefivefive.CanDis.WorkBudget.allocate(1);
         this.syntactic = original.getSyntactic();
         this.semantic = (int) Math.round(original.getSemantic());
         this.symbol = MASGVisitor.SHADOW_SYMBOL;

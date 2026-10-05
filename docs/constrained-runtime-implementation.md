@@ -139,6 +139,21 @@ affinity. This test scheduling repair changes neither production nor frozen
 proof inputs. CI now reports source-registered failing test identifiers and
 counts on failure, while continuing to suppress private model/error content.
 
+A subsequent tagged Windows repeat exposed a separate shutdown boundary:
+`deadline - now` evaluated to `65.00000000000006` for a configured 65-second
+allowance. The [retained Windows failure](../closure/constrained-runtime/evidence/ci-run-37308905863/README.md)
+records the exact assertion. Equal coarse clock samples reproduce this without
+waiting: `(100.3 + 65) - 100.3 > 65`. Each of the three shutdown stages now clamps
+its remaining allowance to `[0, 65]`, preserving the shared deadline and refusal
+to acknowledge an unreaped process. The original upper-bound assertion remains.
+All 71 targeted lifecycle, HTTP and deadline tests passed after the clamp,
+including exact expiry and expiry between stages.
+This later change is limited to shutdown; the earlier benchmark and local
+validation retain their original source hashes and are not relabeled as a
+measurement of the final source. The LP05 Java/Lean input root is unchanged;
+the Python shutdown boundary is covered by executable regressions, not that
+Java refinement proof.
+
 The private archive created by this run is
 `alloy-studio-iis-20261005-102336-623580Z.zip`, with 252 files and SHA-256
 `fa5ad06f5ac15e8ba8297391773cf2f8f44921f707a1d41fd9695438f93cdfc8`.
@@ -151,6 +166,12 @@ SHA-256 `fb83fc0d6a1cb36a67f4d393f653ee5ab39a9469c6c429768a5abd7684f985ab`.
 This supplements the historical sealed validation artifact above. Native CI
 builds its own package from the same source; its ZIP bytes are not identified
 by this local archive's hash. Neither archive is a public release asset.
+
+The shutdown-clamp rebuild is
+`alloy-studio-iis-20261005-122730-695539Z.zip`: **252 files, 60,858,329 bytes**,
+SHA-256 `d4a991b85d88a4551a82bb1092c47044ebab8bb3a2cbb65c958dc1a64b4df4ef`.
+It supersedes the earlier local packages for deployment and retains the same
+explicit package inventory, including exercise data and runtime dependencies.
 
 ## Deployment
 

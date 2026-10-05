@@ -1,0 +1,17 @@
+{
+  "status": "EXPECTED_TEST_FAILURE_REPRODUCED",
+  "clockSamples": [
+    100.3,
+    100.3,
+    100.3,
+    100.3
+  ],
+  "computedDeadline": 165.3,
+  "computedRemaining": 65.00000000000001,
+  "declaredDrainSeconds": 65,
+  "failureCount": 1,
+  "errorCount": 0,
+  "testsRun": 1,
+  "productionModified": false,
+  "testModified": false
+}

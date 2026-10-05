@@ -1,0 +1,80 @@
+{
+  "status": "PASS",
+  "python": "3.11.16",
+  "testsRun": 71,
+  "unittestElapsedSeconds": 1.118,
+  "scenarios": {
+    "coarse-clock-rounding": {
+      "samples": [
+        100.3,
+        100.3,
+        100.3,
+        100.3
+      ],
+      "allowances": [
+        65,
+        65,
+        65
+      ]
+    },
+    "exact-deadline": {
+      "samples": [
+        100,
+        165,
+        165,
+        165
+      ],
+      "allowances": [
+        0,
+        0,
+        0
+      ]
+    },
+    "expired-before-pool": {
+      "samples": [
+        100,
+        166,
+        170,
+        200
+      ],
+      "allowances": [
+        0,
+        0,
+        0
+      ]
+    },
+    "expired-between-stages": {
+      "samples": [
+        100,
+        160,
+        166,
+        170
+      ],
+      "allowances": [
+        5,
+        0,
+        0
+      ]
+    },
+    "existing-progressing-clock": {
+      "samples": [
+        100,
+        105,
+        110,
+        120
+      ],
+      "allowances": [
+        60,
+        55,
+        45
+      ]
+    }
+  },
+  "sourceSha256": {
+    "server.py": "62f3eed7e5b8595bdaf47a051062fce2e67e068f79d8a98c7b732f10d880aa58",
+    "tests/test_traffic_portal.py": "2eea580d06060f5fd49531db1a41aa7960a0daf2aef8979c79298cc99a2725be"
+  },
+  "beforeWitness": "windows-shutdown-rounding-witness.json",
+  "afterWitness": "windows-shutdown-rounding-after.json",
+  "existingAssertionsRelaxed": false
+}

@@ -1,0 +1,34 @@
+{
+  "failedHostedRevision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+  "failedHostedRunId": 37308905863,
+  "files": {
+    "README.md": {
+      "bytes": 1718,
+      "sha256": "4a05732d292014bd37facf61de4a2e9c78cda875c88570e92c302c4734358584"
+    },
+    "windows-shutdown-clamp-final-tests.log": {
+      "bytes": 11663,
+      "sha256": "3f1e4caa3479d0b5c2233a077ac3a37f9342b88e1c76510f07f61263d3b98b77"
+    },
+    "windows-shutdown-clamp-final-validation.json": {
+      "bytes": 1396,
+      "sha256": "20762a6714f36e758065c22dd9e7296ea63ade3013acfff2679f8d37f87f497a"
+    },
+    "windows-shutdown-rounding-after.json": {
+      "bytes": 478,
+      "sha256": "566e6fe94a9c172b6df82ef399d87213dc14d6410f3755a428b5af644176de2b"
+    },
+    "windows-shutdown-rounding-witness.json": {
+      "bytes": 333,
+      "sha256": "42e0ffc675ebf980e194aa921c9c661bb997e7b941a3daf5c2955311da76bca6"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Deterministic constructed floating-point witness and focused local Python regressions; fresh Windows/IIS and full CI validation pending.",
+  "sourceSha256": {
+    "server.py": "62f3eed7e5b8595bdaf47a051062fce2e67e068f79d8a98c7b732f10d880aa58",
+    "tests/test_traffic_portal.py": "2eea580d06060f5fd49531db1a41aa7960a0daf2aef8979c79298cc99a2725be"
+  },
+  "status": "LOCAL_REGRESSION_PASS",
+  "testsRun": 71
+}

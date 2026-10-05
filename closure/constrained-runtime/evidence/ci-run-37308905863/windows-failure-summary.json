@@ -1,0 +1,26 @@
+{
+  "runId": 37308905863,
+  "revision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+  "jobId": 111759198779,
+  "job": "Portable build (windows-latest)",
+  "status": "failure",
+  "failedSteps": [
+    "Persistent transport, scheduling and HTTP boundary regressions"
+  ],
+  "logAvailable": true,
+  "failedRegisteredTests": [
+    "test_traffic_portal.PortalLifecycleTests.test_unreaped_process_prevents_successful_shutdown_acknowledgement"
+  ],
+  "numericUpperBoundAssertions": [
+    {
+      "actual": "65.00000000000006",
+      "maximum": "65"
+    }
+  ],
+  "sourceFrames": [
+    {
+      "file": "test_traffic_portal.py",
+      "line": 140
+    }
+  ]
+}

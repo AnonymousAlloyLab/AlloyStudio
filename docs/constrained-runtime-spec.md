@@ -22,6 +22,12 @@ administration, SQLite, the dashboard, and portable local/IIS deployment.
   seconds and retains ownership until reaping is confirmed. Scheduler waiting
   includes acquisition, execution and cleanup allowances. Queued requests expire
   at the queue deadline even when the preceding job is still running.
+  Backend shutdown shares one absolute 65-second drain deadline across the
+  worker pool, administrator and one-shot processes. Each stage receives an
+  allowance clamped to `[0, 65]`, including when equal coarse clock samples
+  cause floating-point subtraction to round slightly above 65. Expired stages
+  receive zero; an unreaped or starting process still prevents a successful
+  shutdown acknowledgement. This clamp does not promise OS preemption.
 - **LP05-03, startup classification:** waiting for a shared process slot, or
   shutdown before spawning, cannot increment the failed-start circuit. Launch
   attempt credits still follow the existing lane policy. A real failed launch

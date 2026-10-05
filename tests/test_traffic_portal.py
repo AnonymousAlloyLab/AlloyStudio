@@ -159,6 +159,33 @@ class PortalLifecycleTests(unittest.TestCase):
         app.admin.close.assert_called_once_with(timeout=55)
         drain.assert_called_once_with(server.ROOT, timeout=45)
 
+    def test_shutdown_stage_allowances_clamp_rounding_and_never_renew_expired_budget(self):
+        cases = (
+            ('coarse-clock-rounding', [100.3, 100.3, 100.3, 100.3], [65, 65, 65]),
+            ('exact-deadline', [100, 165, 165, 165], [0, 0, 0]),
+            ('expired-before-pool', [100, 166, 170, 200], [0, 0, 0]),
+            ('expired-between-stages', [100, 160, 166, 170], [5, 0, 0]),
+        )
+        # Reproduce the Windows failure using exact deterministic samples.
+        self.assertGreater((100.3 + 65) - 100.3, 65)
+        for name, samples, expected in cases:
+            with self.subTest(scenario=name):
+                app = object.__new__(server.Portal)
+                app.root = server.ROOT
+                app.scheduler = Mock()
+                app.engine_pool = Mock()
+                app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 0}
+                app.admin = Mock()
+                app.admin.close.return_value = True
+                with patch.object(server, 'close_engine_admission'), \
+                     patch.object(server, 'wait_for_oneshots', return_value=True) as drain, \
+                     patch.object(server.BoundedHTTPServer, 'server_close'), \
+                     patch.object(server.time, 'monotonic', side_effect=samples):
+                    app.server_close()
+                app.engine_pool.close.assert_called_once_with(timeout=expected[0])
+                app.admin.close.assert_called_once_with(timeout=expected[1])
+                drain.assert_called_once_with(server.ROOT, timeout=expected[2])
+
     def test_starting_worker_prevents_successful_shutdown_acknowledgement(self):
         app = object.__new__(server.Portal)
         app.root = server.ROOT

@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "count": null,
+      "current": true,
+      "name": "build",
+      "revision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+      "status": "PASS"
+    },
+    {
+      "count": 378,
+      "current": true,
+      "name": "runtime",
+      "revision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+      "status": "PASS"
+    },
+    {
+      "count": null,
+      "current": false,
+      "name": "python",
+      "revision": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "count": null,
+      "current": false,
+      "name": "browser",
+      "revision": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "count": null,
+      "current": false,
+      "name": "dashboard",
+      "revision": null,
+      "status": "NOT_RUN"
+    }
+  ],
+  "closure": {
+    "current": false,
+    "status": "NOT_AVAILABLE"
+  },
+  "lean": {
+    "open": 24,
+    "total": 24
+  },
+  "repository": "AnonymousAlloyLab/AlloyStudio",
+  "revision": {
+    "dirty": false,
+    "sha": "76db3e720abd217ba098efcc63c9cb099b947e82"
+  },
+  "schemaVersion": 1,
+  "version": "0.0.5-alpha"
+}

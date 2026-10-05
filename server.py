@@ -580,9 +580,11 @@ class Portal(BoundedHTTPServer):
         deadline = time.monotonic() + 65
         close_engine_admission(self.root)
         self.scheduler.close()
-        pool_status = self.engine_pool.close(timeout=max(0, deadline - time.monotonic()))
-        admin_drained = self.admin.close(timeout=max(0, deadline - time.monotonic()))
-        oneshots_drained = wait_for_oneshots(self.root, timeout=max(0, deadline - time.monotonic()))
+        # Coarse clock samples can make floating subtraction round just above
+        # the original allowance. Keep every stage inside the same drain cap.
+        pool_status = self.engine_pool.close(timeout=min(65, max(0, deadline - time.monotonic())))
+        admin_drained = self.admin.close(timeout=min(65, max(0, deadline - time.monotonic())))
+        oneshots_drained = wait_for_oneshots(self.root, timeout=min(65, max(0, deadline - time.monotonic())))
         super().server_close()
         if not admin_drained or not oneshots_drained or pool_status['unreaped'] or pool_status['starting']:
             raise RuntimeError('Backend shutdown could not drain active analysis.')

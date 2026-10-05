@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "scope": "TESTED historical CI success before shutdown clamp",
+  "status": "PASS",
+  "runId": "37306121981",
+  "revision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+  "files": {
+    "README.md": "4c497e048644367f26d4a1add698c4362a7df576dc4e1e5e22abb2dc734ee00c",
+    "linux-dashboard.json": "230d46f00bfb0f5fc4a8b37bc34a4bbd72200cc904baecde0d72cd69b8550bc6",
+    "macos-latest-dashboard.json": "f1ca11c3880e3298f1466002aa9594cfa842a76a12a34b1dc13a2781ec21b0a7",
+    "run.json": "b1508e28383314fd054dceca84f1a3944a0ee05af5dcaabe09b3b6ec1f81227e",
+    "windows-latest-dashboard.json": "f05b44a704791a0f5e58dd1d9c8ece2aec50423bebdd64dbc129a9c25c9a0197"
+  }
+}

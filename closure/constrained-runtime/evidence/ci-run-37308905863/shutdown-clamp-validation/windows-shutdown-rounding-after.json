@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "clockSamples": [
+    100.3,
+    100.3,
+    100.3,
+    100.3
+  ],
+  "computedUnclampedRemaining": 65.00000000000001,
+  "clampedRemaining": 65,
+  "declaredDrainSeconds": 65,
+  "failureCount": 0,
+  "errorCount": 0,
+  "testsRun": 1,
+  "existingAssertionRelaxed": false,
+  "productionSourceSha256": "62f3eed7e5b8595bdaf47a051062fce2e67e068f79d8a98c7b732f10d880aa58",
+  "testSourceSha256": "233deff583ca671bef3ca17543e65050caa84d74f273b3607ef1a7cb933ec30a"
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "status": "JOB_FAILURE",
+  "scope": "TESTED Windows shutdown allowance counterexample; workflow partial at capture",
+  "runId": "37308905863",
+  "runUrl": "https://github.com/AnonymousAlloyLab/AlloyStudio/actions/runs/37308905863",
+  "revision": "76db3e720abd217ba098efcc63c9cb099b947e82",
+  "workflowStatusAtCapture": "in_progress",
+  "workflowConclusionAtCapture": "",
+  "failedPhase": {
+    "jobId": 111759198779,
+    "job": "Portable build (windows-latest)",
+    "step": "Persistent transport, scheduling and HTTP boundary regressions"
+  },
+  "failedRegisteredTests": [
+    "test_traffic_portal.PortalLifecycleTests.test_unreaped_process_prevents_successful_shutdown_acknowledgement"
+  ],
+  "numericWitness": {
+    "actual": "65.00000000000006",
+    "maximum": "65"
+  },
+  "files": {
+    "README.md": "f0f946ae25e9c2c9010afcfc0dc3c2f13612692b82ffba089e86c1b280a2f1ac",
+    "macos-dashboard.json": "f1ca11c3880e3298f1466002aa9594cfa842a76a12a34b1dc13a2781ec21b0a7",
+    "run-at-windows-failure.json": "4b5057ebe22f9b88b24d608acd0f8cf29fe3d5ec5be7f96736fd518de068ff50",
+    "windows-dashboard.json": "f05b44a704791a0f5e58dd1d9c8ece2aec50423bebdd64dbc129a9c25c9a0197",
+    "windows-failure-summary.json": "b99c632c1b3548861b63a5db237ca8d61280b961e160016f324f66b6f612bede"
+  }
+}

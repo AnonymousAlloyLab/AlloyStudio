@@ -134,6 +134,94 @@ class DashboardTests(unittest.TestCase):
                     self.assertEqual(report['status'], 'FAIL')
                     self.assertEqual(report['failure_code'], expected)
 
+    def register_python_fixture(self):
+        path = self.root / 'tests/test_registered.py'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Registry discovery must parse source without executing it.
+        path.write_text('raise RuntimeError("PRIVATE_SENTINEL")\n'
+                        'class Registered:\n'
+                        '    def test_failure(self): pass\n'
+                        '    def test_success(self): pass\n'
+                        '    def test_unresolved(self): pass\n')
+        return 'test_registered.Registered.'
+
+    def test_failed_python_child_reports_only_exact_source_registered_test_names(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        prefix = self.register_python_fixture()
+        raw = {'successful': False, 'tests_run': 3, 'outcomes': {
+            prefix + 'test_failure': 'BLOCK', prefix + 'test_success': 'PASS',
+            prefix + 'test_unresolved': 'UNRESOLVED', 'PRIVATE_SENTINEL': 'BLOCK',
+            prefix + 'test_failure (body=PRIVATE_SENTINEL)': 'BLOCK',
+            '_FailedTest.PRIVATE_SENTINEL': 'BLOCK'}, 'error': 'PRIVATE_SENTINEL'}
+        child = self.root / 'scripts/verify_closure.py'
+        child.parent.mkdir()
+        child.write_text('import json, sys\nfrom pathlib import Path\n'
+                         'assert not Path(sys.argv[2]).exists()\n'
+                         'print("PRIVATE_SENTINEL")\n'
+                         'print("PRIVATE_SENTINEL", file=sys.stderr)\n'
+                         f'Path(sys.argv[2]).write_text(json.dumps({raw!r}))\n'
+                         'raise SystemExit(1)\n')
+        stale = self.write('build/ci/unittest-private.json', {'successful': True, 'tests_run': 999})
+        stream = StringIO()
+        with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), redirect_stdout(stream):
+            self.assertEqual(ci_check.execute('python', self.root), 1)
+        report = json.loads((self.root / 'build/ci/python.json').read_text())
+        self.assertEqual(report['status'], 'FAIL')
+        self.assertEqual(report['count'], 3)
+        self.assertEqual(report['failedRegisteredTests'],
+                         [prefix + 'test_failure', prefix + 'test_unresolved'])
+        self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue() + json.dumps(report))
+        self.assertFalse(stale.exists())
+
+    def test_python_exit_and_report_must_both_pass_and_runtime_values_never_escape(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        prefix = self.register_python_fixture()
+        cases = [(0, True, 'PASS', 'PASS', []), (1, True, 'PASS', 'FAIL', []),
+                 (0, False, 'BLOCK', 'FAIL', [prefix + 'test_failure']),
+                 (0, True, 'PRIVATE_SENTINEL', 'FAIL', []),
+                 (1, False, {'private': 'PRIVATE_SENTINEL'}, 'FAIL', [])]
+        for exitcode, success, outcome, status, failures in cases:
+            with self.subTest(exitcode=exitcode, success=success, status=status):
+                def run(command, **kwargs):
+                    self.write('build/ci/unittest-private.json', {'successful': success,
+                        'tests_run': 1, 'outcomes': {prefix + 'test_failure': outcome}})
+                    return subprocess.CompletedProcess(command, exitcode, 'PRIVATE_SENTINEL', 'PRIVATE_SENTINEL')
+                stream = StringIO()
+                with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+                     patch.object(ci_check.subprocess, 'run', side_effect=run), redirect_stdout(stream):
+                    self.assertEqual(ci_check.execute('python', self.root), 0 if status == 'PASS' else 1)
+                report = json.loads((self.root / 'build/ci/python.json').read_text())
+                self.assertEqual(report['status'], status)
+                self.assertEqual(report['count'], 1)
+                self.assertEqual(report['failedRegisteredTests'], failures)
+                self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue() + json.dumps(report))
+                self.assertFalse((self.root / 'build/ci/unittest-private.json').exists())
+
+    def test_python_private_report_is_deleted_on_malformed_report_and_timeout(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        self.register_python_fixture()
+        for mode in ('malformed_json', 'malformed_outcomes', 'timeout'):
+            with self.subTest(mode=mode):
+                def run(command, **kwargs):
+                    raw = self.write('build/ci/unittest-private.json', {'outcomes': ['PRIVATE_SENTINEL']})
+                    if mode == 'malformed_json':
+                        raw.write_text('PRIVATE_SENTINEL not JSON')
+                    if mode == 'timeout':
+                        raise subprocess.TimeoutExpired(command, 1800, 'PRIVATE_SENTINEL', 'PRIVATE_SENTINEL')
+                    return subprocess.CompletedProcess(command, 1, 'PRIVATE_SENTINEL', 'PRIVATE_SENTINEL')
+                stream = StringIO()
+                with patch.object(ci_check, 'revision', return_value={'sha': SHA, 'dirty': False}), \
+                     patch.object(ci_check.subprocess, 'run', side_effect=run), redirect_stdout(stream):
+                    self.assertEqual(ci_check.execute('python', self.root), 1)
+                report = json.loads((self.root / 'build/ci/python.json').read_text())
+                self.assertEqual(report['status'], 'UNAVAILABLE')
+                self.assertEqual(report['failedRegisteredTests'], [])
+                self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue() + json.dumps(report))
+                self.assertFalse((self.root / 'build/ci/unittest-private.json').exists())
+
     def test_ci_child_uses_owned_scratch_instead_of_ambient_temp_directory(self):
         from contextlib import redirect_stdout
         from io import StringIO

@@ -13,6 +13,18 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
 from scripts.package_iis import build_package
+from scripts.verify_closure import discover_ids
+
+
+def python_outcome_summary(raw, registered):
+    """Project only source-registered identifiers, never runtime test descriptions."""
+    if type(raw) is not dict or type(raw.get('outcomes')) is not dict:
+        raise ValueError('Invalid Python outcome report.')
+    outcomes = raw['outcomes']
+    failed = sorted(identifier for identifier in registered
+                    if type(outcomes.get(identifier)) is str
+                    and outcomes[identifier] in {'BLOCK', 'UNRESOLVED'})
+    return {'count': count(raw.get('tests_run')), 'failedRegisteredTests': failed}
 
 
 def build_failure_code(stdout, stderr):
@@ -56,6 +68,9 @@ def execute(name, root=ROOT):
     before = revision(root)
     report = {'check': name, 'status': 'FAIL', 'count': None,
               'revision': before['sha'], 'dirty': before['dirty']}
+    private_report = output / 'unittest-private.json'
+    if name == 'python':
+        report['failedRegisteredTests'] = []
     # Browser profiles/shared-memory fallback and child runtimes must not fill
     # the host's shared temporary directory. Keep diagnostic leftovers owned by
     # this checkout too; a full /tmp directory index can fail despite free disk.
@@ -71,6 +86,10 @@ def execute(name, root=ROOT):
         'dashboard': ['node', 'tests/dashboard.mjs'],
     }
     try:
+        if name == 'python':
+            # A failed child must never inherit a successful previous report.
+            private_report.unlink(missing_ok=True)
+            registered = frozenset(discover_ids(root))
         if name == 'build':
             commands[name] = build_command(environment)
         elif name == 'browser':
@@ -80,14 +99,18 @@ def execute(name, root=ROOT):
             build_package(root, root / 'build/iis/alloy-studio-iis.zip')
         result = subprocess.run(commands[name], cwd=root, env=environment, capture_output=True,
                                 text=True, encoding='utf-8', errors='replace', timeout=1800, check=False)
-        if result.returncode == 0:
+        if name == 'python':
+            if private_report.is_symlink() or not private_report.is_file():
+                raise ValueError('Python outcome report must be a regular file.')
+            raw = json.loads(private_report.read_text(encoding='utf-8'))
+            report.update(python_outcome_summary(raw, registered))
+            if (result.returncode == 0 and raw.get('successful') is True
+                    and report['count'] is not None
+                    and all(value == 'PASS' for value in raw['outcomes'].values())):
+                report['status'] = 'PASS'
+        elif result.returncode == 0:
             report['status'] = 'PASS'
-            if name == 'python':
-                raw = json.loads((output / 'unittest-private.json').read_text())
-                if raw.get('successful') is not True:
-                    report['status'] = 'FAIL'
-                report['count'] = count(raw.get('tests_run'))
-            elif name in {'runtime', 'browser', 'dashboard'}:
+            if name in {'runtime', 'browser', 'dashboard'}:
                 raw = json.loads(result.stdout.strip().splitlines()[-1])
                 if raw.get('status') != 'PASS':
                     report['status'] = 'FAIL'
@@ -95,13 +118,19 @@ def execute(name, root=ROOT):
         elif name == 'build':
             report['failure_code'] = build_failure_code(result.stdout, result.stderr)
         # Captured stdout/stderr are intentionally not logged or uploaded: assertion
-        # failures can contain private models. Only fixed failure codes are public.
-    except (OSError, ValueError, KeyError, AttributeError, TypeError, subprocess.SubprocessError):
+        # failures can contain private models. Python names are projected from
+        # the frozen source registry; all other diagnostic codes are fixed.
+    except (OSError, ValueError, KeyError, AttributeError, TypeError, SyntaxError, subprocess.SubprocessError):
         report['status'] = 'UNAVAILABLE'
+    finally:
+        try:
+            private_report.unlink(missing_ok=True)
+        except OSError:
+            report['status'] = 'UNAVAILABLE'
+            report['failure_code'] = 'PRIVATE_REPORT_CLEANUP_FAILED'
     if revision(root) != before:
         report['dirty'] = True
     (output / (name + '.json')).write_text(json.dumps(report, sort_keys=True) + '\n', encoding='utf-8')
-    (output / 'unittest-private.json').unlink(missing_ok=True)
     print(json.dumps(report, sort_keys=True))
     return 0 if report['status'] == 'PASS' else 1
 

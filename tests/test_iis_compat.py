@@ -3,6 +3,7 @@ import ast
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -43,6 +44,22 @@ class IISAdminModuleInventoryTests(unittest.TestCase):
                 self.assertIn('Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)', readonly)
                 self.assertIn("'" + name + "'", private)
                 self.assertIn("'backend/" + name + "'", private)
+
+    def test_native_catalogue_probe_preserves_exact_projection_and_bound_versions(self):
+        deployment = (ROOT / 'deploy/iis/Test-IisDeployment.ps1').read_text(encoding='utf-8')
+        catalogue = deployment.split("$stage = 'entire catalogue public projection'", 1)[1]
+        catalogue = catalogue.split("$stage = 'real canonical repair with UTF-8 input'", 1)[0]
+        for variable, fields in (('summaryExpected', server.SUMMARY_FIELDS),
+                                 ('expected', server.PUBLIC_FIELDS)):
+            match = re.search(r'\$' + variable + r' = @\((.*?)\)', catalogue)
+            self.assertIsNotNone(match, variable)
+            names = re.findall(r"'([^']+)'", match.group(1))
+            self.assertEqual(tuple(names), tuple(fields))
+            self.assertEqual(len(names), len(set(names)))
+        for variable in ('exercise', 'record'):
+            self.assertIn('$' + variable + '.contentVersion -isnot [string]', catalogue)
+            self.assertIn('$' + variable + ".contentVersion -cnotmatch '\\A[0-9a-f]{64}\\z'", catalogue)
+        self.assertIn('$record.contentVersion -cne $exercise.contentVersion', catalogue)
 
 
 class IISCompatibilityTests(unittest.TestCase):
@@ -85,6 +102,23 @@ class IISCompatibilityTests(unittest.TestCase):
         self.assertIsNotNone(output_cache)
         self.assertEqual(output_cache.get('enabled'), 'false')
         self.assertEqual(output_cache.get('enableKernelCache'), 'false')
+
+    def test_catalogue_detail_version_is_exact_and_matches_listing_without_private_fields(self):
+        with urlopen(self.url + '/api/exercises', timeout=10) as response:
+            listing = json.loads(response.read())['exercises']
+        self.assertTrue(listing)
+        for summary in listing:
+            self.assertEqual(set(summary), set(server.SUMMARY_FIELDS))
+            self.assertRegex(summary['contentVersion'], r'\A[0-9a-f]{64}\Z')
+        # Sampling stable IDs covers separate model environments without solver work.
+        for summary in listing[::max(1, len(listing) // 5)]:
+            with self.subTest(exercise=summary['id']):
+                with urlopen(self.url + '/api/exercises/' + summary['id'], timeout=10) as response:
+                    detail = json.loads(response.read())
+                self.assertEqual(set(detail), set(server.PUBLIC_FIELDS))
+                self.assertEqual(detail['contentVersion'], summary['contentVersion'])
+                self.assertNotIn('exerciseVersion', detail)
+                self.assertNotIn('oracleBody', detail)
 
     def test_versioned_frontend_urls_serve_current_bytes_without_cache_revalidation(self):
         # Version queries must preserve the strict asset allowlist. Old IIS

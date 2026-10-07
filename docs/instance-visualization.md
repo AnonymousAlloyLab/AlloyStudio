@@ -142,3 +142,9 @@ state. The final local receipt is
 `build/instance-hierarchy/tests/final-bound-cached/report.json`; it binds the
 renderer, stylesheet, fixture, and independent checks to their SHA-256 hashes.
 Earlier attempt receipts remain available alongside it.
+
+The `v0.0.6-alpha` release replay repeated all 36 focused and 2,878 cached checks
+with the release's current renderer and stylesheet. Its source-bound receipt is
+`build/release-v006/diagrams/report.json`; all checks passed across the same
+181 invariants. The expanded packaged browser suite also passed 118 checks,
+including learner progress and administrator library/candidate workflows.

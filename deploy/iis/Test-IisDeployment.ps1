@@ -185,8 +185,11 @@ try {
     $stage = 'entire catalogue public projection'
     $listing = (Invoke-PortalRequest 'api/exercises').Body | ConvertFrom-Json
     Assert-Check ($listing.exercises.Count -eq $health.exercises) 'exercise listing matches backend health'
-    $expected = @('id', 'title', 'group', 'predicate', 'description', 'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter', 'source')
+    $summaryExpected = @('id', 'title', 'group', 'predicate', 'description', 'contentVersion')
+    $expected = @('id', 'title', 'group', 'predicate', 'description', 'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter', 'source', 'contentVersion')
     foreach ($exercise in $listing.exercises) {
+        if (@(Compare-Object $summaryExpected @($exercise.PSObject.Properties.Name)).Count) { throw 'Exercise summary field projection changed.' }
+        if ($exercise.contentVersion -isnot [string] -or $exercise.contentVersion -cnotmatch '\A[0-9a-f]{64}\z') { throw 'Exercise summary content version is invalid.' }
         # This checks catalogue contents, not overload handling. Stay below the
         # default 30 requests/second instead of exhausting its 60-credit burst.
         Start-Sleep -Milliseconds 50
@@ -194,6 +197,8 @@ try {
         if ($response.Status -ne 200) { throw 'An exercise failed to load.' }
         $record = $response.Body | ConvertFrom-Json
         if (@(Compare-Object $expected @($record.PSObject.Properties.Name)).Count) { throw 'Exercise field projection changed.' }
+        if ($record.contentVersion -isnot [string] -or $record.contentVersion -cnotmatch '\A[0-9a-f]{64}\z') { throw 'Exercise content version is invalid.' }
+        if ($record.contentVersion -cne $exercise.contentVersion) { throw 'Exercise content changed between listing and detail.' }
     }
     Assert-Check $true 'all exercise records contain only approved public fields'
 

@@ -3,7 +3,7 @@
 Solver certificates are explicit fixtures here; real Alloy validation belongs
 to the integrated admin tests. These tests do not call a provider or start Java.
 """
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from copy import deepcopy
 from pathlib import Path
 import sqlite3
@@ -111,7 +111,7 @@ class AdminCandidatesTests(unittest.TestCase):
         self.assertEqual(len(result.raw_exercises),1)
         self.assertEqual(result.pools_document,self.snapshot.pools_document)
         self.assertEqual(store.load_store(self.root).exercise_count,0)
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db:
             self.assertEqual(db.execute('SELECT count(*) FROM exercises').fetchone()[0],1)
             self.assertGreater(db.execute('SELECT count(*) FROM solutions').fetchone()[0],0)
 
@@ -171,7 +171,7 @@ class AdminCandidatesTests(unittest.TestCase):
         cache.CACHE_LOCK.acquire()
         try:self.assertIsNone(self.admit())
         finally:cache.CACHE_LOCK.release()
-        with store.connect(self.database,writable=True) as connection:
+        with closing(store.connect(self.database,writable=True)) as connection, connection:
             connection.execute('BEGIN IMMEDIATE')
             started=__import__('time').monotonic()
             self.assertIsNone(self.admit())
@@ -215,7 +215,7 @@ class AdminCandidatesTests(unittest.TestCase):
                 self.assertIsNotNone(self.admit(body=self.body+' and '+str(index)+' = '+str(index),
                                                record=record,now=group*10+index))
         self.assertEqual(cache.list_candidates(self.root,self.snapshot)['total'],100)
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection:
             self.assertEqual(connection.execute("SELECT count(*) FROM auxiliary WHERE kind='studentCandidate'").fetchone()[0],100)
 
     def test_review_bound_identity_and_CAS_then_terminal_replay_are_rejected(self):
@@ -297,7 +297,7 @@ class AdminCandidatesTests(unittest.TestCase):
 
     def test_candidate_corruption_and_over_limit_cache_fail_loading(self):
         candidate=self.admit()
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute("UPDATE auxiliary SET original_source='changed' WHERE kind='studentCandidate'")
         with self.assertRaises(store.StoreError):store.load_store(self.root)
 
@@ -308,7 +308,7 @@ class AdminCandidatesTests(unittest.TestCase):
                 cache.dismiss(self.root,self.snapshot,candidate['id'],value,guard=allowed)
             with self.assertRaises(store.StoreError):
                 store.edit_question(self.root,self.record['id'],value,'Title','Question',guard=allowed)
-        with store.connect(self.database,writable=True) as connection:
+        with closing(store.connect(self.database,writable=True)) as connection, connection:
             row=store._auxiliary_kind(connection,cache.CACHE_KIND)[0]
             metadata=store.parse_json(row['payload']);metadata['revision']=2**63-1
             sql.execute(connection,'update_auxiliary_item',(store.encoded(metadata),row['original_source'],cache.CACHE_KIND,row['ordinal']))
@@ -334,7 +334,7 @@ class AdminCandidatesTests(unittest.TestCase):
                 cache.approve(self.root,second['id'],second['candidateVersion'],second['exerciseVersion'],
                                certificate(self.record,second['body']),guard=allowed)
         self.assertEqual(store.load_store(self.root).correct_pools,snapshot.correct_pools)
-        with store.connect(self.database,writable=True) as connection:
+        with closing(store.connect(self.database,writable=True)) as connection, connection:
             row=store._auxiliary_kind(connection,'adminApproval:'+self.record['id'])[0]
             sql.execute(connection,'update_auxiliary_item',(row['payload'],'some Node',row['kind'],row['ordinal']))
         with self.assertRaises(store.StoreError):store.load_store(self.root)

@@ -9,7 +9,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import candidate_store as cache
 import exercise_sql as sql
@@ -173,10 +173,30 @@ class AdminCandidatesTests(unittest.TestCase):
         finally:cache.CACHE_LOCK.release()
         with closing(store.connect(self.database,writable=True)) as connection, connection:
             connection.execute('BEGIN IMMEDIATE')
-            started=__import__('time').monotonic()
-            self.assertIsNone(self.admit())
-            self.assertLess(__import__('time').monotonic()-started,0.5)
+            connect = store.connect
+            busy_timeouts, contention = [], []
+            def observed_connect(*args, **kwargs):
+                actual = connect(*args, **kwargs)
+                observed = Mock(wraps=actual)
+                def execute(statement, *parameters):
+                    if statement == 'BEGIN IMMEDIATE':
+                        busy_timeouts.append(actual.execute('PRAGMA busy_timeout').fetchone()[0])
+                    try:
+                        return actual.execute(statement, *parameters)
+                    except sqlite3.OperationalError as error:
+                        contention.append(error)
+                        raise
+                observed.execute.side_effect = execute
+                return observed
+            # Observe SQLite's actual limit at the contested write, rather
+            # than timing validation and runner scheduling around that wait.
+            with patch('candidate_store.store.connect', side_effect=observed_connect):
+                self.assertIsNone(self.admit())
+            self.assertEqual(busy_timeouts, [100])
+            self.assertEqual(len(contention), 1)
+            self.assertIn('locked', str(contention[0]).lower())
             connection.rollback()
+        self.assertEqual(cache.list_candidates(self.root,self.snapshot)['total'],0)
 
     def test_per_exercise_cap_applies_across_all_versions_and_oldest_pending_is_evicted(self):
         first=self.admit(now=0)

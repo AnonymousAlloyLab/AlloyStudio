@@ -10,12 +10,15 @@ function centerDiagram(scroll) {
   if (scroll.isConnected && scroll.clientWidth > 0) {
     scroll.scrollLeft = Math.max(0, (scroll.scrollWidth - scroll.clientWidth) / 2);
     const viewport = scroll.getBoundingClientRect();
-    const cards = [...scroll.querySelectorAll('.instance-graph-node > rect')]
+    const visibleCards = [...scroll.querySelectorAll('.instance-graph-node > rect')]
       .map(card => card.getBoundingClientRect())
       .filter(card => card.top >= viewport.top && card.bottom <= viewport.bottom);
+    const firstRow = Math.min(...visibleCards.map(card => card.top));
+    const cards = visibleCards.filter(card => Math.abs(card.top - firstRow) < 1);
     if (!cards.some(card => card.left >= viewport.left && card.right <= viewport.right)) {
       // A narrow screen can center the gap between two columns. Bring the
-      // nearest complete object into view instead of presenting an empty gap.
+      // nearest complete object in the uppermost visible row into view, so the
+      // hierarchy begins with an object rather than an empty gap between roots.
       const center = viewport.left + viewport.width / 2;
       cards.sort((a, b) => Math.abs((a.left + a.right) / 2 - center) - Math.abs((b.left + b.right) / 2 - center));
       if (cards.length) scroll.scrollLeft += (cards[0].left + cards[0].right) / 2 - center;
@@ -120,17 +123,27 @@ function tupleDescription(tuple) {
   return `${tuple.relation}, tuple ${tuple.tupleIndex + 1} (${columns}).`;
 }
 
-function activate(group, description, details) {
+function activate(group, description, details, context) {
   group.setAttribute('role', 'button');
   group.setAttribute('tabindex', '0');
   group.setAttribute('aria-label', description);
   group.setAttribute('aria-pressed', 'false');
   const show = () => {
-    for (const previous of group.ownerSVGElement?.querySelectorAll('[aria-pressed="true"]') || []) {
+    const canvas = group.ownerSVGElement;
+    for (const previous of canvas?.querySelectorAll('[aria-pressed="true"]') || []) {
       previous.setAttribute('aria-pressed', 'false');
     }
     group.setAttribute('aria-pressed', 'true');
     details.textContent = description;
+    const selectedNodes = new Set(context.nodes);
+    const selectedTuples = new Set(context.tuples);
+    for (const element of canvas?.querySelectorAll('.instance-graph-node, .instance-graph-tuple') || []) {
+      const related = element.hasAttribute('data-atom')
+        ? selectedNodes.has(element.getAttribute('data-atom'))
+        : selectedTuples.has(element.getAttribute('data-tuple-id'));
+      element.classList.toggle('instance-graph-context-related', related);
+      element.classList.toggle('instance-graph-context-muted', !related);
+    }
   };
   group.addEventListener('click', show);
   group.addEventListener('focus', show);
@@ -142,15 +155,14 @@ function activate(group, description, details) {
   });
 }
 
-// All text owns measured space before any connection is routed. A small local
-// orthogonal router treats both cards and labels as obstacles; crossings between
-// connections are permitted, but connections never run through someone else's text.
+// Hierarchy is a reading aid only. Its edges are supplied relation tuples, not
+// inferred parenthood: condense cycles first, then rank the resulting DAG.
 const STEP = 16;
 const snap = value => Math.ceil(value / (STEP * 2)) * STEP * 2;
 function textMetrics() {
   const context = document.createElement('canvas').getContext('2d');
   const family = getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() || 'monospace';
-  return (text, size = 13, weight = 500) => {
+  return (text, size = 11, weight = 500) => {
     context.font = `${weight} ${size}px ${family}`;
     return context.measureText(text).width;
   };
@@ -161,111 +173,190 @@ function fitLabel(text, measure, width, size, weight) {
   while (characters.length && measure(`${characters.join('')}…`, size, weight) > width) characters.pop();
   return `${characters.join('')}…`;
 }
+function middleLabel(text, measure, width) {
+  if (measure(text, 11, 600) <= width) return text;
+  const characters = Array.from(text);
+  let left = Math.ceil(characters.length / 2), right = characters.length - left;
+  while (left + right > 1) {
+    const candidate = `${characters.slice(0, left).join('')}…${characters.slice(characters.length - right).join('')}`;
+    if (measure(candidate, 11, 600) <= width) return candidate;
+    if (left > right) left -= 1; else right -= 1;
+  }
+  return '…';
+}
+function relationLabels(graph, measure) {
+  const labels = new Map(graph.relations.map(relation => [relation.index, middleLabel(relation.label, measure, 216)]));
+  for (const relation of graph.relations) {
+    const collision = graph.relations.some(other => other.index !== relation.index
+      && other.label !== relation.label && labels.get(other.index) === labels.get(relation.index));
+    if (collision) {
+      // Never make two distinct relation names look identical after elision.
+      const shared = labels.get(relation.index);
+      for (const other of graph.relations) if (labels.get(other.index) === shared) labels.set(other.index, other.label);
+    }
+  }
+  return labels;
+}
+function atomLabel(atom, measure) {
+  const named = /^(.*)\$(\d+)$/.exec(atom);
+  if (!named) return fitLabel(atom, measure, 144, 14, 600);
+  const suffix = ` ${named[2]}`;
+  return fitLabel(named[1], measure, 144 - measure(suffix, 14, 600), 14, 600) + suffix;
+}
 function intersects(a, b, gap = 0) {
   return Math.abs(a.x - b.x) < (a.width + b.width) / 2 + gap
     && Math.abs(a.y - b.y) < (a.height + b.height) / 2 + gap;
 }
+function hierarchy(entities, graph) {
+  const outgoing = new Map(entities.map(entity => [entity.id, new Set()]));
+  const incoming = new Map(entities.map(entity => [entity.id, new Set()]));
+  const connect = (source, target) => { outgoing.get(source).add(target); incoming.get(target).add(source); };
+  for (const tuple of graph.tuples) {
+    if (tuple.arity === 2) connect(tuple.nodeIds[0], tuple.nodeIds[1]);
+    else if (tuple.nodeIds.length) {
+      // The first column leads to the tuple hub in this layout only. Every
+      // actual rendered spoke remains hub → its original numbered column.
+      connect(tuple.nodeIds[0], tuple.id);
+      for (const target of tuple.nodeIds.slice(1)) connect(tuple.id, target);
+    }
+  }
+  let next = 0;
+  const index = new Map(), low = new Map(), stack = [], active = new Set(), components = [];
+  function visit(id) {
+    index.set(id, next); low.set(id, next); next += 1; stack.push(id); active.add(id);
+    for (const target of outgoing.get(id)) {
+      if (!index.has(target)) { visit(target); low.set(id, Math.min(low.get(id), low.get(target))); }
+      else if (active.has(target)) low.set(id, Math.min(low.get(id), index.get(target)));
+    }
+    if (low.get(id) === index.get(id)) {
+      const members = [];
+      let member;
+      do { member = stack.pop(); active.delete(member); members.push(member); } while (member !== id);
+      components.push(members);
+    }
+  }
+  for (const entity of entities) if (!index.has(entity.id)) visit(entity.id);
+  const order = new Map(entities.map((entity, position) => [entity.id, position]));
+  components.forEach(members => members.sort((a, b) => order.get(a) - order.get(b)));
+  components.sort((a, b) => order.get(a[0]) - order.get(b[0]));
+  const componentOf = new Map(components.flatMap((members, position) => members.map(id => [id, position])));
+  const children = components.map(() => new Set()), indegree = components.map(() => 0), ranks = components.map(() => 0);
+  for (const [source, targets] of outgoing) for (const target of targets) {
+    const first = componentOf.get(source), second = componentOf.get(target);
+    if (first !== second && !children[first].has(second)) { children[first].add(second); indegree[second] += 1; }
+  }
+  const ready = components.map((_, position) => position).filter(position => !indegree[position]);
+  while (ready.length) {
+    const first = ready.shift();
+    for (const second of children[first]) {
+      ranks[second] = Math.max(ranks[second], ranks[first] + 1);
+      indegree[second] -= 1;
+      if (!indegree[second]) { ready.push(second); ready.sort((a, b) => a - b); }
+    }
+  }
+  const connected = id => outgoing.get(id).size || incoming.get(id).size;
+  const maximum = Math.max(0, ...ranks);
+  const layers = new Map();
+  components.forEach((members, component) => {
+    const rank = members.some(connected) ? ranks[component] : maximum + 1;
+    if (!layers.has(rank)) layers.set(rank, []);
+    layers.get(rank).push({ component, members });
+  });
+  // Keep each cyclic component together and order independent branches by the
+  // preceding layer's positions. Stable ties preserve the supplied inventory.
+  const previous = new Map();
+  for (const rank of [...layers.keys()].sort((a, b) => a - b)) {
+    const layer = layers.get(rank);
+    const mean = block => {
+      const parents = block.members.flatMap(id => [...incoming.get(id)]).filter(id => previous.has(id));
+      return parents.length ? parents.reduce((sum, id) => sum + previous.get(id), 0) / parents.length : Infinity;
+    };
+    layer.sort((a, b) => mean(a) - mean(b) || a.component - b.component);
+    layer.flatMap(block => block.members).forEach((id, position) => previous.set(id, position));
+  }
+  return { layers, componentOf, outgoing, incoming };
+}
 function layout(graph) {
   const measure = textMetrics();
+  const relationNames = relationLabels(graph, measure);
   const entities = graph.nodes.map(node => {
-    const title = fitLabel(node.atom, measure, 224, 15, 600);
-    const memberships = node.signatures.length ? node.signatures : ['relation value'];
-    const lines = [];
-    for (const membership of memberships) {
-      const text = fitLabel(membership, measure, 224, 12, 400);
-      const previous = lines.at(-1);
-      if (previous && measure(`${previous} · ${text}`, 12, 400) <= 224) lines[lines.length - 1] += ` · ${text}`;
-      else lines.push(text);
-    }
-    // Full memberships remain accessible in the details and exact table.
-    if (lines.length > 3) lines.splice(2, lines.length - 2, '… more memberships');
-    return { id: node.id, title, lines,
-      width: Math.max(160, snap(Math.max(measure(title, 15, 600), ...lines.map(line => measure(line, 12, 400))) + 32)),
-      height: snap(42 + lines.length * 17) };
+    const title = atomLabel(node.atom, measure);
+    const primary = node.signatures[0] || 'relation value';
+    const suffix = node.signatures.length > 1 ? ` +${node.signatures.length - 1} types` : '';
+    const memberships = node.signatures.length ? node.signatures.join(' · ') : primary;
+    const line = measure(memberships, 11, 400) <= 144 ? memberships
+      : fitLabel(primary, measure, 144 - measure(suffix, 11, 400), 11, 400) + suffix;
+    return { id: node.id, title, lines: [line], width: 176, height: 64 };
   });
-  for (const tuple of graph.tuples) {
-    if (tuple.arity !== 2) {
-      const title = fitLabel(`${tuple.relation} #${tuple.tupleIndex + 1}`, measure, 224, 13, 500);
-      entities.push({ id: tuple.id, title, lines: [], width: Math.max(128, snap(measure(title) + 32)), height: 64 });
+  for (const tuple of graph.tuples) if (tuple.arity !== 2) {
+    const title = `${relationNames.get(tuple.relationIndex)} #${tuple.tupleIndex + 1}`;
+    entities.push({ id: tuple.id, title, lines: [],
+      width: Math.max(96, snap((tuple.arity - 1) * 18 + 24), snap(measure(title, 11, 600) + 32)), height: 64 });
+  }
+  const { layers, componentOf } = hierarchy(entities, graph);
+  const maxLayer = Math.max(1, ...[...layers.values()].map(layer => layer.reduce((sum, block) => sum + block.members.length, 0)));
+  const columns = Math.min(window.innerWidth < 640 ? 2 : 4, maxLayer), cellWidth = Math.max(176, ...entities.map(entity => entity.width)) + 96;
+  const width = Math.max(320, snap(columns * cellWidth + 64), snap(Math.max(0, ...[...relationNames.values()].map(name => measure(name, 11, 600))) + 160));
+  const positions = new Map(), entityById = new Map(entities.map(entity => [entity.id, entity]));
+  let y = 144;
+  for (const rank of [...layers.keys()].sort((a, b) => a - b)) {
+    const members = layers.get(rank).flatMap(block => block.members);
+    const rows = Math.ceil(members.length / columns);
+    for (let index = 0; index < members.length; index += 1) {
+      const row = Math.floor(index / columns), rowSize = Math.min(columns, members.length - row * columns);
+      const id = members[index];
+      positions.set(id, { ...entityById.get(id), rank, component: componentOf.get(id),
+        x: Math.round((width - (rowSize - 1) * cellWidth) / 2 / STEP) * STEP + index % columns * cellWidth,
+        y: y + row * 160 });
     }
+    y += rows * 160 + 16;
   }
-  // Related types occupy columns when there are a few balanced groups. This
-  // reduces criss-crossing in models such as Component → Workstation → Worker.
-  // Membership determines placement only; it never adds an inferred relation.
-  const groups = new Map();
-  for (const node of graph.nodes) {
-    const membership = [...node.signatures].sort((a, b) =>
-      graph.signatures.find(signature => signature.label === b).count
-      - graph.signatures.find(signature => signature.label === a).count)[0] ?? '';
-    if (!groups.has(membership)) groups.set(membership, { ids: [], flow: 0 });
-    groups.get(membership).ids.push(node.id);
-  }
-  const groupOf = new Map([...groups.values()].flatMap(group => group.ids.map(id => [id, group])));
-  for (const tuple of graph.tuples) {
-    if (tuple.arity === 2 && groupOf.get(tuple.nodeIds[0]) !== groupOf.get(tuple.nodeIds[1])) {
-      groupOf.get(tuple.nodeIds[0]).flow += 1;
-      groupOf.get(tuple.nodeIds[1]).flow -= 1;
-    }
-  }
-  const grouped = entities.length === graph.nodes.length && groups.size >= 2 && groups.size <= 4
-    && Math.max(...[...groups.values()].map(group => group.ids.length)) <= Math.ceil(Math.sqrt(entities.length)) + 1;
-  const columns = grouped ? groups.size : Math.min(4, Math.max(1, Math.ceil(Math.sqrt(entities.length))));
-  const slots = new Map();
-  if (grouped) [...groups.values()].sort((a, b) => b.flow - a.flow).forEach((group, column) =>
-    group.ids.forEach((id, row) => slots.set(id, { column, row })));
-  else entities.forEach((entity, index) => slots.set(entity.id, { column: index % columns, row: Math.floor(index / columns) }));
-  const cellWidth = Math.max(192, ...entities.map(entity => entity.width)) + 160;
-  const cellHeight = Math.max(64, ...entities.map(entity => entity.height)) + 160;
-  const width = Math.max(760, snap(columns * cellWidth + 64));
-  let height = Math.max(352, snap((Math.max(...[...slots.values()].map(slot => slot.row)) + 1) * cellHeight + 64));
-  const positions = new Map(entities.map(entity => [entity.id, { ...entity,
-    x: Math.round((width - (columns - 1) * cellWidth) / 2 / STEP) * STEP + slots.get(entity.id).column * cellWidth,
-    y: 128 + slots.get(entity.id).row * cellHeight }]));
+  let height = Math.max(288, snap(Math.max(...[...positions.values()].map(point => point.y + point.height / 2)) + 64));
+  const componentTop = new Map();
+  for (const point of positions.values()) componentTop.set(point.component,
+    Math.min(componentTop.get(point.component) ?? Infinity, point.y - point.height / 2));
   const links = graph.tuples.flatMap(tuple => tuple.arity === 2
-    ? [{ id: tuple.id, tuple, source: tuple.nodeIds[0], target: tuple.nodeIds[1], text: tuple.relation }]
+    ? [{ id: tuple.id, tuple, source: tuple.nodeIds[0], target: tuple.nodeIds[1], text: relationNames.get(tuple.relationIndex) }]
     : tuple.nodeIds.map((id, index) => ({ id: `${tuple.id}-${index}`, tuple,
       source: tuple.id, target: id, column: index + 1, text: String(index + 1) })));
   const obstacles = [...positions.values()];
-  // Place wide labels first, using deterministic nearest-free-space search.
-  // A label never gets silently stacked over another label when a graph is dense.
-  for (const link of [...links].sort((a, b) => measure(b.text) - measure(a.text))) {
+  // Only binary arrows need separate badges. Ordered spokes put their column
+  // numbers inside the hub, avoiding a maze of repeated names and labels.
+  for (const link of links.filter(item => item.column === undefined)) {
     const source = positions.get(link.source), target = positions.get(link.target);
-    const text = fitLabel(link.text, measure, 240, 13, 500);
-    const box = { id: `label-${link.id}`, text, width: Math.max(32, snap(measure(text) + 24)), height: 32 };
-    const ideal = source === target ? { x: source.x, y: source.y - source.height / 2 - 72 }
+    const box = { id: `label-${link.id}`, text: link.text, width: Math.max(32, snap(measure(link.text, 11, 600) + 20)), height: 24 };
+    const ideal = source.component === target.component
+      ? { x: (source.x + target.x) / 2, y: componentTop.get(source.component) - 48 }
       : { x: (source.x + target.x) / 2, y: (source.y + target.y) / 2 };
     let best;
     while (!best) {
-      for (let y = 48; y <= height - 48; y += STEP * 2) {
-        for (let x = snap(box.width / 2 + 32); x <= width - box.width / 2 - 32; x += STEP * 2) {
-          const candidate = { ...box, x, y };
-          const score = (x - ideal.x) ** 2 + (y - ideal.y) ** 2;
-          if ((!best || score < best.score) && !obstacles.some(other => intersects(candidate, other, 24))) {
-            best = { ...candidate, score };
-          }
+      for (let by = 48; by <= height - 48; by += STEP * 2) {
+        for (let bx = snap(box.width / 2 + 32); bx <= width - box.width / 2 - 32; bx += STEP * 2) {
+          const candidate = { ...box, x: bx, y: by };
+          const score = (bx - ideal.x) ** 2 + (by - ideal.y) ** 2;
+          if ((!best || score < best.score) && !obstacles.some(other => intersects(candidate, other, 32))) best = { ...candidate, score };
         }
       }
-      if (!best) height += 128;
+      if (!best) height += 64;
     }
-    link.label = best;
-    obstacles.push(best);
+    link.label = best; obstacles.push(best);
   }
-  const router = routingGrid(width, height, obstacles);
-  const usedPorts = new Map();
-  function ports(box, toward, key) {
+  const router = routingGrid(width, height, obstacles), usedPorts = new Map();
+  function ports(box, toward, key, preferred) {
     const candidates = [];
-    for (let x = box.x - box.width / 2 + STEP; x < box.x + box.width / 2; x += STEP) {
-      candidates.push({ x, y: box.y - box.height / 2 - STEP, bx: x, by: box.y - box.height / 2 - 3, side: 'top' });
-      candidates.push({ x, y: box.y + box.height / 2 + STEP, bx: x, by: box.y + box.height / 2 + 3, side: 'bottom' });
+    for (let px = box.x - box.width / 2 + STEP; px < box.x + box.width / 2; px += STEP) {
+      candidates.push({ x: px, y: Math.floor((box.y - box.height / 2 - STEP) / STEP) * STEP, bx: px, by: box.y - box.height / 2 - 3, side: 'top' });
+      candidates.push({ x: px, y: Math.ceil((box.y + box.height / 2 + STEP) / STEP) * STEP, bx: px, by: box.y + box.height / 2 + 3, side: 'bottom' });
     }
-    for (let y = box.y - box.height / 2 + STEP; y < box.y + box.height / 2; y += STEP) {
-      candidates.push({ x: box.x - box.width / 2 - STEP, y, bx: box.x - box.width / 2 - 3, by: y, side: 'left' });
-      candidates.push({ x: box.x + box.width / 2 + STEP, y, bx: box.x + box.width / 2 + 3, by: y, side: 'right' });
+    for (let py = box.y - box.height / 2 + STEP; py < box.y + box.height / 2; py += STEP) {
+      candidates.push({ x: Math.floor((box.x - box.width / 2 - STEP) / STEP) * STEP, y: py, bx: box.x - box.width / 2 - 3, by: py, side: 'left' });
+      candidates.push({ x: Math.ceil((box.x + box.width / 2 + STEP) / STEP) * STEP, y: py, bx: box.x + box.width / 2 + 3, by: py, side: 'right' });
     }
     return candidates.filter(point => !router.blocked(point)).sort((a, b) => {
-      const cost = p => Math.abs(p.x - toward.x) + Math.abs(p.y - toward.y)
-        + (usedPorts.get(`${key}:${p.x},${p.y}`) || 0) * 1000
-        + Math.abs(p.x - box.x) * 0.01 + Math.abs(p.y - box.y) * 0.01;
+      const cost = point => Math.abs(point.x - toward.x) + Math.abs(point.y - toward.y)
+        + (usedPorts.get(`${key}:${point.x},${point.y}`) || 0) * 160
+        + (preferred && point.side !== preferred ? 120 : 0)
+        + Math.abs(point.x - box.x) * 0.05 + Math.abs(point.y - box.y) * 0.05;
       return cost(a) - cost(b);
     });
   }
@@ -275,18 +366,33 @@ function layout(graph) {
   };
   for (const link of links) {
     const source = positions.get(link.source), target = positions.get(link.target), label = link.label;
-    const start = ports(source, label, source.id)[0];
+    const sourceSide = target.y > source.y ? 'bottom' : target.y < source.y ? 'top' : null;
+    const spokeX = link.column === 1 ? source.x
+      : source.x + ((link.column - 2) - Math.floor((link.tuple.arity - 2) / 2)) * STEP;
+    const spokeTop = link.column === 1;
+    const start = link.column === undefined ? ports(source, label || target, source.id, sourceSide)[0]
+      : { x: spokeX, y: source.y + (spokeTop ? -source.height / 2 - STEP : source.height / 2 + STEP),
+        bx: spokeX, by: source.y + (spokeTop ? -source.height / 2 - 3 : source.height / 2 + 3) };
     occupy(source, start);
-    const end = ports(target, label, target.id)[0];
+    const end = ports(target, label || source, target.id, sourceSide === 'bottom' ? 'top' : sourceSide === 'top' ? 'bottom' : null)[0];
     occupy(target, end);
-    const entry = ports(label, source, label.id)[0];
-    occupy(label, entry);
-    const exit = ports(label, target, label.id)[0];
-    const first = router.route(start, entry), last = router.route(exit, end);
-    const points = [{ x: start.bx, y: start.by }, ...first,
-      { x: entry.bx, y: entry.by }, { x: label.x, y: label.y },
-      { x: exit.bx, y: exit.by }, ...last, { x: end.bx, y: end.by }];
-    link.geometry = { path: points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' '), label };
+    let points;
+    if (label) {
+      const entry = ports(label, source, label.id)[0]; occupy(label, entry);
+      const exit = ports(label, target, label.id)[0];
+      points = [{ x: start.bx, y: start.by }, ...router.route(start, entry),
+        { x: entry.bx, y: entry.by }, { x: label.x, y: label.y },
+        { x: exit.bx, y: exit.by }, ...router.route(exit, end), { x: end.bx, y: end.by }];
+    } else points = [{ x: start.bx, y: start.by }, ...router.route(start, end), { x: end.bx, y: end.by }];
+    // Remove collinear grid points: a connection reads as a few clear bends,
+    // rather than hundreds of tiny line segments, without changing its route.
+    const compact = [];
+    for (const point of points) {
+      const last = compact.at(-1), previous = compact.at(-2);
+      if (last && previous && ((previous.x === last.x && last.x === point.x) || (previous.y === last.y && last.y === point.y))) compact.pop();
+      if (!compact.length || compact.at(-1).x !== point.x || compact.at(-1).y !== point.y) compact.push(point);
+    }
+    link.geometry = { path: compact.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' '), label };
   }
   return { positions, width, height, links };
 }
@@ -345,8 +451,8 @@ function routingGrid(width, height, obstacles) {
           x ? id - 1 : -1, y ? id - columns : -1];
         for (const next of neighbors) {
           if (next < 0 || blocked[next]) continue;
-          const turn = previous[id] >= 0 && id - previous[id] !== next - id ? 0.4 : 0;
-          const candidate = cost + 1 + turn + congestion[next] * 8;
+          const turn = previous[id] >= 0 && id - previous[id] !== next - id ? 3 : 0;
+          const candidate = cost + 1 + turn + Math.min(3, congestion[next]) * 2;
           if (candidate >= costs[next]) continue;
           costs[next] = candidate; previous[next] = id; push(next, candidate);
         }
@@ -379,7 +485,7 @@ function draw(graph, prefix, details) {
   canvas.append(svg('desc', { id: `${prefix}-description` },
     `${graph.nodes.length} atoms or values and ${graph.tuples.length} relation tuples shown. `
     + 'Boxes are atoms or values. Arrows are two-column tuples. Labeled tuple boxes connect numbered columns for other arities. '
-    + 'Focus or select an atom or relation to read its exact details below. Position and distance carry no meaning.'));
+    + 'Read the hierarchy from top to bottom. Cycles stay grouped together; arrows retain their original directions. Focus or select an object or relation to read its exact details below. Layout does not add relationships.'));
   const defs = svg('defs');
   canvas.append(defs);
   const relationColors = new Map();
@@ -399,7 +505,7 @@ function draw(graph, prefix, details) {
       'data-arity': tuple.arity, 'data-relation-index': tuple.relationIndex, 'data-tuple-index': tuple.tupleIndex });
     const description = tupleDescription(tuple);
     group.append(svg('title', {}, description));
-    activate(group, description, details);
+    activate(group, description, details, { nodes: tuple.atoms, tuples: [tuple.id] });
     for (const link of links.filter(item => item.tuple === tuple)) {
       const attributes = link.column === undefined
         ? { 'data-source': tuple.atoms[0], 'data-target': tuple.atoms[1] }
@@ -408,23 +514,31 @@ function draw(graph, prefix, details) {
     }
     // Labels sit in reserved obstacle rectangles; they are not placed using an
     // edge midpoint after routing. Draw them above their own connection stroke.
-    for (const link of links.filter(item => item.tuple === tuple)) {
+    for (const link of links.filter(item => item.tuple === tuple && item.label)) {
       const label = link.label;
       group.append(svg('rect', { class: 'instance-graph-label-background',
         x: label.x - label.width / 2, y: label.y - label.height / 2,
-        width: label.width, height: label.height, rx: 6, fill: '#ffffff', stroke: '#dce5ee' }));
+        width: label.width, height: label.height, rx: 5, fill: '#ffffff', stroke: '#dce5ee' }));
       group.append(svg('text', { class: link.column === undefined ? 'instance-graph-edge-label' : 'instance-graph-column-label',
         x: label.x, y: label.y + 4, 'text-anchor': 'middle', fill: color,
         ...(link.column === undefined ? {} : { 'data-column': link.column }) }, label.text));
     }
     if (tuple.arity !== 2) {
       const junction = positions.get(tuple.id);
-      const box = svg('g', { class: 'instance-graph-junction' });
+      const box = svg('g', { class: 'instance-graph-junction', 'data-layout-rank': junction.rank, 'data-layout-component': junction.component });
       box.append(svg('rect', { x: junction.x - junction.width / 2, y: junction.y - junction.height / 2,
         width: junction.width, height: junction.height, rx: 5, fill: '#ffffff', stroke: color,
-        'stroke-width': 2, 'stroke-dasharray': '5 3' }));
-      box.append(svg('text', { class: 'instance-graph-junction-label', x: junction.x, y: junction.y + 5,
-        'text-anchor': 'middle', fill: color, 'font-size': 13 }, junction.title));
+        'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
+      box.append(svg('text', { class: 'instance-graph-junction-label', x: junction.x, y: junction.y + 4,
+        'text-anchor': 'middle', fill: color, 'font-size': 11 }, junction.title));
+      tuple.atoms.forEach((_, index) => {
+        const column = index + 1;
+        const x = column === 1 ? junction.x
+          : junction.x + (index - 1 - Math.floor((tuple.arity - 2) / 2)) * STEP;
+        box.append(svg('text', { class: 'instance-graph-column-label', x,
+          y: junction.y + (column === 1 ? -18 : 22), 'data-column': column,
+          'text-anchor': 'middle', fill: color }, String(column)));
+      });
       group.append(box);
     }
     canvas.append(group);
@@ -433,26 +547,28 @@ function draw(graph, prefix, details) {
     const point = positions.get(node.id);
     const firstSignature = graph.signatures.find(signature => signature.label === node.signatures[0]);
     const color = firstSignature ? COLORS[firstSignature.index % COLORS.length] : '#52616b';
-    const group = svg('g', { class: `instance-graph-node instance-graph-node-${node.kind}`, 'data-atom': node.atom });
+    const group = svg('g', { class: `instance-graph-node instance-graph-node-${node.kind}`, 'data-atom': node.atom, 'data-layout-rank': point.rank, 'data-layout-component': point.component });
     const membership = node.signatures.length ? `Member of ${node.signatures.join(', ')}.` : 'Value appearing in a relation; no named signature membership is listed.';
     const description = `${node.atom}. ${membership}`;
     group.append(svg('title', {}, description));
-    activate(group, description, details);
+    const adjacent = graph.tuples.filter(tuple => tuple.atoms.includes(node.atom));
+    activate(group, description, details, { nodes: [node.atom, ...adjacent.flatMap(tuple => tuple.atoms)],
+      tuples: adjacent.map(tuple => tuple.id) });
     group.append(svg('rect', { x: point.x - point.width / 2, y: point.y - point.height / 2,
       width: point.width, height: point.height, rx: node.kind === 'value' ? 5 : 10,
       fill: '#ffffff', stroke: color, 'stroke-width': 1.5 }));
-    const titleY = point.y - (point.lines.length * 17) / 2 + 5;
+    const titleY = point.y - 4;
     group.append(svg('text', { class: 'instance-graph-node-label', x: point.x, y: titleY,
       'text-anchor': 'middle' }, point.title));
     point.lines.forEach((line, index) => group.append(svg('text', {
-      class: 'instance-graph-node-membership', x: point.x, y: titleY + (index + 1) * 17,
+      class: 'instance-graph-node-membership', x: point.x, y: titleY + (index + 1) * 18,
       'text-anchor': 'middle', fill: color }, line)));
     canvas.append(group);
   }
   return canvas;
 }
 
-/** Render one state. Exact tables remain the companion source for large instances. */
+/** Render one state. Exact tables retain every supplied name and tuple. */
 export function renderInstanceGraph(stateData) {
   listenForResize();
   const prefix = `instance-graph-${++renderSequence}`;
@@ -460,7 +576,7 @@ export function renderInstanceGraph(stateData) {
   root.setAttribute('aria-label', 'Instance visualization');
   const intro = html('div', 'instance-graph-intro');
   intro.append(html('h4', null, `Instance diagram · State ${(stateData.index ?? 0) + 1}`), html('p', null,
-    'Explore one possible world. Select an object or connection to read its exact details.'));
+    'Follow labeled arrows through the objects. Select an object or connection to explore its exact details.'));
   root.append(intro);
   const toolbar = html('div', 'instance-graph-toolbar');
   const label = html('label', null, 'Show relations: ');
@@ -471,53 +587,93 @@ export function renderInstanceGraph(stateData) {
   select.firstElementChild.value = 'all';
   stateData.relations.forEach((relation, index) => {
     const option = html('option', null, `${relation.label} (${relation.tuples.length} tuples)`);
-    option.value = String(index);
-    select.append(option);
+    option.value = String(index); select.append(option);
   });
   toolbar.append(label, select);
   root.append(toolbar);
-  const picture = html('div', 'instance-graph-picture');
-  root.append(picture);
+  const controls = html('div', 'instance-graph-controls');
+  controls.setAttribute('aria-label', 'Diagram controls');
+  const fit = html('button', 'instance-graph-fit', 'Fit width');
+  const normal = html('button', 'instance-graph-size-normal', '100%');
+  const smaller = html('button', 'instance-graph-zoom-out', '−');
+  const larger = html('button', 'instance-graph-zoom-in', '+');
+  const zoomValue = html('output', 'instance-graph-zoom-value', '100%');
+  const reset = html('button', 'instance-graph-reset-context', 'Show all connections');
+  smaller.setAttribute('aria-label', 'Zoom out'); larger.setAttribute('aria-label', 'Zoom in');
+  for (const button of [fit, normal, smaller, larger, reset]) button.type = 'button';
+  controls.append(fit, normal, smaller, zoomValue, larger, reset);
+  root.append(controls);
+  const picture = html('div', 'instance-graph-picture'); root.append(picture);
+  const relationKey = html('ul', 'instance-graph-relation-key');
+  relationKey.setAttribute('aria-label', 'Relation names and tuple counts');
+  stateData.relations.forEach((relation, index) => {
+    const item = html('li'); item.setAttribute('data-relation-index', String(index));
+    const swatch = html('span', 'instance-graph-relation-swatch');
+    swatch.style.backgroundColor = COLORS[index % COLORS.length]; swatch.setAttribute('aria-hidden', 'true');
+    item.append(swatch, html('span', null, `${relation.label} · ${relation.tuples.length} tuples`));
+    relationKey.append(item);
+  });
+  if (stateData.relations.length) root.append(relationKey);
+  const help = html('details', 'instance-graph-help');
+  help.append(html('summary', null, 'How to read this diagram'));
   const legend = html('ul', 'instance-graph-legend');
-  legend.append(html('li', null, 'Solid boxes: individual objects (atoms) or values; type memberships appear below their names.'),
-    html('li', null, 'Labeled arrows: a two-column relation, from column 1 to column 2. A loop returns to the same object.'),
-    html('li', null, 'Dashed boxes: one tuple with numbered column positions, not additional objects.'));
-  const layoutNote = html('p', 'instance-graph-layout-note',
-    'Positions and distances have no meaning. Labels identify every connection; colors only help distinguish them. Full names and tuples are in the exact data below.');
-  const details = html('p', 'instance-graph-details', 'Select an atom or relation to read its details here.');
-  details.setAttribute('aria-live', 'polite');
-  details.setAttribute('aria-atomic', 'true');
-  root.append(legend, layoutNote, details);
+  legend.append(html('li', null, 'Solid boxes are individual objects or values. Their type appears below the name; select a box for every membership.'),
+    html('li', null, 'A labeled arrow is a two-column tuple: the first object points to the second. A loop returns to the same object.'),
+    html('li', null, 'A dashed box is one tuple with more or fewer than two columns. Its numbered connections preserve the column order, including repeated objects.'));
+  help.append(legend, html('p', 'instance-graph-layout-note',
+    'The layout follows connections from top to bottom. Cycles stay grouped together and disconnected objects stay visible. Position does not add a relationship. Full names and all tuples remain in the exact data below.'));
+  root.append(help);
+  const initialDetails = 'Select an object or connection to read its exact details here.';
+  const details = html('p', 'instance-graph-details', initialDetails);
+  details.setAttribute('aria-live', 'polite'); details.setAttribute('aria-atomic', 'true'); root.append(details);
+  let scale = 1, currentScroll, currentCanvas;
+  function setScale(next) {
+    scale = Math.max(0.25, Math.min(1.5, next));
+    zoomValue.value = `${Math.round(scale * 100)}%`; zoomValue.textContent = zoomValue.value;
+    smaller.disabled = scale <= 0.25; larger.disabled = scale >= 1.5;
+    if (currentCanvas) {
+      const bounds = currentCanvas.viewBox.baseVal;
+      currentCanvas.style.width = `${bounds.width * scale}px`;
+      currentCanvas.style.height = `${bounds.height * scale}px`;
+      requestAnimationFrame(() => centerDiagram(currentScroll));
+    }
+  }
+  fit.addEventListener('click', () => {
+    if (currentScroll?.clientWidth && currentCanvas) setScale((currentScroll.clientWidth - 8) / currentCanvas.viewBox.baseVal.width);
+  });
+  normal.addEventListener('click', () => setScale(1));
+  smaller.addEventListener('click', () => setScale(scale - 0.25));
+  larger.addEventListener('click', () => setScale(scale + 0.25));
+  reset.addEventListener('click', () => {
+    for (const item of currentCanvas?.querySelectorAll('.instance-graph-node, .instance-graph-tuple') || []) {
+      item.classList.remove('instance-graph-context-related', 'instance-graph-context-muted');
+      item.setAttribute('aria-pressed', 'false');
+    }
+    details.textContent = initialDetails;
+  });
   function refresh() {
     const graph = buildInstanceGraph(stateData, { relationIndex: select.value === 'all' ? null : Number(select.value) });
-    const content = [];
+    const content = []; currentScroll = undefined; currentCanvas = undefined;
     if (graph.limited) content.push(html('p', 'instance-graph-limit',
       `Limited picture: showing ${graph.counts.shownNodes} of ${graph.counts.nodes} atoms/values and `
       + `${graph.counts.shownTuples} of ${graph.counts.tuples} tuples for the selected relations. The exact data tables retain all supplied data.`));
-    if (!graph.nodes.length) {
-      content.push(html('p', 'instance-graph-empty', 'This state has no atoms or relation values to draw.'));
-    } else {
+    if (!graph.nodes.length) content.push(html('p', 'instance-graph-empty', 'This state has no atoms or relation values to draw.'));
+    else {
       if (!graph.tuples.length) content.push(html('p', 'instance-graph-empty',
         'There are no tuples in the selected relations. The boxes show the atoms and values in this state.'));
-      const scroll = html('div', 'instance-graph-scroll');
-      scroll.setAttribute('tabindex', '0');
-      scroll.setAttribute('role', 'region');
-      scroll.setAttribute('aria-label', 'Instance diagram; scroll to explore when needed');
-      scroll.append(draw(graph, prefix, details));
-      content.push(html('p', 'instance-graph-scroll-hint', 'Scroll to explore the diagram.'));
-      content.push(scroll);
-      // renderInstanceGraph returns a detached element. Wait for its caller to
-      // attach it before measuring, and ignore an already replaced diagram.
-      // Centering brings the first atom of a small ring (or a lone atom) into
-      // view on narrow screens without shrinking its labels.
-      requestAnimationFrame(() => centerDiagram(scroll));
+      currentScroll = html('div', 'instance-graph-scroll');
+      currentScroll.setAttribute('tabindex', '0'); currentScroll.setAttribute('role', 'region');
+      currentScroll.setAttribute('aria-label', 'Instance diagram; scroll to explore when needed');
+      currentCanvas = draw(graph, prefix, details); currentScroll.append(currentCanvas);
+      content.push(html('p', 'instance-graph-scroll-hint', 'Scroll to follow the hierarchy, or use Fit width for an overview.'), currentScroll);
     }
     const emptySignatures = graph.signatures.filter(signature => !signature.count).map(signature => signature.label);
     if (emptySignatures.length) content.push(html('p', 'instance-graph-empty', `Signatures with no atoms: ${emptySignatures.join(', ')}.`));
-    picture.replaceChildren(...content);
-    details.textContent = 'Select an atom or relation to read its details here.';
+    picture.replaceChildren(...content); details.textContent = initialDetails;
+    for (const item of relationKey.children) item.classList.toggle('instance-graph-relation-selected',
+      select.value !== 'all' && item.getAttribute('data-relation-index') === select.value);
+    for (const button of [fit, normal, smaller, larger, reset]) button.disabled = !currentCanvas;
+    if (currentCanvas) setScale(scale);
   }
-  select.addEventListener('change', refresh);
-  refresh();
-  return root;
+  select.addEventListener('change', refresh); refresh(); return root;
 }

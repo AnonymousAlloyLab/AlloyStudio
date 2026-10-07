@@ -93,6 +93,7 @@ if ($Action -eq 'Install') {
         (Join-Path $BackendRoot 'exercise_store.py'), (Join-Path $BackendRoot 'exercise_sql.py'),
         (Join-Path $BackendRoot 'admin_auth.py'), (Join-Path $BackendRoot 'admin_upload.py'),
         (Join-Path $BackendRoot 'admin_luna.py'), (Join-Path $BackendRoot 'admin_service.py'),
+        (Join-Path $BackendRoot 'candidate_store.py'), (Join-Path $BackendRoot 'candidate_review.py'),
         (Join-Path $BackendRoot 'traffic_identity.py'), (Join-Path $BackendRoot 'portal_routes.py'),
         (Join-Path $BackendRoot 'execution_profile.py'),
         (Join-Path $BackendRoot 'web\admin\index.html'), (Join-Path $BackendRoot 'web\admin\app.js'),

@@ -41,6 +41,10 @@ IMPORT_REQUIRED = frozenset(('id', 'title', 'group', 'predicate', 'description',
                              'environmentBefore', 'environmentAfter', 'predicateHeader',
                              'starter', 'oracleSolutions'))
 IMPORT_OPTIONAL = frozenset(('correctSolutions', 'equivalenceScope'))
+PUBLIC_VERSION_FIELDS = ('id', 'title', 'group', 'predicate', 'description',
+                         'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter')
+MAX_APPROVALS_PER_EXERCISE = 100
+MAX_APPROVALS = 10000
 
 
 class StoreError(ValueError):
@@ -53,6 +57,41 @@ def encoded(value):
 
 def sha(value):
     return hashlib.sha256(value if isinstance(value, bytes) else value.encode('utf-8')).hexdigest()
+
+
+def content_version(record):
+    """Public content identity; never hash private solution material into it."""
+    return sha(encoded({key: record[key] for key in PUBLIC_VERSION_FIELDS}))
+
+
+def exercise_version(record):
+    """Stable private authority identity, independent of approved pool additions."""
+    return sha(encoded(dict(public={key: record[key] for key in PUBLIC_VERSION_FIELDS},
+                            oracleBody=record['oracleBody'], source=record['source'])))
+
+
+def _page(offset, limit, maximum):
+    if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= maximum:
+        raise StoreError('Invalid library page.')
+
+
+def library_list(snapshot, offset=0, limit=50):
+    _page(offset, limit, 50)
+    records = list(snapshot.exercises.values())
+    return dict(items=[dict(id=r['id'], predicate=r['predicate'], group=r['group'], title=r['title'],
+                            exerciseVersion=exercise_version(r), contentVersion=content_version(r))
+                       for r in records[offset:offset + limit]], total=len(records), offset=offset, limit=limit)
+
+
+def library_detail(snapshot, identifier, expected_version=None):
+    record = snapshot.exercises.get(identifier) if type(identifier) is str else None
+    if record is None:
+        raise StoreError('Question not found.')
+    if expected_version is not None and expected_version != exercise_version(record):
+        raise StoreError('This question changed. Refresh it before continuing.')
+    return dict(id=record['id'], predicate=record['predicate'], group=record['group'], title=record['title'],
+                question=record['description'], exerciseVersion=exercise_version(record),
+                contentVersion=content_version(record))
 
 
 def unique_object(pairs):
@@ -186,6 +225,10 @@ class Snapshot:
     exercises: dict
     correct_pools: dict
     admin_uploads: list = field(default_factory=list)
+    raw_exercises: dict = field(default_factory=dict)
+    pool_tokens: dict = field(default_factory=dict)
+    equivalence_scopes: dict = field(default_factory=dict)
+    exercise_ordinals: dict = field(default_factory=dict)
 
     @property
     def exercise_count(self):
@@ -212,8 +255,12 @@ def _snapshot(connection):
     auxiliary = _rows(connection, 'auxiliary')
     ordinals = {'sourceInventory': 0, 'excludedSources': 0, 'adminUpload': 0}
     admin_uploads = []
+    extensions = []
     for row in auxiliary:
         kind = row['kind']
+        if kind in ('adminRemoved', 'studentCandidate') or kind.startswith('adminApproval:'):
+            extensions.append(row)
+            continue
         if kind not in ordinals or row['ordinal'] != ordinals[kind]:
             raise StoreError('Invalid auxiliary ordering.')
         item = parse_json(row['payload'])
@@ -280,9 +327,17 @@ def _snapshot(connection):
         raise StoreError('Orphaned solutions.')
     verify_document(dict(catalogue, exercises=legacy_records), dict(pools, pools=legacy_pools))
     _validate_upload_archives(admin_uploads, authored_documents)
-    return Snapshot(catalogue, pools, {r['id']:r for r in catalogue['exercises']},
-                    {p['exerciseId']:tuple(c['body'] for c in p['candidates']) for p in pools['pools']},
-                    admin_uploads)
+    result = Snapshot(catalogue, pools, {r['id']:r for r in catalogue['exercises']},
+                      {p['exerciseId']:tuple(c['body'] for c in p['candidates']) for p in pools['pools']},
+                      admin_uploads)
+    result.raw_exercises = dict(result.exercises)
+    result.pool_tokens = {p['exerciseId']: frozenset(c['tokenSha256'] for c in p['candidates'])
+                          for p in pools['pools']}
+    result.equivalence_scopes = {identifier: certificate['result']['scope']
+                                 for identifier, (_, _, certificate) in authored_documents.items()}
+    result.exercise_ordinals = {row['id']: row['ordinal'] for row in records}
+    _apply_extensions(result, extensions)
+    return result
 
 
 def load_store(root, database_path=None):
@@ -298,6 +353,162 @@ def load_store(root, database_path=None):
 
 def _insert(connection, table, values):
     sql.execute(connection, 'insert_' + table, tuple(values[field] for field in sql.FIELDS[table]))
+
+
+def _auxiliary_kind(connection, kind):
+    return [dict(row) for row in sql.execute(connection, 'select_auxiliary_kind', (kind,))]
+
+
+def _size_guard(connection):
+    if (connection.execute('PRAGMA page_count').fetchone()[0]
+            * connection.execute('PRAGMA page_size').fetchone()[0] > MAX_DATABASE):
+        raise StoreError('Exercise database size limit reached.')
+
+
+def _approval_document(record, candidate_body, scope):
+    return {**{key: record[key] for key in IMPORT_REQUIRED if key != 'oracleSolutions'},
+            'starter': candidate_body, 'oracleSolutions': [record['oracleBody']],
+            'correctSolutions': [candidate_body], 'equivalenceScope': scope}
+
+
+def validate_approval(record, candidate_body, certificate, *, minimum_scope=5):
+    """Pure validation of a backend-produced bounded-equivalence certificate."""
+    body(candidate_body)
+    keys = {'kind','version','result','environmentSha256','bodySha256','starterSha256',
+            'engineSha256','dependencySha256'}
+    if type(certificate) is not dict or set(certificate) != keys:
+        raise StoreError('Missing candidate equivalence provenance.')
+    result = certificate['result']
+    scope = result.get('scope') if type(result) is dict else None
+    expected = dict(scope=scope, bitwidth=5, maxSequence=scope, minTrace=1, maxTrace=10,
+                    solver='SAT4J', oracleCount=1, correctCount=1, evaluatedCandidates=2,
+                    moduleFacts=True, factsSatisfiable=True)
+    if (certificate['kind'] != 'alloy-bounded-equivalence' or type(certificate['version']) is not int
+            or certificate['version'] != 1 or type(scope) is not int
+            or not max(5, minimum_scope) <= scope <= 8 or result != expected
+            or any(type(result[k]) is not type(v) for k, v in expected.items())
+            or certificate['environmentSha256'] != environment_sha256(record)
+            or certificate['bodySha256'] != [sha(record['oracleBody']), sha(candidate_body)]
+            or certificate['starterSha256'] != sha(candidate_body)
+            or type(certificate['engineSha256']) is not str
+            or not re.fullmatch('[a-f0-9]{64}', certificate['engineSha256'])):
+        raise StoreError('Candidate equivalence provenance changed.')
+    dependencies = certificate['dependencySha256']
+    if (type(dependencies) is not dict or set(dependencies) != set(JAR_FILES)
+            or any(type(value) is not str or not re.fullmatch('[a-f0-9]{64}', value)
+                   for value in dependencies.values())):
+        raise StoreError('Missing candidate engine provenance.')
+    return certificate
+
+
+def prepare_approval(root, record, candidate_body, *, java='java', timeout=60):
+    snapshot = load_store(root)
+    current = snapshot.exercises.get(record['id'])
+    if current is None or exercise_version(current) != exercise_version(record):
+        raise StoreError('This question changed. Refresh it before continuing.')
+    scope = max(5, snapshot.equivalence_scopes.get(record['id'], 5))
+    certificate = validate_import(root, _approval_document(record, candidate_body, scope), java=java, timeout=timeout)
+    validate_approval(record, candidate_body, certificate, minimum_scope=scope)
+    return certificate
+
+
+def _apply_extensions(snapshot, rows):
+    removed = set()
+    approvals = {}
+    cache_rows = []
+    for row in rows:
+        if type(row['ordinal']) is not int or row['ordinal'] < 0:
+            raise StoreError('Invalid administrative record order.')
+        kind = row['kind']
+        if kind == 'studentCandidate':
+            cache_rows.append(row)
+            continue
+        value = parse_json(row['payload'])
+        if type(value) is not dict:
+            raise StoreError('Invalid administrative record.')
+        identifier = value.get('exerciseId')
+        record = snapshot.raw_exercises.get(identifier) if type(identifier) is str else None
+        if record is None or value.get('exerciseVersion') != exercise_version(record):
+            # Prose editing intentionally invalidates old candidate work. Approved
+            # solution witnesses bind immutable context separately and remain valid.
+            if not (kind.startswith('adminApproval:') and record is not None):
+                raise StoreError('Administrative record context changed.')
+        if kind == 'adminRemoved':
+            if (set(value) != {'exerciseId','exerciseVersion','removedAt'} or row['original_source']
+                    or type(value['removedAt']) is not int or value['removedAt'] < 0
+                    or identifier in removed or row['ordinal'] != snapshot.exercise_ordinals[identifier]):
+                raise StoreError('Invalid removed question witness.')
+            removed.add(identifier)
+        else:
+            if (kind != 'adminApproval:' + identifier or set(value) !=
+                    {'exerciseId','exerciseVersion','candidateId','candidateHash','tokenSha256','certificate','approvedAt'}
+                    or type(value['exerciseVersion']) is not str
+                    or not re.fullmatch('[a-f0-9]{64}', value['exerciseVersion'])
+                    or type(value['candidateId']) is not str or not re.fullmatch('[A-Za-z0-9_-]{43}', value['candidateId'])
+                    or type(value['approvedAt']) is not int or value['approvedAt'] < 0
+                    or sha(row['original_source']) != value['candidateHash']
+                    or body_token_sha256(row['original_source']) != value['tokenSha256']):
+                raise StoreError('Invalid approved candidate witness.')
+            validate_approval(record, row['original_source'], value['certificate'],
+                              minimum_scope=snapshot.equivalence_scopes.get(identifier, 5))
+            extras = approvals.setdefault(identifier, [])
+            if row['ordinal'] != len(extras):
+                raise StoreError('Invalid approved predicate order.')
+            if value['tokenSha256'] in snapshot.pool_tokens[identifier] or any(x[0] == value['tokenSha256'] for x in extras):
+                raise StoreError('Duplicate approved predicate.')
+            extras.append((value['tokenSha256'], row['original_source']))
+    if sum(map(len, approvals.values())) > MAX_APPROVALS or any(len(values) > MAX_APPROVALS_PER_EXERCISE
+                                                               for values in approvals.values()):
+        raise StoreError('Approved predicate limit exceeded.')
+    for identifier, extras in approvals.items():
+        record = snapshot.raw_exercises[identifier]
+        references = list(snapshot.correct_pools[identifier]) + [item[1] for item in extras]
+        validate_record_fields(record, references, authored=identifier in snapshot.equivalence_scopes)
+        snapshot.correct_pools[identifier] = tuple(references)
+        snapshot.pool_tokens[identifier] = snapshot.pool_tokens[identifier] | frozenset(item[0] for item in extras)
+    from candidate_store import validate_rows
+    cached = validate_rows(cache_rows)
+    if any(record['exerciseId'] not in snapshot.raw_exercises for record in cached):
+        raise StoreError('Candidate belongs to an unknown question.')
+    snapshot.exercises = {key: value for key, value in snapshot.raw_exercises.items() if key not in removed}
+    snapshot.catalogue = dict(snapshot.catalogue, exercises=list(snapshot.exercises.values()))
+    snapshot.correct_pools = {key: value for key, value in snapshot.correct_pools.items() if key not in removed}
+
+
+def edit_question(root, identifier, expected_version, title, question, *, guard):
+    text(title, 256, empty=False)
+    text(question, 8192, empty=False)
+    return _change_question(root, identifier, expected_version, title, question, guard=guard)
+
+
+def remove_question(root, identifier, expected_version, *, guard):
+    return _change_question(root, identifier, expected_version, None, None, guard=guard)
+
+
+def _change_question(root, identifier, expected_version, title, question, *, guard):
+    if type(expected_version) is not str or not re.fullmatch('[a-f0-9]{64}', expected_version):
+        raise StoreError('Provide the current question version.')
+    connection = connect(Path(root) / DATABASE_RELATIVE, writable=True)
+    try:
+        connection.execute('BEGIN IMMEDIATE')
+        snapshot = _snapshot(connection)
+        library_detail(snapshot, identifier, expected_version)
+        if title is None:
+            _insert(connection, 'auxiliary', dict(kind='adminRemoved', ordinal=snapshot.exercise_ordinals[identifier],
+                    payload=encoded(dict(exerciseId=identifier, exerciseVersion=expected_version,
+                                         removedAt=int(time.time() * 1000))), original_source=''))
+        else:
+            sql.execute(connection, 'update_question_metadata', (title, question, identifier))
+        result = _snapshot(connection)
+        _size_guard(connection)
+        with guard():
+            connection.commit()
+        return result
+    except BaseException:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def _add_rows(connection, record, entries, ordinal, origin, validation):
@@ -540,11 +751,11 @@ def add_exercise(root, document, *, java='java'):
     try:
         connection.execute('BEGIN IMMEDIATE')
         snapshot = _snapshot(connection)
-        if record['id'] in snapshot.exercises:
+        if record['id'] in snapshot.raw_exercises:
             raise StoreError('Exercise identifier already exists; no records were replaced.')
-        if snapshot.exercise_count >= 10000:
+        if len(snapshot.raw_exercises) >= 10000:
             raise StoreError('Exercise limit reached.')
-        _add_rows(connection,record,entries,snapshot.exercise_count,'authored',certificate)
+        _add_rows(connection,record,entries,len(snapshot.raw_exercises),'authored',certificate)
         _snapshot(connection)  # check constraints and complete logical state before commit
         # Fixed connection introspection, outside the SQLean DML grammar. Include
         # pages allocated by this transaction even when WAL has not checkpointed.
@@ -654,12 +865,12 @@ def commit_upload(root, prepared, metadata, *, guard):
         connection.execute('BEGIN IMMEDIATE')
         snapshot = _snapshot(connection)
         identifiers = [record['id'] for record,_,_ in batch]
-        if len(set(identifiers)) != len(identifiers) or set(identifiers) & snapshot.exercises.keys():
+        if len(set(identifiers)) != len(identifiers) or set(identifiers) & snapshot.raw_exercises.keys():
             raise StoreError('An exercise identifier already exists; no records were replaced.')
-        if snapshot.exercise_count + len(batch) > 10000:
+        if len(snapshot.raw_exercises) + len(batch) > 10000:
             raise StoreError('Exercise limit reached.')
         for index, (record, entries, certificate) in enumerate(batch):
-            _add_rows(connection,record,entries,snapshot.exercise_count+index,'authored',certificate)
+            _add_rows(connection,record,entries,len(snapshot.raw_exercises)+index,'authored',certificate)
         witness = prepared['witness']
         _insert(connection, 'auxiliary', dict(kind='adminUpload',ordinal=len(snapshot.admin_uploads),
                 payload=encoded({key:value for key,value in witness.items() if key != 'originalSource'}),

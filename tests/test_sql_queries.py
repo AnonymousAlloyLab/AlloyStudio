@@ -44,7 +44,9 @@ class SqlQueryTests(unittest.TestCase):
     def test_registry_matches_every_table_and_field(self):
         registry = sql._registry()
         self.assertEqual(set(registry), {'select_schema', 'select_schema_sql'} |
-                         {prefix + table for prefix in ('select_', 'insert_') for table in sql.FIELDS})
+                         {prefix + table for prefix in ('select_', 'insert_') for table in sql.FIELDS} |
+                          {'select_auxiliary_kind', 'select_auxiliary_item', 'delete_auxiliary_item',
+                          'update_auxiliary_item', 'update_question_metadata', 'select_question_prose'})
         for table, fields in sql.FIELDS.items():
             entry = registry['insert_' + table]
             self.assertEqual(tuple(item['name'] for item in entry['parameters']), fields)
@@ -64,6 +66,22 @@ class SqlQueryTests(unittest.TestCase):
         self.assertEqual(tuple(sql.execute(self.connection, 'select_solutions').fetchone()), solution)
         self.assertEqual(tuple(sql.execute(self.connection, 'select_metadata').fetchone()), (attack, attack))
         self.assertEqual(sql.execute(self.connection, 'select_auxiliary').fetchone()[3], attack)
+        sql.validate_schema(self.connection)
+
+    def test_administrator_updates_deletes_and_selectors_bind_hostile_values(self):
+        attack = "x'; DELETE FROM auxiliary; DROP TABLE exercises; --"
+        sql.execute(self.connection, 'insert_exercises', exercise_values())
+        sql.execute(self.connection, 'insert_auxiliary', ('kept', 0, '{}', 'original'))
+        sql.execute(self.connection, 'insert_auxiliary', (attack, 1, '{}', 'second'))
+        sql.execute(self.connection, 'update_question_metadata', (attack, attack, 'example'))
+        row = sql.execute(self.connection, 'select_question_prose', ('example',)).fetchone()
+        self.assertEqual(tuple(row), ('example', 0, attack, attack))
+        sql.execute(self.connection, 'update_auxiliary_item', (attack, attack, attack, 1))
+        self.assertEqual(tuple(sql.execute(self.connection, 'select_auxiliary_item', (attack, 1)).fetchone()),
+                         (attack, 1, attack, attack))
+        self.assertEqual(len(sql.execute(self.connection, 'select_auxiliary_kind', (attack,)).fetchall()), 1)
+        sql.execute(self.connection, 'delete_auxiliary_item', (attack, 1))
+        self.assertEqual(sql.execute(self.connection, 'select_auxiliary').fetchall(), [('kept', 0, '{}', 'original')])
         sql.validate_schema(self.connection)
 
     def test_unknown_queries_fail_before_sqlite(self):
@@ -251,7 +269,7 @@ class QueryCompilerTests(unittest.TestCase):
         self.assertEqual(provenance['upstreamCommit'], '6da54ef2874cbe7e0069bf8c192f12de3a8644f9')
         self.assertEqual(provenance['leanToolchain'], 'leanprover/lean4:v4.34.0')
         records = artifact['queries']
-        self.assertEqual(len(records), 10)
+        self.assertEqual(len(records), 16)
         self.assertTrue(all(record['roundTrip'] for record in records))
         self.assertTrue(all(record['ast'].startswith('SQLean.Statement.') for record in records))
 

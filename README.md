@@ -34,6 +34,15 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Alpha `v0.0.6-alpha`** adds hierarchical, labeled instance diagrams, browser-local
+solved checks, public-deployment badge handling, and administrator question
+editing/removal. A bounded private candidate cache admits a draft only after an
+exact reward of 1 and completed checks finding neither undercoverage nor
+overcoverage. GPT-6.1 Sol review starts only when the administrator clicks
+**Review with Sol**; approval requires a fresh Alloy check. See the
+[release notes](docs/releases/v0.0.6-alpha.md) and
+[library/cache contract](docs/admin-library-candidates-spec.md).
+
 **Maintenance alpha `v0.0.5-alpha.1`** connects each Luna edit explanation to the
 exercise's natural-language question and the learner's chosen operator. At zero
 distance, guidance invites another solution; a numeric lexical-token comparison
@@ -197,9 +206,10 @@ Behavioral feedback loads separately below the editor and feedback panels. It
 shows the **behavioral similarity score** to three decimal places and up to three
 instances in each oracle/student category: both accept, undercoverage (only the
 oracle accepts), overcoverage (only your predicate accepts), and neither accepts.
-Select an example to see a labeled diagram of its objects and connections.
-Choose a relation to simplify the picture, or select an object or connection
-for a plain-language description. Temporal instances also let you select a
+Select an example to see a hierarchical diagram of its objects and labeled
+connections. Choose a relation to simplify the picture, or select an object or
+connection for its details and nearby connections. **Fit width** provides an
+overview, and **100%** restores normal text size. Temporal instances also let you select a
 state; the picture updates with it. Expand **Exact atoms and relation tables**
 to inspect the values behind the drawing. Empty categories mean no instance exists **within the
 displayed bounds**. Changing the draft clears the previous behavioral results.
@@ -244,6 +254,26 @@ Alloy bounded-equivalence check. Other predicates keep their names. Luna suggest
 metadata and question wording while original source stays unchanged. Review the
 questions before publishing the complete batch. See [admin setup](docs/admin-setup.md)
 and the [security contract](docs/admin-security-spec.md).
+
+The administration page also has an **Exercise library** tab to edit public
+titles/questions or remove exercises, and a **Candidate cache** tab. The private
+SQLite cache retains up to 100 qualifying student drafts, at most 10 per exercise,
+only when administration is configured. Before any admission, the actual reward
+must equal 1, samples must agree, and both undercoverage and overcoverage checks
+must finish UNSAT with model facts enforced. Drafts with a counterexample,
+incomplete checks, or unavailable evidence never enter the cache; a rounded
+`1.000` alone is insufficient. The cache is a private review queue, separate
+from the approved correct-predicate pool.
+**Review with Sol** explicitly requests GPT-6.1 Sol at High effort using the
+backend's private OpenAI key. It gives advice; the administrator approves or
+dismisses. Approval runs a fresh facts-aware Alloy equivalence check before
+extending the correct pool used by both distance modes. These checks are bounded
+agreement, not an unbounded proof. See the [library/cache contract](docs/admin-library-candidates-spec.md).
+
+Learners earn a browser-local green check after zero edit distance and perfect
+behavioral evidence for the same draft. The local-workspace badge appears only
+in source-checkout loopback previews; it stays hidden on public hostnames and
+in IIS packages, including their loopback previews.
 
 ## Environment and reference isolation
 
@@ -380,7 +410,9 @@ projection is available to Luna for explaining the displayed examples.
 
 Each selected example is rendered locally as an interactive SVG diagram from
 that same public instance data. Objects shared by several signatures appear
-once, with their memberships retained. Binary relations use directed arrows;
+once, with their memberships retained. Connections arrange objects from top
+to bottom, keeping cyclic groups together and isolated objects visible.
+Binary relations use directed arrows with visible relation names;
 relations with other arities use numbered tuple connections so column order
 and repeated objects remain explicit. A legend and selection descriptions
 explain how to read the picture. The renderer handles isolated objects, empty

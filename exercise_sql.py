@@ -27,7 +27,7 @@ FIELDS = {
 }
 
 # BEGIN GENERATED SQL INTEGRITY
-ARTIFACT_HASHES = {'sql/compiled-queries.json': '67cf6f3bd6a1de8724bc51a347490f2676f0de3efce292666aefff08c191ef7f', 'sql/queries.json': '8c0b39f879137939fe653d55c5822cacfe3c103b242d5a33189307fb1d79e435', 'sql/schema.json': '3a534942cea24e6fe9434d61384c7f0fad5b9eb1d93984758fa64a369de17746', 'vendor/sqlean/provenance.json': '7ff723b346bfda65d335b07d8a6f11853497366781cb860141a210af3e9746b9'}
+ARTIFACT_HASHES = {'sql/compiled-queries.json': 'aaafd190668ec205e90c26984ef6b020c4f065f20a3a952d605f0b4e0d8a8838', 'sql/queries.json': '3daeb186f197052eaaf7150626e105c4ebd6006ee2cb0d0c0fad1f971c245e34', 'sql/schema.json': '3a534942cea24e6fe9434d61384c7f0fad5b9eb1d93984758fa64a369de17746', 'vendor/sqlean/provenance.json': '7ff723b346bfda65d335b07d8a6f11853497366781cb860141a210af3e9746b9'}
 # END GENERATED SQL INTEGRITY
 
 # Explicitly trusted operations: SQLeanParser does not accept DDL or controls.
@@ -77,6 +77,7 @@ CONTROLS = (
     'PRAGMA foreign_keys = ON', 'PRAGMA foreign_keys', 'BEGIN',
     'PRAGMA trusted_schema = OFF', 'PRAGMA query_only = ON',
     'BEGIN IMMEDIATE', 'PRAGMA page_count', 'PRAGMA page_size',
+    'PRAGMA busy_timeout = 100',
 )
 
 

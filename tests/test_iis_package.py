@@ -95,7 +95,8 @@ class IisPackageTests(unittest.TestCase):
         for name in WEB_FILES:
             self.write(f'web/{name}', 'public learner application')
         self.write('web/app.js', "import { renderInstanceGraph } from './instance-graph.js';\n")
-        self.write('web/index.html', '<link rel="stylesheet" href="./styles.css">'
+        self.write('web/index.html', '<span id="local-workspace-badge" hidden>LOCAL WORKSPACE</span>'
+                   '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
         self.write('web/dashboard/index.html', '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
@@ -183,6 +184,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertNotIn('backend/openai.local.json', entries)
         self.assertNotIn('backend/admin.local.json', entries)
         self.assertTrue(all(f'backend/{name}' in entries for name in ADMIN_MODULES))
+        self.assertIn(b'id="local-workspace-badge" data-public-deployment', entries['wwwroot/index.html'])
         self.assertEqual({name for name in entries if name.startswith('backend/scripts/')},
                          {f'backend/scripts/{name}' for name in RUNTIME_HELPERS})
         self.assertNotIn('backend/web/index.html', entries)

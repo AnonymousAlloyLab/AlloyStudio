@@ -1,7 +1,7 @@
 {
   "boundary": "Generation-time parsing/type checking; runtime bound parameters.",
   "inputs": {
-    "sql/queries.json": "8c0b39f879137939fe653d55c5822cacfe3c103b242d5a33189307fb1d79e435",
+    "sql/queries.json": "3daeb186f197052eaaf7150626e105c4ebd6006ee2cb0d0c0fad1f971c245e34",
     "sql/schema.json": "3a534942cea24e6fe9434d61384c7f0fad5b9eb1d93984758fa64a369de17746",
     "vendor/sqlean/provenance.json": "7ff723b346bfda65d335b07d8a6f11853497366781cb860141a210af3e9746b9"
   },
@@ -265,6 +265,141 @@
       "parameters": [],
       "roundTrip": true,
       "sql": "SELECT \"type\", \"name\", \"tbl_name\", \"sql\" FROM \"sqlite_schema\" WHERE (\"sql\" IS NOT NULL) ORDER BY \"type\" ASC, \"name\" ASC;"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"auxiliary\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"kind\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"payload\",\n                     SQLean.Expr.column \"original_source\"],\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.eq)\n                     (SQLean.Expr.column \"kind\")\n                     (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_KIND__\"))),\n    distinct := false,\n    orderBy := [{ expr := SQLean.Expr.column \"ordinal\", descending := false }],\n    limit := some 101,\n    offset := none }",
+      "canonical": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" WHERE (\"kind\" = '__SQL_BIND_ADMIN_KIND__') ORDER BY \"ordinal\" ASC LIMIT 101;",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT",
+      "id": "select_auxiliary_kind",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" WHERE (\"kind\" = ?) ORDER BY \"ordinal\" ASC LIMIT 101;"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"auxiliary\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"kind\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"payload\",\n                     SQLean.Expr.column \"original_source\"],\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.and)\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"kind\")\n                       (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_KIND__\")))\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"ordinal\")\n                       (SQLean.Expr.literal (SQLean.Value.int 9000000000000040)))),\n    distinct := false,\n    orderBy := [],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" WHERE ((\"kind\" = '__SQL_BIND_ADMIN_KIND__') AND (\"ordinal\" = 9000000000000040));",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT",
+      "id": "select_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "SELECT \"kind\", \"ordinal\", \"payload\", \"original_source\" FROM \"auxiliary\" WHERE ((\"kind\" = ?) AND (\"ordinal\" = ?));"
+    },
+    {
+      "ast": "SQLean.Statement.delete\n  { table := \"auxiliary\",\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.and)\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"kind\")\n                       (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_KIND__\")))\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"ordinal\")\n                       (SQLean.Expr.literal (SQLean.Value.int 9000000000000040)))) }",
+      "canonical": "DELETE FROM \"auxiliary\" WHERE ((\"kind\" = '__SQL_BIND_ADMIN_KIND__') AND (\"ordinal\" = 9000000000000040));",
+      "certificate": "Valid DELETE statement.",
+      "id": "delete_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "DELETE FROM \"auxiliary\" WHERE ((\"kind\" = ?) AND (\"ordinal\" = ?));"
+    },
+    {
+      "ast": "SQLean.Statement.update\n  { table := \"auxiliary\",\n    assignments := [{ column := \"payload\",\n                      value := SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_PAYLOAD__\") },\n                    { column := \"original_source\",\n                      value := SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_ORIGINAL_SOURCE__\") }],\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.and)\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"kind\")\n                       (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_KIND__\")))\n                     (SQLean.Expr.binary\n                       (SQLean.BinOp.eq)\n                       (SQLean.Expr.column \"ordinal\")\n                       (SQLean.Expr.literal (SQLean.Value.int 9000000000000040)))) }",
+      "canonical": "UPDATE \"auxiliary\" SET \"payload\" = '__SQL_BIND_ADMIN_PAYLOAD__', \"original_source\" = '__SQL_BIND_ADMIN_ORIGINAL_SOURCE__' WHERE ((\"kind\" = '__SQL_BIND_ADMIN_KIND__') AND (\"ordinal\" = 9000000000000040));",
+      "certificate": "Valid UPDATE statement.",
+      "id": "update_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 4194304,
+          "name": "payload",
+          "sentinel": "__SQL_BIND_ADMIN_PAYLOAD__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_ADMIN_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "UPDATE \"auxiliary\" SET \"payload\" = ?, \"original_source\" = ? WHERE ((\"kind\" = ?) AND (\"ordinal\" = ?));"
+    },
+    {
+      "ast": "SQLean.Statement.update\n  { table := \"exercises\",\n    assignments := [{ column := \"title\", value := SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_TITLE__\") },\n                    { column := \"description\",\n                      value := SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_DESCRIPTION__\") }],\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.eq)\n                     (SQLean.Expr.column \"id\")\n                     (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_ID__\"))) }",
+      "canonical": "UPDATE \"exercises\" SET \"title\" = '__SQL_BIND_ADMIN_TITLE__', \"description\" = '__SQL_BIND_ADMIN_DESCRIPTION__' WHERE (\"id\" = '__SQL_BIND_ADMIN_ID__');",
+      "certificate": "Valid UPDATE statement.",
+      "id": "update_question_metadata",
+      "parameters": [
+        {
+          "maxBytes": 256,
+          "name": "title",
+          "sentinel": "__SQL_BIND_ADMIN_TITLE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "description",
+          "sentinel": "__SQL_BIND_ADMIN_DESCRIPTION__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_ADMIN_ID__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "UPDATE \"exercises\" SET \"title\" = ?, \"description\" = ? WHERE (\"id\" = ?);"
+    },
+    {
+      "ast": "SQLean.Statement.select\n  { table := \"exercises\",\n    projection := SQLean.Projection.expressions\n                    [SQLean.Expr.column \"id\",\n                     SQLean.Expr.column \"ordinal\",\n                     SQLean.Expr.column \"title\",\n                     SQLean.Expr.column \"description\"],\n    whereClause := some (SQLean.Expr.binary\n                     (SQLean.BinOp.eq)\n                     (SQLean.Expr.column \"id\")\n                     (SQLean.Expr.literal (SQLean.Value.text \"__SQL_BIND_ADMIN_ID__\"))),\n    distinct := false,\n    orderBy := [],\n    limit := none,\n    offset := none }",
+      "canonical": "SELECT \"id\", \"ordinal\", \"title\", \"description\" FROM \"exercises\" WHERE (\"id\" = '__SQL_BIND_ADMIN_ID__');",
+      "certificate": "Valid query. Output types: TEXT, INTEGER, TEXT, TEXT",
+      "id": "select_question_prose",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_ADMIN_ID__",
+          "type": "text"
+        }
+      ],
+      "roundTrip": true,
+      "sql": "SELECT \"id\", \"ordinal\", \"title\", \"description\" FROM \"exercises\" WHERE (\"id\" = ?);"
     }
   ],
   "schemaVersion": 1

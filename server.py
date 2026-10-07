@@ -23,7 +23,8 @@ from execution_profile import resolve_profile
 from traffic_scheduler import Scheduler, EvidenceStore, CapacityError, Superseded, encode
 from traffic_http import BoundedHTTPServer, TrafficProfile, DeadlineReader, HTTPInputError, bounded_json
 from traffic_decode import strict_request_line, strict_request_headers
-from exercise_store import load_store, StoreError, parse_json
+from exercise_store import load_store, StoreError, parse_json, exercise_version
+import candidate_store
 from admin_auth import AuthManager, AuthError
 from admin_service import AdminService, AdminError
 from traffic_limits import validated_int, validated_seconds
@@ -645,7 +646,39 @@ class Portal(BoundedHTTPServer):
         payload = self.behavior_payload(record, body)
         snapshot = None
         key = self._key('behavior', payload, generation)
-        return self._schedule('behavior', key, lambda: self._behavior(payload), channel, revision)
+        result = self._schedule('behavior', key, lambda: self._behavior(payload), channel, revision)
+        self._capture_candidate(record, body, result, generation)
+        return result
+
+    def _capture_candidate(self, record, body, result, generation):
+        # Optional retention never queues behind administrative publication.
+        # Membership and generation refer to the current snapshot, not the
+        # learner's older request. Cache errors cannot change successful hints.
+        if result.get('status') != 'ok' or not self.admin_auth.lock.acquire(blocking=False):
+            return
+        try:
+            if self.admin_auth.settings is None:
+                return
+        except Exception:
+            return
+        finally:
+            self.admin_auth.lock.release()
+        if not self.snapshot_lock.acquire(blocking=False):
+            return
+        try:
+            if self.stopping or generation != self.generation:
+                return
+            snapshot = self._snapshot
+            current = snapshot.exercises.get(record['id'])
+            if current is None or exercise_version(current) != exercise_version(record):
+                return
+            candidate_store.capture(self.root, current, exercise_version(current),
+                                    snapshot.pool_tokens[record['id']], body, result)
+        except Exception:
+            # Retention is deliberately optional, including SQLite failures.
+            pass
+        finally:
+            self.snapshot_lock.release()
 
     def _behavior(self, payload):
         try:

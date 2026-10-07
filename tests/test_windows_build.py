@@ -4,6 +4,7 @@ The offline suite uses the real JDK with the dependency-only preflight and the
 same clean compiler helper as build.ps1. PowerShell's wiring is checked here;
 an actual PowerShell invocation is also run separately when that tool is present.
 """
+import ast
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,31 @@ from runtime_dependencies import ENGINE_CHECKS, JAR_FILES
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class WindowsAdminModuleInventoryTests(unittest.TestCase):
+    """Read-only syntax checks must cover the new backend import dependencies."""
+
+    def test_candidate_imports_are_in_windows_build_syntax_validation(self):
+        source = (ROOT / 'scripts/build.ps1').read_text(encoding='utf-8')
+        embedded = re.search(r"\$pythonCheck = @'\n(.*?)\n'@", source, re.DOTALL)
+        self.assertIsNotNone(embedded)
+        tree = ast.parse(embedded.group(1))
+        inventory = next(node.iter for node in ast.walk(tree)
+                         if isinstance(node, ast.For) and isinstance(node.target, ast.Name)
+                         and node.target.id == 'name')
+        validated = set(ast.literal_eval(inventory))
+        required = set()
+        for entrypoint in ('server.py', 'admin_service.py'):
+            imports = ast.parse((ROOT / entrypoint).read_text(encoding='utf-8'))
+            required.update(name.name + '.py' for node in ast.walk(imports)
+                            if isinstance(node, ast.Import) for name in node.names
+                            if name.name.startswith('candidate_'))
+        self.assertEqual(required, {'candidate_store.py', 'candidate_review.py'})
+        self.assertTrue(required <= validated, 'Windows validation omitted a runtime import dependency.')
+        for path in required:
+            with self.subTest(path=path):
+                ast.parse((ROOT / path).read_text(encoding='utf-8'), filename=path)
 
 
 class WindowsSourceBuildTests(unittest.TestCase):

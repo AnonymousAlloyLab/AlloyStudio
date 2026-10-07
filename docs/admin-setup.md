@@ -79,6 +79,26 @@ do not change their bindings, ACLs or global proxy settings for this feature.
 
 ## Upload, review and publish
 
+The **Exercise library** tab edits the public title and question without changing
+any Alloy code or source witnesses. Removing a question hides it from the live
+library and retains its original private evidence. Edits and removal require the
+current preview version; refresh after another administrator changes it.
+
+The **Candidate cache** tab shows private drafts whose exact samples and bounded
+disagreement checks agree with the primary oracle. Retention starts only after
+administration is configured. The limits are 100 drafts total and 10 per exercise.
+Select a draft to read its code and check evidence. **Review with Sol** makes one
+explicit GPT-6.1 Sol High-effort request through the existing private OpenAI
+configuration. Viewing candidates never makes a paid request.
+
+Advice can recommend, reject, or remain uncertain; it cannot publish a solution.
+Confirm **Approve** to run a fresh facts-aware Alloy check at scope at least five.
+Only a successful, current check extends the correct pool. **Dismiss** records
+the decision without adding anything. Missing AI configuration leaves manual
+approval available. Agreements and counterexample ideas remain bounded evidence.
+See the [full contract](admin-library-candidates-spec.md) for retention, scope,
+stale decisions and private-data boundaries.
+
 Open `/admin/` under your application path and log in. Upload one UTF-8 `.als`
 file up to 256 KiB. Numbered solution predicates such as `inv1C0` and `inv1C1`
 become one `inv1` exercise; standalone parameterless predicates keep their

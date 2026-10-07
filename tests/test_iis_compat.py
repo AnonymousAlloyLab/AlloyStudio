@@ -1,4 +1,5 @@
 """Portable IIS-facing contracts; these tests do not claim to run Windows or IIS."""
+import ast
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,32 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import luna
 import server
+
+
+class IISAdminModuleInventoryTests(unittest.TestCase):
+    """Portable inventory contracts, without executing Windows/IIS or Java."""
+
+    def test_candidate_runtime_imports_are_required_readonly_and_not_public_routes(self):
+        required = set()
+        for entrypoint in ('server.py', 'admin_service.py'):
+            tree = ast.parse((ROOT / entrypoint).read_text(encoding='utf-8'))
+            required.update(name.name + '.py' for node in ast.walk(tree)
+                            if isinstance(node, ast.Import) for name in node.names
+                            if name.name.startswith('candidate_'))
+        self.assertEqual(required, {'candidate_store.py', 'candidate_review.py'})
+        installer = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text(encoding='utf-8')
+        deployment = (ROOT / 'deploy/iis/Test-IisDeployment.ps1').read_text(encoding='utf-8')
+        checks = installer.split('foreach ($file in @(', 1)[1].split('Get-NetTCPConnection', 1)[0]
+        readonly = deployment.split("$stage = 'task identity, configuration, and isolation'", 1)[1]
+        readonly = readonly.split('Assert-BackendWriteScope -Path $config.backend_root', 1)[0]
+        private = deployment.split('foreach ($privateRoute in @(', 1)[1].split(')) {', 1)[0]
+        for name in required:
+            with self.subTest(module=name):
+                self.assertIn("(Join-Path $BackendRoot '" + name + "')", checks)
+                self.assertIn("'" + name + "'", readonly)
+                self.assertIn('Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)', readonly)
+                self.assertIn("'" + name + "'", private)
+                self.assertIn("'backend/" + name + "'", private)
 
 
 class IISCompatibilityTests(unittest.TestCase):

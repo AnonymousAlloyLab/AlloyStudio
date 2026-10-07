@@ -218,6 +218,117 @@
       "id": "select_schema_sql",
       "parameters": [],
       "source": "SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE sql IS NOT NULL ORDER BY type, name"
+    },
+    {
+      "id": "select_auxiliary_kind",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        }
+      ],
+      "source": "SELECT kind, ordinal, payload, original_source FROM auxiliary WHERE kind = '__SQL_BIND_ADMIN_KIND__' ORDER BY ordinal LIMIT 101"
+    },
+    {
+      "id": "select_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "source": "SELECT kind, ordinal, payload, original_source FROM auxiliary WHERE kind = '__SQL_BIND_ADMIN_KIND__' AND ordinal = 9000000000000040"
+    },
+    {
+      "id": "delete_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "source": "DELETE FROM auxiliary WHERE kind = '__SQL_BIND_ADMIN_KIND__' AND ordinal = 9000000000000040"
+    },
+    {
+      "id": "update_auxiliary_item",
+      "parameters": [
+        {
+          "maxBytes": 4194304,
+          "name": "payload",
+          "sentinel": "__SQL_BIND_ADMIN_PAYLOAD__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 262144,
+          "name": "original_source",
+          "sentinel": "__SQL_BIND_ADMIN_ORIGINAL_SOURCE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "kind",
+          "sentinel": "__SQL_BIND_ADMIN_KIND__",
+          "type": "text"
+        },
+        {
+          "name": "ordinal",
+          "sentinel": 9000000000000040,
+          "type": "int"
+        }
+      ],
+      "source": "UPDATE auxiliary SET payload = '__SQL_BIND_ADMIN_PAYLOAD__', original_source = '__SQL_BIND_ADMIN_ORIGINAL_SOURCE__' WHERE kind = '__SQL_BIND_ADMIN_KIND__' AND ordinal = 9000000000000040"
+    },
+    {
+      "id": "update_question_metadata",
+      "parameters": [
+        {
+          "maxBytes": 256,
+          "name": "title",
+          "sentinel": "__SQL_BIND_ADMIN_TITLE__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 8192,
+          "name": "description",
+          "sentinel": "__SQL_BIND_ADMIN_DESCRIPTION__",
+          "type": "text"
+        },
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_ADMIN_ID__",
+          "type": "text"
+        }
+      ],
+      "source": "UPDATE exercises SET title = '__SQL_BIND_ADMIN_TITLE__', description = '__SQL_BIND_ADMIN_DESCRIPTION__' WHERE id = '__SQL_BIND_ADMIN_ID__'"
+    },
+    {
+      "id": "select_question_prose",
+      "parameters": [
+        {
+          "maxBytes": 128,
+          "name": "id",
+          "sentinel": "__SQL_BIND_ADMIN_ID__",
+          "type": "text"
+        }
+      ],
+      "source": "SELECT id, ordinal, title, description FROM exercises WHERE id = '__SQL_BIND_ADMIN_ID__'"
     }
   ],
   "schemaVersion": 1

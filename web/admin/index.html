@@ -13,8 +13,8 @@
   <header><a class="brand" href="../">Alloy Studio <span>/ Administration</span></a><button id="logout" type="button" hidden>Sign out</button></header>
   <main>
     <p class="eyebrow">EXERCISE LIBRARY</p>
-    <h1>Add an Alloy model</h1>
-    <p class="lead">Keep your model intact. Check its solutions, then review the questions learners will see.</p>
+    <h1>Manage the exercise library</h1>
+    <p class="lead">Add models, refine questions, and review learner candidates before adding them to the correct-answer pool.</p>
     <p id="notice" role="status" aria-live="polite">Checking administration availability…</p>
     <section id="disabled" hidden><h2>Administration is not configured</h2><p>Run <code>python scripts/configure_admin.py --origin http://127.0.0.1:8080</code> on the backend host to set a password. For a deployed site, supply its HTTPS origin instead. No password belongs in this page's source or a public configuration file.</p><button id="retry" type="button">Check again</button></section>
     <form id="login-form" hidden>
@@ -23,6 +23,12 @@
       <button type="submit">Sign in</button>
     </form>
     <div id="workspace" hidden>
+      <nav class="workspace-tabs" aria-label="Administration areas">
+        <button id="tab-upload" type="button" class="secondary" aria-pressed="true">Add models</button>
+        <button id="tab-library" type="button" class="secondary" aria-pressed="false">Exercise library</button>
+        <button id="tab-candidates" type="button" class="secondary" aria-pressed="false">Candidate cache</button>
+      </nav>
+      <div id="upload-panel">
       <section class="guide">
         <details><summary>Upload format guide</summary>
           <p>Upload one UTF-8 <code>.als</code> file, up to 256 KiB. Keep signatures, fields, facts and helpers in the same model. All exercise predicates must have no parameters.</p>
@@ -62,6 +68,45 @@ pred inv1C1 { not no Node }</pre>
         </form>
       </section>
       <section id="success" hidden><h2>Exercises published</h2><p id="published-count"></p><a class="button" href="../" target="_blank" rel="noopener">Open the exercise library</a></section>
+      </div>
+      <section id="library-panel" hidden aria-labelledby="library-heading">
+        <div class="section-heading"><h2 id="library-heading">Exercise library</h2><button id="library-refresh" class="secondary" type="button">Refresh questions</button></div>
+        <p class="muted">Edit public titles and questions. The Alloy environment, predicate names, and solutions remain unchanged.</p>
+        <div id="library-list" class="library-list" aria-label="Questions"></div>
+        <div class="page-controls"><button id="library-previous" class="secondary" type="button" disabled>Previous questions</button><span id="library-page" class="muted"></span><button id="library-next" class="secondary" type="button" disabled>Next questions</button></div>
+        <form id="question-form" hidden>
+          <h3 id="question-heading"></h3><p id="question-identity" class="hash"></p>
+          <label for="question-title">Public title</label><input id="question-title" type="text" required maxlength="256">
+          <label for="question-text">Public question</label><textarea id="question-text" rows="5" required maxlength="8192"></textarea>
+          <label class="review"><input id="question-reviewed" type="checkbox" required> I reviewed this question and removed any solution text.</label>
+          <div class="actions"><button id="question-save" type="submit">Save question</button><button id="question-remove-open" class="danger secondary" type="button">Remove question…</button></div>
+          <div id="question-removal" class="confirmation" hidden>
+            <p>Remove this question from the learner library? Its original model and upload evidence are retained privately.</p>
+            <label class="review"><input id="question-remove-confirm" type="checkbox"> I confirm removal of this selected question.</label>
+            <div class="actions"><button id="question-remove" class="danger" type="button" disabled>Confirm removal</button><button id="question-remove-cancel" class="secondary" type="button">Cancel removal</button></div>
+          </div>
+        </form>
+      </section>
+      <section id="candidates-panel" hidden aria-labelledby="candidates-heading">
+        <div class="section-heading"><h2 id="candidates-heading">Candidate cache</h2><button id="candidates-refresh" class="secondary" type="button">Refresh candidates</button></div>
+        <p class="muted">Up to 100 private learner candidates, with at most 10 for one exercise. Only drafts with reward exactly 1 and completed checks finding no undercoverage or overcoverage enter this review queue. AI review starts only when you click Review with Sol.</p>
+        <p class="public-note">Bounded agreement is not a proof of equivalence. Sol offers advice only. You make the final decision, and approval runs a fresh Alloy check with the model facts enforced.</p>
+        <div id="candidates-list" class="library-list" aria-label="Learner candidates"></div>
+        <div class="page-controls"><button id="candidates-previous" class="secondary" type="button" disabled>Previous candidates</button><span id="candidates-page" class="muted"></span><button id="candidates-next" class="secondary" type="button" disabled>Next candidates</button></div>
+        <article id="candidate-detail" hidden>
+          <h3 id="candidate-heading"></h3><p id="candidate-identity" class="hash"></p><p id="candidate-state" class="muted"></p>
+          <h4>Student predicate body</h4><pre id="candidate-body" tabindex="0"></pre>
+          <details><summary>Bounded behavioral evidence</summary><pre id="candidate-evidence" tabindex="0"></pre></details>
+          <div id="candidate-advice" class="candidate-advice"></div>
+          <p class="disclosure">Review with Sol sends this candidate, its exercise environment, and the private oracle solutions to GPT-6.1 Sol at high reasoning effort using the backend key. Viewing this page does not call AI.</p>
+          <div class="actions"><button id="candidate-review" class="secondary" type="button">Review with Sol</button><button id="candidate-approve-open" type="button">Approve candidate…</button><button id="candidate-dismiss" class="danger secondary" type="button">Dismiss candidate</button></div>
+          <div id="candidate-approval" class="confirmation" hidden>
+            <p>Add this exact candidate to this exercise's correct-answer pool if the fresh bounded Alloy check passes? The primary behavioral oracle stays unchanged.</p>
+            <label class="review"><input id="candidate-approve-confirm" type="checkbox"> I reviewed this candidate and authorize adding it after validation.</label>
+            <div class="actions"><button id="candidate-approve" type="button" disabled>Validate and add candidate</button><button id="candidate-approve-cancel" class="secondary" type="button">Cancel approval</button></div>
+          </div>
+        </article>
+      </section>
     </div>
   </main>
 </body>

@@ -101,7 +101,7 @@ class EducationHTTPTests(unittest.TestCase):
         raw['categories'][0]['instances'][0]['states'][0]['skolems'] = [PRIVATE]
         displayed = self.fetch_behavior(answer=raw)
         expected = {key: value for key, value in displayed.items()
-                    if key not in ('exerciseId', 'revision', 'behaviorToken')}
+                    if key not in ('exerciseId', 'revision', 'behaviorToken', 'contentVersion')}
         with patch('server.subprocess.run', return_value=self.completed(self.canonical())), \
              patch.object(self.app, 'evaluate_behavior', side_effect=AssertionError('Do not regenerate displayed instances')), \
              patch.object(self.app.explainer, 'explain', return_value=education_reply()) as explain:

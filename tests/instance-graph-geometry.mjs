@@ -23,6 +23,9 @@ export function instanceDiagramGeometry(canvas) {
     }
   }
   const canvasBounds = canvas.getBoundingClientRect();
+  for (const object of objects) {
+    if (!contains(canvasBounds, object.bounds)) fail('object-clipped-by-canvas', { object: object.id });
+  }
   for (const [index, text] of texts.entries()) {
     if (text.bounds.width <= 0 || text.bounds.height <= 0) fail('text-invisible', { text: text.text });
     if (!contains(canvasBounds, text.bounds)) fail('text-clipped-by-canvas', { text: text.text });
@@ -40,6 +43,7 @@ export function instanceDiagramGeometry(canvas) {
   for (const edge of canvas.querySelectorAll('.instance-graph-edge')) {
     const tuple = edge.closest('[data-tuple-id]')?.dataset.tupleId;
     const edgeBounds = edge.getBoundingClientRect();
+    if (!contains(canvasBounds, edgeBounds)) fail('edge-clipped-by-canvas', { tuple });
     const obstacles = [
       ...texts.filter(text => text.tuple !== tuple).map(text => ({ bounds: text.bounds, kind: 'text', id: text.text })),
       ...objects.filter(object => {

@@ -129,7 +129,8 @@ try {
         Assert-PrivatePath -Path (Get-LocalPath $localOpenAIConfig) -PublicRoots $publicRoots
         Assert-PrivateAcl -Path $localOpenAIConfig
     }
-    foreach ($name in @('server.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py')) {
+    foreach ($name in @('server.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
+        'candidate_store.py', 'candidate_review.py')) {
         Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)
     }
     Assert-BackendWriteScope -Path $config.backend_root
@@ -287,6 +288,7 @@ try {
         'sql/compiled-queries.json', 'vendor/sqlean/provenance.json', 'scripts/manage_exercises.py',
         'admin.local.json', 'backend/admin.local.json', 'admin/admin.local.json',
         'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py',
+        'candidate_store.py', 'candidate_review.py', 'backend/candidate_store.py', 'backend/candidate_review.py',
         'admin/upload.als', 'admin/source.als', 'admin/.admin-config-fixture.tmp',
         'vendor/acgn/lib/alloy.jar', 'openai.key', 'openai.local.json', 'backend/openai.local.json', '.env',
         'deploy/iis/run_backend.py', 'backend-task.json', 'api/exercises/../../catalogue.json')) {

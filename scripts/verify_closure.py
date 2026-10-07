@@ -362,10 +362,17 @@ def execute():
                               'scripts/configure_admin.py','engine/src/live/UploadInspector.java',
                               'tests/test_admin_auth.py','tests/test_admin_upload.py','tests/test_admin_luna.py',
                               'tests/test_admin_store.py','tests/test_admin_http.py','tests/test_admin_service.py',
-                              'tests/test_admin_browser.py','tests/admin.mjs'])
+                              'tests/test_admin_browser.py','tests/admin.mjs',
+                              'candidate_store.py','candidate_review.py','tests/test_candidate_review.py',
+                              'tests/test_admin_candidates.py','tests/test_candidate_admission_gate.py',
+                              'tests/test_admin_candidates_service.py',
+                              'tests/test_admin_candidates_http.py','tests/test_admin_candidates_alloy.py',
+                              'tests/admin-library.mjs',
+                              'docs/admin-library-candidates-spec.md'])
             if identifier == 'V-BROWSER':
                 paths.extend(['tests/navigation.mjs','tests/browser-suite.mjs',
-                              'tests/instance-graph-geometry.mjs'])
+                              'tests/instance-graph-geometry.mjs','tests/progress.mjs',
+                              'tests/admin-library.mjs'])
             implementation = [{"path": path, "sha256": input_paths[path]["sha256"]} for path in paths]
             registry[identifier] = {"id": identifier, "implementation": implementation,
                                     "version_hash": sha(canonical(implementation)),

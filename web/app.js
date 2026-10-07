@@ -32,9 +32,11 @@ const state = {
   feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
+  solved: new Map(), structuralCompletionEvidence: null,
   channel: null, channelPromise: null, checkFlight: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
+const MAX_SOLVED_EXERCISES = 1000;
 const APP_BASE = new URL('.', import.meta.url);
 const METRICS = {
   canonical: { id: 'acgn-fast-rewrite-canonical-distance', basis: 'nearest-known-correct-v1', label: 'Canonical' },
@@ -58,6 +60,68 @@ function readStorage(key, fallback) {
 function writeStorage(key, value) {
   try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); }
   catch { state.storageAvailable = false; }
+}
+
+function exerciseVersion(exercise) {
+  return typeof exercise?.contentVersion === 'string' && /^[a-f0-9]{64}$/.test(exercise.contentVersion)
+    ? exercise.contentVersion : null;
+}
+
+function saveSolvedExercises() {
+  const records = [...state.solved].filter(([, record]) => record.version !== null)
+    .sort(([, left], [, right]) => right.at - left.at).slice(0, MAX_SOLVED_EXERCISES);
+  writeStorage('solved', records.map(([id, record]) => ({ id, ...record })));
+}
+
+function loadSolvedExercises() {
+  state.solved.clear();
+  const records = readStorage('solved', []);
+  if (!Array.isArray(records)) return;
+  const versions = new Map(state.exercises.map(exercise => [exercise.id, exerciseVersion(exercise)]));
+  for (const record of records.slice(0, MAX_SOLVED_EXERCISES)) {
+    if (!record || typeof record.id !== 'string' || typeof record.version !== 'string'
+      || !/^[a-f0-9]{64}$/.test(record.version) || record.version !== versions.get(record.id)
+      || !Number.isFinite(record.at) || record.at <= 0 || !Object.hasOwn(METRICS, record.metric)) continue;
+    state.solved.set(record.id, { version: record.version, at: record.at, metric: record.metric });
+  }
+  // Removed exercises and changed questions or models must not retain a check.
+  saveSolvedExercises();
+}
+
+function solvedExercise(exercise) {
+  const saved = state.solved.get(exercise.id);
+  return Boolean(saved && (saved.version === exerciseVersion(exercise)));
+}
+
+function recordSolvedExercise(result, payload, selection, metric) {
+  const structural = state.structuralCompletionEvidence;
+  if (!structural || structural.distance !== 0 || structural.exerciseId !== payload.exerciseId
+    || structural.revision !== payload.revision || structural.selection !== selection
+    || structural.body !== payload.body || structural.metric !== metric
+    || payload.revision !== state.revision || selection !== state.selection || metric !== state.metric
+    || payload.exerciseId !== state.exercise?.id || payload.body !== elements.editor.value
+    || structural.version !== exerciseVersion(state.exercise)
+    || structural.responseVersion !== structural.version || (result.contentVersion ?? null) !== structural.version
+    || result.scoreStatus !== 'ok' || result.scoreReason !== 'OK' || result.score !== 1
+    || result.sampling.semanticCounterexamples !== 0
+    || result.sampling.positiveTested <= 0 || result.sampling.negativeTested <= 0
+    || result.sampling.positiveAccepted !== result.sampling.positiveTested
+    || result.sampling.negativeRejected !== result.sampling.negativeTested
+    || !['both', 'neither'].every(id => result.categories.some(category => category.id === id
+      && category.status === 'sat' && category.instances.length > 0))
+    || !['undercoverage', 'overcoverage'].every(id => result.categories.some(category => category.id === id
+      && category.status === 'unsat' && category.enumerationComplete && category.instances.length === 0))) return;
+  state.solved.set(payload.exerciseId, { version: structural.version, at: Date.now(), metric });
+  saveSolvedExercises();
+  renderExercises();
+}
+
+function renderWorkspaceBadge() {
+  // Use the browser's actual URL, never the backend's forwarded Host metadata.
+  const hostname = window.location.hostname.toLowerCase();
+  const badge = $('#local-workspace-badge');
+  badge.hidden = badge.hasAttribute('data-public-deployment')
+    || !['localhost', '127.0.0.1', '[::1]', '::1'].includes(hostname);
 }
 
 function historyStorageKey() {
@@ -118,6 +182,7 @@ function setStatus(status, text) {
 }
 
 function invalidateFeedback() {
+  state.structuralCompletionEvidence = null;
   clearOperationHighlight();
   resetBehavior();
   const pending = state.checkFlight || state.feedbackAbort || state.behaviorAbort || state.explainAbort;
@@ -351,11 +416,19 @@ function renderExercises() {
     const button = node('button', `exercise-item${state.exercise?.id === exercise.id ? ' active' : ''}`);
     button.type = 'button';
     button.dataset.exerciseId = exercise.id;
-    button.setAttribute('aria-label', `${exercise.title}, ${exercise.group || 'Exercise'}`);
+    const solved = solvedExercise(exercise);
+    button.dataset.solved = String(solved);
+    button.setAttribute('aria-label', `${exercise.title}, ${exercise.group || 'Exercise'}${solved ? ', Solved' : ''}`);
     if (state.exercise?.id === exercise.id) button.setAttribute('aria-current', 'page');
     const text = node('span', 'exercise-item-text');
     text.append(node('span', 'exercise-item-title', exercise.title), node('span', 'exercise-item-predicate', exercise.predicate));
     button.append(node('span', 'exercise-item-number', String(state.exercises.indexOf(exercise) + 1).padStart(2, '0')), text);
+    if (solved) {
+      const check = node('span', 'exercise-item-solved', '✓');
+      check.setAttribute('aria-hidden', 'true');
+      check.title = 'Solved: zero edit distance and 1.000 behavioral score, with no bounded counterexamples.';
+      button.append(check);
+    }
     if (state.exercise?.id === exercise.id) button.append(node('span', 'exercise-item-arrow', '›'));
     button.addEventListener('click', () => selectExercise(exercise.id));
     elements.list.append(button);
@@ -642,6 +715,15 @@ async function selectExercise(id) {
     if (selection !== state.selection) return;
     if (!exercise || typeof exercise.id !== 'string' || typeof exercise.starter !== 'string') throw new Error('This exercise could not be loaded.');
     state.exercise = exercise;
+    const summary = state.exercises.find(item => item.id === exercise.id);
+    if (summary) {
+      for (const field of ['title', 'group', 'predicate', 'description', 'contentVersion']) summary[field] = exercise[field];
+    }
+    const completion = state.solved.get(exercise.id);
+    if (completion && completion.version !== exerciseVersion(exercise)) {
+      state.solved.delete(exercise.id);
+      saveSolvedExercises();
+    }
     state.loadingExercise = false;
     state.context = 'before';
     loadHistory();
@@ -706,6 +788,7 @@ function checkPredicate() {
 }
 
 async function runPredicateCheck() {
+  state.structuralCompletionEvidence = null;
   clearOperationHighlight();
   clearCanonicalForm('Checking this draft…');
   resetBehavior('Waiting for this draft to compile…', 'Waiting');
@@ -754,6 +837,8 @@ async function runPredicateCheck() {
       throw new Error('The server returned feedback for a different comparison method. Check your predicate again.');
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
+      state.structuralCompletionEvidence = { exerciseId, revision, selection, body, metric,
+        distance: result.distance, version: exerciseVersion(state.exercise), responseVersion: result.contentVersion ?? null };
       state.education = { context: { exerciseId, revision, selection, body, metric }, phase: 'waiting',
         operationIds: (Array.isArray(result.operations) ? result.operations : []).map((_, index) => `operation-${index + 1}`),
         operations: new Map(), instances: new Map() };
@@ -1213,6 +1298,7 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
       return;
     }
     if (!validBehaviorResult(result)) throw new Error('The behavioral checker returned an invalid result. Check your predicate again.');
+    recordSolvedExercise(result, payload, selection, metric);
     state.behaviorEvidence = { token: typeof result.behaviorToken === 'string' && /^[a-f0-9]{64}$/.test(result.behaviorToken) ? result.behaviorToken : null,
       instanceIds: result.categories.flatMap(category => category.instances.map((_, index) => `${category.id}-${index + 1}`)) };
     renderBehavior(result);
@@ -1404,6 +1490,7 @@ function downloadModel() {
 }
 
 async function initialize() {
+  renderWorkspaceBadge();
   const preference = readStorage('live', true);
   elements.live.checked = typeof preference === 'boolean' ? preference : true;
   const metric = readStorage('metric', 'canonical');
@@ -1464,6 +1551,7 @@ async function loadExercises() {
     const data = await fetchJSON('api/exercises', { cache: 'no-cache' });
     if (!Array.isArray(data.exercises)) throw new Error('The exercise catalog could not be read.');
     state.exercises = data.exercises;
+    loadSolvedExercises();
     $('#exercise-count').textContent = String(state.exercises.length);
     elements.group.replaceChildren(new Option('All models', ''));
     [...new Set(state.exercises.map((exercise) => exercise.group).filter(Boolean))].forEach((group) => elements.group.append(new Option(group, group)));

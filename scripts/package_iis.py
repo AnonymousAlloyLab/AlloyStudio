@@ -36,11 +36,13 @@ DEPLOY_FILES = (
 )
 RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_descriptions.json',
                    'prepare_private_data.py', 'manage_exercises.py', 'configure_admin.py')
-ADMIN_MODULES = ('admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py')
+ADMIN_MODULES = ('admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
+                 'candidate_store.py', 'candidate_review.py')
 STORE_FILES = ('exercise_store.py', 'exercise_sql.py', 'sql/schema.json',
                'sql/queries.json', 'sql/compiled-queries.json', 'vendor/sqlean/provenance.json')
 ADMIN_FILES = ('docs/private-exercises.md', 'docs/sqlite-security-spec.md',
-               'docs/admin-security-spec.md', 'docs/admin-setup.md', 'examples/private-exercise.json')
+               'docs/admin-security-spec.md', 'docs/admin-setup.md',
+               'docs/admin-library-candidates-spec.md', 'examples/private-exercise.json')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
@@ -142,6 +144,9 @@ def version_public_assets(entries: dict[str, bytes], directory: str = '') -> dic
 def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, bytes]:
     root = checked_deployment_path(root).resolve(strict=True)
     entries = {f'wwwroot/{name}': read_source(root, f'web/{name}') for name in WEB_FILES}
+    # A packaged deployment stays public even in a loopback smoke preview.
+    entries['wwwroot/index.html'] = entries['wwwroot/index.html'].replace(
+        b'id="local-workspace-badge"', b'id="local-workspace-badge" data-public-deployment')
     public_asset_versions = version_portal_module(entries)
     public_asset_versions.update(version_public_assets(entries))
     public_asset_versions.update(version_public_assets(entries, 'dashboard/'))

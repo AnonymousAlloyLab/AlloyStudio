@@ -15,7 +15,7 @@
     <header class="app-header">
       <a class="brand" href="./" aria-label="Alloy Studio home"><span class="brand-mark" aria-hidden="true">A<span>·</span></span><span>Alloy<span class="brand-light"> Studio</span></span></a>
       <span class="header-divider" aria-hidden="true"></span><span class="header-section">Live predicate lab</span>
-      <div class="header-end"><a class="dashboard-link" href="./admin/">Administration</a><a class="dashboard-link" href="./dashboard/">Project dashboard</a><span class="engine-badge"><span class="status-dot"></span>Powered by ACGN</span><span class="local-badge">LOCAL WORKSPACE</span></div>
+      <div class="header-end"><a class="dashboard-link" href="./admin/">Administration</a><a class="dashboard-link" href="./dashboard/">Project dashboard</a><span class="engine-badge"><span class="status-dot"></span>Powered by ACGN</span><span id="local-workspace-badge" class="local-badge" hidden>LOCAL WORKSPACE</span></div>
     </header>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Exercise navigation">
@@ -79,6 +79,7 @@
         <section id="behavior-card" class="behavior-card" aria-labelledby="behavior-heading">
           <div class="light-panel-toolbar"><div class="panel-heading"><h2 id="behavior-heading">Behavioral similarity score</h2></div><span id="behavior-state" class="feedback-state" data-state="waiting">Not checked</span></div>
           <div id="behavior-result" aria-live="polite" aria-atomic="false"><p class="behavior-message">Check your predicate to compare its behavior with the oracle.</p></div>
+          <p class="candidate-retention-note">Drafts that pass the bounded behavioral checks may be retained privately for administrator review.</p>
         </section>
         <footer class="workspace-footer"><span>Small edits. Clearer models.</span><span>Alloy + ACGN<span aria-hidden="true"> ↗</span></span></footer>
       </main>

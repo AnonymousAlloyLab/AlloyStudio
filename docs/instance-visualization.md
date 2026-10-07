@@ -20,8 +20,11 @@ An object, called an *atom* in Alloy, is one member of a signature. Names such
 as `Node$0` and `Node$1` distinguish two concrete objects. Their placement in the
 drawing is chosen for readability and has no meaning in the Alloy model.
 
-The diagram lists each object's signature memberships. An atom in both a parent
-signature and a subset still appears only once. The picture does not infer a
+Each object card shows its memberships when they fit, or a type and a count of
+additional memberships. Select the card to read every membership. An atom in both a parent signature and a
+subset still appears only once. A compact name such as `Node 0` corresponds to
+the exact identity `Node$0`, which remains in its details and the tables.
+The picture does not infer a
 signature hierarchy that is absent from the returned data. Integers and hidden
 string values can also appear as connection endpoints even when they have no
 named-signature row. A name such as `String$0` identifies an anonymized value;
@@ -37,18 +40,29 @@ diagram uses a tuple marker and numbered connections: **1** is the first column,
 object fills several positions. The marker is a drawing aid, not an additional
 Alloy object. Unary relations use the same notation with one numbered position.
 
-Object cards and connection labels have separate, measured space. Long names
-are shortened to fit their cards, and memberships wrap onto separate lines;
-select the card to read the full name and memberships. Small sets of related
-types are arranged in columns when that reduces clutter. Connections follow
-orthogonal routes around cards and labels, with separate ports and a preference
-for unused tracks. Two connection lines can still cross in a complex graph;
-a crossing does not represent an object or an extra relationship.
+The layout follows connections from top to bottom, so chains, branches, and
+shared downstream objects form a hierarchy. Cyclic groups remain together;
+their arrows can return to the same level. Disconnected objects remain visible.
+For tuples with several columns, the first column and tuple marker guide the
+layout; numbered spokes still show the actual ordered tuple. This arrangement
+does not declare parenthood or change the model's relationships.
+
+Object cards and connection labels have separate, measured space. Connections
+keep readable relation names rather than requiring a lookup of numbered codes.
+Very long names are shortened on the drawing, with their full names available
+on hover, selection, and in the relation list and exact tables. Distinct relation
+names must remain distinguishable. Connections follow orthogonal routes around
+cards and labels, with separate ports and a preference for simpler paths. Two
+connection lines can still cross in a complex graph; a crossing does not
+represent an object or an extra relationship.
 
 Use the relation selector to focus on a single relation. Select an object or
 connection with the mouse, or focus it with the keyboard and press Enter or
-Space, to read its concrete values. The exact-data disclosure below the picture
-contains the returned atom and relation tables.
+Space, to read its concrete values and emphasize its nearby connections.
+**Show all connections** clears this emphasis. It does not change the relation
+selector. **How to read this diagram** opens the notation guide when needed.
+The exact-data disclosure below the picture contains the returned atom and
+relation tables.
 
 ## Temporal examples and large instances
 
@@ -64,10 +78,11 @@ relation or consult the exact tables for the returned data. A separate backend
 truncation notice means some instance data was already omitted before reaching
 the browser. The picture cannot recover those omitted values.
 
-On a narrow screen, the diagram starts centered so a small instance is visible
-immediately. Scroll within it to inspect the remaining objects without shrinking
-labels to unreadable sizes. Large diagrams also scroll vertically inside the
-picture. The page itself remains within the screen.
+On a narrow screen, the diagram starts centered on a complete object. Scroll
+within it to inspect the remaining objects at normal text size, or choose
+**Fit width** for an overview. **100%** restores normal size; the zoom buttons
+adjust the view between 25% and 150%. Large diagrams also scroll vertically
+inside the picture. The page itself remains within the screen.
 
 ## Implementation boundary
 
@@ -93,3 +108,37 @@ connections must avoid unrelated objects and text. Additional cases cover long
 names, parallel and reverse relations, self-connections, repeated higher-arity
 columns, filtering, and the display limit. The public fixture contains only
 concrete instance data and the learner's draft, with no oracle predicate.
+
+`tests/instance-hierarchy.mjs` additionally checks chains, trees, shared-child
+DAGs, cycles, disconnected components, visible relation names, and exact tuple
+and membership retention. It can replay the retained public 181-invariant
+instance audit at desktop and mobile widths without starting Alloy or calling
+an AI provider. Each report records its input and renderer hashes; it is a
+finite rendering check, not a claim about every possible Alloy instance.
+
+The 2026-10-07 validation passed **36 focused checks** and **2,878 desktop/mobile
+checks** over all **181 invariants**, replaying **1,342 retained instances** with
+**1,439 states**. All returned atoms, memberships, and ordered tuples were
+preserved in the real instances; the measured checks found no overlapping
+objects or text, clipped canvas contents, or routes through unrelated objects
+and labels. Initial mobile views include a complete object in the uppermost
+visible row. Focus, filtering, fitting, zoom, and reset also retain the instance
+data. This replay used no solver, provider, or external network requests.
+
+The complete **88-scenario browser suite** also passed, including editor and
+guidance regressions and the IIS asset/import checks. A fresh timestamped IIS
+archive was built and its diagram module and stylesheet matched the checkout.
+These are local browser and package checks, not a new native IIS deployment.
+
+Run the focused checks with:
+
+```sh
+node tests/instance-hierarchy.mjs --output=build/instance-hierarchy/check
+```
+
+If the retained public audit responses are present locally, add
+`--cached-responses=build/instance-audit-v003/responses` to replay every recorded
+state. The final local receipt is
+`build/instance-hierarchy/tests/final-bound-cached/report.json`; it binds the
+renderer, stylesheet, fixture, and independent checks to their SHA-256 hashes.
+Earlier attempt receipts remain available alongside it.

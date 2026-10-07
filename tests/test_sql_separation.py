@@ -96,8 +96,10 @@ class SqlSeparationMutationTests(unittest.TestCase):
     def test_current_production_maps_registered_queries_and_source_inventory(self):
         result = bridge.extract(self.root)
         self.assertEqual(result, self.baseline)
-        self.assertEqual(len(result['registry']), 10)
-        self.assertEqual(len(result['mappings']), 31)
+        self.assertEqual(len(result['registry']), 16)
+        self.assertEqual(len(result['mappings']), 48)
+        self.assertIn('candidate_store.py', result['sources'])
+        self.assertIn('candidate_review.py', result['sources'])
         self.assertIn('web/admin/app.js', result['sources'])
         self.assertIn('exercise_sql.py', result['sources'])
         self.assertIn('scripts/package_iis.py', result['sources'])
@@ -156,6 +158,21 @@ class SqlSeparationMutationTests(unittest.TestCase):
 
     def test_request_selected_table_is_rejected(self):
         self.append('exercise_store.py', 'def new_route(connection, request):\n    return _rows(connection, request["table"])\n')
+        self.rejected()
+
+    def test_candidate_selected_query_identifier_is_rejected(self):
+        self.append('candidate_store.py', 'def injected(connection, request):\n'
+                    '    sql.execute(connection, request["query"], (request["value"],))\n')
+        self.rejected()
+
+    def test_candidate_selected_qualified_table_is_rejected(self):
+        self.append('candidate_store.py', 'def injected(connection, request):\n'
+                    '    store._insert(connection, request["table"], request["values"])\n')
+        self.rejected()
+
+    def test_candidate_raw_sql_is_rejected(self):
+        self.append('candidate_store.py', 'def injected(connection, request):\n'
+                    '    connection.execute(request["sql"])\n')
         self.rejected()
 
     def test_escaped_rows_adapter_is_rejected(self):

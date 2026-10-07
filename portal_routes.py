@@ -14,12 +14,13 @@ import re
 from types import SimpleNamespace
 
 from admin_service import AdminError
+from exercise_store import content_version
 from luna import solution_length_comparison
 from traffic_scheduler import CapacityError, Superseded, ChannelExpired
 
 PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmentBefore',
-                 'environmentAfter', 'predicateHeader', 'starter', 'source')
-SUMMARY_FIELDS = ('id', 'title', 'group', 'predicate', 'description')
+                 'environmentAfter', 'predicateHeader', 'starter', 'source', 'contentVersion')
+SUMMARY_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'contentVersion')
 MAX_BODY_BYTES = 8192
 METRICS = {'canonical': 'acgn-fast-rewrite-canonical-distance',
            'ast': 'acgn-raw-ast-zhang-shasha-distance'}
@@ -105,7 +106,7 @@ NOT_FOUND = Reply(404, {'error': 'Not found.'})
 
 
 def project(record, fields):
-    return {key: record[key] for key in fields}
+    return {key: content_version(record) if key == 'contentVersion' else record[key] for key in fields}
 
 
 def behavior_token(exercise_id, body, evidence):
@@ -316,7 +317,7 @@ def public_post(app, request):
         if not error and not app.scheduler.current(channel, revision):
             result = {'status': 'superseded'}
     status = 503 if result.get('code') == 'capacity' and result.get('dispatched') is False else 200
-    delivery = {'exerciseId': record['id'], 'revision': revision}
+    delivery = {'exerciseId': record['id'], 'revision': revision, 'contentVersion': content_version(record)}
     if path != '/api/behavior':
         delivery['requestedMetric'] = metric
     return Reply.json(status, dict(result, **delivery))
@@ -383,6 +384,40 @@ def admin_post(app, request, principal):
         # The final transaction guard is the commit authorization point.
         # A later logout must not turn a successful commit into a failure.
         return Reply.json(200, result)
+    elif path == '/api/admin/library':
+        if set(data) != {'offset'}:
+            raise AdminError(400, 'Provide a page offset.')
+        result, status = app.admin.library(principal, data['offset']), 200
+    elif path == '/api/admin/questions/detail':
+        if set(data) != {'exerciseId'}:
+            raise AdminError(400, 'Provide an exercise ID.')
+        result, status = app.admin.question(principal, data['exerciseId']), 200
+    elif path == '/api/admin/questions/edit':
+        if set(data) != {'exerciseId', 'version', 'title', 'question'}:
+            raise AdminError(400, 'Provide the exercise, current version, title and question.')
+        result = app.admin.edit_question(principal, data['exerciseId'], data['version'], data['title'], data['question'])
+        return Reply.json(200, result)
+    elif path == '/api/admin/questions/remove':
+        if set(data) != {'exerciseId', 'version', 'confirmation'} or data['confirmation'] != data['exerciseId']:
+            raise AdminError(400, 'Confirm the selected exercise ID.')
+        result = app.admin.remove_question(principal, data['exerciseId'], data['version'])
+        return Reply.json(200, result)
+    elif path == '/api/admin/candidates':
+        if set(data) != {'offset'}:
+            raise AdminError(400, 'Provide a page offset.')
+        result, status = app.admin.candidates(principal, data['offset']), 200
+    elif path == '/api/admin/candidates/detail':
+        if set(data) != {'id', 'version'}:
+            raise AdminError(400, 'Provide the candidate ID and current version.')
+        result, status = app.admin.candidate(principal, data['id'], data['version']), 200
+    elif path in ('/api/admin/candidates/review', '/api/admin/candidates/approve', '/api/admin/candidates/dismiss'):
+        if set(data) != {'id', 'version'}:
+            raise AdminError(400, 'Provide the candidate ID and current version.')
+        action = path.rsplit('/', 1)[-1]
+        if action == 'dismiss':
+            result = app.admin.dismiss_candidate(principal, data['id'], data['version'])
+            return Reply.json(200, result)
+        result, status = app.admin.start_candidate(principal, data['id'], data['version'], action), 202
     else:
         raise AdminError(404, 'Not found.')
     with auth.guard(principal):

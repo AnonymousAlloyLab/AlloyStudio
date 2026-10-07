@@ -56,6 +56,12 @@ SINKS = {'execute', 'executemany', 'executescript', 'cursor', 'load_extension', 
 FORBIDDEN_CALLS = {'eval', 'exec', '__import__', 'setattr', 'delattr', 'globals', 'locals', 'vars'}
 PROTECTED = {'execute','_registry','_parameters','_read_artifact','_strict_json',
              'DDL','CONTROLS','FIELDS','ARTIFACT_HASHES'}
+# Explicit extension of the historical ten-template inventory. Callers can
+# select only these fixed identifiers; all values still reach bound parameters.
+ADMIN_QUERIES = frozenset(('select_auxiliary_kind', 'select_auxiliary_item',
+                          'delete_auxiliary_item', 'update_auxiliary_item',
+                          'update_question_metadata', 'select_question_prose'))
+SQL_CALLERS = frozenset(('exercise_store.py', 'candidate_store.py'))
 
 
 class BridgeError(ValueError):
@@ -224,7 +230,8 @@ def extract(root=ROOT):
     queries = compiled['queries']
     identifiers = [entry['id'] for entry in queries]
     if (len(set(identifiers)) != len(identifiers) or set(identifiers) !=
-            {'select_schema','select_schema_sql', *(prefix+table for prefix in ('select_','insert_') for table in fields)}):
+            {'select_schema','select_schema_sql', *ADMIN_QUERIES,
+             *(prefix+table for prefix in ('select_','insert_') for table in fields)}):
         raise BridgeError('Unmapped registered query')
     if any(type(value) is not str for value in (*controls, *ddl)):
         raise BridgeError('Nonliteral control statement')
@@ -239,7 +246,7 @@ def extract(root=ROOT):
                     if alias.name == 'sqlite3' and (alias.asname or relative not in
                             {'exercise_sql.py','exercise_store.py','scripts/prepare_private_data.py'}):
                         raise BridgeError('Unregistered SQLite import')
-                    if alias.name == 'exercise_sql' and (relative != 'exercise_store.py' or alias.asname != 'sql'):
+                    if alias.name == 'exercise_sql' and (relative not in SQL_CALLERS or alias.asname != 'sql'):
                         raise BridgeError('Unregistered database adapter alias')
             if isinstance(node, ast.ImportFrom) and node.module == 'sqlite3':
                 raise BridgeError('Unregistered SQLite capability alias')
@@ -291,6 +298,16 @@ def extract(root=ROOT):
                     raise BridgeError('Caller-controlled table selector')
                 mappings.append({'file':relative,'line':node.lineno,'kind':'literal-table-selector',
                                  'table':parent.args[1].value,'helper':node.id})
+            if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load) and node.attr in {'_rows', '_insert'}:
+                parent = parents[id(node)]
+                if (relative != 'candidate_store.py' or not isinstance(node.value, ast.Name)
+                        or module_aliases.get(node.value.id) != 'exercise_store'
+                        or not isinstance(parent, ast.Call) or parent.func is not node
+                        or len(parent.args) < 2 or not isinstance(parent.args[1], ast.Constant)
+                        or parent.args[1].value not in fields):
+                    raise BridgeError('Unregistered or caller-controlled qualified table selector')
+                mappings.append({'file':relative,'line':node.lineno,'kind':'literal-table-selector',
+                                 'table':parent.args[1].value,'helper':node.attr})
             if not isinstance(node,ast.Attribute) or node.attr not in SINKS | {'connect'}:
                 continue
             parent = parents[id(node)]
@@ -325,13 +342,20 @@ def extract(root=ROOT):
                             syntax(ast.parse('connection.execute(statement)'))):
                         raise BridgeError('Unregistered schema execution loop')
                     kind = 'fixed-schema'
-            elif relative == 'exercise_store.py' and receiver == 'connection' and node.attr == 'execute':
+            elif relative in SQL_CALLERS and receiver == 'connection' and node.attr == 'execute':
                 if (len(parent.args)==1 and not parent.keywords and isinstance(parent.args[0],ast.Constant)
                         and parent.args[0].value in controls): kind = 'fixed-control'
-            elif relative == 'exercise_store.py' and receiver == 'sql' and node.attr == 'execute':
-                if expression in ("sql.execute(connection, 'select_' + table)",
+            elif relative in SQL_CALLERS and receiver == 'sql' and node.attr == 'execute':
+                if relative == 'exercise_store.py' and expression in ("sql.execute(connection, 'select_' + table)",
                     "sql.execute(connection, 'insert_' + table, tuple((values[field] for field in sql.FIELDS[table])))"):
                     kind = 'registered-row-adapter'
+                elif (len(parent.args) == 3 and not parent.keywords
+                      and isinstance(parent.args[0], ast.Name) and parent.args[0].id == 'connection'
+                      and isinstance(parent.args[1], ast.Constant) and parent.args[1].value in ADMIN_QUERIES
+                      and isinstance(parent.args[2], ast.Tuple)
+                      and len(parent.args[2].elts) == next(len(q['parameters']) for q in queries
+                                                        if q['id'] == parent.args[1].value)):
+                    kind = 'registered-literal-query'
             if kind is None:
                 raise BridgeError('Unregistered SQL execution shape: ' + relative)
             mappings.append({'file':relative,'line':node.lineno,'kind':kind,'expression':expression})

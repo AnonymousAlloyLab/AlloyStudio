@@ -40,7 +40,7 @@ run under
 '''
 RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
 RUNTIME_FILES = ('traffic_profile.py', 'traffic_limits.py', 'execution_profile.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
-                 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
+                 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py',
                  'scripts/configure_admin.py', 'docs/admin-setup.md', 'docs/admin-security-spec.md',
                  'scripts/manage_exercises.py', 'docs/private-exercises.md',
                  'docs/sqlite-security-spec.md', 'examples/private-exercise.json',

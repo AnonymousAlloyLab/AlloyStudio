@@ -1,7 +1,8 @@
 """Bounded, owner-bound upload jobs and atomic administrative publication."""
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import dataclass, field
+import re
 import secrets
 import threading
 import time
@@ -9,7 +10,10 @@ import time
 from admin_auth import AuthError
 from admin_luna import suggest
 from admin_upload import prepare_upload, UploadError
-from exercise_store import StoreError, commit_upload, text
+from exercise_store import (StoreError, commit_upload, text, library_list, library_detail,
+                            edit_question, remove_question, exercise_version, prepare_approval)
+import candidate_store
+import candidate_review
 
 DRAFT_SECONDS = 900
 MAX_DRAFTS = 8
@@ -37,6 +41,9 @@ class Draft:
     scope: int = 5
     suggestion_status: str = 'not_requested'
     message: str = 'Checking the model and all solution variants…'
+    kind: str = 'upload'
+    candidate_id: str = ''
+    result: object = None
 
 
 class AdminService:
@@ -84,6 +91,10 @@ class AdminService:
 
     @staticmethod
     def _view(draft):
+        if draft.kind != 'upload':
+            return dict(id=draft.identifier, revision=draft.revision, state=draft.state,
+                        kind=draft.kind, candidateId=draft.candidate_id,
+                        message=draft.message, result=deepcopy(draft.result))
         return dict(id=draft.identifier,revision=draft.revision,state=draft.state,
                     filename=draft.filename,sourceSha256=draft.source_hash,
                     equivalenceScope=draft.scope,groups=deepcopy(draft.groups),
@@ -228,12 +239,177 @@ class AdminService:
             draft = self._owned(principal,identifier,revision)
             if draft.state != 'ready' or draft.prepared is None:
                 raise AdminError(409,'This draft is not ready to publish or has already been published.')
-            snapshot = commit_upload(self.portal.root,draft.prepared,metadata,
-                                     guard=lambda:self._publication_guard(principal,draft,revision))
-            # A single pointer publishes a fully validated, committed generation.
-            self.portal.snapshot = snapshot
+            with self._snapshot_guard():
+                snapshot = commit_upload(self.portal.root,draft.prepared,metadata,
+                                         guard=lambda:self._publication_guard(principal,draft,revision))
+                # A single pointer publishes a fully validated, committed generation.
+                self.portal.snapshot = snapshot
             identifiers = [item['id'] for item in draft.prepared['documents']]
             draft.prepared = None
             draft.state, draft.revision = 'committed',draft.revision+1
             draft.message = 'Published. The exercises are available in Alloy Studio.'
             return {'status':'committed','exerciseIds':identifiers,'exerciseCount':snapshot.exercise_count}
+
+    def _snapshot_guard(self):
+        # Test portals may omit the publication lock; production Portal owns it.
+        return getattr(self.portal, 'snapshot_lock', nullcontext())
+
+    def library(self, principal, offset):
+        with self.lock, self.auth.guard(principal):
+            self._available()
+            return library_list(self.portal.snapshot, offset=offset)
+
+    def question(self, principal, identifier):
+        with self.lock, self.auth.guard(principal):
+            self._available()
+            return library_detail(self.portal.snapshot, identifier)
+
+    def _question_mutation(self, principal, operation, *args):
+        with self.lock:
+            self._available()
+            self.auth.validate(principal)
+            self._version(args[1])
+            with self._snapshot_guard():
+                try:
+                    snapshot = operation(self.portal.root, *args,
+                                         guard=lambda:self.auth.guard(principal))
+                except StoreError:
+                    raise AdminError(409, 'The question changed or cannot be updated. Refresh the library.') from None
+                self.portal.snapshot = snapshot
+                return {'status':'committed', 'exerciseCount':snapshot.exercise_count}
+
+    def edit_question(self, principal, identifier, version, title, question):
+        return self._question_mutation(principal, edit_question, identifier, version, title, question)
+
+    def remove_question(self, principal, identifier, version):
+        return self._question_mutation(principal, remove_question, identifier, version)
+
+    def candidates(self, principal, offset):
+        with self.lock, self.auth.guard(principal):
+            self._available()
+            return candidate_store.list_candidates(self.portal.root, self.portal.snapshot, offset=offset)
+
+    def candidate(self, principal, identifier, version):
+        with self.lock, self.auth.guard(principal):
+            self._available()
+            self._candidate_identity(identifier, version)
+            return candidate_store.read_candidate(self.portal.root, self.portal.snapshot, identifier, version)
+
+    def dismiss_candidate(self, principal, identifier, version):
+        with self.lock:
+            self._available()
+            self.auth.validate(principal)
+            self._candidate_identity(identifier, version)
+            with self._snapshot_guard():
+                result = candidate_store.dismiss(self.portal.root, self.portal.snapshot, identifier, version,
+                                                guard=lambda:self.auth.guard(principal))
+            return {'status':'dismissed', 'candidate':result}
+
+    def start_candidate(self, principal, identifier, version, action):
+        if action not in ('review', 'approve'):
+            raise AdminError(400, 'Unknown candidate action.')
+        with self.lock:
+            self._available()
+            self.auth.validate(principal)
+            self._candidate_identity(identifier, version)
+            self._cleanup()
+            if (len(self.drafts) >= MAX_DRAFTS or
+                    sum(d.principal.owner == principal.owner for d in self.drafts.values()) >= MAX_OWNER_DRAFTS):
+                raise AdminError(429, 'Discard an earlier operation before starting another.')
+            with self._snapshot_guard():
+                snapshot = self.portal.snapshot
+                candidate = candidate_store.read_candidate(self.portal.root, snapshot, identifier, version)
+                if candidate['state'] != 'pending' or candidate['stale']:
+                    raise AdminError(409, 'This candidate is no longer pending in the current question.')
+                record = deepcopy(snapshot.exercises[candidate['exerciseId']])
+            if not self.slot.acquire(blocking=False):
+                raise AdminError(429, 'An administrator operation is running. Try again shortly.')
+            draft = Draft(secrets.token_urlsafe(32), principal, self.clock(),
+                          state='reviewing' if action == 'review' else 'approving',
+                          kind=action, candidate_id=identifier,
+                          message=('Sol is reviewing this candidate…' if action == 'review' else
+                                   'Alloy is checking agreement with the unchanged model facts…'))
+            self.drafts[draft.identifier] = draft
+            self.idle.clear()
+            try:
+                threading.Thread(target=self._candidate_operation,
+                                 args=(draft, candidate, record), daemon=True).start()
+            except Exception:
+                del self.drafts[draft.identifier]
+                self.slot.release()
+                self.idle.set()
+                raise AdminError(503, 'The candidate worker is unavailable.') from None
+            return self._view(draft)
+
+    @staticmethod
+    def _version(value):
+        if type(value) is not str or re.fullmatch(r'[0-9a-f]{64}', value) is None:
+            raise AdminError(400, 'Provide the current version from the administrator preview.')
+
+    @classmethod
+    def _candidate_identity(cls, identifier, version):
+        cls._version(version)
+        if type(identifier) is not str or re.fullmatch(r'[A-Za-z0-9_-]{43}', identifier) is None:
+            raise AdminError(400, 'Provide a candidate ID from the administrator cache.')
+
+    @contextmanager
+    def _candidate_guard(self, draft):
+        # Recheck lifetime/owner after solver or provider work and SQLite waits.
+        with self.lock:
+            current = self._owned(draft.principal, draft.identifier, 0)
+            if current is not draft or draft.state not in ('reviewing', 'approving'):
+                raise AdminError(409, 'This candidate operation is no longer active.')
+            with self.auth.guard(draft.principal):
+                yield
+
+    def _candidate_operation(self, draft, candidate, record):
+        try:
+            with self.lock:
+                self._owned(draft.principal, draft.identifier, 0)
+                with self._snapshot_guard():
+                    current = candidate_store.read_candidate(self.portal.root, self.portal.snapshot,
+                                                              candidate['id'], candidate['candidateVersion'])
+                    if (current['state'] != 'pending' or current['stale']
+                            or current['exerciseVersion'] != exercise_version(record)):
+                        raise AdminError(409, 'This candidate changed before its operation started.')
+            if draft.kind == 'review':
+                context = dict(exerciseId=record['id'], exerciseVersion=exercise_version(record),
+                               candidateHash=candidate['candidateHash'], predicate=record['predicate'],
+                               question=record['description'], environmentBefore=record['environmentBefore'],
+                               environmentAfter=record['environmentAfter'], predicateHeader=record['predicateHeader'],
+                               candidateBody=candidate['body'], oracleBodies=[record['oracleBody']],
+                               boundedCheck=candidate['behavioralEvidence'])
+                result = candidate_review.review(self.portal.root, context)
+                with self.lock, self._snapshot_guard():
+                    with self._candidate_guard(draft):
+                        saved = candidate_store.save_review(self.portal.root, self.portal.snapshot,
+                            candidate['id'], candidate['candidateVersion'], result,
+                            guard=lambda:self._candidate_guard(draft))
+                    draft.result = saved
+                    draft.message = ('Review the advice and decide whether to approve or dismiss.'
+                                     if result['status'] == 'ok' else
+                                     'AI review is unavailable. You can still approve through the Alloy check.')
+            else:
+                certificate = prepare_approval(self.portal.root, record, candidate['body'],
+                                               java=self.portal.java, timeout=60)
+                with self.lock, self._snapshot_guard():
+                    snapshot = candidate_store.approve(self.portal.root, candidate['id'],
+                        candidate['candidateVersion'], candidate['exerciseVersion'], certificate,
+                        guard=lambda:self._candidate_guard(draft))
+                    self.portal.snapshot = snapshot
+                    draft.result = {'status':'approved', 'exerciseId':record['id'],
+                                    'exerciseCount':snapshot.exercise_count}
+                    draft.message = 'Approved after the bounded Alloy check. Future hints can match this solution.'
+            with self.lock:
+                draft.state, draft.revision = 'completed', 1
+        except Exception:
+            with self.lock:
+                self._cleanup()
+                if self.drafts.get(draft.identifier) is draft:
+                    draft.state, draft.revision = 'rejected', draft.revision + 1
+                    draft.result = None
+                    draft.message = 'The candidate could not be processed. Refresh it; check agreement, session lifetime and service availability.'
+        finally:
+            with self.lock:
+                self.slot.release()
+                self.idle.set()

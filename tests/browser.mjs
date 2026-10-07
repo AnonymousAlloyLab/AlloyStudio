@@ -921,6 +921,8 @@ try {
     assert.deepEqual(await page.locator('.instance-graph [data-atom]').evaluateAll(nodes => nodes.map(node => node.dataset.atom).sort()),
       ['-2', '1', 'Thing$0', 'Thing$1', 'Thing$2']);
     assert.equal(await page.locator('.instance-graph [data-atom="Thing$0"]').count(), 1, 'Overlapping signature membership must not duplicate an atom');
+    const memberships = await page.locator('.instance-graph [data-atom="Thing$0"] .instance-graph-node-membership').textContent();
+    assert(memberships.includes('Thing') && memberships.includes('Chosen'), 'Short type memberships should remain visible together on the object');
     assert.equal(await page.locator('.instance-graph [data-atom="Thing$2"]').count(), 1, 'Disconnected atoms remain visible');
     const loop = page.locator('.instance-graph-edge[data-source="Thing$0"][data-target="Thing$0"]');
     assert.equal(await loop.count(), 1);
@@ -1012,6 +1014,139 @@ try {
       await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
     }
   });
+  await check('instance-hierarchy-orders-chain-tree-and-shared-child-dag-top-to-bottom', async () => {
+    // Known acyclic relationships provide an independent ancestry contract:
+    // every child must be visibly below its parent, regardless of rank metadata.
+    const fixtures = [
+      { atoms: ['A', 'B', 'C', 'D'], pairs: [['A', 'B'], ['B', 'C'], ['C', 'D']] },
+      { atoms: ['Root', 'Left', 'Right', 'L1', 'L2', 'R1'],
+        pairs: [['Root', 'Left'], ['Root', 'Right'], ['Left', 'L1'], ['Left', 'L2'], ['Right', 'R1']] },
+      { atoms: ['Root', 'Left', 'Right', 'Shared', 'End'],
+        pairs: [['Root', 'Left'], ['Root', 'Right'], ['Left', 'Shared'], ['Right', 'Shared'], ['Shared', 'End']] },
+    ];
+    const visual = await context.newPage();
+    visual.on('pageerror', error => errors.push(error.message));
+    try {
+      await visual.route(url + '/instance-hierarchy-test', route => route.fulfill({ contentType: 'text/html', body:
+        '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<link rel="stylesheet" href="/styles.css"></head><body><main id="hierarchy-probe"></main></body></html>' }));
+      await visual.goto(url + '/instance-hierarchy-test');
+      await visual.evaluate(() => document.fonts.ready);
+      for (const width of [1440, 390]) {
+        await visual.setViewportSize({ width, height: 1000 });
+        for (const fixture of fixtures) {
+          await visual.evaluate(async fixture => {
+            const { renderInstanceGraph } = await import('/instance-graph.js');
+            document.querySelector('#hierarchy-probe').replaceChildren(renderInstanceGraph({ index: 0,
+              signatures: [{ label: 'Node', atoms: fixture.atoms }],
+              relations: [{ label: 'child', arity: 2, tuples: fixture.pairs }] }));
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          }, fixture);
+          const positions = await visual.locator('.instance-graph-node').evaluateAll(nodes => Object.fromEntries(nodes.map(node => {
+            const bounds = node.querySelector('rect').getBoundingClientRect();
+            return [node.dataset.atom, { top: bounds.top, bottom: bounds.bottom }];
+          })));
+          assert.deepEqual(Object.keys(positions).sort(), [...fixture.atoms].sort());
+          if (width === 390) {
+            const rows = [];
+            for (const bounds of Object.values(positions)) {
+              const centerY = (bounds.top + bounds.bottom) / 2;
+              const row = rows.find(row => Math.abs(row.centerY - centerY) < 1);
+              if (row) row.count += 1;
+              else rows.push({ centerY, count: 1 });
+            }
+            assert(rows.every(row => row.count <= 2), 'A freshly rendered mobile hierarchy should wrap after two object columns');
+            assert(await visual.locator('.instance-graph-scroll').evaluate(viewport => {
+              const visible = [...viewport.querySelectorAll('.instance-graph-node > rect')].map(card => card.getBoundingClientRect());
+              const bounds = viewport.getBoundingClientRect();
+              const vertical = visible.filter(card => card.top >= bounds.top && card.bottom <= bounds.bottom);
+              const top = Math.min(...vertical.map(card => card.top));
+              return vertical.some(card => card.top <= top + 1 && card.left >= bounds.left && card.right <= bounds.right);
+            }), 'The first visible mobile hierarchy row should contain a complete object, not only a lower row');
+          }
+          for (const [parent, child] of fixture.pairs) {
+            assert(positions[child].top > positions[parent].bottom + 10,
+              `${parent} → ${child} at ${width}px must read as a downstream level, rather than an unrelated grid slot`);
+          }
+          assert.deepEqual((await visual.locator('.instance-graph-canvas').evaluate(instanceDiagramGeometry)).failures, []);
+          assert.equal(await visual.locator('.instance-graph-tuple').count(), fixture.pairs.length);
+        }
+      }
+    } finally { await visual.close(); }
+  });
+  await check('instance-connections-retain-visible-relation-names-and-ordered-hub-columns', async () => {
+    const fixture = { index: 0, signatures: [{ label: 'Thing', atoms: ['Thing$0', 'Thing$1', 'Thing$2'] }],
+      relations: [{ label: 'Thing.child', arity: 2, tuples: [['Thing$0', 'Thing$1'], ['Thing$1', 'Thing$2']] },
+        { label: 'marked', arity: 1, tuples: [['Thing$1']] },
+        { label: 'position', arity: 3, tuples: [['Thing$0', '-2', 'Thing$1']] },
+        ...[0, 1].map(index => ({ label: `ProductionLine_very_long_but_distinguishable_parallel_relation_${index}`,
+          arity: 2, tuples: [['Thing$0', 'Thing$2']] }))] };
+    const visual = await context.newPage();
+    visual.on('pageerror', error => errors.push(error.message));
+    try {
+      await visual.route(url + '/instance-labels-test', route => route.fulfill({ contentType: 'text/html', body:
+        '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<link rel="stylesheet" href="/styles.css"></head><body><main id="labels-probe"></main></body></html>' }));
+      await visual.goto(url + '/instance-labels-test');
+      await visual.evaluate(() => document.fonts.ready);
+      for (const width of [1440, 390]) {
+        await visual.setViewportSize({ width, height: 1000 });
+        await visual.evaluate(async fixture => {
+          const { renderInstanceGraph } = await import('/instance-graph.js');
+          document.querySelector('#labels-probe').replaceChildren(renderInstanceGraph(fixture));
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        }, fixture);
+        const names = await visual.locator('.instance-graph-tuple').evaluateAll(groups => groups.map(group => ({
+          relationIndex: Number(group.dataset.relationIndex), arity: Number(group.dataset.arity),
+          description: group.getAttribute('aria-label'),
+          labels: [...group.querySelectorAll(Number(group.dataset.arity) === 2 ? '.instance-graph-edge-label' : '.instance-graph-junction-label')]
+            .map(label => label.textContent.replace(/(?:\s*·)?\s+#\d+$/u, '')),
+          columns: [...group.querySelectorAll('.instance-graph-column-label')].map(label => label.dataset.column),
+        })));
+        for (const item of names) {
+          const relation = fixture.relations[item.relationIndex];
+          assert(item.description.includes(relation.label), 'The exact qualified name must remain accessible');
+          assert.equal(item.labels.length, 1, 'Every arrow or higher-arity hub needs a visible relation name');
+          const drawn = item.labels[0], parts = drawn.split('…');
+          assert(drawn === relation.label || (parts.length === 2 && parts[0].length >= 3 && parts[1].length >= 3
+            && relation.label.startsWith(parts[0]) && relation.label.endsWith(parts[1])),
+          'A relation label may shorten a long name in the middle while retaining its identity; a numeric code alone is insufficient');
+          if (item.arity !== 2) assert.deepEqual(item.columns, Array.from({ length: item.arity }, (_, index) => String(index + 1)));
+        }
+        assert.notEqual(names.find(item => item.relationIndex === 3).labels[0], names.find(item => item.relationIndex === 4).labels[0],
+          'Parallel relations with long names must remain distinguishable without relying on color');
+        assert.deepEqual((await visual.locator('.instance-graph-canvas').evaluate(instanceDiagramGeometry)).failures, []);
+        const canvas = visual.locator('.instance-graph-canvas');
+        const snapshot = () => canvas.evaluate(canvas => ({ atoms: [...canvas.querySelectorAll('[data-atom]')].map(node => node.dataset.atom).sort(),
+          tuples: [...canvas.querySelectorAll('[data-tuple-id]')].map(tuple => [tuple.dataset.tupleId, tuple.getAttribute('aria-label'),
+            [...tuple.querySelectorAll('.instance-graph-edge')].map(edge => [edge.dataset.source, edge.dataset.target, edge.dataset.column])]) }));
+        const initial = await snapshot();
+        const normalWidth = await canvas.evaluate(canvas => canvas.getBoundingClientRect().width);
+        const selected = visual.locator('.instance-graph-tuple').first();
+        await selected.focus(); await selected.press('Enter');
+        assert(await visual.locator('.instance-graph-context-related').count() > 0);
+        assert(await visual.locator('.instance-graph-context-muted').count() > 0);
+        await visual.locator('.instance-graph-reset-context').click();
+        assert.equal(await visual.locator('.instance-graph-context-muted, .instance-graph [aria-pressed="true"]').count(), 0);
+        await visual.locator('.instance-graph-fit').click();
+        await visual.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        assert(await visual.locator('.instance-graph-scroll').evaluate(viewport =>
+          viewport.querySelector('svg').getBoundingClientRect().width <= viewport.clientWidth + 1), 'Fit width should fit this ordinary concrete instance');
+        assert.deepEqual(await snapshot(), initial, 'Fitting the diagram must retain exact atoms, tuple identities and ordered endpoints');
+        await visual.locator('.instance-graph-size-normal').click();
+        assert(Math.abs(await canvas.evaluate(canvas => canvas.getBoundingClientRect().width) - normalWidth) <= 1);
+        for (const control of ['.instance-graph-zoom-in', '.instance-graph-zoom-out']) {
+          for (let attempt = 0; attempt < 8 && !await visual.locator(control).isDisabled(); attempt += 1) {
+            await visual.locator(control).click();
+            const percent = Number.parseInt(await visual.locator('.instance-graph-zoom-value').textContent(), 10);
+            assert(percent >= 25 && percent <= 150, 'View controls must keep zoom within the supported range');
+          }
+        }
+        await visual.locator('.instance-graph-size-normal').click();
+        assert.deepEqual(await snapshot(), initial, 'Changing zoom or focus must not change the supplied instance');
+      }
+    } finally { await visual.close(); }
+  });
   await check('complex-instance-layout-keeps-objects-labels-and-routes-separated', async () => {
     const fixture = JSON.parse(await readFile(path.join(root, 'tests/fixtures/production-line-inv3-instances.json'), 'utf8'));
     assert.equal(fixture.provenance.exerciseId, 'productionLineNew-inv3');
@@ -1067,12 +1202,12 @@ try {
           if (width === 390) {
             assert(await visual.locator('.instance-graph-scroll').evaluate(viewport => {
               const bounds = viewport.getBoundingClientRect();
-              return [...viewport.querySelectorAll('.instance-graph-node > rect')].some(node => {
-                const card = node.getBoundingClientRect();
-                return card.left >= bounds.left && card.right <= bounds.right
-                  && card.top >= bounds.top && card.bottom <= bounds.bottom;
-              });
-            }), `${fixtureCase.name}: initial mobile view must show at least one complete object`);
+              const visible = [...viewport.querySelectorAll('.instance-graph-node > rect')]
+                .map(node => node.getBoundingClientRect())
+                .filter(card => card.top >= bounds.top && card.bottom <= bounds.bottom);
+              const top = Math.min(...visible.map(card => card.top));
+              return visible.some(card => card.top <= top + 1 && card.left >= bounds.left && card.right <= bounds.right);
+            }), `${fixtureCase.name}: initial mobile view must show a complete object in its topmost visible row`);
           }
           if (fixtureCase.name === 'both-3') {
             await visual.locator('.instance-graph').screenshot({ path: path.join(artifacts,

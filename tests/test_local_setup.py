@@ -39,7 +39,7 @@ run over
 run under
 '''
 RUNTIME_DIRECTORIES = ('engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'web')
-RUNTIME_FILES = ('traffic_profile.py', 'traffic_limits.py', 'execution_profile.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
+RUNTIME_FILES = ('traffic_profile.py', 'traffic_limits.py', 'execution_profile.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'repair_grammar.py', 'luna.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py',
                  'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py',
                  'scripts/configure_admin.py', 'docs/admin-setup.md', 'docs/admin-security-spec.md',
                  'scripts/manage_exercises.py', 'docs/private-exercises.md',
@@ -525,7 +525,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                                        text=True, encoding='utf-8', timeout=budget(45), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 181 (validated-existing)', completed.stdout)
-            self.assertIn('Engine ready: 378 checks passed', completed.stdout)
+            self.assertIn('Engine ready: 500 checks passed', completed.stdout)
             pool = next(pool for pool in pools['pools'] if pool['exerciseId'] == 'cv_v1-inv4')
             self.assert_served_portal(
                 checkout, unrelated, environment, budget, base / 'server output.log',
@@ -598,7 +598,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 text=True, encoding='utf-8', timeout=budget(45), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 1 (restored-bundle)', completed.stdout)
-            self.assertIn('Engine ready: 378 checks passed', completed.stdout)
+            self.assertIn('Engine ready: 500 checks passed', completed.stdout)
             self.assertTrue((checkout / 'build/engine/classes/live/LiveFeedback.class').is_file())
             original_pair = {name: (checkout / 'exercises' / name).read_bytes()
                              for name in prepare_private_data.PRIVATE_NAMES}

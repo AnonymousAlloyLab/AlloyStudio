@@ -55,6 +55,27 @@ def response(value, *, extra=None):
 
 
 class EducationPromptTests(unittest.TestCase):
+    def test_full_score_requires_complete_counterexample_free_bounded_evidence(self):
+        evidence = behavior()
+        evidence['score'] = 1
+        evidence['sampling'].update(positiveAccepted=2, negativeRejected=2)
+        with self.assertRaises(ValueError):
+            luna.prompt_education(trace(), 'some A', evidence)
+        for category in evidence['categories']:
+            if category['id'] in ('undercoverage', 'overcoverage'):
+                category.update(status='unsat', enumerationComplete=True, instances=[])
+        self.assertEqual(luna.prompt_education(trace(), 'some A', evidence)['behavior']['score'], 1)
+        for mutate in ('positiveAccepted', 'negativeRejected', 'semanticCounterexamples'):
+            changed = deepcopy(evidence)
+            changed['sampling'][mutate] = 1
+            with self.subTest(field=mutate), self.assertRaises(ValueError):
+                luna.prompt_education(trace(), 'some A', changed)
+        changed = deepcopy(evidence)
+        changed['score'] = 0.9999
+        with self.assertRaises(ValueError):
+            luna.prompt_education(trace(), 'some A', changed)
+        self.assertNotIn('1.000 can coexist with counterexamples', luna.INSTRUCTIONS)
+
     def test_all_operations_beyond_old_32_cap_and_all_twelve_instances_are_included(self):
         result = luna.prompt_education(trace(40), 'some A', behavior())
         self.assertEqual(len(result['trace']['operations']), 40)

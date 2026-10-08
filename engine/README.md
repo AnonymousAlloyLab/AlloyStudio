@@ -170,3 +170,20 @@ body-only editing, module/import policy, input size, and concurrency limits.
 
 Run `java -Xmx256m -cp 'build/engine/classes:vendor/acgn/lib/*' live.EngineSelfTest`
 after building for the focused adapter regression suite.
+
+## Behavioral rewards and retained instances
+
+`BehaviorFeedback` enforces model facts and uses the primary oracle for its four
+behavioral categories. A score of 1.000 requires nonempty, completely matching
+samples and complete UNSAT results for both undercoverage and overcoverage.
+Integer round-half-up is capped at 0.999 for all other available results.
+
+The behavior worker retains one exact oracle-source/predicate context and at most
+100 private solutions per polarity. New enumerated instances and category
+witnesses refresh the LFU pools before scoring. Mismatches increase usefulness
+frequencies; minimum-frequency eviction uses the oldest admission to break ties.
+The context and pools are cleared on replacement or evaluation failure. Their
+identities and source never enter public responses. The heap limit and worker
+deadline remain runtime guards; bounded entry counts alone do not prove an RSS
+bound. See the [reward contract](../docs/reward-lfu-contract.md) for the proved
+mathematical surface and the separately tested production boundary.

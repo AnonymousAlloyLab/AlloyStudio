@@ -1,6 +1,6 @@
 {
   "name": "alloy-live-programming",
-  "version": "0.0.6-alpha",
+  "version": "0.0.7-alpha",
   "type": "module",
   "description": "Alloy live programming with canonical and Zhang-Shasha AST repair feedback",
   "scripts": {

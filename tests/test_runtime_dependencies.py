@@ -9,7 +9,7 @@ import tempfile
 import unittest
 import zipfile
 
-from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES, runtime_classpath
+from runtime_dependencies import ENGINE_CHECKS, JAR_FILES, REQUIRED_CLASSES, runtime_classpath
 from scripts.package_iis import build_package
 
 
@@ -66,7 +66,7 @@ class RuntimeDependencyTests(unittest.TestCase):
         completed, report = self.checker(java=self.java, poisoned=True)
         self.assertEqual(completed.returncode, 0, report)
         self.assertEqual(report['status'], 'PASS')
-        self.assertEqual(report['engine'], {'status': 'PASS', 'checks': 378})
+        self.assertEqual(report['engine'], {'status': 'PASS', 'checks': ENGINE_CHECKS})
         dependencies = {item['name']: item for item in report['dependencies']}
         self.assertEqual(set(dependencies), set(JAR_FILES))
         for item in dependencies.values():

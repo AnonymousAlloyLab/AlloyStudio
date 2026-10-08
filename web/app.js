@@ -1,4 +1,5 @@
 import { renderInstanceGraph } from './instance-graph.js';
+import { renderAlloyCode, enterIndent, closingIndent, indentAlloy } from './alloy-language.js';
 
 // BEGIN LEAN POLICY KERNEL
 const LEAN_POLICIES = {"feedbackSuccess":{"acceptedMasks":[1023],"arity":10},"guidanceSuccess":{"acceptedMasks":[8191],"arity":13},"poolChoose":{"acceptedMasks":[0,2,3],"arity":2},"poolFinish":{"acceptedMasks":[3],"arity":2}};
@@ -29,9 +30,9 @@ const elements = {
 };
 const state = {
   exercises: [], exercise: null, loadingExercise: false, revision: 0, selection: 0, metric: 'canonical',
-  feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null, context: 'before',
+  feedbackAbort: null, explainAbort: null, behaviorAbort: null, detailAbort: null, timer: null,
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
-  sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null,
+  sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null, progressiveHints: null,
   solved: new Map(), structuralCompletionEvidence: null,
   channel: null, channelPromise: null, checkFlight: null,
 };
@@ -182,6 +183,7 @@ function setStatus(status, text) {
 }
 
 function invalidateFeedback() {
+  state.progressiveHints = null;
   state.structuralCompletionEvidence = null;
   clearOperationHighlight();
   resetBehavior();
@@ -449,7 +451,26 @@ function renderExercises() {
 function updateEditor() {
   const count = elements.editor.value.split('\n').length;
   elements.lines.textContent = Array.from({ length: count }, (_, index) => index + 1).join('\n');
+  renderAlloyCode(elements.highlight, elements.editor.value + '\n', state.sourceHighlight?.range);
+  $('#indent-button').disabled = elements.editor.disabled;
   syncEditorOverlay();
+  updateCursor();
+}
+
+function replaceEditorText(text, start, end, cursor = start + text.length) {
+  elements.editor.focus({ preventScroll: true });
+  elements.editor.setSelectionRange(start, end);
+  // Native insertion preserves browser undo/redo. Its input event follows the
+  // usual revision, stale-result invalidation, and draft-saving path.
+  const previous = elements.editor.value;
+  const revision = state.revision;
+  let inserted = false;
+  try { inserted = document.execCommand('insertText', false, text); } catch { /* Native API unavailable. */ }
+  if (!inserted && elements.editor.value === previous) {
+    elements.editor.setRangeText(text, start, end, 'end');
+  }
+  if (state.revision === revision && elements.editor.value !== previous) onEdit();
+  elements.editor.setSelectionRange(cursor, cursor);
   updateCursor();
 }
 
@@ -465,7 +486,7 @@ function syncEditorOverlay() {
 function clearSourceHighlight() {
   state.sourceHighlight = null;
   elements.editor.classList.remove('has-source-highlight');
-  elements.highlight.replaceChildren();
+  renderAlloyCode(elements.highlight, elements.editor.value + '\n');
   elements.locationStatus.textContent = '';
   elements.locationBar.hidden = true;
   document.querySelectorAll('.operation-locate[aria-pressed="true"]').forEach((button) => button.setAttribute('aria-pressed', 'false'));
@@ -613,11 +634,8 @@ function locateSource(location, index, context, button) {
   if (!validatedSourceLocation(location, context)) { clearSourceHighlight(); return; }
   clearSourceHighlight();
   const range = location.ranges[index];
-  const mark = node('mark', 'source-range', range.text);
-  mark.dataset.start = range.start;
-  mark.dataset.end = range.end;
-  elements.highlight.append(document.createTextNode(context.body.slice(0, range.start)), mark,
-    document.createTextNode(context.body.slice(range.end) + '\n'));
+  renderAlloyCode(elements.highlight, context.body + '\n', range);
+  const mark = elements.highlight.querySelector('.source-range');
   state.sourceHighlight = { context, range };
   elements.editor.classList.add('has-source-highlight');
   button.setAttribute('aria-pressed', 'true');
@@ -683,14 +701,9 @@ function saveDraft() {
 
 function renderContext() {
   if (!state.exercise) return;
-  const isBefore = state.context === 'before';
-  $('#environment-code').textContent = isBefore ? state.exercise.environmentBefore : state.exercise.environmentAfter;
-  $('#environment-code').setAttribute('aria-label', isBefore ? 'Environment before predicate' : 'Environment after predicate');
-  document.querySelectorAll('.environment-tab').forEach((button) => {
-    const active = button.dataset.context === state.context;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
+  const exercise = state.exercise;
+  renderAlloyCode($('#environment-code'), exercise.environmentBefore + exercise.predicateHeader
+    + '{\n  // TODO: write the predicate body in the editor above\n}' + exercise.environmentAfter);
 }
 
 async function selectExercise(id) {
@@ -788,6 +801,7 @@ function checkPredicate() {
 }
 
 async function runPredicateCheck() {
+  state.progressiveHints = null;
   state.structuralCompletionEvidence = null;
   clearOperationHighlight();
   clearCanonicalForm('Checking this draft…');
@@ -943,6 +957,7 @@ function renderOperation(operation, index, sourceContext) {
 }
 
 function renderFeedback(result, sourceContext = null) {
+  state.progressiveHints = null;
   if (result.status !== 'ok') {
     clearCanonicalForm('Canonical form unavailable for this draft. Check the feedback and try again.');
     resetBehavior('Behavioral feedback needs a successful check of this draft.', 'Not checked');
@@ -1020,8 +1035,25 @@ function renderFeedback(result, sourceContext = null) {
       ? 'Each step changes one syntax-tree node. Select a step to find its expression or insertion context in your code.'
       : 'Select an edit to highlight the related expression. Use the operator hint to decide what to try next.'));
     const operationList = node('ol', 'operation-list');
-    list.forEach((operation, index) => operationList.append(renderOperation(operation, index, sourceContext)));
+    operationList.id = 'repair-hint-list';
+    operationList.append(renderOperation(list[0], 0, sourceContext));
     operations.append(operationList);
+    const hints = { context: sourceContext, list, revealed: 1, operationList, count: null, button: null };
+    state.progressiveHints = hints;
+    if (list.length > 1) {
+      const controls = node('div', 'hint-reveal-controls');
+      const count = node('p', 'hint-reveal-count');
+      count.setAttribute('role', 'status');
+      count.setAttribute('aria-live', 'polite');
+      const button = node('button', 'button secondary show-next-hint', 'Show next hint');
+      button.type = 'button';
+      button.setAttribute('aria-controls', operationList.id);
+      button.addEventListener('click', () => revealNextHint(hints));
+      hints.count = count; hints.button = button;
+      updateHintRevealControls(hints);
+      controls.append(count, button);
+      operations.append(controls);
+    }
   } else operations.append(node('p', 'no-operations', result.distance === 0 ? 'No structural edits are needed.' : 'No detailed operations are available for this comparison.'));
   if (result.trace) {
     const reconciliation = result.trace.matchesDistance
@@ -1044,6 +1076,38 @@ function renderFeedback(result, sourceContext = null) {
   explanationBody.append(node('p', 'explanation-pending', 'Waiting for the behavioral check before preparing explanations…'));
   explanation.append(explanationBody);
   elements.result.replaceChildren(distance, operations, explanation);
+}
+
+function updateHintRevealControls(hints) {
+  if (!hints.count || !hints.button) return;
+  const remaining = hints.list.length - hints.revealed;
+  hints.count.textContent = `${hints.revealed} of ${hints.list.length} hints shown${remaining ? ` · ${remaining} more available` : ''}.`;
+  hints.button.textContent = remaining ? 'Show next hint' : 'All hints shown';
+  hints.button.disabled = !remaining || !sourceContextCurrent(hints.context);
+  hints.button.setAttribute('aria-label', remaining
+    ? `Show next hint (${remaining} remaining)` : 'All hints shown');
+}
+
+function revealNextHint(hints) {
+  if (state.progressiveHints !== hints || !sourceContextCurrent(hints.context)
+    || hints.revealed >= hints.list.length) return;
+  const index = hints.revealed;
+  hints.operationList.append(renderOperation(hints.list[index], index, hints.context));
+  hints.revealed += 1;
+  updateHintRevealControls(hints);
+  renderEducationSummary();
+}
+
+function renderEducationSummary() {
+  const education = state.education;
+  const container = $('#luna-explanation-body');
+  if (!container || !education || education.phase !== 'ready'
+    || !sourceContextCurrent(education.context)) return;
+  const hints = state.progressiveHints;
+  const withheld = hints && hints.revealed < hints.list.length;
+  container.replaceChildren(node('p', withheld ? 'explanation-withheld' : 'explanation-text', withheld
+    ? 'Try the hint you have opened. Luna’s summary will appear after you choose to show all hints.'
+    : education.summary));
 }
 
 const BEHAVIOR_CATEGORIES = [
@@ -1086,6 +1150,7 @@ function validBehaviorResult(result) {
     || sampling.positiveAccepted > sampling.positiveTested || sampling.negativeRejected > sampling.negativeTested) return false;
   if (result.scoreStatus === 'ok') {
     if (typeof result.score !== 'number' || !Number.isFinite(result.score) || result.score < 0 || result.score > 1 || result.scoreReason !== 'OK') return false;
+    if (Math.abs(result.score * 1000 - Math.round(result.score * 1000)) > 1e-9) return false;
   } else if (result.scoreStatus !== 'unavailable' || result.score !== null
     || !['ORACLE_POSITIVE_UNSAT', 'ORACLE_NEGATIVE_UNSAT'].includes(result.scoreReason)) return false;
   const validState = (stateData, index) => stateData && stateData.index === index
@@ -1100,7 +1165,7 @@ function validBehaviorResult(result) {
     && (instance.states.length === instance.traceLength || instance.truncated === true)
     && instance.states.every(validState);
   if (!Array.isArray(result.categories) || result.categories.length !== BEHAVIOR_CATEGORIES.length) return false;
-  return BEHAVIOR_CATEGORIES.every(expected => {
+  const validCategories = BEHAVIOR_CATEGORIES.every(expected => {
     const matching = result.categories.filter(category => category?.id === expected.id);
     if (matching.length !== 1) return false;
     const category = matching[0];
@@ -1110,6 +1175,18 @@ function validBehaviorResult(result) {
       && (category.status === 'unsat' ? category.instances.length === 0 && category.enumerationComplete
         : category.status === 'sat' && category.instances.length > 0);
   });
+  if (!validCategories) return false;
+  if (result.score === 1) {
+    return sampling.positiveTested > 0 && sampling.negativeTested > 0
+      && sampling.positiveAccepted === sampling.positiveTested
+      && sampling.negativeRejected === sampling.negativeTested
+      && sampling.semanticCounterexamples === 0
+      && result.categories.filter(category => ['both', 'neither'].includes(category.id))
+        .every(category => category.status === 'sat' && category.instances.length > 0)
+      && result.categories.filter(category => ['undercoverage', 'overcoverage'].includes(category.id))
+        .every(category => category.status === 'unsat' && category.enumerationComplete && category.instances.length === 0);
+  }
+  return true;
 }
 
 function behaviorTable(caption, headings, rows) {
@@ -1231,13 +1308,11 @@ function renderBehavior(result) {
   const rounded = available ? (Math.round((result.score + Number.EPSILON) * 1000) / 1000).toFixed(3) : 'Unavailable';
   score.append(node('span', `behavior-score${available ? '' : ' unavailable'}`, rounded), node('span', 'behavior-score-range', available ? 'out of 1.000' : 'within these bounds'));
   const explanation = node('div', 'behavior-score-description');
-  explanation.append(node('p', '', 'ACGN reward against the exercise oracle. Structural distance above uses the closest correct predicate.'), node('span', 'behavior-facts', 'Model facts enforced'));
+  explanation.append(node('p', '', 'Behavioral similarity against the exercise oracle, using continuously updated instance samples. Structural distance above uses the closest correct predicate.'), node('span', 'behavior-facts', 'Model facts enforced'));
   if (!available) explanation.append(node('p', 'behavior-score-reason', result.scoreReason === 'ORACLE_POSITIVE_UNSAT'
     ? 'The oracle accepts no instance within these bounds, so the score is unavailable.'
     : 'The oracle rejects no instance within these bounds, so the score is unavailable.'));
-  if (rounded === '1.000' && result.categories.some(category => ['undercoverage', 'overcoverage'].includes(category.id) && category.status === 'sat')) {
-    explanation.append(node('p', 'behavior-rounding-note', 'Rounding shows 1.000; counterexamples still exist within these bounds.'));
-  }
+  explanation.append(node('p', 'behavior-rounding-note', '1.000 requires completed checks with no undercoverage or overcoverage within these bounds.'));
   summary.append(score, explanation);
   const scope = result.scope;
   const bounds = node('p', 'behavior-scope', `Bounds: default atom scope ${scope.overall} · ${scope.bitwidth}-bit integers · sequence bound ${scope.maxSequence} · traces ${scope.minTrace}–${scope.maxTrace} states · sample pool ${scope.poolSize}.`);
@@ -1409,10 +1484,11 @@ async function requestExplanation(payload, selection) {
       ])
         || !validEducation(explanation, education.operationIds, instanceIds)) throw new Error('AI explanations could not be matched to the displayed edits and examples. Check again or retry guidance.');
       education.phase = 'ready';
+      education.summary = explanation.summary;
       education.operations = new Map(explanation.operations.map(item => [item.id, item.description]));
       education.instances = new Map(explanation.instances.map(item => [item.id, item.description]));
       refreshEducationSlots();
-      container.replaceChildren(node('p', 'explanation-text', explanation.summary));
+      renderEducationSummary();
     } else renderExplanationUnavailable(container, explanation.message || 'AI guidance is currently unavailable. Structural feedback remains available.', payload, selection);
   } catch (error) {
     if (error.name === 'AbortError' || !current()) return;
@@ -1509,6 +1585,18 @@ async function initialize() {
   ['click', 'keyup', 'select'].forEach((event) => elements.editor.addEventListener(event, updateCursor));
   elements.editor.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); checkPredicate(); }
+    if (event.isComposing || event.defaultPrevented) return;
+    if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      const edit = enterIndent(elements.editor.value, elements.editor.selectionStart, elements.editor.selectionEnd);
+      replaceEditorText(edit.text, edit.start, edit.end, edit.cursor);
+    }
+    const closing = !event.ctrlKey && !event.metaKey && !event.altKey
+      ? closingIndent(elements.editor.value, elements.editor.selectionStart, elements.editor.selectionEnd, event.key) : null;
+    if (closing) {
+      event.preventDefault();
+      replaceEditorText(closing.text, closing.start, closing.end);
+    }
     if (event.key === 'Escape') {
       elements.editor.dataset.releaseTab = 'true';
       showToast('Press Tab to leave the editor.');
@@ -1517,8 +1605,7 @@ async function initialize() {
       event.preventDefault();
       const start = elements.editor.selectionStart;
       const end = elements.editor.selectionEnd;
-      elements.editor.setRangeText('  ', start, end, 'end');
-      onEdit();
+      replaceEditorText('  ', start, end);
     }
     if (event.key !== 'Escape') delete elements.editor.dataset.releaseTab;
   });
@@ -1537,7 +1624,14 @@ async function initialize() {
     else { clearTimeout(state.timer); }
   });
   elements.download.addEventListener('click', downloadModel);
-  document.querySelectorAll('.environment-tab').forEach((button) => button.addEventListener('click', () => { state.context = button.dataset.context; renderContext(); }));
+  $('#indent-button').addEventListener('click', () => {
+    if (elements.editor.disabled) return;
+    const body = indentAlloy(elements.editor.value);
+    if (body !== elements.editor.value) {
+      replaceEditorText(body, 0, elements.editor.value.length);
+    }
+    elements.editor.focus();
+  });
   window.addEventListener('beforeunload', () => {
     if (!elements.editor.disabled) saveDraft();
     if (state.checkFlight || state.explainAbort) cancelChannel(state.revision + 1);

@@ -94,7 +94,8 @@ class IisPackageTests(unittest.TestCase):
     def fixture(self):
         for name in WEB_FILES:
             self.write(f'web/{name}', 'public learner application')
-        self.write('web/app.js', "import { renderInstanceGraph } from './instance-graph.js';\n")
+        self.write('web/app.js', "import { renderInstanceGraph } from './instance-graph.js';\n"
+                   "import { renderAlloyCode } from './alloy-language.js';\n")
         self.write('web/index.html', '<span id="local-workspace-badge" hidden>LOCAL WORKSPACE</span>'
                    '<link rel="stylesheet" href="./styles.css">'
                    '<script type="module" src="./app.js"></script>')
@@ -107,7 +108,7 @@ class IisPackageTests(unittest.TestCase):
         self.write('LICENSE', 'Portal licence')
         self.write('server.py', '"""Private backend."""\n')
         self.write('luna.py', '"""Private explanation client."""\n')
-        for module in ('engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
+        for module in ('repair_grammar.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
             self.write(module, (ROOT / module).read_bytes())
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
@@ -356,8 +357,10 @@ class IisPackageTests(unittest.TestCase):
         name = 'instance-graph.js'
         version = hashlib.sha256(first['wwwroot/' + name]).hexdigest()
         self.assertEqual(first_manifest['publicAssetVersions'][name], version)
+        language_version = hashlib.sha256(first['wwwroot/alloy-language.js']).hexdigest()
         self.assertEqual(first['wwwroot/app.js'], original_app.replace(
-            b"'./instance-graph.js'", ("'./instance-graph.js?v=" + version + "'").encode()))
+            b"'./instance-graph.js'", ("'./instance-graph.js?v=" + version + "'").encode()).replace(
+            b"'./alloy-language.js'", ("'./alloy-language.js?v=" + language_version + "'").encode()))
         self.write('web/instance-graph.js', 'updated graph rendering')
         _, changed = self.archive()
         self.assertNotEqual(first['wwwroot/app.js'], changed['wwwroot/app.js'])
@@ -405,7 +408,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertGreater(manager.index(writable), readonly)
         self.assertNotRegex(manager, r'Set-RestrictedAcl -Path \$BackendRoot[^\n]*-LocalServiceAccess Modify')
         startup = (ROOT / 'deploy/iis/Start-AlloyStudio.ps1').read_text()
-        self.assertIn("$expectedAssets = @('index.html', 'app.js', 'instance-graph.js', 'styles.css',", startup)
+        self.assertIn("$expectedAssets = @('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css',", startup)
         self.assertNotRegex(startup, r'\$health\.exercises\s+-eq\s+181')
         self.assertIn('$health.exercises -gt 0', startup)
         self.assertIn('@($listing.exercises).Count -ne $health.exercises', startup)
@@ -778,7 +781,7 @@ class IisPackageTests(unittest.TestCase):
         self.assertEqual(action.get('appendQueryString'), 'true')
         blocked = re.compile(boundary.find('match').get('url'))
         self.assertEqual(boundary.find('action').get('statusCode'), '404')
-        for path in ('', 'index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard', 'dashboard/',
+        for path in ('', 'index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css', 'dashboard', 'dashboard/',
                      'dashboard/index.html', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
                      'admin', 'admin/', 'admin/index.html', 'admin/app.js', 'admin/styles.css'):
             self.assertIsNone(blocked.fullmatch(path))

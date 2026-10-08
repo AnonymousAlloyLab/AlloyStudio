@@ -1,0 +1,94 @@
+{
+  "allowlistedAxioms": [],
+  "claims": [
+    "RWD-GATE",
+    "RWD-ARITHMETIC",
+    "RWD-WITNESSES",
+    "LFU-ADMISSION",
+    "LFU-EVICTION",
+    "LFU-UPDATE",
+    "LFU-CONTEXT",
+    "RWD-INTERNAL"
+  ],
+  "excluded": [
+    "Universal Java/Python semantic refinement",
+    "Alloy solver correctness, UNSAT completeness and concrete solution identity construction",
+    "Unbounded equivalence beyond configured scope",
+    "Allocated bytes/RSS and unconditional fairness/liveness",
+    "Browser/deployment functionality",
+    "Historical closure obligations",
+    "Future source mutations"
+  ],
+  "flags": [
+    "--trust=0",
+    "-DwarningAsError=true",
+    "-DgenInjectivity=false",
+    "-j1"
+  ],
+  "id": "RWD01",
+  "inputs": {
+    "docs/reward-lfu-contract.md": "8d57fdd9c496744cc52f51b25eed81866a8d6169a974111d52ebe402d961df2d",
+    "engine/src/live/BehaviorFeedback.java": "ea7df04940a2f1170433a6bdef6c4f199e8cedc8c83fe327a0f10188cc626a6f",
+    "engine/src/live/BehaviorPool.java": "a1efaf63f4813944f2a209ce47983a5921c06b407739fa8fdbf21c6ad52afb61",
+    "engine/src/live/BehaviorReward.java": "b54875141bd9fd3e97d14ad497f4210a1547b50dc967a37eea3b022f1476d564",
+    "formal/lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "formal/reward/Audit.lean": "ac4d57f97e4999b123fd0c9e392dc71c4e58d7ae2457417fa7e8d042962b2a5b",
+    "formal/reward/LFU.lean": "66bbb0b67d16e18a08da2a1f4e1af6d8382671820cdceb70fc9dfc5b80548025",
+    "formal/reward/README.md": "607a73b164fde0ee852f14300ee0fccecacdab6e96eeecb740a3a1cd0dc4b82b",
+    "formal/reward/Reward.lean": "662ff5b9faca5194c69fd3bd6e68c4524890e9c45bbf67ad2a862a286a2b8d8c",
+    "formal/reward/claims.json": "d7dc3b9d6a755df7e1138d07439f319037b37fe631edbe2fa495fb8945748888",
+    "formal/reward/theorems.json": "793e6157f052843b763d7b1c69ef960ca33bdd3c9668c060790d9ecd2bb28365",
+    "formal/reward/witnesses.json": "48a1f8acc7d6662aa3aaf3d3b3eb3b7cf23acb4d97a1d0d3599b954628b25b24",
+    "lean-toolchain": "d5edba4e4b8faad9c1baeadb265716d20d03be4d1a2647dc5e35b0c0325bea7b",
+    "scripts/bridge_policies.py": "f499aedd03d080aa212023f52af7713ebe792c5560eef1cc35187a39e9ca68bc",
+    "scripts/lean_offline.py": "c62a45d4b7ee61fb5f77e7a8e455b0fa6f8020063eda02e5c01b848f78c0eed0",
+    "scripts/verify_lean.py": "0f699df450db1c9ab6f4aad03952b836c33700045fdd9147ad9eb141dfda54f2",
+    "scripts/verify_reward_contract.py": "5153725ed07b1843cabbb8763aea5b3356d7bd9040127112620e2f7f839f49c5",
+    "server.py": "4cf033543f299061af73b79442c5fdfc2dd4a9e3ea1a4598c6f1283b0aa39189"
+  },
+  "leanToolchain": "leanprover/lean4:v4.34.1",
+  "modules": [
+    "Reward",
+    "LFU"
+  ],
+  "productionRefinementEstablished": false,
+  "publicClaims": [
+    "docs/reward-lfu-contract.md",
+    "formal/reward/README.md"
+  ],
+  "requiredCleanBuilds": 2,
+  "requiredReviews": 6,
+  "reviewPolicy": "Two GPT-6 Luna, then two GPT-6.1 Sol, then two GPT-6 Astra; each tier binds all prior JSON hashes and each record binds coverage notes. Constructed breach witnesses required. Reviews do not discharge proofs.",
+  "schemaVersion": 1,
+  "scope": "reward-lfu-model-only",
+  "theoremDeclarations": 92,
+  "trust": [
+    {
+      "binding": "All bin/lib files SHA256-bound before and after both isolated builds; theorem and definition transitive axiom dependencies must be empty",
+      "classification": "TRUSTED",
+      "components": [
+        "Installed pinned Lean 4.34.1 kernel, compiler and standard library"
+      ],
+      "id": "TCB-LEAN"
+    },
+    {
+      "binding": "All transitive project verifier dependencies and audit source frozen in input manifest",
+      "classification": "TRUSTED",
+      "components": [
+        "Registered Python verifier and Lean audit metaprogram",
+        "Source hashing and manifest machinery"
+      ],
+      "id": "TCB-VERIFIER"
+    },
+    {
+      "binding": "Sanitized subprocesses, no network interface beyond unconfigured loopback, isolated read-only input snapshots",
+      "classification": "TRUSTED",
+      "components": [
+        "Python runtime and standard library",
+        "Linux kernel, unshare, filesystem/process semantics",
+        "Hardware and SHA256 collision resistance"
+      ],
+      "id": "TCB-HOST"
+    }
+  ]
+}

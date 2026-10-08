@@ -57,6 +57,9 @@ jobs:
       - name: Replay frozen charged-work refinement on the CI runtime
         # Runtime-portability replay, never a renewal of local VERIFIED closure.
         run: python scripts/verify_work_budget.py --replay
+      - name: Verify the reward and LFU mathematical contract offline
+        # Model-only closure; production correspondence is separately tested.
+        run: python scripts/verify_reward_contract.py
       - name: Current-source freshness of historical closures
         # Fails only on an invalid historical record; STALE is reported, never hidden.
         run: python scripts/source_freshness.py --output build/freshness/report.json

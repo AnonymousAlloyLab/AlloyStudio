@@ -113,7 +113,7 @@ try {
     $runtimeDependencies = Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
         -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe)
     Assert-Check ($runtimeDependencies.dependencies.Count -eq 7) 'all seven bundled JARs have their recorded SHA-256 hashes'
-    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 378) 'fresh JVM passes 378 engine checks with the packaged classpath'
+    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 500) 'fresh JVM passes 500 engine checks with the packaged classpath'
 
     $stage = 'task identity, configuration, and isolation'
     $publicRoots = @(Get-IisPhysicalRoots)
@@ -161,7 +161,7 @@ try {
     Import-Module WebAdministration
     $proxy = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy'
     Assert-Check ([bool]$proxy.enabled -and ([TimeSpan]$proxy.timeout).TotalSeconds -ge 120) 'ARR proxy is enabled with a timeout of at least 120 seconds'
-    foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+    foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
         'dashboard/index.html')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"
@@ -236,12 +236,23 @@ try {
         $behavior.metric -eq 'acgn-reward' -and $behavior.scope.moduleFacts -eq $true -and
         $behavior.categories.Count -eq 4) 'fact-constrained behavioral score and four categories survive IIS'
     Assert-Check (@(Compare-Object @('both', 'undercoverage', 'overcoverage', 'neither') @($behavior.categories.id)).Count -eq 0) 'all four behavioral categories are present'
+    $mismatches = @($behavior.categories | Where-Object { $_.id -in @('undercoverage', 'overcoverage') -and $_.status -eq 'sat' })
+    Assert-Check ($mismatches.Count -gt 0 -and $behavior.scoreStatus -eq 'ok' -and $behavior.score -lt 1) 'concrete counterexamples never receive a full behavioral score'
     foreach ($category in $behavior.categories) {
         Assert-Check (@($category.instances).Count -le 3) ("at most three rendering inputs: " + $category.id)
         foreach ($instance in $category.instances) {
             Assert-Check (@($instance.states).Count -gt 0) 'instance includes concrete graph-rendering state'
         }
     }
+    $payload.body = $operators[0].replacementOperator + ' (iden & adj)'
+    $response = Invoke-PortalRequest 'api/behavior' $payload
+    $agreement = $response.Body | ConvertFrom-Json
+    $emptyMismatch = @($agreement.categories | Where-Object {
+        $_.id -in @('undercoverage', 'overcoverage') -and $_.status -eq 'unsat' -and
+        $_.enumerationComplete -eq $true -and @($_.instances).Count -eq 0
+    })
+    Assert-Check ($response.Status -eq 200 -and $agreement.status -eq 'ok' -and
+        $agreement.score -eq 1 -and $emptyMismatch.Count -eq 2) 'full behavioral score requires both completed counterexample-free checks'
     if ($CheckDiagnostics) {
         $stage = 'private control diagnostics and persistent reuse'
         Assert-Check ($config.PSObject.Properties.Name -contains 'control_port' -and [int]$config.control_port -gt 0) 'private control port is configured for acceptance'

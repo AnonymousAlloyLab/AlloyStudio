@@ -103,7 +103,98 @@ public final class EngineSelfTest {
                 .getString("status").equals("invalid_request"), "predicate validation");
         testNearestCorrectPools();
         testRawAstMode();
+        testBehaviorRewards();
+        testBehaviorPools();
         report.println("EngineSelfTest passed (" + checks + " checks)");
+    }
+
+    private static void testBehaviorRewards() {
+        check(BehaviorReward.millis(100, 100, 100, 100, 1, false) == 999,
+                "10000/10001 counterexample cannot round to full reward");
+        check(BehaviorReward.millis(100, 100, 100, 100, 0, false) == 999,
+                "incomplete semantic evidence cannot receive full reward");
+        check(BehaviorReward.millis(100, 100, 100, 100, 0, true) == 1000,
+                "complete bounded agreement receives full reward");
+        check(BehaviorReward.millis(4, 2, 4, 3, 0, false) == 375,
+                "integer score preserves ordinary ACGN ratio");
+        check(BehaviorReward.millis(8, 1, 1, 1, 0, false) == 125,
+                "integer score preserves exact thousandths");
+        check(BehaviorReward.millis(16, 1, 1, 1, 0, false) == 63,
+                "integer score rounds midpoint half upward");
+        check(BehaviorReward.millis(1, 0, 1, 0, 0, false) == 0,
+                "zero classification score remains zero");
+        for (int p = 1; p <= 100; p++) {
+            check(BehaviorReward.millis(p, p, 100, 100, 1, false) < 1000,
+                    "counterexample full-score exclusion over every pool size");
+        }
+        BehaviorFeedback.resetPools();
+        JSONObject request = new JSONObject().put("studentSource", source("some A"))
+                .put("oracleSource", source("some A")).put("studentBody", "some A").put("predicate", "target");
+        JSONObject first = BehaviorFeedback.evaluate(request);
+        check(first.getString("status").equals("ok") && first.getDouble("score") == 1,
+                "Alloy complete bounded agreement full score");
+        long[] before = BehaviorFeedback.poolState();
+        JSONObject repeated = BehaviorFeedback.evaluate(request);
+        long[] after = BehaviorFeedback.poolState();
+        check(repeated.getDouble("score") == 1 && after[0] <= 100 && after[1] <= 100,
+                "repeated edits retain bounded compatible Alloy signature state");
+        check(after[2] > before[2], "warm fresh evaluation advances positive enumeration");
+        JSONObject wrong = BehaviorFeedback.evaluate(new JSONObject(request.toString())
+                .put("studentSource", source("no A")).put("studentBody", "no A"));
+        check(wrong.getString("status").equals("ok") && wrong.getDouble("score") < 1,
+                "actual Alloy counterexamples exclude full reward");
+        check(wrong.getJSONObject("sampling").getInt("positiveAccepted")
+                < wrong.getJSONObject("sampling").getInt("positiveTested"),
+                "fresh counterexample witnesses participate in final counts");
+        JSONObject switched = BehaviorFeedback.evaluate(new JSONObject(request.toString())
+                .put("oracleSource", source("no A")).put("studentSource", source("no A")).put("studentBody", "no A"));
+        check(switched.getString("status").equals("ok") && switched.getDouble("score") == 1,
+                "exact oracle context switch releases prior classifications");
+        check(BehaviorFeedback.poolState()[0] == 1, "context switch starts fresh positive oracle pool");
+        BehaviorFeedback.resetPools();
+    }
+
+    private static void testBehaviorPools() {
+        BehaviorPool<Integer> pool = new BehaviorPool<>(2);
+        pool.admit("a", 1); pool.admit("b", 2);
+        check(pool.size() == 2, "LFU capacity starts bounded");
+        long epoch = pool.epoch();
+        pool.admit("a", 99);
+        check(pool.size() == 2 && pool.epoch() == epoch && pool.snapshot().get(0).value == 1,
+                "duplicate identity does not replace or touch retained witness");
+        pool.mismatch(pool.snapshot().get(0));
+        pool.admit("c", 3);
+        check(pool.snapshot().get(0).identity.equals("a") && pool.snapshot().get(1).identity.equals("c"),
+                "LFU evicts least frequently defect-detecting witness");
+        BehaviorPool<Integer> ties = new BehaviorPool<>(2);
+        ties.admit("a", 1); ties.admit("b", 2); ties.admit("c", 3);
+        check(ties.snapshot().get(0).identity.equals("b") && ties.snapshot().get(1).identity.equals("c"),
+                "LFU oldest insertion tie breaking");
+        pool.mismatch(pool.snapshot().get(1));
+        pool.admit("d", 4);
+        check(pool.snapshot().get(0).identity.equals("c") && pool.snapshot().get(1).identity.equals("d"),
+                "frequency updates preserve insertion order for ties");
+        try {
+            BehaviorPool.Entry<Integer> entry = pool.snapshot().get(0);
+            var frequency = BehaviorPool.Entry.class.getDeclaredField("frequency");
+            frequency.setAccessible(true); frequency.setInt(entry, Integer.MAX_VALUE);
+            pool.mismatch(entry);
+            check(entry.frequency() == Integer.MAX_VALUE, "LFU frequency saturates without wrapping");
+            var version = BehaviorPool.class.getDeclaredField("epoch");
+            version.setAccessible(true); version.setLong(pool, Long.MAX_VALUE);
+            pool.admit("e", 5);
+            check(pool.epoch() == Long.MAX_VALUE, "LFU diagnostic epoch saturates without wrapping");
+        } catch (ReflectiveOperationException error) {
+            throw new AssertionError("LFU saturation fixture failed", error);
+        }
+        BehaviorPool<Integer> bounded = new BehaviorPool<>(100);
+        boolean alwaysBounded = true;
+        for (int i = 0; i < 1000; i++) {
+            bounded.admit("w" + i, i);
+            alwaysBounded &= bounded.size() <= 100;
+        }
+        check(alwaysBounded && bounded.size() == 100 && bounded.snapshot().get(0).value == 900,
+                "continuous LFU updates retain only finite entries and identities");
     }
 
     private static void testRawAstMode() {

@@ -38,6 +38,9 @@ REQUIRED_CLASSES = (
     'live/BridgePolicies.class', 'live/VerifiedPoolSelection.class', 'live/VerifiedPoolSelection$Result.class',
     'live/LiveFeedback$Candidate.class', 'live/AstFeedback$Candidate.class',
     'live/LiveFeedback.class', 'live/EngineSelfTest.class', 'live/BehaviorFeedback.class',
+    'live/BehaviorReward.class', 'live/BehaviorPool.class', 'live/BehaviorPool$Entry.class',
+    'live/BehaviorFeedback$Context.class', 'live/BehaviorFeedback$Category.class',
+    'live/BehaviorFeedback$UnsafeContext.class',
     'live/SourceLocator.class', 'live/SourceLocator$Range.class', 'live/SourceLocator$1.class',
     'live/CanonicalLocator.class', 'live/CanonicalLocator$Token.class', 'live/CanonicalLocator$Group.class',
     'live/CanonicalLocator$Span.class', 'live/CanonicalLocator$FormIndex.class', 'live/CanonicalLocator$1.class',
@@ -58,7 +61,7 @@ REQUIRED_CLASSES = (
     'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$Adapter.class',
     'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$IndexedTree.class',
 )
-ENGINE_CHECKS = 378
+ENGINE_CHECKS = 500
 
 
 def runtime_classpath(root):

@@ -295,7 +295,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Restore the missing or changed runtime files i
 
 This target-side check requires the complete bundled dependency set, verifies
 each JAR's SHA-256 against `backend/vendor/acgn/snapshot.json`, checks the
-compiled entry classes, and runs 378 engine checks in a fresh JVM. The engine
+compiled entry classes, and runs 500 engine checks in a fresh JVM. The engine
 uses an explicit classpath built from these files and ignores ambient Java
 classpath/option settings. The check needs no compiler, download, network
 connection, credential, or original ACGN checkout. Retain all seven files under
@@ -716,7 +716,7 @@ path generated from `-RuntimeRoot`. It does not select another user's config.
 ```
 
 The script first records all seven dependency filenames, expected/actual SHA-256
-hashes, compiled-class results, and the fresh JVM's 378-check result. Those
+hashes, compiled-class results, and the fresh JVM's 500-check result. Those
 details remain in `runtime_dependencies` even when a dependency failure prevents
 HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
 binding, configured origin, private ACLs and paths, all public exercise

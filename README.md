@@ -34,6 +34,16 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Alpha `v0.0.7-alpha`** reserves a behavioral score of **1.000** for completed,
+fact-aware bounded checks with no undercoverage or overcoverage. Private LFU
+instance pools refresh across edits in the reusable behavior JVM; fresh checks
+do not reuse completed score responses. The model environment expands to show
+its full text. See the [release notes](docs/releases/v0.0.7-alpha.md),
+[reward/LFU engine contract](docs/reward-lfu-engine-spec.md), and
+[response/freshness contract](docs/reward-boundary-spec.md).
+The [Lean reward/LFU contract](docs/reward-lfu-contract.md) provides an isolated
+92-declaration mathematical proof surface; production correspondence is separately tested.
+
 **Alpha `v0.0.6-alpha`** adds hierarchical, labeled instance diagrams, browser-local
 solved checks, public-deployment badge handling, and administrator question
 editing/removal. A bounded private candidate cache admits a draft only after an
@@ -42,6 +52,14 @@ overcoverage. GPT-6.1 Sol review starts only when the administrator clicks
 **Review with Sol**; approval requires a fresh Alloy check. See the
 [release notes](docs/releases/v0.0.6-alpha.md) and
 [library/cache contract](docs/admin-library-candidates-spec.md).
+
+Version `v0.0.7-alpha` also encodes repairs as an ordered, name-free sequence in
+a [finite repair dictionary](docs/repair-operation-grammar.md). The editor shows
+the first hint by default; **Show next hint** reveals one more, with its Luna
+explanation. See the [progressive-hint contract](docs/progressive-hints-spec.md).
+The [Alloy editor](docs/alloy-editor-spec.md) adds keyword coloring, automatic
+indentation, and one model-environment view with a TODO body. Numeric instance
+values have [typed labels and clickable relation context](docs/instance-labels-spec.md).
 
 **Maintenance alpha `v0.0.5-alpha.1`** connects each Luna edit explanation to the
 exercise's natural-language question and the learner's chosen operator. At zero
@@ -396,8 +414,20 @@ If `P` oracle-positive samples contain `p` learner acceptances and `N`
 oracle-negative samples contain `n` learner rejections, the reward is
 `(p * n) / (P * N + c)`. The correction `c` is zero unless every sample agrees;
 then it counts the satisfiable undercoverage and overcoverage directions (0–2).
-The displayed value is rounded to the nearest 0.001. Rounding can display `1.000`
-even when a rare counterexample exists; inspect the categories as well.
+The displayed value uses integer round-half-up to the nearest 0.001, with **1.000
+reserved for nonempty, fully matching samples and complete UNSAT checks in both
+mismatch directions**. Otherwise it is capped at 0.999, even when ordinary rounding
+would produce 1.000. Empty positive or negative pools make the score unavailable.
+
+Each behavior worker retains one exact model/oracle context, with at most 100
+private instances per polarity. Fresh category witnesses enter these LFU pools
+before scoring; repeated edits advance each remaining enumeration by one instance.
+Mismatch observations increase a witness's frequency, and full pools evict the
+oldest among the least frequent entries. Switching context discards the prior
+pools. The numeric score can change as samples improve; it is not a historical
+fixed-sample benchmark value. Completed scores are not reused for new checks;
+identical pending checks still share work. Retained explanation evidence describes
+the immutable observation already shown to the learner.
 
 The four categories are solved independently, so a sampled pool missing a case
 does not label that category empty. Each category exposes at most three examples,

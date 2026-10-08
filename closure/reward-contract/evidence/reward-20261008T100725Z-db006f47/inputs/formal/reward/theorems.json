@@ -1,0 +1,657 @@
+{
+  "schemaVersion": 1,
+  "theorems": [
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.absent_append",
+      "typeSha256": "a28f1451239b6c015fa204e910afff5aaa30e51097cf71a24559937f545d1002"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.absent_member",
+      "typeSha256": "79e004931c9a73a991f86d2b1cc178226d8e694eb0f878f7d914709c9e703cd7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.admit_bounded",
+      "typeSha256": "535f80c727847c67701e20b651d93bc16b43ee704caed31fe3c6a6479d997f5a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.admit_duplicate_unchanged",
+      "typeSha256": "1020e4e46402d946e7f9f80b8885518518ca7396dc55ea86f72a1144496556df"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.admit_unique",
+      "typeSha256": "9e0d41f162ea5206e385c2b08a2f7583f922159d14411fd84f2371189aaa3f4f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.appended_member",
+      "typeSha256": "54c2ef84711b69207270acea1df2c3c755bde0e9c79be3a4515fbd87ffb6751c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.bump_bounded",
+      "typeSha256": "41fba785f752ca636949f80bc1b1d95bee09c9e3a6f3969debe5d2fc700dcf29"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.bump_nondecreasing",
+      "typeSha256": "208f7d2956ddfb9a5d90e25c0f49c1009804ca56f3bf57cba5dd3367a6a4caf6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.bump_saturated",
+      "typeSha256": "a2b417571249f8558846ec4b0f02dac5bb13c37b6d151c54c0069e3d0a792163"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.completed_request_is_fresh",
+      "typeSha256": "15b6f0cf1b110154d92334c8c3a5511dad4808ba25fa179010ec313af7b313c6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.constructive_length_append",
+      "typeSha256": "935dc93c30de3f1ce48fa164e9e9c9ff624abcb1b6d960fafefabcc756e31557"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.context_switch_discards_pool",
+      "typeSha256": "e90a7afc4c05d330ff56d09d26e29ed835897e0f67cca239aba9ee0b175d4760"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.continuous_admissions_bounded",
+      "typeSha256": "4a617b9634dc29ee02f51daf76d9918ebef18bce25346b82dece34006fae5282"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.continuous_admissions_unique",
+      "typeSha256": "c90df69fffb9799166fb46eceae271a3b93737ec13b5f0309b4520fb0f39e3ef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.diagnostic_version_nondecreasing",
+      "typeSha256": "302c58d1cb09965499d9696e1cb8dae971332381be8eea3dd5e5394086b7642a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.diagnostic_version_saturates",
+      "typeSha256": "fcabc713a2bf2de00c7602e209366506c784ca763377506fa840434b281cac4f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase_absent",
+      "typeSha256": "17be8360ca1b71cb96f6677299fabbebc1d062feee2657ce569223af2e371637"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase_length_le",
+      "typeSha256": "863b1d619ee8c492d3345a56b4391ce2ffc8433aaa6423bff21ae4ee6e82365d"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase_length_lt",
+      "typeSha256": "55abe0683ae8e6950b84d2f7fa5f1f6b8feea7278d101bb53456a09c8ec774e4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase_preserves_absent",
+      "typeSha256": "5a15772bbd9f22d63ba3402318bf49bdde3a8077e0aa8b8d96f0137ea1c811f5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase_unique",
+      "typeSha256": "6a5368804779e50bcd5f209815560edcae07f78d50df53e2fd6d358b92c8eb4c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.fresh_admission_present",
+      "typeSha256": "8adbddf1dffa9e43e4e04ac02894c28fc891f317ab841675b7ca9e0ed71b8d3c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.identical_inflight_may_join",
+      "typeSha256": "cd5687e8753fc43512baa36a41c646ad47528431107076140184580bd7b12d4a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.member_cons",
+      "typeSha256": "d114b728bdf494f719fa8e38797aa73965b1eb4be8fc055d43cac6cd8b85d2cd"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.member_not_absent",
+      "typeSha256": "7cef6b739915e40ffa3298ee2175f3143b1d4ec1e84cea1e9d54161e9abf94aa"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_absent_iff",
+      "typeSha256": "15c110764211d0328df16f4f21bab9e0a62ccf61cd2e45c93014ad8c1ece3da8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_identity_order",
+      "typeSha256": "517f073bd24fb98009f0562150690afe436ec589355e00a047da61ab47a08a85"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_length",
+      "typeSha256": "d8cf644d62ac1068d53fe1e7fb66d0061e2a13eb4c4ec06f817b12ea20c6f45e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_retained_hit",
+      "typeSha256": "fa2138f35b93584ac8ae8f3fd229e3f8cdb2a30c63a6461d48fa94708133d3f6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_retention_witness",
+      "typeSha256": "4746e93dad92e6e58de62e8c223a75444b1bc471a0362eaabb992249fe2e4299"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_unique",
+      "typeSha256": "55f64c7e4364992b2b8828d31930c88c03286ecdeeb022ce6f0ed6a049e29920"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch_valid_frequencies",
+      "typeSha256": "f6cbd45a7ecdfb96cc5718a0c8ddf953260397a735b842930f3e07cf683b0ddf"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.oldest_tie_witness",
+      "typeSha256": "6e4cc410913f2bb7c7a142bf00e141012b565350f5d671364fd5aaa9ea230c98"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.same_context_preserves_pool",
+      "typeSha256": "300d86edd754a3b82b6791aee043bf79e75e01c82f07f52b0bd2a914d1031d6f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.survivors_absent",
+      "typeSha256": "dc08b7d7b2e73c4d5e1c430ff66a5c1809cbadcec9a282744d4c2aae8cab1364"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.survivors_length_lt",
+      "typeSha256": "a54b29aea771829398aa5752f70198892931eddededde28747ae2e335a5641a3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.survivors_unique",
+      "typeSha256": "cc9bb3443cafe8155ab6a422e7eb603154944bf0f01c71fe40f5e59c802f8fc4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.unique_append_new",
+      "typeSha256": "696f5e94d183f21c290d072c460323e2ef2b3d59cb35f06d2473d40fd6582a92"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.victim_member_minimum",
+      "typeSha256": "9931d310d5317d084e6b9554dd3a2a14aeb621604e82c90fc9a1374b704736a9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.victim_none_iff",
+      "typeSha256": "7956eb95bfdc241d04ced833b0170f4f78dc12a7893969a820bc6d6216058319"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.victim_oldest_tie",
+      "typeSha256": "6406ae4ecdf12db5b10799a553f60b33447ce150560d220f4aaf5b747ef8945f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.available_denominator_positive",
+      "typeSha256": "5269972ed8b4589737c2bf93f1e5f71bfa023f5e15275c13501429414023896e"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.constructive_min_left",
+      "typeSha256": "875fc7db7b2e4c0810342df75d3f4f50b3a9db08aca8ae1d86ae9601ea02d8c4"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.counterexample_correction_lt_one",
+      "typeSha256": "99d49b19bfdc852dbf05a2eec17fe71875fd037d8d2556cf927a3d84c8f4aa7a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.empty_negative_unavailable",
+      "typeSha256": "2fefee55ec6c3c36d8e23f363dc295f8bc3142e2600f69c978f3f88d02ea964a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.empty_positive_unavailable",
+      "typeSha256": "8c4ea030f272da162dcf89d576d41459b2159668b5e50aef30b86ffc8e981d2f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.full_score_iff",
+      "typeSha256": "16c7cf478283ab614b5ecc2e7190d3acdea674bdddfced45a71f2130bc9df16f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.invalid_unavailable",
+      "typeSha256": "9a25ca35d08ee9f24ef80899b382efde3ae87b98794a67ee5c027e3927b5a69b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.java_rounding_denominator_safe",
+      "typeSha256": "6f225d491a375cc97153b6688a70d3ce201fbbe8c85399c9e1ba84fa58dee8f3"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.java_rounding_numerator_safe",
+      "typeSha256": "ebd8650f0dcca80686cda4e47064b8cb29d9f9f40e4423ab20ffe0adce860e25"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.nonempty_agreement_witness",
+      "typeSha256": "c06e84579fd1a08d671238112c0cf9a64050ebda82d48659bcb9d8316cd33a13"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.nonfull_rounding",
+      "typeSha256": "aaa041b676dbb9686b939c0f08b305e65f8292451e35f7c01ed7883b62dce064"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.nonfull_score_lt_one",
+      "typeSha256": "aa612d4bc94ed7c22194c90071075c037ada40dee5c6d8bd0a3693773329e908"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.old_rounding_false_one",
+      "typeSha256": "81f6d589ffa39b776ce4adc6d199741402349fd13e6e2899a13fa5ed64dcddef"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.overcoverage_check_lt_one",
+      "typeSha256": "b159c1b6b58ff0e25fe613d6b6a7fad1d0535ddae455c8281650c8a61d4b1b3c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.repaired_rounding_counterexample",
+      "typeSha256": "185d3c2aebf26be8014ef13bec15b1f272a90b58a4e57958a203ca49458edaf7"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.sample_mismatch_lt_one",
+      "typeSha256": "b04534d38a6968f564f15af877f3439722f9c3b3091df05ca1afb8602f9e27b9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.score_denominator_bound",
+      "typeSha256": "0dbbb20aea530b28eda3caada049e3b03d4aa649ae5c951986cbbc185c119a8f"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.score_is_bounded",
+      "typeSha256": "869ea573795b3d7e6df16067d3d45717b1590d96a896f9e072de150106fd6473"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.score_numerator_bound",
+      "typeSha256": "2aecf6b2d092adc665bca8fbbd7a62ac340c4a7825b1c0b1d588ee12b1fb04a6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.undercoverage_check_lt_one",
+      "typeSha256": "ed313939c8df38a1732f56535ca09a2002dc87af6e1e0406a201679bb4b0fdc0"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.Decision.ofNat_ctorIdx",
+      "typeSha256": "56f473f932314968a903f14448fab48fb1ba9ef4d89711fa52c220c452231272"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.erase.eq_def",
+      "typeSha256": "71d1a0f9480ea2d7c86669cf447d54613337e82ebf0b397b4f00c25ccb34dca9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqDecision._proof_1",
+      "typeSha256": "1b9a40ec1d0dc90c5e6f38037e493aae1e23e363571a5867fe6516dd40768708"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqDecision._proof_2",
+      "typeSha256": "5dfeaaef98ffca90d2ce6896584272b606ee36b3a87445944104b2b4790e0be2"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.lookup.eq_def",
+      "typeSha256": "31900aede5506307f5f61806d937ac4c39b7a1f98e1462586193f793561e796c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.mismatch.eq_def",
+      "typeSha256": "20b4ad33289c64a35a278f8763d60c0106a346f395cb794b9e52483892ceb6f8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.victim.eq_def",
+      "typeSha256": "dceb618de68a105fcda548743923b61bcf700763d99a1a6a3c0380704bb11a00"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.Decision.fresh.sizeOf_spec",
+      "typeSha256": "b3ec9d80cb679eaf70846e4c0c8ae876f7c6c5795c82c0007deb62058dd6f554"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.Decision.join.sizeOf_spec",
+      "typeSha256": "3fc6681a2dae9fa956e91154c635e9ce53177597676244b30cf3e55c0e36bfed"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.Entry.mk.sizeOf_spec",
+      "typeSha256": "7891cfc5915d7a5c295a71ed6a653eae3a51b9b20a25b850b12b7e56778fa6f6"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.State.mk.sizeOf_spec",
+      "typeSha256": "a263e450722952208a259c1e38682516aefdb486d58ab5fe1731c1ec50a12c18"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqEntry.decEq._proof_1",
+      "typeSha256": "1c1c5773607658a054c99b2edd47afeeca62f92898c00ec9ca3789617c75af9c"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqEntry.decEq._proof_2",
+      "typeSha256": "b8c2ae2d27606fa54c6dad93c0a0f8e0abd0788745b907a8c9c54d3d78c54753"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqEntry.decEq._proof_3",
+      "typeSha256": "56102ec61c195121f828a2df67db16910330e490775e413cf8165352a6668908"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqState.decEq._proof_1",
+      "typeSha256": "febe6c869be89e6b1ada805b14e2c6c3f88e23578b8940df9f33ffd9ca7d5115"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqState.decEq._proof_2",
+      "typeSha256": "fdd0541d2f90286f3cccc9582a24e399366d4c3bcc8c83c91d34d464118f7d35"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqState.decEq._proof_3",
+      "typeSha256": "0a07be7e50026076de8f576809cd18137efce9870d8f257b7c30274064733995"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "LFU",
+      "name": "LFU.instDecidableEqState.decEq._proof_4",
+      "typeSha256": "b80397dbab0bdacf66c246a1cf1af0bcd3cf9e7176a2176ff9bfb9db92243d89"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.Evidence.mk.sizeOf_spec",
+      "typeSha256": "8fcf6a08bbe6c45279c7ce9452d42666e9d126c04c63d672654327a9606eb12a"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_1",
+      "typeSha256": "e24435d9a99537c5823136d2166d05473d3023ac69febca45315b060e8ff1ca8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_2",
+      "typeSha256": "059488269b5fa6e67413eea9362d030d5272322f7d357b72f10f245101d8a88b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_3",
+      "typeSha256": "b0c96d62bb641281320f7c97d0b62f5261b82998bce8494dc8ee6f6fe095c1e9"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_4",
+      "typeSha256": "b2205ceaf1f3387e68cab7ab6102eb753a6d8bf0b7d14750d963139295debde5"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_5",
+      "typeSha256": "90bdc7ca8ecdf4664105c7064f183900ec2911a5052ec85f675a611de8354ca8"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_6",
+      "typeSha256": "a26dc4f3b796cc513035328bde5339b32b052c63f99fe7ff163aa9fd439743e1"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_7",
+      "typeSha256": "6175ff72e50883dcfc2deea4822ae4e960f78d5b897648111d38402c269cbccc"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [],
+      "module": "Reward",
+      "name": "Reward.instDecidableEqEvidence.decEq._proof_8",
+      "typeSha256": "fddd06f48c9dafde959c7f66d587e9af0a25bafef5baae3a514478de32c03f88"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "LFU",
+      "name": "_private.LFU.0.LFU.Absent.match_1.eq_1",
+      "typeSha256": "7930306f01e6cbb5138e0c4a37903abb445a3d23b5c1f497fa128d10071303ce"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "LFU",
+      "name": "_private.LFU.0.LFU.Absent.match_1.eq_2",
+      "typeSha256": "a745117983376e9bf4b189e6dcc783cb63ff91d89ad3affb328800bb6ae96e10"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "LFU",
+      "name": "_private.LFU.0.LFU.victim.match_1.eq_1",
+      "typeSha256": "4987b254acfd864f7fd4caa7bb0648cd20388c582d91dbbfe17b8ed7cb03d29b"
+    },
+    {
+      "axioms": [],
+      "levelParameters": [
+        "u_1"
+      ],
+      "module": "LFU",
+      "name": "_private.LFU.0.LFU.victim.match_1.eq_2",
+      "typeSha256": "9449b3a51285a245bde9f65921b4e910e5ff5f394a0aeeb3d1ee13dc3d58e90d"
+    }
+  ]
+}

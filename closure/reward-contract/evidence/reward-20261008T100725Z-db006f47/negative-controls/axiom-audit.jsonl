@@ -1,0 +1,2 @@
+{"axioms":["Reward.rogue"],"kind":"theorem","levelParameters":[],"module":"Reward","name":"Reward.bad","type":"Lean.Expr.const `False []"}
+{"kind":"forbidden-project-axiom","module":"Reward","name":"Reward.rogue"}

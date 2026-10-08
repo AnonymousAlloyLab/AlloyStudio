@@ -73,7 +73,8 @@ missing examples. If a witness is truncated, say the view is partial. If strings
 do not guess literal values. Explain loops/states only when supplied. Unsatisfiable means no
 instance within the displayed bounds, not a universal result. If behavior is unavailable, say
 examples are unavailable and make no semantic claims. The behavioral score uses bounded samples
-and is rounded to 0.001; even 1.000 can coexist with counterexamples and is not proof. Canonical
+and is rounded to 0.001. A score of 1.000 is reserved for completed checks finding no
+undercoverage or overcoverage within the stated bounds; it is not an unbounded proof. Canonical
 distance zero is equality under implemented normalization, not proof of semantic correctness.
 Raw AST distance uses Zhang-Shasha edits on the parsed, ordered syntax tree without canonical
 normalization. An AST deletion removes one part and keeps its children; an insertion adds one
@@ -357,6 +358,19 @@ def _behavior_evidence(raw):
         categories[name] = {'id': name, 'oracle': polarity[0], 'student': polarity[1],
             'status': category['status'], 'enumerationComplete': complete, 'instances': instances}
     _require(set(categories) == set(types))
+    if score is not None:
+        _require(abs(score * 1000 - round(score * 1000)) < 1e-9)
+    if score == 1:
+        _require(sampling['positiveTested'] > 0 and sampling['negativeTested'] > 0
+                 and sampling['positiveAccepted'] == sampling['positiveTested']
+                 and sampling['negativeRejected'] == sampling['negativeTested']
+                 and sampling['semanticCounterexamples'] == 0
+                 and all(categories[name]['status'] == 'sat' and categories[name]['instances']
+                         for name in ('both', 'neither'))
+                 and all(categories[name]['status'] == 'unsat'
+                         and categories[name]['enumerationComplete']
+                         and not categories[name]['instances']
+                         for name in ('undercoverage', 'overcoverage')))
     return {'status': 'ok', 'metric': 'acgn-reward', 'score': score, 'scoreStatus': raw['scoreStatus'],
             'scoreReason': raw['scoreReason'], 'scope': expected_scope, 'sampling': sampling,
             'categories': [categories[name] for name in types]}

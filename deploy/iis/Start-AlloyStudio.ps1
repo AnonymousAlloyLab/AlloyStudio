@@ -47,7 +47,7 @@ $WebRoot = Get-LocalPath -Path ([Environment]::ExpandEnvironmentVariables([strin
 if ([IO.Path]::GetFileName($WebRoot) -ne 'wwwroot') {
     throw 'The IIS application must point to the distribution public wwwroot directory.'
 }
-$expectedAssets = @('index.html', 'app.js', 'instance-graph.js', 'styles.css', 'web.config', 'dashboard', 'admin')
+$expectedAssets = @('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css', 'web.config', 'dashboard', 'admin')
 $assets = @(Get-ChildItem -LiteralPath $WebRoot -Force)
 if (@(Compare-Object $expectedAssets @($assets.Name)).Count -or
     @($assets | Where-Object { $_.PSIsContainer -and $_.Name -notin @('dashboard', 'admin') }).Count) {

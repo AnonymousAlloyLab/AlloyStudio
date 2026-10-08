@@ -61,7 +61,7 @@ try {
   page.on('request', request => assert.equal(new URL(request.url()).origin, url, 'No provider or external request is permitted'));
   await page.goto(`${url}/?exercise=graphs-inv1`);
   await page.waitForFunction(() => !document.querySelector('#predicate-editor').disabled);
-  await check('persistent-real-browser-two-edits-and-revisit-reuse-exact-feedback-behavior-evidence', async () => {
+  await check('persistent-real-browser-revisit-refreshes-behavior-without-new-jvm-launches', async () => {
     const evidence = [];
     for (const body of ['adj = ~adj', 'no (iden & adj)', 'adj = ~adj']) {
       await page.locator('#predicate-editor').fill(body);
@@ -95,9 +95,11 @@ try {
     const exit = await stopBackend(); assert.equal(exit.code, 0);
     const stats = JSON.parse(await readFile(statsPath, 'utf8'));
     assert.equal(stats.mode, 'persistent');
-    assert.equal(stats.before.launches, 2); assert.equal(stats.before.completed, 4);
+    // Two feedback computations (the revisited body is cached), but all three
+    // behavioral observations must refresh the retained LFU instance pools.
+    assert.equal(stats.before.launches, 2); assert.equal(stats.before.completed, 5);
     assert.equal(stats.before.failures, 0); assert.equal(stats.before.recycled, 0);
-    assert.equal(stats.scheduler.computations, 4); assert.equal(stats.scheduler.cacheHits, 2);
+    assert.equal(stats.scheduler.computations, 5); assert.equal(stats.scheduler.cacheHits, 1);
     assert.equal(stats.scheduler.jobs, 0); assert.equal(stats.scheduler.subscribers, 0);
     assert.equal(stats.after.processBudget.reserved, 0); assert.equal(stats.after.unreaped, 0);
     assert.equal(stats.after.workers.feedback, 0); assert.equal(stats.after.workers.behavior, 0);

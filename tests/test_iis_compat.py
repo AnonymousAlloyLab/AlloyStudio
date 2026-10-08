@@ -123,7 +123,7 @@ class IISCompatibilityTests(unittest.TestCase):
     def test_versioned_frontend_urls_serve_current_bytes_without_cache_revalidation(self):
         # Version queries must preserve the strict asset allowlist. Old IIS
         # validators must not turn changed local frontend content into a 304.
-        for name in ('index.html', 'app.js', 'instance-graph.js', 'styles.css'):
+        for name in ('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css'):
             with self.subTest(asset=name):
                 request = Request(self.url + '/' + name + '?v=content-hash', headers={
                     'If-None-Match': 'W/"old-release-timestamp"',
@@ -208,6 +208,8 @@ class IISCompatibilityTests(unittest.TestCase):
             # projection adds unavailable locations without altering its UTF-8
             # action text or claiming positions that the worker did not supply.
             legacy = {**answer, 'operations': [dict(operation) for operation in answer['operations']]}
+            self.assertEqual(legacy.pop('repairGrammar')['status'], 'unavailable')
+            self.assertEqual(legacy.pop('repairSequence'), [])
             for operation in legacy['operations']:
                 for field, coordinates in (('sourceLocation', 'body'), ('canonicalLocation', 'canonical')):
                     location = operation.pop(field)

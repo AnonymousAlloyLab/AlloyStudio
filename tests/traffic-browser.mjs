@@ -17,6 +17,7 @@ process.env.TEMP = scratch;
 const assets = new Map(await Promise.all([
   ['/', 'index.html', 'text/html'], ['/app.js', 'app.js', 'text/javascript'],
   ['/styles.css', 'styles.css', 'text/css'], ['/instance-graph.js', 'instance-graph.js', 'text/javascript'],
+  ['/alloy-language.js', 'alloy-language.js', 'text/javascript'],
 ].map(async ([url, file, type]) => [url, { type, bytes: await readFile(path.join(root, 'web', file)) }])));
 const record = { id: 'traffic', title: 'Traffic fixture', group: 'Graphs', predicate: 'inv1',
   starter: 'some Node', predicateHeader: 'pred inv1 ', environmentBefore: 'sig Node {}\n',

@@ -10,6 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const assets = new Map(await Promise.all([
   ['/', 'index.html', 'text/html'], ['/app.js', 'app.js', 'text/javascript'],
   ['/styles.css', 'styles.css', 'text/css'], ['/instance-graph.js', 'instance-graph.js', 'text/javascript'],
+  ['/alloy-language.js', 'alloy-language.js', 'text/javascript'],
 ].map(async ([url, file, type]) => [url, { type, bytes: await readFile(path.join(root, 'web', file)) }])));
 const records = () => ['first', 'second'].map((id, index) => ({ id, title: `Question ${index + 1}`,
   group: 'Graphs', predicate: `inv${index + 1}`, description: 'There must be at least one node.',
@@ -181,7 +182,10 @@ try {
         } });
       try {
         await checked(page); await unsolved(item('first'));
-        if (mode === 'rounded') assert.equal(await page.locator('.behavior-score').textContent(), '1.000');
+        if (mode === 'rounded') {
+          assert.equal(await page.locator('#behavior-state').getAttribute('data-state'), 'error');
+          assert.equal(await page.locator('.behavior-score').count(), 0);
+        }
       } finally { await context.close(); }
     }
   });
@@ -197,7 +201,13 @@ try {
         if (mode === 'duplicateCategory') answer.categories[2] = answer.categories[1];
         return answer;
       } });
-      try { await checked(page); await unsolved(item('first')); } finally { await context.close(); }
+      try {
+        await checked(page); await unsolved(item('first'));
+        if (['undercoverage', 'overcoverage', 'incomplete'].includes(mode)) {
+          assert.equal(await page.locator('#behavior-state').getAttribute('data-state'), 'error');
+          assert.equal(await page.locator('.behavior-score').count(), 0);
+        }
+      } finally { await context.close(); }
     }
   });
   await check('failed-or-wrongly-bound-structural-feedback-cannot-be-combined-with-a-perfect-behavior', async () => {

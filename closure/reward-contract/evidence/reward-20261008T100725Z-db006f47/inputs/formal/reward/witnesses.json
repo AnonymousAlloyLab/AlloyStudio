@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "witnesses": [
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "FALSE-ONE",
+      "theorems": [
+        "Reward.old_rounding_false_one",
+        "Reward.repaired_rounding_counterexample"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "FULL-AGREEMENT",
+      "theorems": [
+        "Reward.nonempty_agreement_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "OLDEST-TIE",
+      "theorems": [
+        "LFU.oldest_tie_witness"
+      ]
+    },
+    {
+      "classification": "kernel_checked_model_witness",
+      "id": "LFU-RETENTION",
+      "theorems": [
+        "LFU.mismatch_retention_witness"
+      ]
+    }
+  ]
+}

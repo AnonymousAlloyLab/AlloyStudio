@@ -84,8 +84,9 @@ public final class EngineWorker {
                 } finally {
                     parses = WorkerSafety.end();
                 }
-                // No retained parsed-reference cache. Each request owns every
-                // mutable parser/graph/solver object and releases its disk inputs.
+                // Feedback owns its parser/graph state per request. Behavior
+                // retains one bounded oracle world and LFU witness context;
+                // neither lane retains request disk inputs or learner modules.
                 try (var files = Files.walk(job)) {
                     for (Path file : files.sorted(Comparator.reverseOrder()).toList()) Files.delete(file);
                 }

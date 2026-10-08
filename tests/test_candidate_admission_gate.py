@@ -1,8 +1,7 @@
 """Explicit pre-admission gate witnesses for the private review cache.
 
-In particular, the displayed three-decimal score can be 1.000 even when a
-separate bounded solver query found a concrete disagreement. Such a result
-must never enter the cache, regardless of its agreeing sampled instances.
+In particular, a separate bounded solver disagreement must stay below 1.000
+and must never enter the cache, regardless of its agreeing sampled instances.
 """
 from copy import deepcopy
 import unittest
@@ -28,7 +27,7 @@ class CandidateAdmissionGateTests(unittest.TestCase):
     admit = fixtures.AdminCandidatesTests.admit
     detail = fixtures.AdminCandidatesTests.detail
 
-    def test_rounded_one_with_concrete_under_or_overcoverage_never_enters_cache(self):
+    def test_rare_concrete_under_or_overcoverage_is_below_one_and_never_enters_cache(self):
         # The fixture oracle is `no iden & adj`: an empty graph satisfies it,
         # whereas a one-node self loop does not. These are concrete witnesses
         # against the respective otherwise-plausible student expressions.
@@ -48,11 +47,15 @@ class CandidateAdmissionGateTests(unittest.TestCase):
                 categories['neither']['instances'] = [
                     instance(['Node$0', 'Node$1'], [['Node$0', 'Node$0']])]
                 categories[name].update(status='sat', instances=[witness])
-                # 10000 / 10001 rounds to 1.000. The production projection
-                # accepts this well-formed score/category envelope; admission
-                # must separately reject the solver's disagreement witness.
+                # 10000 / 10001 formerly rounded to 1.000. The projection now
+                # refuses that old worker claim and preserves the witnesses
+                # at 0.999; admission independently rejects both forms.
+                with self.assertRaises(ValueError):
+                    project_behavior(raw)
+                self.assertIsNone(self.admit(body=body, behavior=raw))
+                raw['score'] = 0.999
                 projected = project_behavior(raw)
-                self.assertEqual(projected['score'], 1.0)
+                self.assertEqual(projected['score'], 0.999)
                 self.assertEqual(projected['sampling']['semanticCounterexamples'], 1)
                 self.assertIsNone(self.admit(body=body, behavior=projected))
         self.assertEqual(cache.list_candidates(self.root, self.snapshot)['total'], 0)

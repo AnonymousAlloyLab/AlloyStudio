@@ -68,7 +68,7 @@ const behaviorInstance = (identity, states = 1) => ({ traceLength: states, loopS
   states: Array.from({ length: states }, (_, index) => ({ index,
     signatures: [{ label: 'Node', atoms: [`Node$${identity}`, `State$${index}`] }],
     relations: [{ label: 'adj', arity: 2, tuples: [[`Node$${identity}`, `State$${index}`]] }] })) });
-const behaviorResult = (payload, score = 0.6665) => ({ exerciseId: payload.exerciseId, revision: payload.revision,
+const behaviorResult = (payload, score = 0.667) => ({ exerciseId: payload.exerciseId, revision: payload.revision,
   behaviorToken: createHash('sha256').update(JSON.stringify([payload.exerciseId, payload.body, payload.revision])).digest('hex'),
   status: 'ok', metric: 'acgn-reward', score, scoreStatus: 'ok', scoreReason: 'OK',
   scope: { overall: 3, bitwidth: 3, maxSequence: 3, poolSize: 100, minTrace: 1, maxTrace: 10, moduleFacts: true },
@@ -109,7 +109,16 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   const editor = page.locator('#predicate-editor');
   const feedback = page.locator('#feedback-state');
-  const waitChecked = async () => { await page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Checked'); };
+  // These legacy scenarios inspect complete traces. Explicitly opt in to each
+  // remaining card; progressive-hints.mjs verifies the first-only default.
+  const revealAllHints = async target => {
+    const button = target.locator('.show-next-hint');
+    while (await button.count() && await button.isEnabled()) await button.click();
+  };
+  const waitChecked = async () => {
+    await page.waitForFunction(() => document.querySelector('#feedback-state').textContent === 'Checked');
+    await revealAllHints(page);
+  };
   const waitBehavior = async (status = 'ok') => page.waitForFunction(expected => document.querySelector('#behavior-state').dataset.state === expected, status);
   const submit = async body => { await editor.fill(body); await page.locator('#check-button').click(); await waitChecked(); };
   let record;
@@ -154,7 +163,8 @@ try {
     record = await (await context.request.get(url + '/api/exercises/graphs-inv1')).json();
     assert(!('oracleBody' in record)); assert(!('originalSource' in record));
     assert.equal(await page.locator('#exercise-description').textContent(), record.description);
-    assert.equal(await page.locator('#environment-code').textContent(), record.environmentBefore);
+    assert.equal(await page.locator('#environment-code').textContent(), record.environmentBefore + record.predicateHeader
+      + '{\n  // TODO: write the predicate body in the editor above\n}' + record.environmentAfter);
     await page.screenshot({ path: path.join(artifacts, 'desktop.png'), fullPage: true });
   });
   await check('real-invalid-diagnostic-and-canonical-zero-witness', async () => {
@@ -835,7 +845,7 @@ try {
     await page.unroute('**/api/behavior');
   });
   await check('behavior-rounding-categories-and-three-example-choices', async () => {
-    let score = 0.6665;
+    let score = 0.667;
     await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
     await page.route('**/api/behavior', route => route.fulfill({ json: behaviorResult(route.request().postDataJSON(), score) }));
     await submit('some Node'); await waitBehavior();
@@ -863,10 +873,13 @@ try {
     }
     await page.locator('.behavior-category-choice[data-category="undercoverage"]').click();
     await page.locator('#behavior-card').screenshot({ path: path.join(artifacts, 'behavioral-example-controls.png') });
-    for (const [value, text] of [[0, '0.000'], [1, '1.000'], [0.0005, '0.001'], [0.9995, '1.000'], [0.1234, '0.123']]) {
+    for (const [value, text] of [[0, '0.000'], [0.001, '0.001'], [0.999, '0.999'], [0.123, '0.123']]) {
       score = value; await submit(`some Node // score ${value}`); await waitBehavior();
       assert.equal(await page.locator('.behavior-score').textContent(), text);
-      if (text === '1.000') assert.match(await page.locator('.behavior-rounding-note').textContent(), /counterexamples still exist/);
+    }
+    for (const value of [1, 0.9995, 0.0005]) {
+      score = value; await submit(`some Node // invalid score ${value}`); await waitBehavior('error');
+      assert.equal(await page.locator('.behavior-score').count(), 0);
     }
     await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
   });
@@ -1567,9 +1580,9 @@ try {
     assert.equal(await editor.inputValue(), 'some Node // browser draft');
   });
   await check('preserved-environment-and-download', async () => {
-    await page.locator('[data-context="after"]').click();
-    assert.equal(await page.locator('#environment-code').textContent(), record.environmentAfter);
-    await page.locator('[data-context="before"]').click();
+    assert.equal(await page.locator('.environment-tab').count(), 0);
+    assert.equal(await page.locator('#environment-code').textContent(), record.environmentBefore + record.predicateHeader
+      + '{\n  // TODO: write the predicate body in the editor above\n}' + record.environmentAfter);
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#download-button').click();
     const download = await downloadPromise;
@@ -1726,7 +1739,7 @@ try {
       'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("wwwroot/" + sys.argv[2]))',
       process.env.ALLOY_IIS_TEST_ARCHIVE || path.join(root, 'build/iis/alloy-studio-iis.zip'), name]);
     const packagedIndex = packagedAsset('index.html');
-    const packagedAssets = new Map(['app.js', 'styles.css', 'instance-graph.js'].map(name => [name, packagedAsset(name)]));
+    const packagedAssets = new Map(['app.js', 'styles.css', 'instance-graph.js', 'alloy-language.js'].map(name => [name, packagedAsset(name)]));
     const assetVersions = new Map([...packagedAssets].map(([name, content]) =>
       [name, createHash('sha256').update(content).digest('hex')]));
     for (const name of ['app.js', 'styles.css']) {
@@ -1734,6 +1747,7 @@ try {
       assert(packagedIndex.includes(Buffer.from(`./${name}?v=${version}`)));
     }
     assert(packagedAssets.get('app.js').includes(Buffer.from(`./instance-graph.js?v=${assetVersions.get('instance-graph.js')}`)));
+    assert(packagedAssets.get('app.js').includes(Buffer.from(`./alloy-language.js?v=${assetVersions.get('alloy-language.js')}`)));
     let backendURL;
     let backend;
     let proxyContext;
@@ -1802,9 +1816,11 @@ try {
       assert(proxyRequests.includes(`/alloy/app.js?v=${assetVersions.get('app.js')}`));
       assert(proxyRequests.includes(`/alloy/styles.css?v=${assetVersions.get('styles.css')}`));
       assert(proxyRequests.includes(`/alloy/instance-graph.js?v=${assetVersions.get('instance-graph.js')}`));
+      assert(proxyRequests.includes(`/alloy/alloy-language.js?v=${assetVersions.get('alloy-language.js')}`));
       assert(!proxyRequests.includes('/alloy/app.js'));
       assert(!proxyRequests.includes('/alloy/styles.css'));
       assert(!proxyRequests.includes('/alloy/instance-graph.js'));
+      assert(!proxyRequests.includes('/alloy/alloy-language.js'));
       assert(proxyRequests.includes('/alloy/api/exercises'));
       assert(proxyRequests.includes('/alloy/api/feedback'));
       const proxyEditor = proxyPage.locator('#predicate-editor');

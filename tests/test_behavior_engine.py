@@ -4,7 +4,6 @@ These finite tests do not establish unbounded equivalence or representative
 sampling. Private fixture input and raw engine streams are never in failures.
 """
 import json
-import math
 from pathlib import Path
 import subprocess
 import tempfile
@@ -132,9 +131,13 @@ public class RewardAuthority {
         penalty = sum(categories[i]['status'] == 'sat' for i in (1, 2)) if perfect else 0
         self.assertEqual(counts['semanticCounterexamples'], penalty)
         if available:
-            expected = counts['positiveAccepted'] * counts['negativeRejected'] / (
-                counts['positiveTested'] * counts['negativeTested'] + penalty)
-            expected = math.floor(expected * 1000 + 0.5) / 1000
+            numerator = counts['positiveAccepted'] * counts['negativeRejected']
+            denominator = counts['positiveTested'] * counts['negativeTested'] + penalty
+            rounded = (2000 * numerator + denominator) // (2 * denominator)
+            complete_agreement = perfect and all(
+                categories[i]['status'] == 'unsat' and categories[i]['enumerationComplete']
+                and not categories[i]['instances'] for i in (1, 2))
+            expected = (rounded if complete_agreement else min(999, rounded)) / 1000
             self.assertEqual(result['score'], expected)
             self.assertEqual(result['scoreReason'], 'OK')
         else:
@@ -155,7 +158,10 @@ public class RewardAuthority {
         self.assertTrue(result['categories'][3]['enumerationComplete'])
         self.assertEqual(len(result['categories'][3]['instances']), 1)
 
-    def test_fact_free_score_matches_vendored_rewarder_on_five_behaviors(self):
+    def test_exhausted_small_fact_free_universes_match_legacy_reward_baselines(self):
+        # These small A/B universes fit entirely in each pool. They compare
+        # initial observations only; evolving LFU samples are not claimed to
+        # reproduce the legacy Rewarder's frozen enumeration on larger models.
         for student in ('some A', 'no A', 'some A and some B', 'some A or some B', 'some B'):
             with self.subTest(behavior=['some A', 'no A', 'some A and some B', 'some A or some B', 'some B'].index(student)):
                 payload = request(student, 'some A')
@@ -287,7 +293,7 @@ public class RewardAuthority {
         result = invoke(payload)
         self.assertEqual(result['status'], 'unsupported')
 
-    def test_perfect_samples_receive_independent_semantic_counterexample_penalty(self):
+    def test_rare_semantic_counterexamples_update_samples_and_cannot_get_full_reward(self):
         environment = 'sig A { r: set A }\nsig B { s: set B }\n'
         for student, expected_penalty in [
                 ('some A and not (#A=2 and r=A->A)', 1),
@@ -297,13 +303,13 @@ public class RewardAuthority {
             counts = result['sampling']
             self.assertEqual(counts['positiveTested'], 100)
             self.assertEqual(counts['negativeTested'], 100)
-            self.assertEqual(counts['positiveAccepted'], 100)
-            self.assertEqual(counts['negativeRejected'], 100)
-            self.assertEqual(counts['semanticCounterexamples'], expected_penalty)
-            # Rounding to three decimals can hide this small penalty; SAT
-            # counterexample categories must still remain visible.
-            self.assertEqual(result['score'], 1.0)
-            self.assertEqual(result['score'], invoke(request(student, 'some A', environment), self.authority)['score'])
+            self.assertLess(counts['positiveAccepted'] * counts['negativeRejected'], 10000)
+            self.assertEqual(sum(result['categories'][i]['status'] == 'sat' for i in (1, 2)), expected_penalty)
+            self.assertLess(result['score'], 1.0)
+            # Preserve the legacy implementation as an independent baseline:
+            # it produces the constructed rounded-one defect. The corrected
+            # implementation includes witnesses in its LFU samples first.
+            self.assertEqual(invoke(request(student, 'some A', environment), self.authority)['score'], 1.0)
 
     def test_model_facts_remove_out_of_model_semantic_penalties(self):
         environment = 'sig A {r: set A}\nsig B {s: set B}\nfact {not (#A=2 and r=A->A)}\n'

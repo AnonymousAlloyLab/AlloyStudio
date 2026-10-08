@@ -123,6 +123,40 @@ function tupleDescription(tuple) {
   return `${tuple.relation}, tuple ${tuple.tupleIndex + 1} (${columns}).`;
 }
 
+function highlightContext(canvas, details, description, context, selected) {
+  const root = canvas.closest('.instance-graph') || canvas;
+  for (const previous of root.querySelectorAll('[aria-pressed="true"]')) {
+    previous.setAttribute('aria-pressed', 'false');
+  }
+  selected?.setAttribute('aria-pressed', 'true');
+  details.replaceChildren(html('span', 'instance-graph-selection-description', description));
+  const selectedNodes = new Set(context.nodes);
+  const selectedTuples = new Set(context.tuples);
+  for (const element of canvas.querySelectorAll('.instance-graph-node, .instance-graph-tuple')) {
+    const related = element.hasAttribute('data-atom')
+      ? selectedNodes.has(element.getAttribute('data-atom'))
+      : selectedTuples.has(element.getAttribute('data-tuple-id'));
+    element.classList.toggle('instance-graph-context-related', related);
+    element.classList.toggle('instance-graph-context-muted', !related);
+  }
+  const relationIndexes = new Set(context.relationIndexes || []);
+  for (const item of root.querySelectorAll('.instance-graph-relation-key > li')) {
+    item.classList.toggle('instance-graph-relation-focused', relationIndexes.has(Number(item.dataset.relationIndex)));
+  }
+  if (context.relations?.length) {
+    const relations = html('span', 'instance-graph-object-relations');
+    relations.append(html('span', null, 'Highlight a relation: '));
+    for (const relation of context.relations) {
+      const button = html('button', 'instance-graph-object-relation', relation.label);
+      button.type = 'button'; button.dataset.relationIndex = String(relation.index);
+      button.setAttribute('aria-label', `Highlight all visible tuples of relation ${relation.label}.`);
+      button.addEventListener('click', () => context.selectRelation(relation.index));
+      relations.append(button);
+    }
+    details.append(relations);
+  }
+}
+
 function activate(group, description, details, context) {
   group.setAttribute('role', 'button');
   group.setAttribute('tabindex', '0');
@@ -130,20 +164,7 @@ function activate(group, description, details, context) {
   group.setAttribute('aria-pressed', 'false');
   const show = () => {
     const canvas = group.ownerSVGElement;
-    for (const previous of canvas?.querySelectorAll('[aria-pressed="true"]') || []) {
-      previous.setAttribute('aria-pressed', 'false');
-    }
-    group.setAttribute('aria-pressed', 'true');
-    details.textContent = description;
-    const selectedNodes = new Set(context.nodes);
-    const selectedTuples = new Set(context.tuples);
-    for (const element of canvas?.querySelectorAll('.instance-graph-node, .instance-graph-tuple') || []) {
-      const related = element.hasAttribute('data-atom')
-        ? selectedNodes.has(element.getAttribute('data-atom'))
-        : selectedTuples.has(element.getAttribute('data-tuple-id'));
-      element.classList.toggle('instance-graph-context-related', related);
-      element.classList.toggle('instance-graph-context-muted', !related);
-    }
+    if (canvas) highlightContext(canvas, details, description, context, group);
   };
   group.addEventListener('click', show);
   group.addEventListener('focus', show);
@@ -202,6 +223,18 @@ function atomLabel(atom, measure) {
   if (!named) return fitLabel(atom, measure, 144, 14, 600);
   const suffix = ` ${named[2]}`;
   return fitLabel(named[1], measure, 144 - measure(suffix, 14, 600), 14, 600) + suffix;
+}
+function nodeLabel(node, measure) {
+  if (!/^[+-]?\d+$/.test(node.atom)) return atomLabel(node.atom, measure);
+  // A number-only object box is ambiguous to a novice. Use an actual supplied
+  // membership if present; relation-only numbers remain values, not inferred Ints.
+  const prefix = node.signatures[0] || 'Value';
+  const suffix = ` · ${node.atom}`;
+  const remaining = 144 - measure(suffix, 14, 600);
+  if (remaining < measure('V…', 14, 600)) {
+    return fitLabel(`Value · ${node.atom}`, measure, 144, 14, 600);
+  }
+  return fitLabel(prefix, measure, remaining, 14, 600) + suffix;
 }
 function intersects(a, b, gap = 0) {
   return Math.abs(a.x - b.x) < (a.width + b.width) / 2 + gap
@@ -280,7 +313,7 @@ function layout(graph) {
   const measure = textMetrics();
   const relationNames = relationLabels(graph, measure);
   const entities = graph.nodes.map(node => {
-    const title = atomLabel(node.atom, measure);
+    const title = nodeLabel(node, measure);
     const primary = node.signatures[0] || 'relation value';
     const suffix = node.signatures.length > 1 ? ` +${node.signatures.length - 1} types` : '';
     const memberships = node.signatures.length ? node.signatures.join(' · ') : primary;
@@ -486,6 +519,20 @@ function draw(graph, prefix, details) {
     `${graph.nodes.length} atoms or values and ${graph.tuples.length} relation tuples shown. `
     + 'Boxes are atoms or values. Arrows are two-column tuples. Labeled tuple boxes connect numbered columns for other arities. '
     + 'Read the hierarchy from top to bottom. Cycles stay grouped together; arrows retain their original directions. Focus or select an object or relation to read its exact details below. Layout does not add relationships.'));
+  const selectRelation = (index, selected) => {
+    const relation = graph.relations.find(item => item.index === index);
+    if (!relation) return;
+    const tuples = graph.tuples.filter(tuple => tuple.relationIndex === index);
+    const root = canvas.closest('.instance-graph');
+    const legendButton = [...root?.querySelectorAll('.instance-graph-relation-button') || []]
+      .find(button => Number(button.dataset.relationIndex) === index);
+    const description = `${relation.label}. Showing ${tuples.length} of ${relation.tupleCount} supplied tuples in this diagram. `
+      + (tuples.length ? 'Select a labeled connection for its exact ordered columns.'
+        : relation.tupleCount ? 'This relation has no tuples in the current filtered or limited picture.' : 'This relation has no tuples in this state.');
+    highlightContext(canvas, details, description, {
+      nodes: tuples.flatMap(tuple => tuple.atoms), tuples: tuples.map(tuple => tuple.id), relationIndexes: [index],
+    }, selected || legendButton);
+  };
   const defs = svg('defs');
   canvas.append(defs);
   const relationColors = new Map();
@@ -505,7 +552,7 @@ function draw(graph, prefix, details) {
       'data-arity': tuple.arity, 'data-relation-index': tuple.relationIndex, 'data-tuple-index': tuple.tupleIndex });
     const description = tupleDescription(tuple);
     group.append(svg('title', {}, description));
-    activate(group, description, details, { nodes: tuple.atoms, tuples: [tuple.id] });
+    activate(group, description, details, { nodes: tuple.atoms, tuples: [tuple.id], relationIndexes: [tuple.relationIndex] });
     for (const link of links.filter(item => item.tuple === tuple)) {
       const attributes = link.column === undefined
         ? { 'data-source': tuple.atoms[0], 'data-target': tuple.atoms[1] }
@@ -549,11 +596,14 @@ function draw(graph, prefix, details) {
     const color = firstSignature ? COLORS[firstSignature.index % COLORS.length] : '#52616b';
     const group = svg('g', { class: `instance-graph-node instance-graph-node-${node.kind}`, 'data-atom': node.atom, 'data-layout-rank': point.rank, 'data-layout-component': point.component });
     const membership = node.signatures.length ? `Member of ${node.signatures.join(', ')}.` : 'Value appearing in a relation; no named signature membership is listed.';
-    const description = `${node.atom}. ${membership}`;
-    group.append(svg('title', {}, description));
     const adjacent = graph.tuples.filter(tuple => tuple.atoms.includes(node.atom));
+    const relationIndexes = [...new Set(adjacent.map(tuple => tuple.relationIndex))];
+    const relations = graph.relations.filter(relation => relationIndexes.includes(relation.index));
+    const description = `${node.atom}. ${membership}`
+      + (relations.length ? ` Connected by ${relations.map(relation => relation.label).join(', ')}.` : ' No connections in the current picture.');
+    group.append(svg('title', {}, description));
     activate(group, description, details, { nodes: [node.atom, ...adjacent.flatMap(tuple => tuple.atoms)],
-      tuples: adjacent.map(tuple => tuple.id) });
+      tuples: adjacent.map(tuple => tuple.id), relationIndexes, relations, selectRelation });
     group.append(svg('rect', { x: point.x - point.width / 2, y: point.y - point.height / 2,
       width: point.width, height: point.height, rx: node.kind === 'value' ? 5 : 10,
       fill: '#ffffff', stroke: color, 'stroke-width': 1.5 }));
@@ -565,7 +615,7 @@ function draw(graph, prefix, details) {
       'text-anchor': 'middle', fill: color }, line)));
     canvas.append(group);
   }
-  return canvas;
+  return { canvas, selectRelation };
 }
 
 /** Render one state. Exact tables retain every supplied name and tuple. */
@@ -610,14 +660,18 @@ export function renderInstanceGraph(stateData) {
     const item = html('li'); item.setAttribute('data-relation-index', String(index));
     const swatch = html('span', 'instance-graph-relation-swatch');
     swatch.style.backgroundColor = COLORS[index % COLORS.length]; swatch.setAttribute('aria-hidden', 'true');
-    item.append(swatch, html('span', null, `${relation.label} · ${relation.tuples.length} tuples`));
+    const button = html('button', 'instance-graph-relation-button', `${relation.label} · ${relation.tuples.length} tuples`);
+    button.type = 'button'; button.dataset.relationIndex = String(index);
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', `Highlight relation ${relation.label}, ${relation.tuples.length} tuples.`);
+    item.append(swatch, button);
     relationKey.append(item);
   });
   if (stateData.relations.length) root.append(relationKey);
   const help = html('details', 'instance-graph-help');
   help.append(html('summary', null, 'How to read this diagram'));
   const legend = html('ul', 'instance-graph-legend');
-  legend.append(html('li', null, 'Solid boxes are individual objects or values. Their type appears below the name; select a box for every membership.'),
+  legend.append(html('li', null, 'Solid boxes are individual objects or values. Their type appears below the name; select a box for every membership and its connected relations. Numeric values are labeled with a supplied type or “Value”.'),
     html('li', null, 'A labeled arrow is a two-column tuple: the first object points to the second. A loop returns to the same object.'),
     html('li', null, 'A dashed box is one tuple with more or fewer than two columns. Its numbered connections preserve the column order, including repeated objects.'));
   help.append(legend, html('p', 'instance-graph-layout-note',
@@ -626,7 +680,11 @@ export function renderInstanceGraph(stateData) {
   const initialDetails = 'Select an object or connection to read its exact details here.';
   const details = html('p', 'instance-graph-details', initialDetails);
   details.setAttribute('aria-live', 'polite'); details.setAttribute('aria-atomic', 'true'); root.append(details);
-  let scale = 1, currentScroll, currentCanvas;
+  let scale = 1, currentScroll, currentCanvas, currentRelationSelection;
+  relationKey.addEventListener('click', event => {
+    const button = event.target.closest('button.instance-graph-relation-button');
+    if (button && relationKey.contains(button)) currentRelationSelection?.(Number(button.dataset.relationIndex), button);
+  });
   function setScale(next) {
     scale = Math.max(0.25, Math.min(1.5, next));
     zoomValue.value = `${Math.round(scale * 100)}%`; zoomValue.textContent = zoomValue.value;
@@ -649,11 +707,13 @@ export function renderInstanceGraph(stateData) {
       item.classList.remove('instance-graph-context-related', 'instance-graph-context-muted');
       item.setAttribute('aria-pressed', 'false');
     }
+    for (const item of root.querySelectorAll('[aria-pressed="true"]')) item.setAttribute('aria-pressed', 'false');
+    for (const item of relationKey.children) item.classList.remove('instance-graph-relation-focused');
     details.textContent = initialDetails;
   });
   function refresh() {
     const graph = buildInstanceGraph(stateData, { relationIndex: select.value === 'all' ? null : Number(select.value) });
-    const content = []; currentScroll = undefined; currentCanvas = undefined;
+    const content = []; currentScroll = undefined; currentCanvas = undefined; currentRelationSelection = undefined;
     if (graph.limited) content.push(html('p', 'instance-graph-limit',
       `Limited picture: showing ${graph.counts.shownNodes} of ${graph.counts.nodes} atoms/values and `
       + `${graph.counts.shownTuples} of ${graph.counts.tuples} tuples for the selected relations. The exact data tables retain all supplied data.`));
@@ -664,14 +724,20 @@ export function renderInstanceGraph(stateData) {
       currentScroll = html('div', 'instance-graph-scroll');
       currentScroll.setAttribute('tabindex', '0'); currentScroll.setAttribute('role', 'region');
       currentScroll.setAttribute('aria-label', 'Instance diagram; scroll to explore when needed');
-      currentCanvas = draw(graph, prefix, details); currentScroll.append(currentCanvas);
+      const drawn = draw(graph, prefix, details);
+      currentCanvas = drawn.canvas; currentRelationSelection = drawn.selectRelation; currentScroll.append(currentCanvas);
       content.push(html('p', 'instance-graph-scroll-hint', 'Scroll to follow the hierarchy, or use Fit width for an overview.'), currentScroll);
     }
     const emptySignatures = graph.signatures.filter(signature => !signature.count).map(signature => signature.label);
     if (emptySignatures.length) content.push(html('p', 'instance-graph-empty', `Signatures with no atoms: ${emptySignatures.join(', ')}.`));
     picture.replaceChildren(...content); details.textContent = initialDetails;
-    for (const item of relationKey.children) item.classList.toggle('instance-graph-relation-selected',
-      select.value !== 'all' && item.getAttribute('data-relation-index') === select.value);
+    for (const item of relationKey.children) {
+      item.classList.remove('instance-graph-relation-focused');
+      item.querySelector('button').setAttribute('aria-pressed', 'false');
+      item.querySelector('button').disabled = !currentCanvas;
+      item.classList.toggle('instance-graph-relation-selected',
+        select.value !== 'all' && item.getAttribute('data-relation-index') === select.value);
+    }
     for (const button of [fit, normal, smaller, larger, reset]) button.disabled = !currentCanvas;
     if (currentCanvas) setScale(scale);
   }

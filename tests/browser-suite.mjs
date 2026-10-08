@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 const passed = [];
-for (const file of ['tests/browser.mjs', 'tests/navigation.mjs', 'tests/progress.mjs', 'tests/traffic-browser.mjs', 'tests/persistent-browser.mjs', 'tests/admin-library.mjs']) {
+for (const file of ['tests/browser.mjs', 'tests/navigation.mjs', 'tests/progress.mjs', 'tests/traffic-browser.mjs', 'tests/persistent-browser.mjs', 'tests/admin-library.mjs', 'tests/progressive-hints.mjs', 'tests/alloy-editor.mjs', 'tests/instance-labels.mjs']) {
   const expected = [...readFileSync(file, 'utf8').matchAll(/await check\('([^']+)'/g)].map(match => match[1]);
   assert.ok(expected.length > 0, 'No browser scenarios registered');
   assert.equal(new Set(expected).size, expected.length, 'Duplicate browser scenario');

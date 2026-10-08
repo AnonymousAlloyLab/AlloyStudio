@@ -224,20 +224,20 @@ class BehaviorWorkerTests(unittest.TestCase):
         self.assertLessEqual(run.call_args.kwargs['timeout'], 30)
         self.assertFalse(run.call_args.kwargs['check'])
 
-    def test_cache_is_separate_and_bound_to_exercise_and_exact_body(self):
+    def test_evidence_store_is_separate_and_new_requests_always_observe_worker(self):
         body = 'some Node'
         other_record = self.app.exercises['graphs-inv1']
         comparison = {'strategy': 'nearest-known-correct', 'poolSize': len(self.app.correct_pools[self.record['id']]),
                       'evaluatedCandidates': len(self.app.correct_pools[self.record['id']]), 'complete': True}
         canonical = {'status': 'ok', 'distance': 1, 'comparison': comparison}
-        with patch('server.subprocess.run', side_effect=[completed(canonical)] + [completed(valid_behavior())] * 3) as run:
+        with patch('server.subprocess.run', side_effect=[completed(canonical)] + [completed(valid_behavior())] * 4) as run:
             self.assertEqual(self.app.evaluate(self.record, body)['distance'], 1)
             first = self.app.evaluate_behavior(self.record, body)
             self.assertEqual(first, self.app.evaluate_behavior(self.record, body))
             self.app.evaluate_behavior(self.record, body + ' // changed')
             self.app.evaluate_behavior(other_record, body)
             self.assertEqual(self.app.evaluate(self.record, body)['distance'], 1)
-        self.assertEqual(run.call_count, 4)
+        self.assertEqual(run.call_count, 5)
         self.assertEqual(len(self.app.cache), 1)
         self.assertEqual(len(self.app.behavior_cache), 3)
 

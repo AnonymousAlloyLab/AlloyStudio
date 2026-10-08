@@ -1,0 +1,201 @@
+{
+  "claims": [
+    {
+      "class": "model_theorem",
+      "id": "RWD-GATE",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "Reward.empty_positive_unavailable",
+        "Reward.empty_negative_unavailable",
+        "Reward.invalid_unavailable",
+        "Reward.available_denominator_positive",
+        "Reward.score_is_bounded",
+        "Reward.nonfull_score_lt_one",
+        "Reward.full_score_iff",
+        "Reward.counterexample_correction_lt_one",
+        "Reward.undercoverage_check_lt_one",
+        "Reward.overcoverage_check_lt_one",
+        "Reward.sample_mismatch_lt_one",
+        "Reward.nonfull_rounding"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "RWD-ARITHMETIC",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "Reward.score_numerator_bound",
+        "Reward.score_denominator_bound",
+        "Reward.java_rounding_numerator_safe",
+        "Reward.java_rounding_denominator_safe"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "RWD-WITNESSES",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "Reward.old_rounding_false_one",
+        "Reward.repaired_rounding_counterexample",
+        "Reward.nonempty_agreement_witness"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "LFU-ADMISSION",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "LFU.admit_bounded",
+        "LFU.admit_duplicate_unchanged",
+        "LFU.admit_unique",
+        "LFU.fresh_admission_present",
+        "LFU.continuous_admissions_bounded",
+        "LFU.continuous_admissions_unique"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "LFU-EVICTION",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "LFU.victim_member_minimum",
+        "LFU.victim_oldest_tie",
+        "LFU.oldest_tie_witness",
+        "LFU.mismatch_retention_witness"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "LFU-UPDATE",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "LFU.bump_nondecreasing",
+        "LFU.bump_bounded",
+        "LFU.bump_saturated",
+        "LFU.mismatch_length",
+        "LFU.mismatch_unique",
+        "LFU.mismatch_valid_frequencies",
+        "LFU.mismatch_identity_order",
+        "LFU.mismatch_retained_hit"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "LFU-CONTEXT",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "LFU.diagnostic_version_nondecreasing",
+        "LFU.diagnostic_version_saturates",
+        "LFU.context_switch_discards_pool",
+        "LFU.same_context_preserves_pool",
+        "LFU.completed_request_is_fresh",
+        "LFU.identical_inflight_may_join"
+      ],
+      "verifier": "V-RWD-LEAN"
+    },
+    {
+      "class": "model_theorem",
+      "id": "RWD-INTERNAL",
+      "passPredicate": "all_registered_theorems_kernel_checked_with_empty_axioms",
+      "productionRefinement": "NOT_ESTABLISHED",
+      "publicClaims": [
+        "docs/reward-lfu-contract.md",
+        "formal/reward/README.md"
+      ],
+      "theorems": [
+        "LFU.Decision.fresh.sizeOf_spec",
+        "LFU.Decision.join.sizeOf_spec",
+        "LFU.Decision.ofNat_ctorIdx",
+        "LFU.Entry.mk.sizeOf_spec",
+        "LFU.State.mk.sizeOf_spec",
+        "LFU.absent_append",
+        "LFU.absent_member",
+        "LFU.appended_member",
+        "LFU.constructive_length_append",
+        "LFU.erase.eq_def",
+        "LFU.erase_absent",
+        "LFU.erase_length_le",
+        "LFU.erase_length_lt",
+        "LFU.erase_preserves_absent",
+        "LFU.erase_unique",
+        "LFU.instDecidableEqDecision._proof_1",
+        "LFU.instDecidableEqDecision._proof_2",
+        "LFU.instDecidableEqEntry.decEq._proof_1",
+        "LFU.instDecidableEqEntry.decEq._proof_2",
+        "LFU.instDecidableEqEntry.decEq._proof_3",
+        "LFU.instDecidableEqState.decEq._proof_1",
+        "LFU.instDecidableEqState.decEq._proof_2",
+        "LFU.instDecidableEqState.decEq._proof_3",
+        "LFU.instDecidableEqState.decEq._proof_4",
+        "LFU.lookup.eq_def",
+        "LFU.member_cons",
+        "LFU.member_not_absent",
+        "LFU.mismatch.eq_def",
+        "LFU.mismatch_absent_iff",
+        "LFU.survivors_absent",
+        "LFU.survivors_length_lt",
+        "LFU.survivors_unique",
+        "LFU.unique_append_new",
+        "LFU.victim.eq_def",
+        "LFU.victim_none_iff",
+        "Reward.Evidence.mk.sizeOf_spec",
+        "Reward.constructive_min_left",
+        "Reward.instDecidableEqEvidence.decEq._proof_1",
+        "Reward.instDecidableEqEvidence.decEq._proof_2",
+        "Reward.instDecidableEqEvidence.decEq._proof_3",
+        "Reward.instDecidableEqEvidence.decEq._proof_4",
+        "Reward.instDecidableEqEvidence.decEq._proof_5",
+        "Reward.instDecidableEqEvidence.decEq._proof_6",
+        "Reward.instDecidableEqEvidence.decEq._proof_7",
+        "Reward.instDecidableEqEvidence.decEq._proof_8",
+        "_private.LFU.0.LFU.Absent.match_1.eq_1",
+        "_private.LFU.0.LFU.Absent.match_1.eq_2",
+        "_private.LFU.0.LFU.victim.match_1.eq_1",
+        "_private.LFU.0.LFU.victim.match_1.eq_2"
+      ],
+      "verifier": "V-RWD-LEAN"
+    }
+  ],
+  "schemaVersion": 1
+}

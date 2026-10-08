@@ -54,9 +54,10 @@ jobs:
         run: python scripts/ci_check.py runtime
       - name: Python regressions
         run: python scripts/ci_check.py python
-      - name: Replay frozen charged-work refinement on the CI runtime
-        # Runtime-portability replay, never a renewal of local VERIFIED closure.
-        run: python scripts/verify_work_budget.py --replay
+      - name: Replay historical charged-work proof (production binding stale)
+        # Replay immutable reviewed inputs, never renew their production freshness.
+        # LP05-WORK's current EngineWorker.java binding is stale after LFU changes.
+        run: python closure/work-budget/evidence/verify-20261005T103541Z-0cba9231/snapshot/scripts/verify_work_budget.py --replay
       - name: Verify the reward and LFU mathematical contract offline
         # Model-only closure; production correspondence is separately tested.
         run: python scripts/verify_reward_contract.py

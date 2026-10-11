@@ -1,6 +1,7 @@
 """Real Alloy witnesses for bounded batch upload and explicit practice selection."""
 from contextlib import contextmanager
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -117,6 +118,15 @@ class AdminSelectionTests(unittest.TestCase):
         self.assertTrue(all(cert['result']['evaluatedCandidates'] == 2
                             for cert in prepared['certificates']))
 
+    def test_100_parameterized_practices_keep_typed_slots_and_two_jvm_bound(self):
+        source = BASE + ''.join(f'pred practice{i}[n: Node] {{some n}}\n' for i in range(100))
+        prepared, _ = self.measured_prepare(source, expected_frames=100)
+        self.assertEqual(len(prepared['documents']), 100)
+        for index, document in enumerate(prepared['documents']):
+            self.assertEqual(document['predicateHeader'], f'pred practice{index}[n: Node] ')
+            self.assertEqual(document['oracleSolutions'], ['some n'])
+        self.assertEqual(len(prepared['witness']['groups'][0]['siblingSlots']), 99)
+
     def test_100_distinct_source_spellings_share_one_batch_of_200_frames(self):
         prepared, _ = self.measured_prepare(grouped(100, spelling=True), expected_frames=200)
         self.assertEqual(len(prepared['documents']), 100)
@@ -154,11 +164,172 @@ class AdminSelectionTests(unittest.TestCase):
         for doc, group in zip(prepared['documents'], prepared['witness']['groups']):
             environment = doc['environmentBefore'] + doc['environmentAfter']
             self.assertIn(retained, environment)
-            self.assertNotIn('pred CustomFirst', environment)
+            if doc['predicate'] == 'CustomFirst':
+                self.assertNotIn('pred CustomFirst', environment)
+            else:
+                self.assertIn('pred CustomFirst {\n' + upload.GENERATED_STARTER + '\n}', environment)
+                self.assertNotIn('pred CustomFirst {some Node}', environment)
             self.assertNotIn('pred Inv2C0', environment)
             for side in ('before', 'after'):
+                pieces = [(start, raw[start:end]) for start, end in group[side + 'Spans']]
+                pieces += [(slot['startByte'], (slot['header'] + '{\n' + upload.GENERATED_STARTER + '\n}').encode())
+                           for slot in group.get('siblingSlots', [])
+                           if (slot['startByte'] < group['insertionByte']) == (side == 'before')]
                 self.assertEqual(doc['environment' + side.title()].encode('utf-8'),
-                                 b''.join(raw[start:end] for start, end in group[side + 'Spans']))
+                                 b''.join(value for _, value in sorted(pieces)))
+
+    def test_selected_sibling_names_support_unchanged_retained_aggregate_without_answers(self):
+        helper = 'private pred helper[n: Node] {some n}\n'
+        aggregate = 'pred aggregate { firstRule and secondRule }\nassert combined {aggregate}\nrun aggregate\n'
+        source = (BASE + helper + 'pred firstRule {all n: Node | helper[n]}\n'
+                  'pred secondRule {no Node}\n' + aggregate)
+        prepared, _ = self.measured_prepare(source, expected_frames=2,
+                                            practicePredicates=['secondRule', 'firstRule'])
+        self.assertEqual(prepared['witness']['version'], 2)
+        self.assertEqual(prepared['witness']['practicePredicates'], ['firstRule', 'secondRule'])
+        for document in prepared['documents']:
+            environment = document['environmentBefore'] + document['environmentAfter']
+            self.assertIn(helper, environment)
+            self.assertIn(aggregate, environment)
+            self.assertNotIn('all n: Node | helper[n]', environment)
+            self.assertNotIn('pred secondRule {no Node}', environment)
+            sibling = 'secondRule' if document['predicate'] == 'firstRule' else 'firstRule'
+            self.assertIn('pred ' + sibling + ' {\n' + upload.GENERATED_STARTER + '\n}', environment)
+        self.assertTrue(upload.validate_witness(prepared['witness'], prepared['documents']))
+
+    def test_parameterized_standalone_preserves_fixed_header_body_and_unselected_helpers(self):
+        helper = 'private pred helper[n: Node] {some n}\n'
+        aggregate = 'pred everyNode {all n: Node | typed[n, Node]}\nrun everyNode\n'
+        header = 'pred typed /* fixed interface */ [n: Node, nodes: set Node] '
+        body = ' n in nodes and helper[n] // unchanged λ\n '
+        source = 'module typed\n' + BASE + helper + header + '{' + body + '}\n' + aggregate
+        prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['typed'])
+        document = prepared['documents'][0]
+        self.assertEqual(document['predicate'], 'typed')
+        self.assertEqual(document['predicateHeader'], header)
+        self.assertEqual(document['oracleSolutions'], [body])
+        environment = document['environmentBefore'] + document['environmentAfter']
+        self.assertIn(helper, environment)
+        self.assertIn(aggregate, environment)
+        self.assertNotIn(body, environment)
+        discovered = upload.discover_upload(self.root, envelope(source, practicePredicates=[]))
+        metadata = next(group for group in discovered['groups'] if group['predicate'] == 'typed')
+        self.assertEqual(metadata['predicateHeader'], header)
+        self.assertNotIn(body, json.dumps(discovered, ensure_ascii=False))
+        self.assertTrue(upload.validate_witness(prepared['witness'], prepared['documents']))
+
+    def test_parameterized_sibling_slots_keep_their_exact_typed_interface(self):
+        source = (BASE + 'pred first[n: Node] {some n}\n'
+                  'pred second[n: Node, nodes: set Node] {n in nodes}\n'
+                  'pred aggregate {all n: Node | first[n] and second[n, Node]}\n')
+        prepared, _ = self.measured_prepare(source, expected_frames=2, practicePredicates=['first', 'second'])
+        first, second = prepared['documents']
+        self.assertIn('pred second[n: Node, nodes: set Node] {\n' + upload.GENERATED_STARTER + '\n}', first['environmentAfter'])
+        self.assertIn('pred first[n: Node] {\n' + upload.GENERATED_STARTER + '\n}', second['environmentBefore'])
+        self.assertEqual(first['oracleSolutions'], ['some n'])
+        self.assertEqual(second['oracleSolutions'], ['n in nodes'])
+
+    def test_parameterized_group_checks_every_variant_and_preserves_starter_interface(self):
+        source = (BASE + 'pred inv1 /* fixed starter */ [n: Node] { }\n'
+                  'pred inv1C7 [n : /* same domain */ Node] {not no n}\npred inv1C0[n: Node] {some n}\n')
+        prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['inv1'])
+        document = prepared['documents'][0]
+        self.assertEqual(document['predicateHeader'], 'pred inv1 /* fixed starter */ [n: Node] ')
+        self.assertEqual(document['starter'], ' ')
+        self.assertEqual(document['oracleSolutions'], ['some n', 'not no n'])
+        self.assertEqual([entry['name'] for entry in prepared['witness']['groups'][0]['variants']], ['inv1C0', 'inv1C7'])
+        for fragment in ('inv1C0', 'inv1C7'):
+            self.assertNotIn(fragment, document['environmentBefore'] + document['environmentAfter'])
+
+    def test_disjoint_grouped_parameters_and_relational_domains_are_supported(self):
+        source = ('sig Node {edge: set Node}\n'
+                  'pred inv1C0[disj a,b: Node, relation: Node -> Node] {a->b in relation}\n'
+                  'pred inv1C1[disj a,b: Node, relation: Node -> Node] {not (a->b not in relation)}\n')
+        prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['inv1'])
+        self.assertEqual(prepared['documents'][0]['predicateHeader'],
+                         'pred inv1[disj a,b: Node, relation: Node -> Node] ')
+        self.assertEqual(prepared['certificates'][0]['result']['evaluatedCandidates'], 2)
+
+    def test_parameterized_group_mismatch_rejects_even_when_unselected(self):
+        source = (BASE + 'pred ordinary {some Node}\npred inv1C0[n: Node] {some n}\n'
+                  'pred inv1C1[n: Node] {no n}\n')
+        for selection in (['ordinary'], ['inv1']):
+            with self.subTest(selection=selection), self.assertRaises(upload.UploadError):
+                upload.prepare_upload(self.root, envelope(source, practicePredicates=selection))
+
+    def test_mismatched_parameter_names_domains_grouping_or_starter_reject_before_jvm(self):
+        second_headers = ('m: Node', 'n: set Node', 'n: lone Node', 'n: Node, m: Node', '')
+        sources = [BASE + 'pred inv1C0[n: Node] {some n}\npred inv1C1[' + header + '] {some Node}\n'
+                   for header in second_headers]
+        sources += [BASE + 'pred inv1[n: set Node] {}\npred inv1C0[n: Node] {some n}\n',
+                    BASE + 'pred inv1C0[disj n,m: Node] {n != m}\npred inv1C1[n,m: Node] {n != m}\n',
+                    BASE + 'pred inv1C0[n,m: Node] {n = m}\npred inv1C1[n: Node,m: Node] {n = m}\n']
+        for source in sources:
+            with self.subTest(source=source), patch.object(upload, 'run_engine') as worker:
+                with self.assertRaisesRegex(upload.UploadError, 'matching parameter declarations'):
+                    upload.prepare_upload(self.root, envelope(source))
+                worker.assert_not_called()
+
+    def test_fixed_typed_header_utf8_byte_limit_rejects_before_jvm(self):
+        source = BASE + 'pred huge /*' + 'λ' * 4097 + '*/ [n: Node] {some n}\n'
+        self.assertLess(len(source.encode('utf-8')), upload.MAX_SOURCE)
+        with patch.object(upload, 'run_engine') as worker, self.assertRaises(upload.UploadError):
+            upload.prepare_upload(self.root, envelope(source))
+        worker.assert_not_called()
+
+    def test_large_unselected_parameterized_helper_body_is_preserved_without_practice_cap(self):
+        helper_body = 'some n /*' + ' unchanged' * 1000 + ' */'
+        helper = 'private pred retained[n: Node] {' + helper_body + '}\n'
+        source = BASE + helper + 'pred practice {some Node}\n'
+        self.assertGreater(len(helper_body.encode()), upload.MAX_BODY)
+        discovered = upload.discover_upload(self.root, envelope(source, practicePredicates=[]))
+        self.assertEqual([group['predicate'] for group in discovered['groups']], ['retained', 'practice'])
+        prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['practice'])
+        self.assertIn(helper, prepared['documents'][0]['environmentBefore'])
+        self.assertTrue(upload.validate_witness(prepared['witness'], prepared['documents']))
+        with patch.object(upload, 'run_engine') as worker, self.assertRaises(upload.UploadError):
+            upload.prepare_upload(self.root, envelope(source, practicePredicates=['retained']))
+        worker.assert_not_called()
+
+    def test_large_unselected_ordinary_header_is_retained_without_discovery_header(self):
+        for parameters in ('', '[n: Node]'):
+            with self.subTest(parameters=parameters):
+                header = 'pred retained /*' + ' unchanged' * 1000 + ' */ ' + parameters + ' '
+                helper = header + '{some Node}\n'
+                source = BASE + helper + 'pred practice {some Node}\n'
+                self.assertGreater(len(header.encode()), upload.MAX_HEADER)
+                discovered = upload.discover_upload(self.root, envelope(source, practicePredicates=[]))
+                metadata = next(group for group in discovered['groups'] if group['predicate'] == 'retained')
+                self.assertNotIn('predicateHeader', metadata)
+                self.assertNotIn('unchanged', json.dumps(metadata))
+                prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['practice'])
+                self.assertIn(helper, prepared['documents'][0]['environmentBefore'])
+                self.assertTrue(upload.validate_witness(prepared['witness'], prepared['documents']))
+                with patch.object(upload, 'run_engine') as worker, self.assertRaises(upload.UploadError):
+                    upload.prepare_upload(self.root, envelope(source, practicePredicates=['retained']))
+                worker.assert_not_called()
+
+    def test_malformed_typed_headers_bodies_and_excess_parameters_are_rejected(self):
+        sources = [BASE + 'pred invalid[n: Unknown] {some n}\n',
+                   BASE + 'pred invalid[n: Node] {n + Node}\n',
+                   BASE + 'pred invalid[n: Node {some n}\n',
+                   BASE + 'pred invalid[' + ','.join('n' + str(index) for index in range(17)) + ': Node] {some Node}\n']
+        for source in sources:
+            with self.subTest(source=source), self.assertRaises(upload.UploadError):
+                upload.prepare_upload(self.root, envelope(source))
+
+    def test_hidden_c_dependency_names_are_actionable_without_disclosing_the_body(self):
+        source = BASE + 'pred inv1C0 {some Node}\npred helper[n: Node] {inv1C0}\n'
+        with self.assertRaisesRegex(upload.UploadError, r'helper calls hidden inv1C0.*Deselect') as failure:
+            upload.prepare_upload(self.root, envelope(source, practicePredicates=['inv1']))
+        self.assertNotIn('some Node', str(failure.exception))
+        kept, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['helper'])
+        self.assertIn('pred inv1C0 {some Node}', kept['documents'][0]['environmentBefore'])
+
+    def test_model_facts_cannot_change_with_selected_predicates_even_via_a_helper(self):
+        source = BASE + 'pred practice {some Node}\npred indirect {practice}\nfact {indirect}\n'
+        with self.assertRaisesRegex(upload.UploadError, r'Model facts depend on practice practice'):
+            upload.prepare_upload(self.root, envelope(source, practicePredicates=['practice']))
 
     def test_unknown_duplicate_and_split_variant_selection_rejected_without_jvm(self):
         for selection in (['unknown'], ['inv1', 'inv1'], ['inv1C0'], [], None, 'inv1', [True]):
@@ -246,6 +417,120 @@ class AdminSelectionTests(unittest.TestCase):
             upload.prepare_upload(self.root, envelope(source, practicePredicates=['inv1']))
 
 
+class UploadProjectionCompatibilityTests(unittest.TestCase):
+    @staticmethod
+    def inspected(source):
+        return dict(status='ok', sourceSha256=hashlib.sha256(source.encode()).hexdigest(),
+                    moduleName='this', declarations=[dict(row, calls=[]) for row in upload._inventory(source)],
+                    factCalls=[], assertionCalls=[], commandCalls=[])
+
+    def test_discovery_keeps_large_parameterized_helper_body_private_and_still_invokes_inspection(self):
+        body = 'some n /*' + ' unchanged' * 1000 + ' */'
+        helper = 'pred retained[n: Node] {' + body + '}\n'
+        source = BASE + helper + 'pred practice {some Node}\n'
+        with patch.object(upload, '_worker', return_value=self.inspected(source)) as inspector, patch.object(
+                store, '_engine_identity', return_value={'engineSha256': '0' * 64}), patch.object(upload, 'run_engine') as process:
+            discovered = upload.discover_upload(ROOT, envelope(source, practicePredicates=[]))
+        process.assert_not_called()
+        inspector.assert_called_once()
+        self.assertEqual(inspector.call_args.args[1:3], ('live.UploadInspector', {'source': source}))
+        self.assertNotIn(body, json.dumps(discovered))
+        self.assertEqual(discovered['groups'][0]['predicateHeader'], 'pred retained[n: Node] ')
+        documents, witness, _ = upload._plan(source, 'capacity.als', 'capacity', 5, ['practice'])
+        self.assertIn(helper, documents[0]['environmentBefore'])
+        self.assertTrue(upload.validate_witness(witness, documents))
+        with self.assertRaises(upload.UploadError):
+            upload._plan(source, 'capacity.als', 'capacity', 5, ['retained'])
+
+    def test_discovery_omits_oversized_ordinary_headers_without_bypassing_full_inspection(self):
+        for parameters in ('', '[n: Node]'):
+            with self.subTest(parameters=parameters):
+                helper = 'pred retained /*' + ' unchanged' * 1000 + ' */ ' + parameters + ' {some Node}\n'
+                source = BASE + helper + 'pred practice {some Node}\n'
+                with patch.object(upload, '_worker', return_value=self.inspected(source)) as inspector, patch.object(
+                        store, '_engine_identity', return_value={'engineSha256': '0' * 64}), patch.object(upload, 'run_engine') as process:
+                    discovered = upload.discover_upload(ROOT, envelope(source, practicePredicates=[]))
+                process.assert_not_called()
+                inspector.assert_called_once()
+                self.assertEqual(inspector.call_args.args[2], {'source': source})
+                self.assertNotIn('predicateHeader', discovered['groups'][0])
+                self.assertNotIn('unchanged', json.dumps(discovered))
+                documents, witness, _ = upload._plan(source, 'capacity.als', 'capacity', 5, ['practice'])
+                self.assertEqual(documents[0]['environmentBefore'], BASE + helper)
+                self.assertTrue(upload.validate_witness(witness, documents))
+                with self.assertRaises(upload.UploadError):
+                    upload._plan(source, 'capacity.als', 'capacity', 5, ['retained'])
+                with patch.object(upload, '_worker', side_effect=upload.UploadError('Model inspection rejected.')) as rejected, patch.object(
+                        store, '_engine_identity', return_value={'engineSha256': '0' * 64}), self.assertRaisesRegex(upload.UploadError, 'inspection rejected'):
+                    upload.discover_upload(ROOT, envelope(source, practicePredicates=[]))
+                rejected.assert_called_once()
+
+    def test_unselected_legacy_parameterized_helper_keeps_large_body_and_header_exactly(self):
+        body = 'some n /*' + ' λ' * 3000 + ' */'
+        header = 'private pred retained /*' + ' λ' * 3000 + ' */ [n: Node] '
+        helper = header + '{' + body + '}\n'
+        source = BASE + helper + 'pred practice {some Node}\n'
+        self.assertGreater(len(body.encode()), upload.MAX_BODY)
+        self.assertGreater(len(header.encode()), upload.MAX_HEADER)
+        for version in (1, 2):
+            with self.subTest(version=version):
+                documents, witness, _ = upload._plan(source, 'large.als', 'large', 5, ['practice'], projection_version=version)
+                self.assertEqual(documents[0]['environmentBefore'], BASE + helper)
+                self.assertTrue(upload.validate_witness(witness, documents))
+        with self.assertRaises(upload.UploadError):
+            upload._plan(source, 'large.als', 'large', 5, ['retained'])
+
+    def test_frozen_version_one_witness_keeps_original_environment_and_validates_unchanged(self):
+        # This is the deployed v1 representation, including its absence of
+        # sibling slots. It must not be silently migrated by witness checking.
+        source = BASE + 'pred first {some Node}\npred second {no Node}\n'
+        witness = dict(version=1, originalSource=source,
+            sourceSha256='0c0b0b87677180b34a2ffa2c5ba96321beb6473d645112eeb6505f6b3e4b65c1',
+            filename='legacy.als', modelId='legacy', equivalenceScope=5, groups=[
+                dict(exerciseId='legacy-first', predicate='first', kind='standalone', starter=None,
+                     insertionByte=12, beforeSpans=[[0,12]], afterSpans=[[34,35],[56,57]], variants=[
+                         dict(name='first', startByte=12, endByte=34, bodyStartByte=24, bodyEndByte=33,
+                              bodySha256='46c4689086ce7f6dd4fdde4cd70a97755a57abbc497dde9329ff504a2aa1ae62', solutionIndex=0)]),
+                dict(exerciseId='legacy-second', predicate='second', kind='standalone', starter=None,
+                     insertionByte=35, beforeSpans=[[0,12],[34,35]], afterSpans=[[56,57]], variants=[
+                         dict(name='second', startByte=35, endByte=56, bodyStartByte=48, bodyEndByte=55,
+                              bodySha256='219bd6b5bbce3822e40051743805944bd7775e899352c9c250edf90d81e2adf8', solutionIndex=0)])])
+        documents = [dict(id='legacy-' + name, title=name, group='legacy', predicate=name,
+                         description='Complete the ' + name + ' predicate in legacy.',
+                         environmentBefore=before, environmentAfter=after, predicateHeader='pred ' + name + ' ',
+                         starter=upload.GENERATED_STARTER, oracleSolutions=[body], correctSolutions=[], equivalenceScope=5)
+                     for name,before,after,body in [('first', BASE, '\n\n', 'some Node'),
+                                                  ('second', BASE + '\n', '\n', 'no Node')]]
+        before = deepcopy((witness, documents))
+        self.assertTrue(upload.validate_witness(witness, documents))
+        self.assertEqual((witness, documents), before)
+        changed = deepcopy(witness)
+        changed['version'] = 2
+        with self.assertRaises(upload.UploadError):
+            upload.validate_witness(changed, documents)
+
+    def test_version_two_sibling_slot_spans_names_headers_and_environment_are_protected(self):
+        source = BASE + 'pred first[n: Node] {some n}\npred second[n: Node] {no n}\n'
+        documents, witness, _ = upload._plan(source, 'bound.als', 'bound', 5)
+        self.assertEqual(witness['version'], 2)
+        self.assertTrue(upload.validate_witness(witness, documents))
+        mutations = [lambda w: w['groups'][0]['siblingSlots'][0].update(predicate='forged'),
+                     lambda w: w['groups'][0]['siblingSlots'][0].update(header='pred second '),
+                     lambda w: w['groups'][0]['siblingSlots'][0].update(startByte=True),
+                     lambda w: w['groups'][0]['siblingSlots'].clear(),
+                     lambda w: w.update(version=1)]
+        for mutate in mutations:
+            changed = deepcopy(witness)
+            mutate(changed)
+            with self.subTest(witness=changed), self.assertRaises(upload.UploadError):
+                upload.validate_witness(changed, documents)
+        changed_documents = deepcopy(documents)
+        changed_documents[0]['environmentAfter'] = changed_documents[0]['environmentAfter'].replace(
+            upload.GENERATED_STARTER, 'no n')
+        with self.assertRaises(upload.UploadError):
+            upload.validate_witness(witness, changed_documents)
+
+
 class UploadInspectorEquivalenceTests(unittest.TestCase):
     def setUp(self):
         SCRATCH.mkdir(parents=True, exist_ok=True)
@@ -294,11 +579,13 @@ class UploadInspectorEquivalenceTests(unittest.TestCase):
                 request = dict(source=source, equivalenceScope=5, variantGroups=groups)
                 self.assertEqual(inspect(request)['status'], 'rejected')
 
-    def test_variant_budget_and_parameterless_predicate_kind_are_enforced(self):
+    def test_variant_budget_and_explicit_predicate_kind_are_enforced(self):
         source = BASE + ''.join(f'pred inv1C{i} {{some Node}}\n' for i in range(257))
         payload = self.request(source, [[f'inv1C{i}' for i in range(257)]])
         self.assertEqual(inspect(payload)['status'], 'rejected')
-        for declaration in ('pred inv1C0[n: Node] {some n}', 'fun inv1C0: set Node {Node}'):
+        parameterized = self.request(BASE + 'pred inv1C0[n: Node] {some n}', [['inv1C0']])
+        self.assertEqual(inspect(parameterized)['status'], 'ok')
+        for declaration in ('pred Node.inv1C0 {some this}', 'fun inv1C0: set Node {Node}'):
             with self.subTest(declaration=declaration):
                 payload = self.request(BASE + declaration, [['inv1C0']])
                 self.assertEqual(inspect(payload)['status'], 'rejected')

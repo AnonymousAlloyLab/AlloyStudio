@@ -3,6 +3,8 @@ const $ = id => document.getElementById(id);
 const bytes = value => new TextEncoder().encode(value).length;
 let csrf = '', draft = null, source = '', epoch = 0, busy = false;
 let uploadEnvelope = null;
+// Local selection state carries no backend draft or publication authority.
+let selectionAvailable = false;
 const cards = [];
 const choices = [];
 const library = { offset: 0, total: 0, limit: 50, items: [], loading: false, sequence: 0 };
@@ -23,7 +25,7 @@ function lock(value) {
   updateLibraryControls();
 }
 function clearUpload() {
-  draft = null; source = ''; uploadEnvelope = null; cards.length = 0; choices.length = 0;
+  draft = null; source = ''; uploadEnvelope = null; selectionAvailable = false; cards.length = 0; choices.length = 0;
   $('selection').hidden = true; $('preview').hidden = true; $('success').hidden = true;
   $('predicate-choices').replaceChildren(); $('exercise-cards').replaceChildren(); $('source-preview').textContent = '';
   $('selection-summary').textContent = ''; $('source-hash').textContent = ''; $('validation').textContent = '';
@@ -88,7 +90,7 @@ async function bootstrap(showNotice = true) {
 function renderPreview(value) {
   if (value.state !== 'ready') throw new Error('Validate the selected predicates before reviewing questions.');
   validateGroups(value.groups);
-  draft = value; cards.length = 0;
+  draft = value; selectionAvailable = false; cards.length = 0;
   choices.length = 0; $('predicate-choices').replaceChildren(); $('selection').hidden = true;
   $('preview').hidden = false; $('success').hidden = true; $('reviewed').checked = false;
   $('source-preview').textContent = source;
@@ -100,6 +102,7 @@ function renderPreview(value) {
     const heading = document.createElement('h3'); heading.textContent = group.predicate;
     const detail = document.createElement('p'); detail.className = 'muted';
     detail.textContent = `${group.id} · ${group.oracleCount} distinct solution(s) · ${group.variants.join(', ')}`;
+    const signature = predicateSignature(group);
     const titleLabel = document.createElement('label'); titleLabel.textContent = 'Public title';
     const title = document.createElement('input'); title.type = 'text'; title.required = true;
     title.maxLength = 256; title.value = group.title; titleLabel.append(title);
@@ -107,7 +110,9 @@ function renderPreview(value) {
     const question = document.createElement('textarea'); question.rows = 4; question.required = true;
     question.maxLength = 8192; question.value = group.question; questionLabel.append(question);
     for (const input of [title, question]) input.addEventListener('input', () => { $('reviewed').checked = false; });
-    card.append(heading, detail, titleLabel, questionLabel); container.append(card);
+    card.append(heading, detail);
+    if (signature) card.append(signature);
+    card.append(titleLabel, questionLabel); container.append(card);
     cards.push({ predicate: group.predicate, title, question });
   }
 }
@@ -115,11 +120,19 @@ function validateGroups(groups) {
   if (!Array.isArray(groups) || groups.length < 1 || groups.length > 100
       || groups.some(group => !group || typeof group.predicate !== 'string' || !group.predicate
         || bytes(group.predicate) > 512 || !Array.isArray(group.variants) || group.variants.length < 1
-        || group.variants.some(name => typeof name !== 'string' || bytes(name) > 512))
+        || group.variants.some(name => typeof name !== 'string' || bytes(name) > 512)
+        || (group.predicateHeader !== undefined && (typeof group.predicateHeader !== 'string'
+          || !group.predicateHeader.trim() || bytes(group.predicateHeader) > 8192)))
       || new Set(groups.map(group => group.predicate)).size !== groups.length
       || groups.reduce((total, group) => total + group.variants.length, 0) > 256) {
     throw new Error('The predicate list could not be read. Parse the model again.');
   }
+}
+function predicateSignature(group) {
+  if (!group.predicateHeader) return null;
+  const code = document.createElement('code'); code.className = 'predicate-signature';
+  code.textContent = `${group.predicateHeader.trim()} { … }`;
+  return code;
 }
 function updateSelectionSummary() {
   $('selection-summary').textContent = `${choices.filter(item => item.input.checked).length} of ${choices.length} practice predicates selected.`;
@@ -127,17 +140,20 @@ function updateSelectionSummary() {
 function renderSelection(value) {
   if (value.state !== 'selecting') throw new Error('The model is not ready for predicate selection.');
   validateGroups(value.groups);
-  draft = value; choices.length = 0; cards.length = 0;
+  draft = value; selectionAvailable = true; choices.length = 0; cards.length = 0;
   $('preview').hidden = true; $('success').hidden = true; $('selection').hidden = false;
   $('exercise-cards').replaceChildren(); $('source-preview').textContent = '';
   const container = $('predicate-choices'); container.replaceChildren();
   for (const group of value.groups) {
     const label = document.createElement('label'); label.className = 'predicate-choice';
-    const input = document.createElement('input'); input.type = 'checkbox'; input.checked = true;
+    const input = document.createElement('input'); input.type = 'checkbox'; input.checked = false;
     const content = document.createElement('span');
     const name = document.createElement('strong'); name.textContent = group.predicate;
     const detail = document.createElement('small'); detail.textContent = group.variants.join(', ');
-    content.append(name, detail); label.append(input, content); container.append(label);
+    content.append(name, detail);
+    const signature = predicateSignature(group);
+    if (signature) content.append(signature);
+    label.append(input, content); container.append(label);
     input.addEventListener('change', updateSelectionSummary);
     choices.push({ predicate: group.predicate, input });
   }
@@ -229,14 +245,14 @@ $('clear-all').addEventListener('click', () => {
 });
 $('selection-form').addEventListener('submit', async event => {
   event.preventDefault();
-  if (busy || !draft || draft.state !== 'selecting' || !uploadEnvelope) return;
+  if (busy || !selectionAvailable || !uploadEnvelope || (draft && draft.state !== 'selecting')) return;
   const selected = choices.filter(item => item.input.checked).map(item => item.predicate);
   if (!selected.length) { notice('Select at least one predicate to practice.', true); return; }
   const currentEpoch = epoch, token = csrf, envelope = { ...uploadEnvelope, practicePredicates: selected };
   let ready = false;
   lock(true);
   try {
-    await api('discard', { id: draft.id });
+    if (draft) await api('discard', { id: draft.id });
     if (currentEpoch !== epoch) return;
     draft = null;
     let value = await api('prepare', envelope);
@@ -250,9 +266,11 @@ $('selection-form').addEventListener('submit', async event => {
         const failedId = draft?.id;
         await discardDetached(failedId, token);
         if (currentEpoch !== epoch) return;
-        clearUpload();
+        // Keep the original input and choices locally; a retry must obtain a
+        // fresh validated backend draft before suggestions or publication.
+        draft = null;
       }
-      notice(error.message + (ready ? '' : ' Parse the model again to retry.'), true);
+      notice(error.message + (ready ? '' : ' Your choices are kept. Adjust them and retry, or correct the model and parse it again.'), true);
     }
   }
   finally { if (currentEpoch === epoch) lock(false); }
@@ -264,11 +282,11 @@ $('suggest').addEventListener('click', async () => {
   finally { if (currentEpoch === epoch) lock(false); }
 });
 async function discardUpload() {
-  if (busy || !draft) return;
+  if (busy || (!draft && !selectionAvailable)) return;
   const currentEpoch = epoch; lock(true);
   let completedEpoch = currentEpoch;
   try {
-    await api('discard', { id: draft.id });
+    if (draft) await api('discard', { id: draft.id });
     if (currentEpoch !== epoch) return;
     completedEpoch = ++epoch;
     clearUpload();

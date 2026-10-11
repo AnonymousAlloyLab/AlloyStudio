@@ -34,6 +34,16 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Maintenance alpha `v0.0.7-alpha.2`** supports parameterized practice predicates
+with fixed, visible typed headers. Selected standalone predicates keep blank
+sibling slots so unchanged helpers and aggregate commands can still resolve
+their names without exposing the selected answers. Upload selection starts empty;
+failed validation preserves the administrator's choices for a fresh retry.
+Numbered variants require matching parameter declarations and facts-aware bounded
+equivalence. Existing version-one upload witnesses remain valid unchanged. See the
+[release notes](docs/releases/v0.0.7-alpha.2.md) and
+[upload contract](docs/admin-security-spec.md).
+
 **Maintenance alpha `v0.0.7-alpha.1`** supports 100 upload predicate groups,
 manual practice selection, and unchanged nonpractice predicates in the displayed
 environment. Selected exercises share a sequential validation JVM, with bounded
@@ -50,6 +60,9 @@ its full text. See the [release notes](docs/releases/v0.0.7-alpha.md),
 [response/freshness contract](docs/reward-boundary-spec.md).
 The [Lean reward/LFU contract](docs/reward-lfu-contract.md) provides an isolated
 92-declaration mathematical proof surface; production correspondence is separately tested.
+CI replays its frozen, reviewed inputs offline with
+[`scripts/replay_reward_contract.py`](scripts/replay_reward_contract.py); the
+parameter-handling changes leave the historical production binding stale.
 
 **Alpha `v0.0.6-alpha`** adds hierarchical, labeled instance diagrams, browser-local
 solved checks, public-deployment badge handling, and administrator question
@@ -275,7 +288,14 @@ allow the same address in the edge rule as well; see the
 Use the site's exact HTTPS origin in production. The password is stored only as
 a private salted hash; no password or OpenAI key belongs in the public web root.
 Uploads support **100 predicate groups** and **256 solution declarations** per
-model. Parse the model, choose its practice predicates, and validate the selection.
+model. Parse the model, explicitly choose its practice predicates, and validate the selection.
+Typed parameters are supported; their names and declarations remain visible in
+the fixed predicate header, while students edit the body. Numbered alternatives
+must share the same parameter declarations. Selected standalone siblings receive
+blank learner slots so retained helpers and aggregate commands still resolve them;
+selected solution bodies stay private. Facts and selected solutions cannot depend
+on a changeable learner slot. A retained call to a hidden `C` variant identifies
+the conflicting declaration so you can keep that group unselected.
 Unselected predicates keep their original code in the learner's model environment.
 `inv1C0`, `inv1C1`, … stay together as one `inv1` exercise. All original numbered
 groups must pass bounded equivalence, including unselected groups; selected
@@ -287,6 +307,8 @@ and the [security contract](docs/admin-security-spec.md).
 Validation batches all selected exercises in one JVM: two sequential JVM starts
 per preparation, plus one for the preceding discovery stage. Only one admin JVM
 can run at a time; the 60-second preparation deadline and 256-MiB heap remain.
+Rejected validation drafts are discarded, but the page keeps the source and
+choices locally for a fresh validation attempt without parsing for discovery again.
 
 The administration page also has an **Exercise library** tab to edit public
 titles/questions or remove exercises, and a **Candidate cache** tab. The private

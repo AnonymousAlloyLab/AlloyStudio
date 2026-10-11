@@ -157,12 +157,21 @@ class SQLiteStoreTests(unittest.TestCase):
 
     def test_unknown_fields_duplicate_json_keys_and_types(self):
         for changes in (dict(secret='x'),dict(equivalenceScope=True),dict(equivalenceScope=9),
-                        dict(oracleSolutions=[]),dict(id='../bad'),dict(predicateHeader='pred inv[x: Node] '),
+                        dict(oracleSolutions=[]),dict(id='../bad'),dict(predicateHeader='pred inv[x: Node] {} fact injected '),
                         dict(title='\ud800'),dict(starter='a\0b'),dict(oracleSolutions=['some Node','some   Node'])):
             with self.subTest(fields=list(changes)),self.assertRaises(store.StoreError):
                 store.normalize_import(authored(**changes))
         with self.assertRaises(store.StoreError):
             store.parse_json('{"id":"a","id":"b"}')
+
+    def test_typed_practice_header_and_argument_bodies_publish_and_reload_unchanged(self):
+        document = authored(predicateHeader='pred inv[n: Node] ', starter='some n.adj',
+                            oracleSolutions=['some n.adj', 'not no n.adj'], correctSolutions=[])
+        store.add_exercise(self.root, document)
+        loaded = store.load_store(self.root)
+        self.assertEqual(loaded.exercises['private-one']['predicateHeader'], document['predicateHeader'])
+        self.assertEqual(loaded.correct_pools['private-one'], tuple(document['oracleSolutions']))
+        self.assertEqual(loaded.exercises['private-one']['starter'], document['starter'])
 
     def test_aggregate_engine_limit_and_individual_bounds(self):
         # All references meet individual 8KiB limits but the collection exceeds1MiB.

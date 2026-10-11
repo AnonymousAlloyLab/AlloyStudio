@@ -101,7 +101,7 @@ class SQLiteAdversarialTests(unittest.TestCase):
     def test_carriage_return_comment_escape_and_context_dependency_cannot_publish(self):
         escape = 'some Node // end comment\r} fact injected { no Node } pred extra { some Node'
         documents = [authored(oracleSolutions=[escape], correctSolutions=[]),
-                     authored(environmentAfter='\npred hiddenDependency { inv }\n'),
+                     authored(environmentAfter='\npred hiddenDependency { inv }\nfact { hiddenDependency }\n'),
                      authored(environmentBefore='sig Node { adj: set Node }\nfact { inv }\n')]
         before = self.database.read_bytes()
         for document in documents:
@@ -117,6 +117,14 @@ class SQLiteAdversarialTests(unittest.TestCase):
         with self.assertRaises(store.StoreError):
             store.add_exercise(self.root, document)
         self.assertEqual(self.database.read_bytes(), before)
+
+    def test_dormant_incoming_helper_publishes_without_rewriting_its_environment(self):
+        after = '\npred aggregate { inv }\nassert demonstration { aggregate }\ncheck demonstration\n'
+        document = authored(environmentAfter=after)
+        store.add_exercise(self.root, document)
+        loaded = store.load_store(self.root)
+        self.assertEqual(loaded.exercises['private-one']['environmentAfter'], after)
+        self.assertEqual(loaded.correct_pools['private-one'], tuple(document['oracleSolutions'] + document['correctSolutions']))
 
     def test_read_transaction_cannot_mix_concurrent_catalogue_generations(self):
         store.add_exercise(self.root, authored())

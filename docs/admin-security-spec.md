@@ -1,6 +1,6 @@
 # Authenticated model import: specification before implementation
 
-Version 1, 2026-09-29; upload-capacity amendment 2026-10-11. This is the acceptance contract for the new admin feature,
+Version 1, 2026-09-29; upload-capacity and dependency/parameter amendments 2026-10-11. This is the acceptance contract for the new admin feature,
 not a claim of completed verification. It extends the SQLite specification:
 its CLI-only/no-hot-reload restrictions are superseded only for the authenticated
 routes described here. The learner API and public field allowlists stay in force.
@@ -69,7 +69,7 @@ Accept one UTF-8 .als file, at most 256 KiB, through a JSON envelope at most
 Unicode, duplicate JSON keys, unrecognized fields and malformed Alloy. Filename
 and model ID are metadata, never filesystem paths. IDs use the existing store
 identifier format. Scope defaults to 5, range 1..8. Limit 100 exercise groups,
-256 source solution declarations total, 8 KiB per body and the existing aggregate
+256 source solution declarations total, 8 KiB per selected practice body and the existing aggregate
 engine request bound. A bounded worker admits at most one preparation/provider
 operation globally; excess work gets a retryable busy result. Draft/job records (including failed and completed jobs) are capped
 at eight globally and two per session, expire after 15 minutes, and are memory
@@ -87,27 +87,74 @@ Names matching case-preserving `[iI][nN][vV](0|[1-9][0-9]*)[cC](0|[1-9][0-9]*)`
 form a group named by the prefix before C. Number components have at most six
 digits. Ambiguous mixed-case bases, duplicate numeric variant IDs, and naming
 collisions are rejected. `inv1C0`, `inv1C1`, ... therefore become the `inv1`
-exercise. Every variant is a parameterless oracle. If a bare `inv1` declaration
+exercise. Every variant is an oracle. Parameter declarations must agree across
+variants, including names, grouping, disjointness, multiplicities and domains.
+If a bare `inv1` declaration
 also exists, it is the learner starter, not another oracle. Otherwise create a
-backend-generated parameterless `inv1` learner slot with a comment starter.
-Other source-backed parameterless predicates become standalone exercises with
+backend-generated `inv1` learner slot with the same parameter declarations and a
+comment starter. A practice permits at most 16 explicit argument names, arity at
+most eight, and an 8-KiB header. Receiver-style predicates remain retained helpers;
+use explicit parameters when publishing a practice.
+Other source-backed predicates become standalone exercises with
 their original names. The administrator selects which groups become exercises;
 nonselected predicates and their original bodies remain in the displayed model
-environment. Parameterized predicates and functions are retained
-helpers, not exercises. The lowest numeric variant is the primary oracle;
+environment. Functions remain helpers; administrators may select predicates with
+parameters as practices. The fixed editor header contains their original typed
+parameter declarations. The lowest numeric variant is the primary oracle;
 standalone predicates use their sole body. Group order follows source order.
+Newly selectable parameterized standalone helpers that remain unselected retain
+the model-wide source budget rather than acquiring the practice body/header cap.
+An oversized ordinary helper header is omitted from discovery metadata; selecting
+it fails before validation. Every original numbered C solution still has the
+8-KiB body/header bounds, including unselected groups.
 
 Keep the complete uploaded source unchanged in a private SQLite TEXT witness.
 Use verified UTF-8 byte spans to take exact oracle/starter body slices. Include
-private modifiers in declaration-removal spans. Remove all selected oracle declarations
+private modifiers in declaration-removal spans. Remove all selected oracle bodies
 from the learner projection, preserving every retained environment fragment
 exactly. Generated selected-predicate wrappers are explicitly derived text;
 they do not purport to be byte-identical to the original wrapper. Never rewrite
 predicate bodies, signature/fact/helper code, module declarations or commands.
-Reject unresolved dependencies on removed oracle declarations, including direct
+For new version-2 witnesses, replace other selected standalone declarations with
+explicitly generated blank learner slots of the same names and parameter headers
+at their original positions. These slots preserve symbol resolution for retained
+aggregates without revealing any selected answer. Version-1 archives retain their
+original projection and remain verifiable. No unselected declaration is rewritten.
+Reject unresolved dependencies on removed C aliases, including direct
 run commands, recursion and references hidden in helpers or facts. Do not delete
 or rewrite commands to make an upload pass. A retained learner starter cannot
-be embedded as a hidden solution to another generated exercise.
+be embedded as a hidden solution to another generated exercise. A selected oracle
+or starter may not transitively call another selected slot or selected C alias.
+Facts, signature facts and field domains may not transitively depend on any
+selected slot. Retained nonrecursive callers used only by helpers, assertions or
+commands are permitted: feedback executes generated facts-and-target queries,
+not uploaded commands. Calling such an incoming helper from the selected body
+would create a cycle and must still be rejected in each independently parsed body.
+
+Parameterized equivalence is pointwise at the existing bounds: search for an
+argument assignment where the two bodies disagree, using the same parameter
+variables and declaration domains. Comparing two separately universally closed
+bodies is forbidden. Behavioral examples and scores must likewise evaluate the
+same model and argument assignment, expose student parameter bindings, and retain
+the existing no-counterexample requirement for score 1. No synthetic atoms may
+change the model's `univ`, arithmetic or relation meaning. Header/body containment,
+parameter-domain independence, work deadlines and JVM admission limits still apply.
+An exact-bound declaration such as `n = Node` retains its original public header;
+the private quantifier bridge uses a set domain with an explicit equality to
+that original bound. It must preserve grouping, disjointness and dependent bounds,
+rather than admit arbitrary subsets. For parameterized temporal queries, enumerate
+the union of exact trace lengths 1..10: the pinned Alloy enumerator loses exposed
+argument skolems when a variable-length enumeration grows. Each exact-length
+cursor preserves the bindings, and exhaustion means all ten lengths completed.
+Static and parameterless enumeration retain their existing path. Every sample
+uses its own argument skolems; missing bindings fail closed rather than choosing
+new arguments or dropping the assignment from the LFU identity.
+
+The browser starts with no practices selected so helpers are not silently removed.
+Rejected backend drafts are discarded, but immutable local source and selections
+remain available for a changed selection and fresh validation. This local state
+grants no suggestion/publication authority; logout, file changes and explicit
+discard clear it. Old responses must not restore it after those events.
 
 Discovery uses an empty `practicePredicates` list and cannot produce a publishable
 draft. A nonempty list chooses exact, distinct group names; unknown names are

@@ -50,6 +50,46 @@ def fragment(text, location):
 
 
 class AstEngineTests(unittest.TestCase):
+    def test_exact_bound_parameter_alias_keeps_body_only_feedback_for_both_metrics(self):
+        prefix = ENV + 'pred target[n = A] {\n'
+        for metric in ('canonical', 'ast'):
+            with self.subTest(metric=metric):
+                different = invoke(dict(metric=metric, predicate='target',
+                    studentSource=prefix + 'no n\n}\n', referencePrefix=prefix,
+                    referenceSuffix='\n}\n', referenceBodies=['some n']))
+                self.assertEqual(different['status'], 'ok')
+                self.assertGreater(different['distance'], 0)
+                self.assertTrue(different['operations'])
+                same = invoke(dict(metric=metric, predicate='target',
+                    studentSource=prefix + 'some n\n}\n', referencePrefix=prefix,
+                    referenceSuffix='\n}\n', referenceBodies=['some n']))
+                self.assertEqual(same['status'], 'ok')
+                self.assertEqual(same['distance'], 0)
+                self.assertEqual(same['operations'], [])
+
+    def test_parameterized_bodies_support_both_metrics_and_exact_source_highlights(self):
+        prefix = ENV + 'pred target[n: A] {\n'
+        for metric in ('canonical', 'ast'):
+            with self.subTest(metric=metric):
+                result = invoke(dict(metric=metric, predicate='target', studentSource=prefix + 'no n\n}\n',
+                                     referencePrefix=prefix, referenceSuffix='\n}\n',
+                                     referenceBodies=['some n', 'not no n']))
+                self.assertEqual(result['status'], 'ok')
+                self.assertGreater(result['distance'], 0)
+                self.assertEqual(result['comparison']['evaluatedCandidates'], 2)
+                self.assertTrue(result['operations'])
+                for operation in result['operations']:
+                    location = operation['sourceLocation']
+                    self.assertEqual(location['status'], 'located')
+                    for value in fragment(prefix + 'no n\n}\n', location):
+                        self.assertIn(value, 'no n')
+                exact = invoke(dict(metric=metric, predicate='target', studentSource=prefix + 'some n\n}\n',
+                                    referencePrefix=prefix, referenceSuffix='\n}\n',
+                                    referenceBodies=['some n', 'not no n']))
+                self.assertEqual(exact['status'], 'ok')
+                self.assertEqual(exact['distance'], 0)
+                self.assertEqual(exact['operations'], [])
+
     def assert_feedback(self, result):
         self.assertEqual(result.get('status'), 'ok', 'Raw AST fixture did not complete')
         self.assertEqual(result['metric'], METRIC)

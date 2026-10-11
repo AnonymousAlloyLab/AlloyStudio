@@ -169,8 +169,28 @@ def validate_record_fields(record, references, *, authored=False):
     for key in ('environmentBefore', 'environmentAfter', 'originalSource'):
         text(record.get(key, ''), 262144)
     text(record['predicateHeader'], 8192)
-    if authored and not re.fullmatch(r'\s*pred\s+' + re.escape(record['predicate']) + r'\s*', record['predicateHeader']):
-        raise StoreError('Only a parameterless predicate header is supported.')
+    if authored:
+        try:
+            header = tokens(record['predicateHeader'].encode('utf-8'))
+            if (len(header) < 2 or header[0].value != b'pred'
+                    or header[1].value.decode('ascii') != record['predicate']):
+                raise ValueError('header')
+            tail = header[2:]
+            if tail:
+                if tail[0].value != b'[' or tail[-1].value != b']':
+                    raise ValueError('header')
+                depth = 0
+                for index, item in enumerate(tail):
+                    if item.value == b'[':
+                        depth += 1
+                    elif item.value == b']':
+                        depth -= 1
+                    if depth < 0 or depth == 0 and index != len(tail) - 1:
+                        raise ValueError('header')
+                if depth:
+                    raise ValueError('header')
+        except (ValueError, UnicodeError):
+            raise StoreError('The fixed predicate header must contain only its name and parameter declarations.') from None
     # Some legacy starters deliberately contain syntax errors; keep their exact
     # witnessed text, but new imports must compile and stay within their body.
     text(record['starter'], 8192)

@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from urllib.parse import unquote, urlsplit
-from luna import Explainer
+from luna import Explainer, project_parameter_bindings
 from runtime_dependencies import (check_runtime, runtime_classpath, run_engine,
                                   open_engine_admission, close_engine_admission, wait_for_oneshots)
 from engine_workers import EnginePool, EngineUnavailable, EngineTimeout, EngineAcquisitionTimeout
@@ -168,6 +168,8 @@ def project_behavior(raw):
             require(0 < len(states) <= length and (len(states) == length or truncated))
             instances.append({'traceLength': length, 'loopState': loop, 'truncated': truncated,
                               'stringsAnonymized': strings_anonymized, 'states': states})
+            if 'parameterBindings' in instance:
+                instances[-1]['parameterBindings'] = project_parameter_bindings(instance['parameterBindings'], label=text)
         require((item['status'] == 'sat') == bool(instances))
         require(item['status'] != 'unsat' or complete)
         # With fewer than the three requested witnesses, enumeration must have

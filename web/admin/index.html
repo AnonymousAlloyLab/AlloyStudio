@@ -31,19 +31,19 @@
       <div id="upload-panel">
       <section class="guide">
         <details><summary>Upload format guide</summary>
-          <p>Upload one UTF-8 <code>.als</code> file, up to 256 KiB. Keep signatures, fields, facts and helpers in the same model. All exercise predicates must have no parameters.</p>
+          <p>Upload one UTF-8 <code>.als</code> file, up to 256 KiB. Keep signatures, fields, facts and helpers in the same model. Exercise predicates may have typed parameters: their original names and parameter declarations become a fixed header, and students edit only the body.</p>
           <ul>
-            <li><code>inv1C0</code>, <code>inv1C1</code>, … are alternative solutions for one <code>inv1</code> exercise. Capitalization of the base name is preserved. Every variant must agree within the selected Alloy scope.</li>
+            <li><code>inv1C0</code>, <code>inv1C1</code>, … are alternative solutions for one <code>inv1</code> exercise. Capitalization of the base name is preserved. Variants must have the same parameter names, types and declarations, apart from the predicate name, and agree within the selected Alloy scope.</li>
             <li>An optional bare <code>inv1</code> is the learner's starter. Otherwise, a blank practice body is provided. C numbers need not be consecutive; the lowest is the primary behavioral reference.</li>
             <li>A standalone predicate such as <code>acyclic</code> keeps its name and can become a single-solution exercise. After the file is parsed, choose the predicates you want students to practice. Unselected predicates and their bodies remain unchanged in the model environment.</li>
-            <li>Parameterized predicates and functions remain helpers. Do not call private solution variants from another predicate, fact, helper or command. Module macros, duplicate names, recursive exercises and local-file imports are unsupported.</li>
+            <li>Unselected predicates and functions remain helpers. If retained code calls a selected solution that would be hidden, keep that solution's group unselected or correct the dependency in your model. Module macros, duplicate names, recursive exercises and local-file imports are unsupported.</li>
           </ul>
           <pre>module graph
 sig Node { edge: set Node }
 pred inv1C0 { some Node }
 pred inv1C1 { not no Node }</pre>
           <p>The original upload is retained privately. Selected solution declarations are removed from the learner view; every retained environment fragment and every solution body is preserved. Luna formats the exercise metadata, not the Alloy code.</p>
-          <p>Up to 100 exercise groups and 256 solution declarations per file. Select each group as a whole; alternative solutions cannot be split into separate exercises. Every numbered solution group must agree, including unselected groups. Each body may use up to 8 KiB. Alloy checks equivalence with facts enforced, bitwidth 5 and the selected scope (1–8); this is bounded agreement, not an unbounded proof.</p>
+          <p>Up to 100 exercise groups and 256 solution declarations per file. Select each group as a whole; alternative solutions cannot be split into separate exercises. Every numbered solution group must agree, including unselected groups. Each selected solution body and fixed header may use up to 8 KiB; unselected parameterized helpers retain their original code within the file limit. Alloy checks equivalence with facts enforced, bitwidth 5 and the selected scope (1–8); this is bounded agreement, not an unbounded proof.</p>
         </details>
       </section>
       <form id="upload-form">
@@ -57,7 +57,7 @@ pred inv1C1 { not no Node }</pre>
       </form>
       <section id="selection" hidden>
         <div class="section-heading"><h2><span class="step">2</span> Choose practice predicates</h2><button id="selection-discard" class="secondary" type="button">Discard draft</button></div>
-        <p class="muted">Select the predicates that become exercises. The others, including their original bodies, stay in the model environment. Alternative solutions in an InvXC group are selected together.</p>
+        <p class="muted">Choose the predicates that become exercises; none are selected automatically. The others, including their original bodies, stay in the model environment. Alternative solutions in an InvXC group are selected together. The fixed header shows each predicate's parameter names and types.</p>
         <p id="selection-summary" class="muted" aria-live="polite"></p>
         <div class="selection-actions"><button id="select-all" class="secondary" type="button">Select all</button><button id="clear-all" class="secondary" type="button">Clear all</button></div>
         <form id="selection-form">

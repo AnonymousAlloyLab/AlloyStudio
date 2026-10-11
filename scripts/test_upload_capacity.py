@@ -17,12 +17,14 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 BASE = 'sig Node {}\n'
-SCENARIOS = ('100-standalone', '100-equivalent-pairs', '100-token-duplicate-pairs')
+SCENARIOS = ('100-standalone', '100-parameterized', '100-equivalent-pairs', '100-token-duplicate-pairs')
 
 
 def source_for(scenario):
     if scenario == '100-standalone':
         return BASE + ''.join(f'pred practice{i} {{some Node}}\n' for i in range(100))
+    if scenario == '100-parameterized':
+        return BASE + ''.join(f'pred practice{i}[n: Node] {{some n}}\n' for i in range(100))
     body = 'not no Node' if scenario == '100-equivalent-pairs' else 'some  Node'
     return BASE + ''.join(f'pred inv{i}C0 {{some Node}}\npred inv{i}C1 {{{body}}}\n'
                           for i in range(1, 101))
@@ -112,6 +114,8 @@ def worker(scenario, output):
                       for name in ('admin_upload.py', 'admin_service.py', 'exercise_store.py',
                                    'runtime_dependencies.py', 'engine/src/live/ExerciseValidator.java',
                                    'engine/src/live/UploadInspector.java',
+                                   'engine/src/live/ParameterContext.java',
+                                   'engine/src/live/BehaviorFeedback.java',
                                    'scripts/test_upload_capacity.py')},
                   python=platform.python_version(), platform=platform.platform())
     output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')

@@ -101,18 +101,47 @@ stale decisions and private-data boundaries.
 
 Open `/admin/` under your application path and log in. Upload one UTF-8 `.als`
 file up to 256 KiB. Numbered solution predicates such as `inv1C0` and `inv1C1`
-become one `inv1` exercise; standalone parameterless predicates keep their
+become one `inv1` exercise; standalone predicates keep their
 names. The backend preserves original source and checks every solution with
 Alloy. The selection step shows up to 100 predicate groups, with up to 256
-solution declarations in total. Select which groups become practices, then click
+solution declarations in total. No practice is preselected; leave control and
+frame-condition predicates used by transactions as helpers. Select which groups become practices, then click
 **Validate selected predicates**. Numbered variants stay together; they cannot be
 selected individually. Unselected predicates and their original bodies remain
 in the model environment shown to learners. The full original upload must parse;
 every original numbered InvXC group must agree, including unselected groups.
 Every selected solution also passes bounded equivalence in its retained exercise
 environment. Unsupported dependencies or a nonequivalent late variant reject the
-whole preparation. See [the security contract](admin-security-spec.md) for naming,
+whole preparation. Failed selection validation keeps the file and checkboxes
+locally, so change the selection and retry without parsing again. The rejected
+backend draft is discarded and cannot publish. See [the security contract](admin-security-spec.md) for naming,
 source-preservation rules and bounded-equivalence limits.
+
+Explicit parameters are supported, for example `pred reachable[n: Node]` or
+`pred connected[disj a, b: Node, links: set Node->Node]`. Exact-bound declarations
+such as `pred allNodes[n = Node]` are supported too. The editor displays the
+fixed typed header above the editable body. A practice may have up to 16 argument
+names, relation arity up to eight, and an 8-KiB header. All numbered alternatives
+and an optional bare starter must use matching parameter declarations. Convert
+receiver-style syntax such as `pred Node.rule` to an explicitly parameterized
+predicate before selecting it as a practice; otherwise it stays a helper.
+Unselected parameterized helpers may use the model-wide source budget; selecting
+one applies the practice body and header limits. Discovery omits oversized helper
+headers rather than displaying their contents.
+
+Retained aggregators such as `pred invariants { inv_a and inv_b }` may call
+practice slots. Other selected standalone answers are replaced with named blank
+TODO slots in each exercise, so their bodies stay hidden and aggregates still
+parse. Uploaded assertions and commands are displayed unchanged; live feedback
+uses its own queries rather than running those commands. A practice answer may
+not call another selected answer, and model facts may not depend on selected
+practices. Keep such dependencies unselected. References to removed `inv1C0`
+aliases are rejected with the declaration name, so the selection can be corrected.
+
+Parameterized equivalence checks both bodies for the same legal argument values.
+Behavioral examples show those values beside the diagram; the score samples
+model-and-argument assignments. Counterexamples in either direction prevent a
+score of 1.000. These are bounded checks, not an unbounded equivalence proof.
 
 Preparation and Luna suggestions run as bounded jobs, so the browser can poll
 without keeping a request open for the full solver duration. Drafts remain in

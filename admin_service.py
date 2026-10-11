@@ -174,6 +174,7 @@ class AdminService:
                 draft.scope = prepared['documents'][0].get('equivalenceScope',5)
                 draft.groups = [dict(id=doc['id'],predicate=doc['predicate'],title=doc['title'],
                                       question=doc['description'],oracleCount=len(doc['oracleSolutions']),
+                                      predicateHeader=doc['predicateHeader'],
                                       variants=[variant['name'] for variant in group['variants']])
                                 for doc, group in zip(prepared['documents'],witness['groups'])]
                 draft.state, draft.message = 'ready','All solution variants agree within the displayed bounds. Review the public questions.'

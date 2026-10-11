@@ -96,3 +96,4 @@
 /* Keep the entire read-only environment visible, including long model lines. */
 .environment-code{min-height:300px;max-height:none;overflow:visible;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:730px){.environment-code{min-height:220px}}
+.behavior-arguments { overflow-wrap: anywhere; }

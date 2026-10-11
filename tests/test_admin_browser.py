@@ -16,8 +16,8 @@ class AdminBrowserTests(unittest.TestCase):
                          'Admin browser contract failed; run node tests/admin.mjs locally.')
         report = json.loads(result.stdout.strip().splitlines()[-1])
         self.assertEqual(report['status'], 'PASS')
-        self.assertEqual(report['checks'], 21)
-        self.assertEqual(len(set(report['passed'])), 21)
+        self.assertEqual(report['checks'], 24)
+        self.assertEqual(len(set(report['passed'])), 24)
 
 
 if __name__ == '__main__':

@@ -285,6 +285,30 @@ def _location(raw, texts, *, canonical):
         return unavailable
 
 
+def project_parameter_bindings(value, *, label=None):
+    """Public learner argument values, with fixed caps and no worker metadata."""
+    if label is None:
+        label = lambda item: _text(item, 256)
+    _require(isinstance(value, list) and 1 <= len(value) <= 16)
+    projected, seen, count = [], set(), 0
+    for item in value:
+        _require(isinstance(item, dict))
+        name = item.get('name')
+        _require(type(name) is str and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,127}', name)
+                 and name not in seen)
+        seen.add(name)
+        name = label(name)
+        arity = _integer(item.get('arity'), 1, 8)
+        tuples = []
+        for row in _sequence(item.get('tuples'), 512):
+            _require(isinstance(row, list) and len(row) == arity)
+            count += 1
+            _require(count <= 2048)
+            tuples.append([label(atom) for atom in row])
+        projected.append({'name': name, 'arity': arity, 'tuples': tuples})
+    return projected
+
+
 def _behavior_evidence(raw):
     if raw is None or isinstance(raw, dict) and raw.get('status') != 'ok':
         return {'status': 'unavailable'}
@@ -353,6 +377,8 @@ def _behavior_evidence(raw):
             _require(0 < len(states) <= length and (len(states) == length or truncated))
             instances.append({'id': name + '-' + str(number), 'traceLength': length,
                 'loopState': loop, 'truncated': truncated, 'stringsAnonymized': anonymized, 'states': states})
+            if 'parameterBindings' in instance:
+                instances[-1]['parameterBindings'] = project_parameter_bindings(instance['parameterBindings'], label=label)
         _require((category['status'] == 'sat') == bool(instances)
                  and (complete or len(instances) == 3))
         categories[name] = {'id': name, 'oracle': polarity[0], 'student': polarity[1],

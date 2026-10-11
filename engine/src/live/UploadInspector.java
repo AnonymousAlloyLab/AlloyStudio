@@ -98,7 +98,7 @@ public final class UploadInspector {
             declarations.sort(Comparator.comparingInt(Declaration::start));
             JSONObject variantEquivalence = null;
             if (verifyVariants) {
-                variantEquivalence = variantEquivalence(module, declarations, names, variantGroups, equivalenceScope);
+                variantEquivalence = variantEquivalence(module, declarations, names, variantGroups, equivalenceScope, source);
                 if (variantEquivalence.has("status")) return variantEquivalence;
             }
             JSONArray rows = new JSONArray();
@@ -148,14 +148,14 @@ public final class UploadInspector {
     /** Compare all marked source predicates in their unchanged original world.
      * The caller's list can neither omit a group nor split or redefine one. */
     private static JSONObject variantEquivalence(CompModule module, List<Declaration> declarations,
-            Map<Func, String> names, JSONArray requested, int scope) throws Exception {
+            Map<Func, String> names, JSONArray requested, int scope, String source) throws Exception {
         Map<String, List<Func>> groups = new LinkedHashMap<>();
         Map<String, String> spelling = new HashMap<>();
         Set<String> allVariants = new TreeSet<>();
         for (Declaration declaration : declarations) {
             Matcher match = VARIANT.matcher(declaration.name);
             if (!match.matches()) continue;
-            if (!declaration.function.isPred || declaration.function.count() != 0
+            if (!declaration.function.isPred
                     || match.group(2).length() > 6 || match.group(3).length() > 6)
                 throw new IllegalArgumentException();
             String base = match.group(1);
@@ -167,6 +167,9 @@ public final class UploadInspector {
                 throw new IllegalArgumentException();
         }
         for (List<Func> variants : groups.values()) {
+            Func primary = variants.get(0);
+            for (Func variant : variants) if (!sameParameters(primary, variant))
+                return rejected("PARAMETER_SIGNATURE_MISMATCH");
             variants.sort(Comparator.comparingInt(function -> variantNumber(names.get(function))));
             int previous = -1;
             for (Func function : variants) {
@@ -220,9 +223,10 @@ public final class UploadInspector {
             facts = facts.and(ExprConstant.Op.STRING.make(Pos.UNKNOWN, literal).in(Sig.STRING));
         if (!ExerciseValidator.solve(module, facts, scope).satisfiable()) return rejected("INCONSISTENT_FACTS");
         for (List<Func> variants : groups.values()) {
-            Expr primary = variants.get(0).call();
+            ParameterContext parameters = new ParameterContext(module, variants.get(0), source);
+            Expr primary = parameters.oracle();
             for (int index = 1; index < variants.size(); index++) {
-                Expr mismatch = facts.and(primary.iff(variants.get(index).call()).not());
+                Expr mismatch = facts.and(parameters.mismatch(primary, parameters.call(variants.get(index))));
                 if (ExerciseValidator.solve(module, mismatch, scope).satisfiable())
                     return rejected("NOT_EQUIVALENT");
             }
@@ -231,6 +235,27 @@ public final class UploadInspector {
                 .put("scope", scope).put("bitwidth", 5).put("maxSequence", scope)
                 .put("minTrace", 1).put("maxTrace", 10).put("solver", "SAT4J")
                 .put("moduleFacts", true).put("factsSatisfiable", true).put("equivalence", "bounded");
+    }
+
+    /** Headers remain fixed, including grouped/disjoint names and dependent
+     * domains. Only predicate names may differ across numbered alternatives.
+     * Parsed domains share one original module, so qualified references have
+     * stable identities and spellings rather than caller-supplied type claims. */
+    private static boolean sameParameters(Func left, Func right) {
+        if (left.count() != right.count() || left.decls.size() != right.decls.size()) return false;
+        for (int index = 0; index < left.decls.size(); index++) {
+            Decl a = left.decls.get(index), b = right.decls.get(index);
+            if (a.names.size() != b.names.size()
+                    || (a.disjoint != null) != (b.disjoint != null)
+                    || (a.disjoint2 != null) != (b.disjoint2 != null)
+                    || (a.isVar != null) != (b.isVar != null)
+                    || (a.isPrivate != null) != (b.isPrivate != null)
+                    || !a.expr.toString().equals(b.expr.toString())
+                    || !a.expr.type().toString().equals(b.expr.type().toString())) return false;
+            for (int name = 0; name < a.names.size(); name++)
+                if (!a.names.get(name).label.equals(b.names.get(name).label)) return false;
+        }
+        return true;
     }
 
     private static int variantNumber(String name) {

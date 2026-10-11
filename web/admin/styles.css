@@ -4,3 +4,4 @@
 #question-heading,#candidate-heading{overflow-wrap:anywhere}
 
 .selection-actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}.predicate-choice{display:flex;align-items:flex-start;gap:.7rem;margin:0;padding:.85rem 0;border-bottom:1px solid var(--line);font-weight:400}.predicate-choice input{flex-shrink:0;margin-top:.3rem}.predicate-choice span{min-width:0;overflow-wrap:anywhere}.predicate-choice strong,.predicate-choice small{display:block}#validate-selection{margin-top:1.2rem}@media(max-width:600px){.selection-actions button,#validate-selection{min-height:44px}}
+.predicate-signature{display:block;margin:.35rem 0;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}

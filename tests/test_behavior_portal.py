@@ -41,6 +41,40 @@ def completed(answer):
 
 
 class BehaviorProjectionTests(unittest.TestCase):
+    def test_parameter_bindings_survive_public_and_tutor_projections_without_metadata(self):
+        answer = valid_behavior()
+        bindings = [dict(name='n', arity=1, tuples=[['A$0']], oracleBody=PRIVATE),
+                    dict(name='edges', arity=2, tuples=[['A$0', 'A$1']], command=PRIVATE)]
+        for category in answer['categories']:
+            category['instances'][0]['parameterBindings'] = copy.deepcopy(bindings)
+        result = server.project_behavior(answer)
+        from luna import _behavior_evidence
+        education = _behavior_evidence(result)
+        for value in (result, education):
+            self.assertNotIn(PRIVATE, json.dumps(value))
+            categories = value['categories']
+            if isinstance(categories, dict):
+                categories = categories.values()
+            for category in categories:
+                actual = category['instances'][0]['parameterBindings']
+                self.assertEqual(actual, [dict(name='n', arity=1, tuples=[['A$0']]),
+                                          dict(name='edges', arity=2, tuples=[['A$0', 'A$1']])])
+
+    def test_malformed_or_oversized_parameter_assignments_are_rejected(self):
+        valid = dict(name='n', arity=1, tuples=[['A$0']])
+        cases = [None, [], [valid] * 2, [dict(valid, name='x;statement')],
+                 [dict(valid, arity=True)], [dict(valid, arity=9)],
+                 [dict(valid, tuples=[['A$0', 'A$1']])],
+                 [dict(valid, tuples=[['A$0']] * 513)],
+                 [dict(valid, name='p' + str(i)) for i in range(17)],
+                 [dict(valid, name='p' + str(i), tuples=[['A$0']] * 512) for i in range(5)]]
+        for bindings in cases:
+            with self.subTest(bindings_type=type(bindings).__name__):
+                answer = valid_behavior()
+                answer['categories'][0]['instances'][0]['parameterBindings'] = bindings
+                with self.assertRaises(ValueError):
+                    server.project_behavior(answer)
+
     def test_known_schema_preserves_four_categories_and_finite_score(self):
         result = server.project_behavior(valid_behavior())
         self.assertEqual(result['status'], 'ok')

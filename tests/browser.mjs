@@ -1267,6 +1267,32 @@ try {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
   });
+  await check('behavior-parameter-values-are-visible-and-safe-on-desktop-and-mobile', async () => {
+    await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));
+    await page.route('**/api/behavior', route => {
+      const data = behaviorResult(route.request().postDataJSON());
+      for (const category of data.categories) for (const instance of category.instances) {
+        instance.parameterBindings = [
+          { name: 'n', arity: 1, tuples: [['Node$0']] },
+          { name: 'edges', arity: 2, tuples: [['Node$0', 'Node$1']] },
+          { name: 'optional', arity: 1, tuples: [] }
+        ];
+      }
+      return route.fulfill({ json: data });
+    });
+    await submit('some Node // argument display'); await waitBehavior();
+    assert.match(await page.locator('.behavior-arguments').textContent(), /n = Node\$0/);
+    assert.match(await page.locator('.behavior-arguments').textContent(), /edges = Node\$0 → Node\$1/);
+    assert.match(await page.locator('.behavior-arguments').textContent(), /optional = none/);
+    for (const category of ['undercoverage', 'overcoverage', 'neither']) {
+      await page.locator(`.behavior-category-choice[data-category="${category}"]`).click();
+      assert.match(await page.locator('.behavior-arguments').textContent(), /Parameter values for this example/);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.unroute('**/api/behavior'); await page.unroute('**/api/feedback');
+  });
   await check('behavior-unavailable-polarity-and-timeout-are-distinct', async () => {
     let mode = 'ORACLE_POSITIVE_UNSAT';
     await page.route('**/api/feedback', route => route.fulfill({ json: result(route.request().postDataJSON(), 2) }));

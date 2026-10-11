@@ -40,6 +40,8 @@ public final class ExerciseValidator {
     private static final int MAX_BODY_BYTES = 8_192;
     private static final int MAX_SOURCE_BYTES = 262_144;
     private static final int MAX_REFERENCES = 256;
+    private static final int MAX_PARAMETERS = ParameterContext.MAX_PARAMETERS;
+    private static final int MAX_HEADER_BYTES = 8_192;
     private static final Set<String> FIELDS = Set.of("predicate", "sourcePrefix", "sourceSuffix",
             "starter", "oracleBodies", "correctBodies", "scope");
 
@@ -163,7 +165,9 @@ public final class ExerciseValidator {
             }
             if (world == null) throw new IllegalStateException();
             Expr facts = world.getAllReachableFacts();
-            Expr primary = BehaviorFeedback.selected(world, predicate).call();
+            Func selected = BehaviorFeedback.selected(world, predicate);
+            ParameterContext parameters = new ParameterContext(world, selected, prefix + candidates.get(0) + suffix);
+            Expr primary = parameters.oracle();
             Set<String> strings = BehaviorFeedback.stringConstants(primary);
             strings.addAll(BehaviorFeedback.stringConstants(facts));
             for (Sig sig : world.getAllReachableUserDefinedSigs()) {
@@ -180,11 +184,14 @@ public final class ExerciseValidator {
             for (int index = 1; index < candidates.size(); index++) {
                 // Reparse only the independently checked expression in the
                 // primary world, so all compared expressions share signatures.
-                Expr candidate = CompUtil.parseOneExpression_fromString(world, "{\n" + candidates.get(index) + "\n}");
+                Expr candidate = parameters.parseBody(candidates.get(index));
                 if (!candidate.type().is_bool) return rejected("INVALID_MODEL", index);
                 if (!strings.containsAll(BehaviorFeedback.stringConstants(candidate)))
                     return rejected("UNSUPPORTED_STRING_UNIVERSE", index);
-                Expr counterexample = facts.and(primary.iff(candidate).not());
+                // One shared argument assignment must witness disagreement.
+                // Closing each predicate separately would miss different
+                // functions whose universal closures are both false.
+                Expr counterexample = facts.and(parameters.mismatch(primary, candidate));
                 if (solve(world, counterexample, scope).satisfiable()) return rejected("NOT_EQUIVALENT", index);
             }
             return new JSONObject().put("status", "ok").put("scope", scope).put("bitwidth", 5)
@@ -210,9 +217,17 @@ public final class ExerciseValidator {
         try { world = CompUtil.parseEverything_fromString(A4Reporter.NOP, source); }
         catch (Err error) { throw new Rejected("INVALID_MODEL", candidateIndex); }
         if (!bundledDependencies(world)) throw new Rejected("UNSUPPORTED_EXTERNAL_MODULE", candidateIndex);
-        Func selected;
-        try { selected = BehaviorFeedback.selected(world, predicate); }
-        catch (RuntimeException error) { throw new Rejected("UNSUPPORTED_PREDICATE", candidateIndex); }
+        Func selected = null;
+        for (Func function : world.getAllFunc()) {
+            if (!function.label.equals(predicate) && !function.label.equals("this/" + predicate)) continue;
+            if (selected != null || !function.isPred)
+                throw new Rejected("UNSUPPORTED_PREDICATE", candidateIndex);
+            selected = function;
+        }
+        if (selected == null) throw new Rejected("UNSUPPORTED_PREDICATE", candidateIndex);
+        if (selected.count() > MAX_PARAMETERS
+                || selected.params().stream().anyMatch(variable -> variable.label.equals("this")))
+            throw new Rejected("UNSUPPORTED_PARAMETERS", candidateIndex);
         int[] range;
         try { range = BehaviorFeedback.bodyRange(selected, source); }
         catch (RuntimeException error) { throw new Rejected("BODY_CONTAINMENT", candidateIndex); }
@@ -224,6 +239,11 @@ public final class ExerciseValidator {
                 || !source.substring(0, range[0] + 2).equals(prefix)
                 || !source.substring(range[1] - 2).equals(suffix))
             throw new Rejected("BODY_CONTAINMENT", candidateIndex);
+        int[] declaration = selected.span().toStartEnd(source);
+        if (declaration == null || declaration[0] < 0 || declaration[0] > range[0]
+                || source.substring(declaration[0], range[0]).getBytes(StandardCharsets.UTF_8).length
+                    > MAX_HEADER_BYTES)
+            throw new Rejected("UNSUPPORTED_PARAMETERS", candidateIndex);
         if (BehaviorFeedback.hasUnsafeDependencies(world, selected))
             throw new Rejected("UNSUPPORTED_DEPENDENCY", candidateIndex);
         return world;

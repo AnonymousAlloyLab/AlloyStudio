@@ -1157,13 +1157,20 @@ function validBehaviorResult(result) {
     && list(stateData.signatures, 128, signature => signature && label(signature.label) && list(signature.atoms, 128, label))
     && list(stateData.relations, 128, relation => relation && label(relation.label) && integer(relation.arity, 1, 8)
       && list(relation.tuples, 512, tuple => Array.isArray(tuple) && tuple.length === relation.arity && tuple.every(label)));
+  const validBindings = bindings => Array.isArray(bindings) && bindings.length >= 1 && bindings.length <= 16
+    && new Set(bindings.map(binding => binding?.name)).size === bindings.length
+    && bindings.reduce((count, binding) => count + (binding?.tuples?.length || 0), 0) <= 2048
+    && bindings.every(binding => binding && typeof binding.name === 'string'
+      && /^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(binding.name) && integer(binding.arity, 1, 8)
+      && list(binding.tuples, 512, tuple => Array.isArray(tuple) && tuple.length === binding.arity && tuple.every(label)));
   const validInstance = instance => instance && integer(instance.traceLength, 1, scope.maxTrace)
     && integer(instance.loopState, -1, instance.traceLength - 1)
     && (instance.truncated === undefined || typeof instance.truncated === 'boolean')
     && (instance.stringsAnonymized === undefined || typeof instance.stringsAnonymized === 'boolean')
     && Array.isArray(instance.states) && instance.states.length >= 1 && instance.states.length <= instance.traceLength
     && (instance.states.length === instance.traceLength || instance.truncated === true)
-    && instance.states.every(validState);
+    && instance.states.every(validState)
+    && (instance.parameterBindings === undefined || validBindings(instance.parameterBindings));
   if (!Array.isArray(result.categories) || result.categories.length !== BEHAVIOR_CATEGORIES.length) return false;
   const validCategories = BEHAVIOR_CATEGORIES.every(expected => {
     const matching = result.categories.filter(category => category?.id === expected.id);
@@ -1247,6 +1254,16 @@ function renderBehaviorState(container, stateData) {
 function renderBehaviorInstance(container, instance, categoryId, exampleIndex) {
   container.replaceChildren();
   container.append(educationSlot('instance', `${categoryId}-${exampleIndex + 1}`));
+  if (instance.parameterBindings) {
+    const argumentsView = node('div', 'behavior-arguments');
+    argumentsView.append(node('h4', '', 'Parameter values for this example'));
+    for (const binding of instance.parameterBindings) {
+      const value = binding.tuples.length
+        ? binding.tuples.map(tuple => tuple.join(' → ')).join(', ') : 'none';
+      argumentsView.append(node('p', '', `${binding.name} = ${value}`));
+    }
+    container.append(argumentsView);
+  }
   if (instance.truncated) container.append(node('p', 'behavior-truncated', 'This instance is only partially displayed; some atoms, relations, tuples, or states were omitted.'));
   if (instance.stringsAnonymized) container.append(node('p', 'behavior-string-note', 'String contents are hidden; atom identities are preserved.'));
   const stateContent = node('div', 'behavior-state-content');

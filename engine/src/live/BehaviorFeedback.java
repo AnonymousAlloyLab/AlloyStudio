@@ -42,11 +42,12 @@ public final class BehaviorFeedback {
         final String source, predicate;
         final CompModule world;
         final Func target;
+        final ParameterContext parameters;
         final Expr oracle, facts;
         final Set<String> strings;
         final BehaviorPool<A4Solution> positive = new BehaviorPool<>(POOL_SIZE);
         final BehaviorPool<A4Solution> negative = new BehaviorPool<>(POOL_SIZE);
-        A4Solution positiveCursor, negativeCursor;
+        Cursor positiveCursor, negativeCursor;
         boolean seeded;
 
         Context(String source, String predicate) throws Err {
@@ -54,7 +55,8 @@ public final class BehaviorFeedback {
             world = WorkerSafety.parse(source);
             target = selected(world, predicate);
             if (hasUnsafeDependencies(world, target)) throw new UnsafeContext();
-            oracle = target.call(); facts = world.getAllReachableFacts();
+            parameters = new ParameterContext(world, target, source);
+            oracle = parameters.oracle(); facts = world.getAllReachableFacts();
             strings = stringConstants(oracle);
             strings.addAll(stringConstants(facts));
             for (Sig sig : world.getAllReachableUserDefinedSigs()) {
@@ -66,17 +68,50 @@ public final class BehaviorFeedback {
         void refresh() throws Err {
             if (!seeded) {
                 // Authenticate source context and String universe before solver work.
-                positiveCursor = solve(world, facts.and(oracle));
-                negativeCursor = solve(world, facts.and(oracle.not()));
+                positiveCursor = new Cursor(world, facts.and(parameters.quantify(oracle)), parameters);
+                negativeCursor = new Cursor(world, facts.and(parameters.quantify(oracle.not())), parameters);
             }
             int amount = seeded ? 1 : POOL_SIZE;
-            positiveCursor = advance(positive, positiveCursor, amount);
-            negativeCursor = advance(negative, negativeCursor, amount);
+            advance(positive, positiveCursor, amount, parameters);
+            advance(negative, negativeCursor, amount, parameters);
             seeded = true;
         }
     }
 
     private static final class UnsafeContext extends IllegalArgumentException { }
+
+    /** The pinned Alloy enumerator drops exposed skolems when it grows a
+     * temporal trace. Parameterized queries enumerate each exact length instead,
+     * retaining one cursor across the same bounded 1..10 union of traces. No
+     * model atoms or declarations are added. Static enumeration is unchanged.
+     */
+    private static final class Cursor {
+        final CompModule world;
+        final Expr expression;
+        final boolean fixedTrace;
+        int trace = 1;
+        A4Solution solution;
+
+        Cursor(CompModule world, Expr expression, ParameterContext parameters) throws Err {
+            this.world = world; this.expression = expression;
+            fixedTrace = parameters.isParameterized() && CompUtil.isTemporalModel(
+                    world.getAllReachableSigs(), new Command(true, SCOPE, SCOPE, SCOPE, expression));
+            solution = solve(world, expression, fixedTrace ? trace : -1);
+            seek();
+        }
+
+        boolean satisfiable() { return solution.satisfiable(); }
+
+        void next() throws Err {
+            solution = solution.next();
+            seek();
+        }
+
+        private void seek() throws Err {
+            while (!solution.satisfiable() && fixedTrace && trace < MAX_STATES)
+                solution = solve(world, expression, ++trace);
+        }
+    }
 
     private static final class Category {
         final JSONObject projected;
@@ -144,10 +179,10 @@ public final class BehaviorFeedback {
                     || !maskedBody(studentSource, learnerBody).equals(maskedBody(oracleSource, oracleBody)))
                 return failure("invalid_request", "CONTEXT_MISMATCH");
 
-            // Shared helpers cannot depend on the selected predicate. Parsing the
-            // independently checked learner body here therefore shares signature
-            // identity without changing the meaning of any learner function call.
-            Expr student = CompUtil.parseOneExpression_fromString(world, "{\n" + studentBody + "\n}");
+            // A body may use stable helpers. An incoming helper is dormant here:
+            // calling it from this body would have failed the learner cycle gate.
+            // Parameters share one legal assignment in the primary signature world.
+            Expr student = context.parameters.parseBody(studentBody);
             Expr oracle = context.oracle;
             Expr facts = context.facts;
             // Rewarder's sample universe comes from oracle commands. A new
@@ -162,16 +197,19 @@ public final class BehaviorFeedback {
             boolean[] studentValues = {true, false, true, false};
             JSONArray categories = new JSONArray();
             for (int i = 0; i < ids.length; i++) {
-                Expr category = facts.and(oracleValues[i] ? oracle : oracle.not())
-                        .and(studentValues[i] ? student : student.not());
-                Category result = category(world, learner, category, ids[i], oracleValues[i], studentValues[i]);
+                Expr category = facts.and(context.parameters.quantify(
+                        (oracleValues[i] ? oracle : oracle.not())
+                        .and(studentValues[i] ? student : student.not())));
+                Category result = category(world, learner, category, ids[i], oracleValues[i],
+                        studentValues[i], context.parameters);
                 categories.put(result.projected);
                 BehaviorPool<A4Solution> pool = oracleValues[i] ? context.positive : context.negative;
-                for (A4Solution witness : result.witnesses) pool.admit(identity(witness), witness);
+                for (A4Solution witness : result.witnesses)
+                    pool.admit(identity(witness, context.parameters), witness);
             }
             // Include fresh category witnesses before computing the final score.
-            int[] positiveCounts = sample(context.positive, student, true);
-            int[] negativeCounts = sample(context.negative, student, false);
+            int[] positiveCounts = sample(context.positive, student, true, context.parameters);
+            int[] negativeCounts = sample(context.negative, student, false, context.parameters);
             int semanticCounterexamples = 0;
             boolean available = positiveCounts[0] > 0 && negativeCounts[0] > 0;
             if (available && positiveCounts[0] == positiveCounts[1] && negativeCounts[0] == negativeCounts[1]) {
@@ -209,11 +247,14 @@ public final class BehaviorFeedback {
         }
     }
 
-    private static A4Solution solve(CompModule world, Expr expression) throws Err {
+    private static A4Solution solve(CompModule world, Expr expression, int exactTrace) throws Err {
         A4Options options = new A4Options();
         options.solver = A4Options.SatSolver.SAT4J;
+        Command command = exactTrace < 0 ? new Command(true, SCOPE, SCOPE, SCOPE, expression)
+                : new Command(null, null, "", true, SCOPE, SCOPE, SCOPE,
+                        exactTrace, exactTrace, -1, null, null, expression, null);
         A4Solution solution = TranslateAlloyToKodkod.execute_command(A4Reporter.NOP, world.getAllReachableSigs(),
-                new Command(true, SCOPE, SCOPE, SCOPE, expression), options);
+                command, options);
         if (solution == null) throw new IllegalStateException();
         return solution;
     }
@@ -223,18 +264,19 @@ public final class BehaviorFeedback {
                 && category.getBoolean("enumerationComplete") && category.getJSONArray("instances").isEmpty();
     }
 
-    private static A4Solution advance(BehaviorPool<A4Solution> pool, A4Solution solution, int amount) throws Err {
-        for (int i = 0; i < amount && solution != null && solution.satisfiable(); i++) {
-            pool.admit(identity(solution), solution);
-            solution = solution.next();
+    private static void advance(BehaviorPool<A4Solution> pool, Cursor cursor, int amount,
+            ParameterContext parameters) throws Err {
+        for (int i = 0; i < amount && cursor.satisfiable(); i++) {
+            pool.admit(identity(cursor.solution, parameters), cursor.solution);
+            cursor.next();
         }
-        return solution;
     }
 
-    private static int[] sample(BehaviorPool<A4Solution> pool, Expr student, boolean expected) throws Err {
+    private static int[] sample(BehaviorPool<A4Solution> pool, Expr student, boolean expected,
+            ParameterContext parameters) throws Err {
         int tested = 0, matched = 0;
         for (BehaviorPool.Entry<A4Solution> entry : pool.snapshot()) {
-            Object evaluation = entry.value.eval(student);
+            Object evaluation = entry.value.eval(parameters.freeze(student, entry.value));
             if (!(evaluation instanceof Boolean)) throw new IllegalArgumentException();
             if (((Boolean) evaluation) == expected) matched++;
             else pool.mismatch(entry);
@@ -244,24 +286,24 @@ public final class BehaviorFeedback {
     }
 
     private static Category category(CompModule world, CompModule learner, Expr expression, String id,
-            boolean oracle, boolean student) throws Err {
-        A4Solution solution = solve(world, expression);
+            boolean oracle, boolean student, ParameterContext parameters) throws Err {
+        Cursor cursor = new Cursor(world, expression, parameters);
         JSONArray instances = new JSONArray();
         List<A4Solution> witnesses = new ArrayList<>();
-        while (instances.length() < EXAMPLES && solution != null && solution.satisfiable()) {
-            instances.put(instance(solution, learner));
-            witnesses.add(solution);
-            solution = solution.next();
+        while (instances.length() < EXAMPLES && cursor.satisfiable()) {
+            instances.put(instance(cursor.solution, learner, parameters));
+            witnesses.add(cursor.solution);
+            cursor.next();
         }
         JSONObject projected = new JSONObject().put("id", id).put("oracle", oracle).put("student", student)
                 .put("status", instances.isEmpty() ? "unsat" : "sat")
-                .put("enumerationComplete", solution == null || !solution.satisfiable())
+                .put("enumerationComplete", !cursor.satisfiable())
                 .put("instances", instances);
         return new Category(projected, witnesses);
     }
 
     /** Exact private trace identity, independent of capped/anonymized public projection. */
-    private static String identity(A4Solution solution) {
+    private static String identity(A4Solution solution, ParameterContext parameters) throws Err {
         StringBuilder result = new StringBuilder();
         result.append(solution.getTraceLength()).append(':').append(solution.getLoopState()).append(':');
         List<Sig> signatures = new ArrayList<>();
@@ -278,6 +320,14 @@ public final class BehaviorFeedback {
                     part(result, field.label);
                     tupleIdentity(result, solution.eval(field, state));
                 }
+            }
+        }
+        if (parameters.isParameterized()) {
+            part(result, "parameter-assignments");
+            List<A4TupleSet> values = parameters.values(solution);
+            for (int index = 0; index < values.size(); index++) {
+                part(result, parameters.arguments.get(index).label);
+                tupleIdentity(result, values.get(index));
             }
         }
         return result.toString();
@@ -306,7 +356,8 @@ public final class BehaviorFeedback {
     }
 
     /** Only learner-declared relation labels and concrete tuples cross the wire. */
-    private static JSONObject instance(A4Solution solution, CompModule learner) {
+    private static JSONObject instance(A4Solution solution, CompModule learner,
+            ParameterContext parameters) throws Err {
         Set<String> allowedSignatures = new java.util.HashSet<>();
         Set<String> allowedFields = new java.util.HashSet<>();
         for (Sig sig : learner.getAllReachableUserDefinedSigs()) {
@@ -363,8 +414,35 @@ public final class BehaviorFeedback {
             }
             states.put(new JSONObject().put("index", state).put("signatures", sigRows).put("relations", relationRows));
         }
-        return new JSONObject().put("traceLength", traceLength).put("loopState", solution.getLoopState())
+        JSONObject result = new JSONObject().put("traceLength", traceLength).put("loopState", solution.getLoopState())
                 .put("states", states).put("truncated", truncated).put("stringsAnonymized", !stringAtoms.isEmpty());
+        if (parameters.isParameterized()) {
+            JSONArray bindings = new JSONArray();
+            List<A4TupleSet> values = parameters.values(solution);
+            int remaining = MAX_TUPLES;
+            for (int index = 0; index < values.size(); index++) {
+                A4TupleSet value = values.get(index);
+                JSONArray tuples = new JSONArray();
+                for (A4Tuple tuple : value) {
+                    if (remaining-- <= 0 || tuples.length() >= MAX_TUPLES_PER_RELATION) {
+                        truncated = true; break;
+                    }
+                    JSONArray columns = new JSONArray();
+                    boolean omitted = false;
+                    for (int column = 0; column < tuple.arity(); column++) {
+                        String atom = displayAtom(tuple, column, stringAtoms);
+                        if (atom.length() > MAX_LABEL) { truncated = true; omitted = true; break; }
+                        columns.put(atom);
+                    }
+                    if (!omitted) tuples.put(columns);
+                }
+                bindings.put(new JSONObject().put("name", parameters.arguments.get(index).label)
+                        .put("arity", value.arity()).put("tuples", tuples));
+            }
+            result.put("parameterBindings", bindings).put("truncated", truncated)
+                    .put("stringsAnonymized", !stringAtoms.isEmpty());
+        }
+        return result;
     }
 
     private static String displayAtom(A4Tuple tuple, int column, java.util.Map<String, String> stringAtoms) {
@@ -384,7 +462,8 @@ public final class BehaviorFeedback {
         Func result = null;
         for (Func function : module.getAllFunc()) {
             if (function.label.equals(name) || function.label.equals("this/" + name)) {
-                if (result != null || !function.isPred || function.count() != 0) throw new IllegalArgumentException();
+                if (result != null || !function.isPred || function.count() > ParameterContext.MAX_PARAMETERS)
+                    throw new IllegalArgumentException();
                 result = function;
             }
         }
@@ -407,9 +486,6 @@ public final class BehaviorFeedback {
     static boolean hasUnsafeDependencies(CompModule module, Func target) {
         if (cyclic(target, new IdentityHashMap<>())) return true;
         for (CompModule reachable : module.getAllReachableModules()) {
-            for (Func helper : reachable.getAllFunc()) {
-                if (helper != target && !isSyntheticCommand(helper) && dependsOn(helper, target, identitySet())) return true;
-            }
             for (edu.mit.csail.sdg.alloy4.Pair<String, Expr> fact : reachable.getAllFacts()) {
                 if (dependsOn(fact.b, target, identitySet())) return true;
             }
@@ -420,6 +496,8 @@ public final class BehaviorFeedback {
                 }
             }
         }
+        for (Decl declaration : target.decls)
+            if (dependsOn(declaration.expr, target, identitySet())) return true;
         return false;
     }
 

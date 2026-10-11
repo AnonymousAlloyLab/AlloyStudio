@@ -27,6 +27,9 @@ const groups = () => ['hundred', 'overflow'].includes(mode)
   ? Array.from({ length: mode === 'hundred' ? 100 : 101 }, (_, index) => ({ predicate: `Inv${index + 1}`,
     id: `fixture-Inv${index + 1}`, variants: [`Inv${index + 1}C0`, `Inv${index + 1}C1`], oracleCount: 2,
     title: `Question ${index + 1}`, question: `Describe the requirement for question ${index + 1}.` }))
+  : mode === 'typed' ? [{ predicate: 'Reachable', id: 'fixture-Reachable',
+    variants: ['Reachable'], oracleCount: 1, title: 'Typed reachability', question: 'Describe reachability between the given nodes.',
+    predicateHeader: 'pred Reachable[n: Node, nodes: set Node] ' }]
   : mode === 'single' ? [{ predicate: 'Reachable', id: 'fixture-Reachable',
   variants: ['Reachable'], oracleCount: 1, title: 'Reachability', question: 'Describe reachability.' }]
   : [{ predicate: 'Inv1', id: 'fixture-Inv1', variants: ['Inv1C0', 'Inv1C7'],
@@ -167,7 +170,10 @@ try {
     await page.locator('#model-file').setInputFiles({ name, mimeType: 'text/plain', buffer: Buffer.isBuffer(content) ? content : Buffer.from(content) });
     await page.locator('#prepare').click();
     await page.waitForFunction(() => !document.querySelector('#prepare').disabled);
-    if (validate && await page.locator('#selection').isVisible()) await validateSelection();
+    if (validate && await page.locator('#selection').isVisible()) {
+      await page.locator('#select-all').click();
+      await validateSelection();
+    }
   };
   const original = '\ufeffmodule original\r\n// naïve λ source\r\nsig Node {edge: set Node}\r\npred Inv1C0 {\r\n some Node\r\n}\r\npred Inv1C7 {not no Node}\r\npred acyclic {no iden & ^edge}\r\n';
 
@@ -199,6 +205,7 @@ try {
   assert.equal(await page.locator('#preview').isVisible(), false);
   assert.deepEqual(await page.locator('.predicate-choice strong').allTextContents(), ['Inv1', 'acyclic']);
   assert.equal(await page.locator('.predicate-choice input').count(), 2);
+  assert.equal(await page.locator('.predicate-choice input:checked').count(), 0);
   assert.match(await page.locator('.predicate-choice').first().textContent(), /Inv1C0, Inv1C7/);
   assert.equal(operationCount('suggest'), 0);
   assert.equal(operationCount('commit'), 0);
@@ -254,7 +261,7 @@ try {
 
   mode = 'group';
   await upload(original, 'selected.als', false);
-  await page.locator('.predicate-choice input').first().uncheck();
+  await page.locator('.predicate-choice input').nth(1).check();
   assert.match(await page.locator('#selection-summary').textContent(), /1 of 2/);
   await validateSelection();
   assert.deepEqual(latest('prepare').data.practicePredicates, ['acyclic']);
@@ -275,6 +282,7 @@ try {
   const names = Array.from({ length: 100 }, (_, index) => `Inv${index + 1}`);
   await upload(hundred, 'hundred.als', false);
   assert.equal(await page.locator('.predicate-choice input').count(), 100);
+  assert.equal(await page.locator('.predicate-choice input:checked').count(), 0);
   assert.deepEqual(await page.locator('.predicate-choice strong').allTextContents(), names);
   await mkdir(path.join(root, 'build/admin-upload-limit'), { recursive: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -285,6 +293,7 @@ try {
   await page.screenshot({ path: path.join(root, 'build/admin-upload-limit/selection-mobile.png') });
   await page.locator('.predicate-choice').last().scrollIntoViewIfNeeded();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.locator('#select-all').click();
   await validateSelection();
   assert.deepEqual(latest('prepare').data.practicePredicates, names);
   assert.deepEqual(await page.locator('.exercise-card h3').allTextContents(), names);
@@ -342,29 +351,72 @@ try {
   passed.push('hundred-and-one-groups-fail-without-luna-publication-or-locked-controls');
 
   mode = 'group';
+  await upload(original, 'rejected-selection.als', false);
+  await page.locator('.predicate-choice input').nth(1).check();
+  const beforeRepeatedDiscovery = requests.filter(row => row.operation === 'prepare' && !row.data.practicePredicates.length).length;
+  const beforeRejectedCommit = operationCount('commit');
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await upload(original, `rejected-${attempt}.als`, false);
     const beforeValidationSuggest = operationCount('suggest');
     failNextValidation = true;
     await validateSelection();
     assert.match(await page.locator('#notice').textContent(), /selected solution failed equivalence validation/);
-    assert.equal(await page.locator('#selection').isVisible(), false);
+    assert.match(await page.locator('#notice').textContent(), /Your choices are kept/);
+    assert.equal(await page.locator('#selection').isVisible(), true);
     assert.equal(await page.locator('#preview').isVisible(), false);
+    assert.deepEqual(await page.locator('.predicate-choice input').evaluateAll(inputs => inputs.map(input => input.checked)), [false, true]);
     assert.equal(await page.locator('#prepare').isEnabled(), true);
     assert.equal(retainedDrafts.size, 0);
     assert.equal(latest('discard').data.id, `draft-${sequence}`);
     assert.equal(operationCount('suggest'), beforeValidationSuggest);
+    assert.equal(operationCount('commit'), beforeRejectedCommit);
+    assert.deepEqual(latest('prepare').data.practicePredicates, ['acyclic']);
+    assert.equal(latest('prepare').data.source, original);
   }
-  await upload(original, 'after-rejections.als');
+  assert.equal(requests.filter(row => row.operation === 'prepare' && !row.data.practicePredicates.length).length, beforeRepeatedDiscovery);
+  await page.locator('#clear-all').click();
+  const beforeEmptyRetry = operationCount('prepare');
+  await validateSelection();
+  assert.equal(operationCount('prepare'), beforeEmptyRetry);
+  assert.match(await page.locator('#notice').textContent(), /Select at least one predicate/);
+  const beforeLocalRetry = operationCount('prepare');
+  await page.locator('.predicate-choice input').first().check();
+  await page.locator('.predicate-choice input').nth(1).uncheck();
+  await validateSelection();
+  assert.equal(operationCount('prepare'), beforeLocalRetry + 1);
+  assert.deepEqual(latest('prepare').data.practicePredicates, ['Inv1']);
   assert.equal(await page.locator('#preview').isVisible(), true);
   await page.locator('#discard').click();
   await page.waitForFunction(() => document.querySelector('#preview').hidden);
   assert.equal(retainedDrafts.size, 0);
-  passed.push('rejected-selection-drafts-are-discarded-so-repeated-validation-and-retry-remain-usable');
+  passed.push('rejected-selection-keeps-choices-for-retry-without-rediscovery-or-draft-authority');
+
+  await upload(original, 'local-discard.als', false);
+  await page.locator('#select-all').click(); failNextValidation = true;
+  await validateSelection();
+  const beforeLocalDiscard = operationCount('discard');
+  await page.locator('#selection-discard').click();
+  await page.waitForFunction(() => document.querySelector('#selection').hidden);
+  assert.equal(operationCount('discard'), beforeLocalDiscard);
+  assert.equal(await page.locator('#predicate-choices').textContent(), '');
+  assert.equal(retainedDrafts.size, 0);
+  passed.push('discard-clears-locally-retained-rejected-selection-without-another-server-draft');
+
+  await upload(original, 'local-signout.als', false);
+  await page.locator('#select-all').click(); failNextValidation = true;
+  await validateSelection();
+  await page.locator('#logout').click();
+  await page.waitForFunction(() => !document.querySelector('#login-form').hidden);
+  assert.equal(await page.locator('#selection').isVisible(), false);
+  assert.equal(await page.locator('#predicate-choices').textContent(), '');
+  assert.equal(await page.locator('#model-file').inputValue(), '');
+  assert.equal(retainedDrafts.size, 0);
+  await login();
+  passed.push('signout-clears-rejected-local-selection-and-source-without-retaining-authority');
 
   await upload(original, 'old-rejection.als', false);
   const cleanup = { id: `draft-${sequence + 1}`, started: latch(), release: latch(), finished: latch() };
   pausedDiscard = cleanup; failNextValidation = true;
+  await page.locator('#select-all').click();
   await page.locator('#validate-selection').click(); await cleanup.started.promise;
   await page.locator('#model-file').setInputFiles({ name: 'newer.als', mimeType: 'text/plain', buffer: Buffer.from(original) });
   await page.locator('#prepare').click();
@@ -379,6 +431,7 @@ try {
   assert.equal(retainedDrafts.has(newerDraft), true);
   assert.equal(retainedDrafts.has(cleanup.id), false);
   assert.match(await page.locator('#notice').textContent(), /Choose the predicates/);
+  await page.locator('#select-all').click();
   await validateSelection();
   assert.equal(latest('prepare').data.modelId, 'newer');
   assert.equal(await page.locator('#source-preview').textContent(), original);
@@ -434,6 +487,19 @@ try {
   assert.equal(operationCount('suggest'), beforeSingle + 1);
   assert.equal(await page.locator('#reviewed').isChecked(), false);
   passed.push('single-predicate-also-gets-automatic-luna-metadata');
+
+  mode = 'typed';
+  const typedSource = 'module parameters\nsig Node {}\npred Reachable[n: Node, nodes: set Node] {n in nodes}\n';
+  await upload(typedSource, 'parameters.als', false);
+  assert.equal(await page.locator('.predicate-choice input:checked').count(), 0);
+  assert.equal(await page.locator('.predicate-choice code').textContent(), 'pred Reachable[n: Node, nodes: set Node] { … }');
+  await page.locator('.predicate-choice input').check();
+  await validateSelection();
+  assert.equal(await page.locator('.exercise-card .predicate-signature').textContent(), 'pred Reachable[n: Node, nodes: set Node] { … }');
+  assert.equal(latest('prepare').data.source, typedSource);
+  assert.equal(await page.locator('.exercise-card .predicate-signature input').count(), 0);
+  assert.match(await page.locator('.guide').textContent(), /fixed header.*students edit only the body/);
+  passed.push('parameterized-practice-displays-immutable-typed-header-in-selection-and-review');
 
   mode = 'manual';
   await page.locator('#suggest').click();

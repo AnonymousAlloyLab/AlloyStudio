@@ -16,6 +16,7 @@ PEER = ('127.0.0.1', 40000)
 ENVELOPE = {'source': 'sig Node {} pred inv1C0 { some Node }',
             'filename': 'model.als', 'modelId': 'model'}
 PREPARED = {'documents': [{'id': 'model-inv1', 'predicate': 'inv1', 'title': 'Exercise',
+                           'predicateHeader': 'pred inv1 ',
                            'description': 'Review the property.', 'oracleSolutions': ['some Node']}],
             'witness': {'filename': 'model.als', 'sourceSha256': 'a' * 64,
                         'originalSource': ENVELOPE['source'],

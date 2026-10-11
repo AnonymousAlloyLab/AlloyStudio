@@ -8,22 +8,29 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRATCH = ROOT / 'build/exercise-validation-tests'
 COMMAND = ['java', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
            os.pathsep.join((str(ROOT / 'build/engine/classes'), str(ROOT / 'vendor/acgn/lib/*'))),
            'live.ExerciseValidator']
 
 
-def request(oracles=('some Node',), correct=(), *, starter='some Node', environment='sig Node {}\n', scope=5):
-    return {'predicate': 'target', 'sourcePrefix': environment + 'pred target {\n', 'sourceSuffix': '\n}\n',
+def request(oracles=('some Node',), correct=(), *, starter='some Node', environment='sig Node {}\n',
+            scope=5, header='pred target '):
+    return {'predicate': 'target', 'sourcePrefix': environment + header + '{\n', 'sourceSuffix': '\n}\n',
             'starter': starter, 'oracleBodies': list(oracles), 'correctBodies': list(correct), 'scope': scope}
 
 
 def invoke(payload, *, command=COMMAND, cwd=ROOT):
     encoded = payload if isinstance(payload, bytes) else json.dumps(payload).encode('utf-8')
-    try:
-        result = subprocess.run(command, input=encoded, cwd=cwd, capture_output=True, timeout=60, check=False)
-    except subprocess.TimeoutExpired:
-        raise AssertionError('Private validation exceeded its process deadline') from None
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='validator-', dir=SCRATCH) as folder:
+        owned_command = list(command)
+        if not any(value.startswith('-Djava.io.tmpdir=') for value in owned_command):
+            owned_command.insert(1, '-Djava.io.tmpdir=' + folder)
+        try:
+            result = subprocess.run(owned_command, input=encoded, cwd=cwd, capture_output=True, timeout=60, check=False)
+        except subprocess.TimeoutExpired:
+            raise AssertionError('Private validation exceeded its process deadline') from None
     if result.returncode or result.stderr:
         raise AssertionError('Private validator violated its clean JSON boundary')
     try:
@@ -139,20 +146,91 @@ class ExerciseValidationTests(unittest.TestCase):
         payload['predicate'] = 'other'
         self.rejected(payload, 'BODY_CONTAINMENT')
 
-    def test_parameterized_selected_predicate_is_not_supported(self):
-        payload = request(starter='some n', oracles=('some n',))
-        payload['sourcePrefix'] = 'sig Node {}\npred target[n: Node] {\n'
-        self.rejected(payload, 'UNSUPPORTED_PREDICATE')
+    def test_explicit_parameterized_bodies_are_type_checked_and_pointwise_equivalent(self):
+        cases = [('[n: Node]', 'some n', 'not no n'),
+                 ('[n: set Node]', 'some n', '#n > 0'),
+                 ('[n: lone Node]', 'some n', 'not no n'),
+                 ('[r: Node -> Node]', 'some r', '#r > 0'),
+                 ('[disj n, m: Node]', 'n != m', 'some n and some m'),
+                 ('[n: Node, m: n.edge]', 'm in n.edge', 'some m')]
+        for parameters, primary, candidate in cases:
+            with self.subTest(parameters=parameters):
+                self.accepted(request((primary, candidate), starter='',
+                    header='pred target' + parameters + ' ', environment='sig Node { edge: set Node }\n', scope=3))
+
+    def test_pointwise_check_does_not_compare_separate_universal_closures(self):
+        # Both universal closures are false under these facts; nevertheless
+        # the predicates disagree for every supplied argument.
+        environment = 'sig Node {}\nsig Marker in Node {}\nfact { some Marker and some Node - Marker }\n'
+        self.rejected(request(('n in Marker', 'n not in Marker'), starter='', environment=environment,
+            header='pred target[n: Node] ', scope=3), 'NOT_EQUIVALENT', 1)
+
+    def test_exact_bound_parameter_aliases_preserve_their_assignment_constraints(self):
+        environment = 'sig Node { edge: set Node }\n'
+        cases = [('[n = Node]', 'no n', 'no Node'),
+                 ('[n: Node, m = n.edge]', 'no m', 'no n.edge'),
+                 ('[r = Node->Node]', 'some r', 'some Node')]
+        for parameters, primary, alternative in cases:
+            with self.subTest(parameters=parameters):
+                self.accepted(request((primary, alternative), starter='', environment=environment,
+                                      header='pred target' + parameters + ' ', scope=3))
+        # Both bodies are false when Node is empty, but differ on nonempty Node.
+        # Allowing arbitrary subsets for n instead of the exact Node value also
+        # breaks the accepted equivalent pair above.
+        self.rejected(request(('some n', 'no n'), starter='', environment=environment,
+                              header='pred target[n = Node] ', scope=3), 'NOT_EQUIVALENT', 1)
+
+    def test_parameterized_temporal_equivalence_uses_one_argument_for_the_trace(self):
+        environment = 'sig Node {}\nvar sig Active in Node {}\n'
+        self.accepted(request(('eventually n in Active', 'not always n not in Active'),
+            starter='', environment=environment, header='pred target[n: Node] ', scope=2))
+        self.rejected(request(('eventually n in Active', 'n in Active'), starter='',
+            environment=environment, header='pred target[n: Node] ', scope=2), 'NOT_EQUIVALENT', 1)
+
+    def test_parameterized_equivalence_enforces_model_facts(self):
+        environment = 'sig Node {}\nsig Marker in Node {}\nfact { Node = Marker }\n'
+        self.accepted(request(('n in Marker', 'some n'), starter='', environment=environment,
+            header='pred target[n: Node] ', scope=3))
+
+    def test_fixed_parameter_domains_pin_the_string_universe(self):
+        self.accepted(request(('some n', 'n in String'), starter='',
+            environment='sig Node {}\nfact { #String = 1 }\n', header='pred target[n: "A"] '))
+        self.rejected(request(('n = "A"', 'n = "B"'), starter='',
+            environment='sig Node {}\nfact { #String = 1 and "A" in String }\n',
+            header='pred target[n: String] '), 'UNSUPPORTED_STRING_UNIVERSE', 1)
+
+    def test_unused_arguments_do_not_hide_pointwise_disagreement(self):
+        for parameters in ('[n: Node]', '[n: set Node]', '[r: Node -> Node]'):
+            with self.subTest(parameters=parameters):
+                self.rejected(request(('some Node or no Node', 'some Node and no Node'), starter='',
+                    header='pred target' + parameters + ' ', scope=2), 'NOT_EQUIVALENT', 1)
+
+    def test_later_parameterized_body_is_independently_type_checked(self):
+        self.rejected(request(('some n', 'not no n'), ('some missingParameter',), starter='',
+            header='pred target[n: Node] '), 'INVALID_MODEL', 2)
+
+    def test_parameter_limits_and_implicit_receiver_fail_closed(self):
+        admitted = ', '.join(f'n{i}: Node' for i in range(16))
+        self.accepted(request(header='pred target[' + admitted + '] ', scope=1))
+        arguments = ', '.join(f'n{i}: Node' for i in range(17))
+        self.rejected(request(header='pred target[' + arguments + '] '), 'UNSUPPORTED_PARAMETERS')
+        self.rejected(request(header='pred target[n: Node] /*' + ' ' * 8192 + '*/ '),
+                      'UNSUPPORTED_PARAMETERS')
+        self.rejected(request(('some edge',), starter='', header='pred Node.target ',
+            environment='sig Node { edge: set Node }\n'), 'UNSUPPORTED_PARAMETERS')
 
     def test_recursive_or_context_dependent_selected_predicate_is_rejected(self):
         for payload in [request(('target',), starter='target'),
-                        request(environment='sig Node {}\npred helper { target }\n'),
                         request(environment='sig Node {}\nfact { target }\n'),
                         request(environment='sig Node {}\npred helper { helper }\n',
                                 starter='helper', oracles=('helper',))]:
             with self.subTest(kind=payload['starter']):
                 result = self.rejected(payload)
                 self.assertIn(result['code'], {'UNSUPPORTED_DEPENDENCY', 'INVALID_MODEL'})
+
+    def test_inactive_nonrecursive_callers_do_not_change_generated_query_context(self):
+        self.accepted(request(environment='sig Node {}\npred helper { target }\n'
+            'assert demonstration { helper }\ncheck demonstration\n'))
 
     def test_independent_helpers_are_available_in_the_common_world(self):
         self.accepted(request(('helper', 'not no Node'), environment='sig Node {}\npred helper { some Node }\n'))
@@ -165,7 +243,8 @@ class ExerciseValidationTests(unittest.TestCase):
         # parseEverything_fromString writes a root file to java.io.tmpdir. A
         # sibling module previously entered the certificate without a hash or
         # a deployment copy; ordinary working-directory tests miss this case.
-        with tempfile.TemporaryDirectory(prefix='alloy-external-module-') as directory:
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='alloy-external-module-', dir=SCRATCH) as directory:
             folder = Path(directory)
             (folder / 'helper.als').write_text(
                 'module helper\nsig Node {}\npred accepts { some Node }\n', encoding='utf-8')
@@ -175,7 +254,8 @@ class ExerciseValidationTests(unittest.TestCase):
             self.assertEqual(result, {'status': 'rejected', 'code': 'UNSUPPORTED_EXTERNAL_MODULE'})
 
     def test_filesystem_shadow_of_builtin_module_is_not_a_bundled_dependency(self):
-        with tempfile.TemporaryDirectory(prefix='alloy-shadow-module-') as directory:
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='alloy-shadow-module-', dir=SCRATCH) as directory:
             folder = Path(directory)
             (folder / 'util').mkdir()
             (folder / 'util/ordering.als').write_text(
@@ -215,6 +295,49 @@ class ExerciseValidationTests(unittest.TestCase):
         self.rejected(b' ' * 1048577, 'REQUEST_TOO_LARGE')
         self.rejected(b'{"predicate":"target","predicate":"other"}', 'INVALID_REQUEST')
         self.rejected(b'{"predicate":"\xff"}', 'INVALID_REQUEST')
+
+
+class ParameterizedSourceInspectionTests(unittest.TestCase):
+    @staticmethod
+    def inspect(source):
+        return invoke(dict(source=source, equivalenceScope=3, variantGroups=[['inv1C0', 'inv1C1']]),
+                      command=COMMAND[:-1] + ['live.UploadInspector'])
+
+    def test_original_marked_variants_are_compared_at_the_same_argument_assignment(self):
+        source = ('sig Node {}\nsig Marker in Node {}\n'
+                  'fact { some Marker and some Node - Marker }\n'
+                  'pred inv1C0[n: Node] { n in Marker }\n'
+                  'pred inv1C1[n: Node] { n not in Marker }\n')
+        self.assertEqual(self.inspect(source), {'status': 'rejected', 'code': 'NOT_EQUIVALENT'})
+
+    def test_original_explicit_parameterized_equivalent_variants_are_accepted(self):
+        for parameters, primary, alternate in [('[n: set Node]', 'some n', 'not no n'),
+                ('[r: Node -> Node]', 'some r', '#r > 0'),
+                ('[disj n, m: Node]', 'n != m', 'some n and some m'),
+                ('[n: Node, m: n.edge]', 'm in n.edge', 'some m')]:
+            with self.subTest(parameters=parameters):
+                source = ('sig Node { edge: set Node }\n'
+                          f'pred inv1C0{parameters} {{ {primary} }}\n'
+                          f'pred inv1C1{parameters} {{ {alternate} }}\n')
+                observed = self.inspect(source)
+                self.assertEqual(observed['status'], 'ok')
+                self.assertEqual(observed['variantEquivalence']['groupCount'], 1)
+                self.assertEqual(observed['variantEquivalence']['variantCount'], 2)
+
+    def test_original_variant_parameter_signatures_cannot_change(self):
+        cases = [('[n: Node]', '[m: Node]', 'some n', 'some m'),
+                 ('[n: Node]', '[n: Other]', 'some n', 'some n'),
+                 ('[n: set Node]', '[n: lone Node]', 'some n', 'some n'),
+                 ('[n, m: Node]', '[n: Node, m: Node]', 'some n', 'some n'),
+                 ('[disj n, m: Node]', '[n, m: Node]', 'some n', 'some n'),
+                 ('[n: Node, m: n.edge]', '[n: Node, m: Node]', 'some n', 'some n')]
+        for first, second, primary, alternate in cases:
+            with self.subTest(first=first, second=second):
+                source = ('sig Node { edge: set Node }\nsig Other {}\n'
+                          f'pred inv1C0{first} {{ {primary} }}\n'
+                          f'pred inv1C1{second} {{ {alternate} }}\n')
+                self.assertEqual(self.inspect(source),
+                                 {'status': 'rejected', 'code': 'PARAMETER_SIGNATURE_MISMATCH'})
 
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ class AdminUploadTests(unittest.TestCase):
     def test_standalone_name_and_helpers_are_preserved(self):
         source = (BASE + 'pred helper[n: Node] {some n}\nfun nodes: set Node {Node}\n'
                   'pred customRule { all n: nodes | helper[n] }\nrun {customRule}\n')
-        result = prepared(source)
+        result = prepared(source, practicePredicates=['customRule'])
         self.assertEqual(len(result['documents']), 1)
         document = result['documents'][0]
         self.assertEqual(document['predicate'], 'customRule')
@@ -79,10 +79,16 @@ class AdminUploadTests(unittest.TestCase):
     def test_multiple_standalones_have_independent_private_solutions(self):
         result = prepared(BASE + 'pred firstRule {some Node}\npred secondRule {no Node}\n')
         self.assertEqual([item['predicate'] for item in result['documents']], ['firstRule', 'secondRule'])
-        for document in result['documents']:
+        self.assertEqual(result['witness']['version'], 2)
+        for document, witness in zip(result['documents'], result['witness']['groups']):
             environment = document['environmentBefore'] + document['environmentAfter']
-            self.assertNotIn('pred firstRule', environment)
-            self.assertNotIn('pred secondRule', environment)
+            sibling = 'secondRule' if document['predicate'] == 'firstRule' else 'firstRule'
+            self.assertNotIn('pred ' + document['predicate'], environment)
+            self.assertIn('pred ' + sibling + ' {\n' + GENERATED_STARTER + '\n}', environment)
+            self.assertNotIn('some Node', environment)
+            self.assertNotIn('no Node', environment)
+            self.assertEqual([slot['predicate'] for slot in witness['siblingSlots']], [sibling])
+        self.assertTrue(validate_witness(result['witness'], result['documents']))
 
     def test_crlf_unicode_private_modifier_and_every_retained_byte(self):
         source = ('module keep\r\n// 🎯 retained Unicode α\r\nsig Node{}\r\n'
@@ -154,9 +160,9 @@ class AdminUploadTests(unittest.TestCase):
             with self.subTest(suffix=suffix):
                 self.rejected(BASE + suffix)
 
-    def test_parameterized_variant_cannot_be_silently_excluded_from_group(self):
-        # Silently treating C0 as a helper previously let only C1 be checked,
-        # despite the administrator marking both as required oracle variants.
+    def test_parameter_interface_mismatch_or_function_cannot_be_silently_excluded_from_group(self):
+        # Every marked variant remains in its group; typed and parameterless
+        # declarations cannot silently be compared under different interfaces.
         for declaration in ('pred inv1C0[n:Node] {no n}', 'fun inv1C0: set Node {none}'):
             with self.subTest(declaration=declaration):
                 self.rejected(BASE + declaration + '\npred inv1C1 {some Node}\n')
@@ -249,7 +255,7 @@ class AdminUploadTests(unittest.TestCase):
             for source in (BASE + ''.join(f'pred p{i} {{some Node}}\n' for i in range(101)),
                            BASE + ''.join(f'pred inv1C{i} {{some Node}}\n' for i in range(257)),
                            BASE + 'pred target {some Node' + ' ' * 8193 + '}',
-                           BASE + 'pred onlyHelper[n:Node] {some n}'):
+                           BASE + 'fun onlyHelper: set Node {Node}'):
                 with self.assertRaises(UploadError):
                     prepared(source)
 

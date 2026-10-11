@@ -18,6 +18,8 @@ MAX_SOURCE = 262144
 MAX_GROUPS = 100
 MAX_VARIANTS = 256
 MAX_BODY = 8192
+MAX_HEADER = 8192
+MAX_PARAMETERS = 16
 MAX_PREPARED_BYTES = 8 * 1048576
 MAX_BATCH_FRAMES = 200
 MAX_BATCH_BYTES = 16 * 1048576
@@ -31,7 +33,7 @@ SPAN_FIELDS = ('name', 'startByte', 'endByte', 'bodyStartByte', 'bodyEndByte')
 
 
 class UploadError(ValueError):
-    """Fixed private-import errors; never include source, local paths or streams."""
+    """Private-import errors: fixed text and declaration names, never bodies/paths."""
 
 
 def _hash(value):
@@ -177,12 +179,44 @@ def _retained(length, cuts, insertion):
     return before, after
 
 
-def _groups(source):
+def _header(source, declaration, predicate=None):
+    """Derive a fixed wrapper; preserve explicit parameter syntax verbatim."""
+    raw = source.encode('utf-8')
+    header = raw[declaration['keywordStartByte']:declaration['bodyStartByte'] - 1]
+    stream = tokens(header)
+    if len(stream) < 2 or stream[0].value != b'pred':
+        raise UploadError('Unsupported practice predicate header.')
+    if len(stream) > 2 and stream[2].value == b'.':
+        raise UploadError('Use explicit parameters for practice predicates; receiver predicates remain helpers.')
+    suffix = header[stream[1].end:].decode('utf-8')
+    value = 'pred ' + (predicate or declaration['name']) + suffix
+    if not value[-1].isspace():
+        value += ' '
+    return _text(value, MAX_HEADER)
+
+
+def _interface(source, declaration):
+    """Names, grouped binders and domains must match, ignoring only trivia."""
+    header = _header(source, declaration)
+    value = tuple(token.value for token in tokens(header.encode('utf-8')))[2:]
+    return () if value == (b'[', b']') else value
+
+
+def _receiver(source, declaration):
+    raw = source.encode('utf-8')
+    stream = tokens(raw[declaration['keywordStartByte']:declaration['bodyStartByte'] - 1])
+    return len(stream) > 2 and stream[2].value == b'.'
+
+
+def _groups(source, *, include_parameters=True):
     declarations = _inventory(source)
-    if any(VARIANT.fullmatch(item['name']) and (item['kind'] != 'pred' or item['parameterCount'])
+    if any(VARIANT.fullmatch(item['name']) and (item['kind'] != 'pred'
+           or not include_parameters and item['parameterCount'] or _receiver(source, item))
            for item in declarations):
-        raise UploadError('Every invariant variant must be a parameterless oracle.')
-    parameterless = [item for item in declarations if item['kind'] == 'pred' and item['parameterCount'] == 0]
+        raise UploadError('Every invariant variant must be a predicate with explicit parameters.')
+    parameterless = [item for item in declarations if item['kind'] == 'pred'
+                    and (include_parameters or item['parameterCount'] == 0)
+                    and not _receiver(source, item)]
     # At most 256 oracle declarations plus one bare starter per group can be
     # valid. Bound this before grouping and variant-ID duplicate comparisons.
     if len(parameterless) > MAX_VARIANTS + MAX_GROUPS:
@@ -212,6 +246,11 @@ def _groups(source):
                 raise UploadError('A grouped learner name collides with another declaration.')
             group['starter'] = collisions[0]
         group['variants'].sort(key=lambda item: int(VARIANT.fullmatch(item['name']).group(3)))
+        if include_parameters:
+            interface = _interface(source, group['variants'][0])
+            if any(_interface(source, item) != interface
+                   for item in group['variants'][1:] + ([group['starter']] if group['starter'] else [])):
+                raise UploadError('All variants and the starter must have matching parameter declarations.')
     for item in parameterless:
         if item['name'] in oracle_names or item['name'] in groups:
             continue
@@ -224,16 +263,21 @@ def _groups(source):
     raw = source.encode('utf-8')
     for group in values:
         for item in group['variants']:
-            _text(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8'), MAX_BODY)
+            # Parameterized predicates used to be retained helpers, whose bodies
+            # could use the source-wide budget. Do not apply a practice-body cap
+            # before the administrator selects one. Marked C variants keep
+            # their existing all-original-solutions bound.
+            if not (include_parameters and group['kind'] == 'standalone' and item['parameterCount']):
+                _text(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8'), MAX_BODY)
         if group['starter']:
             item = group['starter']
             _text(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8'), MAX_BODY, empty=True)
     return declarations, values
 
 
-def _plan(source, filename, model_id, scope, practice_predicates=None):
+def _plan(source, filename, model_id, scope, practice_predicates=None, *, projection_version=2):
     raw = source.encode('utf-8')
-    declarations, values = _groups(source)
+    declarations, values = _groups(source, include_parameters=projection_version >= 2)
     selection = _selection(practice_predicates)
     if selection is not None:
         names = {group['predicate'] for group in values}
@@ -255,6 +299,22 @@ def _plan(source, filename, model_id, scope, practice_predicates=None):
         if starter:
             cuts.add((starter['startByte'], starter['endByte']))
         before, after = _retained(len(raw), cuts, insertion)
+        # Preserve names needed by dormant aggregates without exposing sibling
+        # answers. Only selected declarations receive these derived wrappers.
+        slots = []
+        if projection_version >= 2:
+            for sibling in values:
+                if sibling is group or sibling['kind'] != 'standalone':
+                    continue
+                item = sibling['variants'][0]
+                slots.append(dict(predicate=sibling['predicate'], startByte=item['startByte'],
+                                  endByte=item['endByte'],
+                                  header=_header(source, item, sibling['predicate'])))
+        def environment(spans, side):
+            parts = [(start, raw[start:end]) for start, end in spans]
+            parts.extend((slot['startByte'], (slot['header'] + '{\n' + GENERATED_STARTER + '\n}').encode('utf-8'))
+                         for slot in slots if (slot['startByte'] < insertion) == (side == 'before'))
+            return b''.join(value for _, value in sorted(parts)).decode('utf-8')
         bodies, body_indices, variants = [], {}, []
         for item in group['variants']:
             value = raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8')
@@ -270,18 +330,21 @@ def _plan(source, filename, model_id, scope, practice_predicates=None):
         _text(initial, MAX_BODY, empty=True)
         document = dict(id=identifier, title=predicate, group=model_id, predicate=predicate,
                         description=f'Complete the {predicate} predicate in {model_id}.',
-                        environmentBefore=b''.join(raw[start:end] for start, end in before).decode('utf-8'),
-                        environmentAfter=b''.join(raw[start:end] for start, end in after).decode('utf-8'),
-                        predicateHeader='pred ' + predicate + ' ', starter=initial,
+                        environmentBefore=environment(before, 'before'),
+                        environmentAfter=environment(after, 'after'),
+                        predicateHeader=(_header(source, starter or group['variants'][0], predicate)
+                                         if projection_version >= 2 else 'pred ' + predicate + ' '), starter=initial,
                         oracleSolutions=bodies, correctSolutions=[], equivalenceScope=scope)
         witnesses.append(dict(exerciseId=identifier, predicate=predicate, kind=group['kind'], variants=variants,
                               starter=_body_record(starter, raw) if starter else None,
                               insertionByte=insertion, beforeSpans=before, afterSpans=after))
+        if slots:
+            witnesses[-1]['siblingSlots'] = slots
         documents.append(document)
         document_bytes += len(json.dumps(document, ensure_ascii=False).encode('utf-8'))
         if document_bytes > MAX_PREPARED_BYTES:
             raise UploadError('The selected environments are too large. Select fewer predicates.')
-    witness = dict(version=1, originalSource=source, sourceSha256=_hash(raw), filename=filename,
+    witness = dict(version=projection_version, originalSource=source, sourceSha256=_hash(raw), filename=filename,
                    modelId=model_id, equivalenceScope=scope, groups=witnesses)
     if selection is not None:
         witness['practicePredicates'] = [group['predicate'] for group in values]
@@ -291,7 +354,8 @@ def _plan(source, filename, model_id, scope, practice_predicates=None):
 def validate_witness(witness, documents):
     """Recompute all protected slices and bindings without a runtime parser job."""
     try:
-        if type(witness) is not dict or type(documents) not in (list, tuple) or type(witness.get('version')) is not int:
+        if (type(witness) is not dict or type(documents) not in (list, tuple)
+                or type(witness.get('version')) is not int or witness['version'] not in (1, 2)):
             raise UploadError('Invalid upload witness.')
         envelope = dict(source=witness['originalSource'], filename=witness['filename'],
                         modelId=witness['modelId'], equivalenceScope=witness['equivalenceScope'])
@@ -299,7 +363,7 @@ def validate_witness(witness, documents):
             envelope['practicePredicates'] = witness['practicePredicates']
         source, filename, model_id, scope = _envelope(envelope)
         expected_docs, expected_witness, _ = _plan(source, filename, model_id, scope,
-                                                 envelope.get('practicePredicates'))
+                                                 envelope.get('practicePredicates'), projection_version=witness['version'])
         # JSON equality alone treats booleans like integers. Canonical encoding
         # keeps span/index types exact, as well as rejecting extra metadata.
         if json.dumps(witness, sort_keys=True, ensure_ascii=False) != json.dumps(expected_witness, sort_keys=True, ensure_ascii=False):
@@ -422,6 +486,10 @@ def _check_inspection(inspection, source, declarations, witnesses, *, variant_gr
         contexts[key] = set(values)
     private = {variant['name'] for group in witnesses for variant in group['variants']}
     starters = {group['starter']['name'] for group in witnesses if group['starter']}
+    slots = {group['predicate'] for group in witnesses}
+    parameter_counts = {item['name']: item['parameterCount'] for item in inspection['declarations']}
+    if any(parameter_counts[name] > MAX_PARAMETERS for name in private | starters):
+        raise UploadError('Practice predicates may have at most 16 parameters.')
     def reachable(name):
         seen, pending = set(), list(graph[name])
         while pending:
@@ -432,19 +500,29 @@ def _check_inspection(inspection, source, declarations, witnesses, *, variant_gr
         return seen
     for group in witnesses:
         target = group['predicate']
-        # A standalone source name remains available as its learner slot; C
-        # aliases and other standalone oracle declarations are all removed.
-        removed = private - {target}
+        # Every selected standalone name has a derived learner slot. Numbered
+        # C aliases remain private and have no public replacement declaration.
+        removed = private - slots
         retained = names - private - {target}
-        if any(graph[name] & removed for name in retained):
-            raise UploadError('A retained helper or starter depends on a removed oracle.')
+        for name in sorted(retained):
+            if graph[name] & removed:
+                called = sorted(graph[name] & removed)[0]
+                raise UploadError(f'{name} calls hidden {called}. Deselect the called practice.')
         if any(values & removed for values in contexts.values()):
-            raise UploadError('A fact, assertion or command depends on a removed oracle.')
+            called = sorted(set().union(*contexts.values()) & removed)[0]
+            raise UploadError(f'A fact, assertion or command calls hidden {called}. Keep its group unselected.')
+        fact_dependencies = set(contexts['factCalls'])
+        for name in contexts['factCalls']:
+            fact_dependencies.update(reachable(name))
+        if fact_dependencies & (private | slots | starters):
+            called = sorted(fact_dependencies & (private | slots | starters))[0]
+            raise UploadError(f'Model facts depend on practice {called}. Retain it as a helper.')
         for variant in group['variants']:
             if reachable(variant['name']) & (private | starters):
-                raise UploadError('An oracle depends on another oracle or learner starter.')
-        if group['starter'] and graph[target] & private:
-            raise UploadError('A learner starter depends on a removed oracle.')
+                called = sorted(reachable(variant['name']) & (private | starters))[0]
+                raise UploadError(f'{variant["name"]} calls another selected solution, {called}. Keep that dependency unselected.')
+        if group['starter'] and reachable(target) & (private | starters - {target}):
+            raise UploadError('A learner starter depends on a selected solution. Change the practice selection.')
 
 
 def _deadline(timeout):
@@ -480,6 +558,14 @@ def discover_upload(root, envelope, *, java='java', timeout=60):
         metadata.append(dict(id=identifier, predicate=group['predicate'], title=group['predicate'],
                              question=f"Complete the {group['predicate']} predicate in {model_id}.",
                              oracleCount=count, variants=[item['name'] for item in group['variants']]))
+        try:
+            metadata[-1]['predicateHeader'] = _header(source, group['starter'] or group['variants'][0], group['predicate'])
+        except UploadError:
+            # Oversized ordinary helper headers remain source-backed and fully
+            # parsed, but cannot become a practice. Discovery carries no code
+            # from such a header; selected preparation enforces its fixed cap.
+            if group['kind'] != 'standalone':
+                raise
     classpath = runtime_classpath(Path(root))
     try:
         identity = _engine_identity(classpath)

@@ -65,8 +65,10 @@ Imports are at most 2 MiB, with up to 256 distinct references, 8 KiB per body,
 and 256 KiB per complete model. The importer also checks aggregate engine input
 size. Database growth is bounded to 128 MiB. IDs permit ASCII letters, digits,
 underscore, dash and dot (128 characters, alphanumeric first character). The
-header must name a parameterless `pred`; unknown input fields and duplicate JSON
-keys are refused. The complete contract is in
+header must name the exercise's `pred` and may contain explicit parameter
+declarations (8 KiB, up to 16 argument names, arity up to eight). Matching solutions
+are compared at the same legal argument assignment; the editor keeps this typed
+header fixed. Unknown input fields and duplicate JSON keys are refused. The complete contract is in
 [sqlite-security-spec.md](sqlite-security-spec.md).
 
 ## Migration, backups and upgrades

@@ -46,7 +46,9 @@ public final class RawAstTrace {
         Predicate selected = null;
         for (Predicate candidate : model.getPredDeclList()) {
             if (candidate.getName().equals(predicate) || candidate.getName().equals("this/" + predicate)) {
-                if (selected != null || !candidate.getParamList().isEmpty()) throw new IllegalArgumentException("Ambiguous predicate");
+                // Upload validation fixes the typed header. AST hints compare
+                // its editable body, including occurrences of formal arguments.
+                if (selected != null) throw new IllegalArgumentException("Ambiguous predicate");
                 selected = candidate;
             }
         }

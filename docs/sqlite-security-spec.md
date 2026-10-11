@@ -120,9 +120,11 @@ environment. It then requires a SAT result for module facts alone (avoiding
 vacuous equivalence from an inconsistent context) and an UNSAT result for
 `facts and not (primary iff candidate)` for every additional oracle and
 known-correct body. A counterexample, timeout, unsupported dependency or unknown
-result rejects the entire import. Facts/helpers that depend on the selected
-predicate, recursion, unsupported parameters or failed body containment are
-rejected rather than compared in a changed context.
+result rejects the entire import. Facts and declaration domains that depend on
+the selected predicate, recursion, unsupported parameter interfaces or failed
+body containment are rejected rather than compared in a changed context.
+Parameterized imports use the same legal argument assignment for both bodies;
+the [admin contract](admin-security-spec.md) specifies the shared checking bridge.
 
 The import may supply `equivalenceScope` (default 5, range 1..8). The bitwidth
 is 5 and the maximum sequence length is the selected scope; trace bounds are
@@ -158,7 +160,9 @@ Bounds: database file 128 MiB; import file 2 MiB; query source/canonical text
 per stored pool and 256 references per new import; predicate/starter body 8 KiB;
 complete authored environment/model 256 KiB; title/group 256 UTF-8 bytes and
 description 8 KiB. IDs match `[A-Za-z0-9][A-Za-z0-9_.-]{0,127}`; predicate names
-match `[A-Za-z_][A-Za-z0-9_]{0,127}` with a parameterless `pred NAME` header.
+match `[A-Za-z_][A-Za-z0-9_]{0,127}` with a fixed `pred NAME` header and optional
+explicit parameter declarations (header 8 KiB, up to 16 argument names and arity
+eight). The actual Alloy parser verifies the interface and body containment.
 Reject embedded NULs and invalid Unicode. The Alloy validation process gets
 60 seconds for an entire import and bounded heap. SQLite lock waits and snapshot
 backup each have a 5-second deadline; backup uses a monotonic progress deadline,

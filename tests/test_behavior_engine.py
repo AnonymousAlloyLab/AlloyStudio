@@ -4,28 +4,35 @@ These finite tests do not establish unbounded equivalence or representative
 sampling. Private fixture input and raw engine streams are never in failures.
 """
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 
+from runtime_dependencies import runtime_classpath
+
 ROOT = Path(__file__).resolve().parents[1]
-CLASSPATH = str(ROOT / 'build/engine/classes') + ':' + str(ROOT / 'vendor/acgn/lib/*')
+CLASSPATH = runtime_classpath(ROOT)
+SCRATCH = ROOT / 'build/upload-dependency-fix'
 COMMAND = ['java', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp', CLASSPATH,
            'live.BehaviorFeedback']
 
 
-def request(student, oracle, environment='sig A {}\nsig B {}\n'):
-    prefix = environment + 'pred target {\n'
+def request(student, oracle, environment='sig A {}\nsig B {}\n', *, header='pred target '):
+    prefix = environment + header + '{\n'
     return {'studentSource': prefix + student + '\n}\n',
             'oracleSource': prefix + oracle + '\n}\n',
             'studentBody': student, 'predicate': 'target'}
 
 
 def invoke(payload, command=COMMAND):
+    SCRATCH.mkdir(parents=True, exist_ok=True)
     try:
-        run = subprocess.run(command, input=json.dumps(payload), text=True,
-                             capture_output=True, timeout=25, cwd=ROOT, check=False)
+        with tempfile.TemporaryDirectory(prefix='behavior-jvm-', dir=SCRATCH) as scratch:
+            owned_command = [command[0], '-Djava.io.tmpdir=' + scratch, *command[1:]]
+            run = subprocess.run(owned_command, input=json.dumps(payload), text=True,
+                                 capture_output=True, timeout=25, cwd=ROOT, check=False)
     except subprocess.TimeoutExpired:
         raise AssertionError('Behavior JVM timed out') from None
     if run.returncode or run.stderr:
@@ -41,7 +48,8 @@ class BehaviorEngineTests(unittest.TestCase):
     def setUpClass(cls):
         if not (ROOT / 'build/engine/classes/live/BehaviorFeedback.class').is_file():
             raise AssertionError('Build the behavioral JVM engine before testing')
-        cls.temporary = tempfile.TemporaryDirectory(prefix='alloy-behavior-authority-')
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        cls.temporary = tempfile.TemporaryDirectory(prefix='alloy-behavior-authority-', dir=SCRATCH)
         cls.addClassCleanup(cls.temporary.cleanup)
         helper = Path(cls.temporary.name) / 'RewardAuthority.java'
         helper.write_text('''
@@ -68,10 +76,10 @@ public class RewardAuthority {
         if run.returncode:
             raise AssertionError('Independent ACGN reward authority did not compile')
         cls.authority = COMMAND[:]
-        cls.authority[-2] = cls.temporary.name + ':' + CLASSPATH
+        cls.authority[-2] = cls.temporary.name + os.pathsep + CLASSPATH
         cls.authority[-1] = 'RewardAuthority'
 
-    def checked(self, payload):
+    def checked(self, payload, *, parameters=()):
         result = invoke(payload)
         self.assertEqual(result.get('status'), 'ok', 'Behavior fixture did not finish')
         self.assertEqual(set(result), {'status', 'metric', 'score', 'scoreStatus', 'scoreReason',
@@ -108,7 +116,17 @@ public class RewardAuthority {
             if len(instances) < 3:
                 self.assertTrue(category['enumerationComplete'])
             for instance in instances:
-                self.assertEqual(set(instance), {'traceLength', 'loopState', 'states', 'truncated', 'stringsAnonymized'})
+                expected_fields = {'traceLength', 'loopState', 'states', 'truncated', 'stringsAnonymized'}
+                if parameters:
+                    expected_fields.add('parameterBindings')
+                self.assertEqual(set(instance), expected_fields)
+                if parameters:
+                    self.assertEqual([binding['name'] for binding in instance['parameterBindings']], list(parameters))
+                    for binding in instance['parameterBindings']:
+                        self.assertEqual(set(binding), {'name', 'arity', 'tuples'})
+                        self.assertLessEqual(len(binding['tuples']), 512)
+                        self.assertTrue(1 <= binding['arity'] <= 8)
+                        self.assertTrue(all(len(row) == binding['arity'] for row in binding['tuples']))
                 self.assertIs(type(instance['truncated']), bool)
                 self.assertIs(type(instance['stringsAnonymized']), bool)
                 self.assertGreaterEqual(instance['traceLength'], 1)
@@ -250,6 +268,206 @@ public class RewardAuthority {
                                       'sig A {}\npred nonempty[x:set A] {some x}\n'))
         self.assertEqual(result['score'], 1.0)
 
+    def test_dormant_incoming_aggregate_and_commands_do_not_change_behavior(self):
+        environment = 'sig A {}\npred aggregate {target}\nrun {aggregate}\n'
+        result = self.checked(request('no A', 'some A', environment))
+        self.assertEqual(result['score'], 0.0)
+        self.assertEqual([category['status'] for category in result['categories']],
+                         ['unsat', 'sat', 'sat', 'unsat'])
+
+    def test_parameterized_predicates_compare_the_same_argument_not_universal_closures(self):
+        environment = 'abstract sig N {}\none sig Left, Right extends N {}\n'
+        result = self.checked(request('n=Right', 'n=Left', environment,
+                                      header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual(result['score'], 0.0)
+        self.assertEqual([category['status'] for category in result['categories']],
+                         ['unsat', 'sat', 'sat', 'unsat'])
+        for category in result['categories']:
+            for instance in category['instances']:
+                value = instance['parameterBindings'][0]['tuples']
+                self.assertEqual(value, [['Left$0']] if category['oracle'] else [['Right$0']])
+
+    def test_equivalent_parameterized_bodies_and_fixed_argument_binding(self):
+        result = self.checked(request('n in Left', 'n=Left',
+                                      'abstract sig N {}\none sig Left, Right extends N {}\n',
+                                      header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual(result['score'], 1.0)
+        self.assertEqual([category['status'] for category in result['categories']],
+                         ['sat', 'unsat', 'unsat', 'sat'])
+
+    def test_lfu_identity_keeps_distinct_assignments_of_the_same_model(self):
+        result = self.checked(request('n=Left', 'n in Left+Right',
+            'abstract sig N {}\none sig Left, Right, Other extends N {}\n',
+            header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual(result['sampling']['positiveTested'], 2)
+        self.assertEqual(result['sampling']['positiveAccepted'], 1)
+        self.assertEqual(result['sampling']['negativeTested'], 1)
+        self.assertEqual(result['sampling']['negativeRejected'], 1)
+        self.assertEqual(result['score'], 0.5)
+
+    def test_parameter_multiplicity_distinguishes_one_from_set_assignments(self):
+        for multiplicity in ('one', 'set', 'lone', 'some'):
+            with self.subTest(multiplicity=multiplicity):
+                result = self.checked(request('no x', 'some x', 'sig A {}\n',
+                    header=f'pred target[x:{multiplicity} A] '), parameters=('x',))
+                if multiplicity in ('one', 'some'):
+                    self.assertEqual(result['scoreReason'], 'ORACLE_NEGATIVE_UNSAT')
+                    self.assertEqual(result['categories'][2]['status'], 'unsat')
+                else:
+                    self.assertEqual(result['score'], 0.0)
+                    self.assertEqual(result['categories'][2]['status'], 'sat')
+                for category in result['categories']:
+                    for instance in category['instances']:
+                        tuples = instance['parameterBindings'][0]['tuples']
+                        self.assertEqual(bool(tuples), category['oracle'])
+                        if multiplicity in ('one', 'lone'):
+                            self.assertLessEqual(len(tuples), 1)
+
+    def test_group_disjointness_is_preserved_in_parameter_examples(self):
+        result = self.checked(request('x=y', 'x!=y', 'sig A {}\n',
+                                      header='pred target[disj x,y:A] '), parameters=('x', 'y'))
+        self.assertEqual(result['scoreReason'], 'ORACLE_NEGATIVE_UNSAT')
+        for instance in result['categories'][1]['instances']:
+            x, y = instance['parameterBindings']
+            self.assertEqual(len(x['tuples']), 1)
+            self.assertEqual(len(y['tuples']), 1)
+            self.assertNotEqual(x['tuples'], y['tuples'])
+
+    def test_dependent_parameter_domains_share_the_preceding_argument(self):
+        result = self.checked(request('y not in x.r', 'y in x.r', 'sig A {r:set A}\n',
+                                      header='pred target[x:A,y:x.r] '), parameters=('x', 'y'))
+        self.assertEqual(result['scoreReason'], 'ORACLE_NEGATIVE_UNSAT')
+        for instance in result['categories'][1]['instances']:
+            x, y = [binding['tuples'][0][0] for binding in instance['parameterBindings']]
+            self.assertIn([x, y], instance['states'][0]['relations'][0]['tuples'])
+
+    def test_relation_valued_parameters_have_exact_tuple_bindings(self):
+        result = self.checked(request('no r', 'some r', 'sig A {}\n',
+                                      header='pred target[r:A->A] '), parameters=('r',))
+        self.assertEqual(result['score'], 0.0)
+        for category in result['categories']:
+            for instance in category['instances']:
+                binding = instance['parameterBindings'][0]
+                self.assertEqual(binding['arity'], 2)
+                self.assertEqual(bool(binding['tuples']), category['oracle'])
+
+    def test_integer_parameters_preserve_arithmetic_and_numeric_bindings(self):
+        result = self.checked(request('n<0', 'n>=0', 'sig A {}\nfact {no A}\n',
+                                      header='pred target[n:Int] '), parameters=('n',))
+        self.assertEqual(result['score'], 0.0)
+        self.assertEqual(result['sampling']['positiveTested'], 4)
+        self.assertEqual(result['sampling']['negativeTested'], 4)
+        for category in result['categories']:
+            for instance in category['instances']:
+                value = int(instance['parameterBindings'][0]['tuples'][0][0])
+                self.assertEqual(value >= 0, category['oracle'])
+
+    def test_exact_parameter_aliases_preserve_the_whole_domain(self):
+        environment = 'sig A {}\n'
+        result = self.checked(request('no x', 'some x', environment,
+                                      header='pred target[x=A] '), parameters=('x',))
+        self.assertEqual(result['score'], 0.0)
+        for category in result['categories']:
+            for instance in category['instances']:
+                atoms = next(signature['atoms'] for signature in instance['states'][0]['signatures']
+                             if signature['label'] == 'A')
+                self.assertEqual({row[0] for row in instance['parameterBindings'][0]['tuples']}, set(atoms))
+        dependent = self.checked(request('no y', 'some y', 'sig A {r:set A}\n',
+                                         header='pred target[x=A,y=x.r] '), parameters=('x', 'y'))
+        self.assertEqual(dependent['score'], 0.0)
+        for category in dependent['categories']:
+            for instance in category['instances']:
+                bindings = instance['parameterBindings']
+                state = instance['states'][0]
+                atoms = next(signature['atoms'] for signature in state['signatures'] if signature['label'] == 'A')
+                relation = next(relation['tuples'] for relation in state['relations'] if relation['label'] == 'A.r')
+                self.assertEqual({row[0] for row in bindings[0]['tuples']}, set(atoms))
+                self.assertEqual({row[0] for row in bindings[1]['tuples']}, {row[1] for row in relation})
+        relational = self.checked(request('no r', 'some r', environment,
+                                          header='pred target[r=A->A] '), parameters=('r',))
+        self.assertEqual(relational['score'], 0.0)
+        for category in relational['categories']:
+            for instance in category['instances']:
+                atoms = next(signature['atoms'] for signature in instance['states'][0]['signatures']
+                             if signature['label'] == 'A')
+                self.assertEqual({tuple(row) for row in instance['parameterBindings'][0]['tuples']},
+                                 {(left, right) for left in atoms for right in atoms})
+        grouped = self.checked(request('no x', 'some y', environment,
+                                       header='pred target[x,y=A] '), parameters=('x', 'y'))
+        self.assertEqual(grouped['score'], 0.0)
+        for category in grouped['categories']:
+            for instance in category['instances']:
+                left, right = instance['parameterBindings']
+                self.assertEqual(left['tuples'], right['tuples'])
+        # Alloy itself rejects disjoint exact/defined declarations; preserve
+        # this malformed-header rejection rather than weakening its grammar.
+        disjoint = invoke(request('some A', 'no A', 'sig A {}\nfact {some A}\n',
+                                  header='pred target[disj x,y=A] '))
+        self.assertEqual((disjoint['status'], disjoint['diagnostics'][0]['code']),
+                         ('invalid', 'INVALID_LEARNER'))
+
+    def test_parameterized_temporal_examples_keep_one_argument_across_the_trace(self):
+        environment = 'sig N {}\nvar sig Active in N {}\n'
+        result = self.checked(request('n in Active', 'eventually n in Active', environment,
+                                      header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual([category['status'] for category in result['categories']],
+                         ['sat', 'sat', 'unsat', 'sat'])
+        self.assertLess(result['score'], 1.0)
+        for instance in result['categories'][1]['instances']:
+            argument = instance['parameterBindings'][0]['tuples'][0][0]
+            states = [{signature['label']: signature['atoms']
+                       for signature in state['signatures']} for state in instance['states']]
+            self.assertIn(argument, states[0]['N'])
+            self.assertNotIn(argument, states[0]['Active'])
+            self.assertTrue(any(argument in state['Active'] for state in states[1:]))
+        same = self.checked(request('eventually n in Active', 'eventually n in Active', environment,
+                                    header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual(same['score'], 1.0)
+        looping_environment = ('one sig N {}\nvar sig Active in N {}\n'
+                               'fact {always (some Active iff after no Active)}\n')
+        looping = self.checked(request('n in Active', 'eventually n in Active', looping_environment,
+                                       header='pred target[n:N] '), parameters=('n',))
+        self.assertEqual(looping['categories'][1]['status'], 'sat')
+        for instance in looping['categories'][1]['instances']:
+            self.assertGreaterEqual(instance['traceLength'], 2)
+            self.assertGreaterEqual(instance['loopState'], 0)
+            argument = instance['parameterBindings'][0]['tuples'][0][0]
+            states = [{signature['label']: signature['atoms']
+                       for signature in state['signatures']} for state in instance['states']]
+            self.assertNotIn(argument, states[0]['Active'])
+            self.assertTrue(any(argument in state['Active'] for state in states[1:]))
+
+    def test_unused_and_shadowed_parameters_still_have_legal_assignments(self):
+        for header, body in [('pred target[x:set A] ', 'some A or no A'),
+                             ('pred target[x:A] ', 'some x:A | x in A')]:
+            with self.subTest(header=header):
+                result = self.checked(request(body, body, 'sig A {}\n', header=header), parameters=('x',))
+                self.assertEqual(result['scoreReason'], 'ORACLE_NEGATIVE_UNSAT')
+                self.assertTrue(result['categories'][0]['instances'])
+
+    def test_parameter_bindings_anonymize_private_string_literals(self):
+        result = self.checked(request('s in String', 's="private-value"', 'sig A {}\n',
+                                      header='pred target[s:String] '), parameters=('s',))
+        self.assertNotIn('private-value', json.dumps(result))
+        for category in result['categories']:
+            for instance in category['instances']:
+                for row in instance['parameterBindings'][0]['tuples']:
+                    self.assertTrue(row[0].startswith('String$'))
+
+    def test_internal_argument_marker_in_comments_or_strings_is_not_a_variable(self):
+        result = self.checked(request('s in String /* $lp_argument_0 */',
+                                      's="$lp_argument_0"', 'sig A {}\n',
+                                      header='pred target[s:String] '), parameters=('s',))
+        self.assertNotIn('$lp_argument_', json.dumps(result))
+        static = self.checked(request('some A', 'some A', 'sig A {}\n// $lp_argument_0\n'))
+        self.assertEqual(static['score'], 1.0)
+
+    def test_parameter_dependent_environment_facts_remain_unsupported(self):
+        result = invoke(request('no n', 'some n', 'sig A {}\nfact {all a:A|target[a]}\n',
+                                header='pred target[n:A] '))
+        self.assertEqual(result['status'], 'unsupported')
+        self.assertEqual(result['diagnostics'][0]['code'], 'RECURSIVE_OR_CONTEXT_DEPENDENCY')
+
     def test_recursive_learner_calls_cannot_become_private_oracle_calls(self):
         for student, environment in [('target[]', 'sig A {}\n'),
                                      ('helper[]', 'sig A {}\npred helper {target[]}\n'),
@@ -287,11 +505,12 @@ public class RewardAuthority {
         self.assertEqual(result['score'], 0.0)
         self.assertEqual([c['status'] for c in result['categories']], ['sat', 'unsat', 'sat', 'unsat'])
 
-    def test_parameterized_selected_predicate_is_rejected(self):
+    def test_learner_cannot_change_the_fixed_parameter_header(self):
         payload = request('some A', 'some A')
         payload['studentSource'] = payload['studentSource'].replace('pred target', 'pred target[x:A]')
         result = invoke(payload)
-        self.assertEqual(result['status'], 'unsupported')
+        self.assertEqual(result['status'], 'invalid_request')
+        self.assertEqual(result['diagnostics'][0]['code'], 'CONTEXT_MISMATCH')
 
     def test_rare_semantic_counterexamples_update_samples_and_cannot_get_full_reward(self):
         environment = 'sig A { r: set A }\nsig B { s: set B }\n'

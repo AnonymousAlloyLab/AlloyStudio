@@ -17,6 +17,7 @@ SCRATCH = ROOT / 'build/upload-capacity-validation'
 ENVELOPE = dict(source='sig Node {} pred inv1C0 {some Node}',
                 filename='selection.als', modelId='selection')
 PREPARED = dict(documents=[dict(id='selection-inv1', predicate='inv1', title='inv1',
+                               predicateHeader='pred inv1 ',
                                description='Require a Node.', oracleSolutions=['some Node'])],
                 certificates=[], witness=dict(filename='selection.als', sourceSha256='a' * 64,
                     originalSource=ENVELOPE['source'], groups=[dict(variants=[dict(name='inv1C0')])]))

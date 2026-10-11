@@ -16,16 +16,25 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Private source-backed declaration inventory for authenticated .als uploads. */
 public final class UploadInspector {
     private static final int MAX_INPUT = 2_097_152;
     private static final int MAX_SOURCE = 262_144;
+    private static final int MAX_VARIANT_GROUPS = 100;
+    private static final int MAX_VARIANTS = 256;
+    private static final Pattern VARIANT = Pattern.compile(
+            "([iI][nN][vV](0|[1-9][0-9]*))[cC](0|[1-9][0-9]*)");
     private UploadInspector() { }
 
     public static void main(String[] args) throws Exception {
@@ -47,11 +56,23 @@ public final class UploadInspector {
 
     public static JSONObject inspect(JSONObject request) {
         try {
-            if (!request.keySet().equals(Set.of("source")) || !(request.get("source") instanceof String source)
+            boolean verifyVariants = request.keySet().equals(Set.of("source", "equivalenceScope", "variantGroups"));
+            if ((!request.keySet().equals(Set.of("source")) && !verifyVariants)
+                    || !(request.get("source") instanceof String source)
                     || source.isBlank() || source.indexOf('\0') >= 0
                     || !StandardCharsets.UTF_8.newEncoder().canEncode(source)
                     || source.getBytes(StandardCharsets.UTF_8).length > MAX_SOURCE)
                 return rejected("INVALID_UPLOAD");
+            int equivalenceScope = 0;
+            JSONArray variantGroups = null;
+            if (verifyVariants) {
+                if (!(request.get("equivalenceScope") instanceof Integer scope) || scope < 1 || scope > 8
+                        || !(request.get("variantGroups") instanceof JSONArray groups)
+                        || groups.length() > MAX_VARIANT_GROUPS)
+                    return rejected("INVALID_UPLOAD");
+                equivalenceScope = scope;
+                variantGroups = groups;
+            }
             if (hasModuleMacro(source)) return rejected("UNSUPPORTED_MACRO");
             CompModule module = CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
             if (!ExerciseValidator.bundledDependencies(module)) return rejected("UNSUPPORTED_EXTERNAL_MODULE");
@@ -75,6 +96,11 @@ public final class UploadInspector {
                 names.put(function, name);
             }
             declarations.sort(Comparator.comparingInt(Declaration::start));
+            JSONObject variantEquivalence = null;
+            if (verifyVariants) {
+                variantEquivalence = variantEquivalence(module, declarations, names, variantGroups, equivalenceScope);
+                if (variantEquivalence.has("status")) return variantEquivalence;
+            }
             JSONArray rows = new JSONArray();
             int previous = 0;
             for (Declaration declaration : declarations) {
@@ -111,10 +137,106 @@ public final class UploadInspector {
                     }
                 }
             }
-            return new JSONObject().put("status", "ok").put("sourceSha256", digest(source))
+            JSONObject result = new JSONObject().put("status", "ok").put("sourceSha256", digest(source))
                     .put("moduleName", module.getModelName()).put("declarations", rows)
                     .put("factCalls", facts).put("assertionCalls", assertions).put("commandCalls", commands);
+            if (verifyVariants) result.put("variantEquivalence", variantEquivalence);
+            return result;
         } catch (Throwable error) { return rejected("INVALID_MODEL"); }
+    }
+
+    /** Compare all marked source predicates in their unchanged original world.
+     * The caller's list can neither omit a group nor split or redefine one. */
+    private static JSONObject variantEquivalence(CompModule module, List<Declaration> declarations,
+            Map<Func, String> names, JSONArray requested, int scope) throws Exception {
+        Map<String, List<Func>> groups = new LinkedHashMap<>();
+        Map<String, String> spelling = new HashMap<>();
+        Set<String> allVariants = new TreeSet<>();
+        for (Declaration declaration : declarations) {
+            Matcher match = VARIANT.matcher(declaration.name);
+            if (!match.matches()) continue;
+            if (!declaration.function.isPred || declaration.function.count() != 0
+                    || match.group(2).length() > 6 || match.group(3).length() > 6)
+                throw new IllegalArgumentException();
+            String base = match.group(1);
+            String previous = spelling.putIfAbsent(base.toLowerCase(Locale.ROOT), base);
+            if (previous != null && !previous.equals(base)) throw new IllegalArgumentException();
+            groups.computeIfAbsent(base, ignored -> new ArrayList<>()).add(declaration.function);
+            allVariants.add(declaration.name);
+            if (groups.size() > MAX_VARIANT_GROUPS || allVariants.size() > MAX_VARIANTS)
+                throw new IllegalArgumentException();
+        }
+        for (List<Func> variants : groups.values()) {
+            variants.sort(Comparator.comparingInt(function -> variantNumber(names.get(function))));
+            int previous = -1;
+            for (Func function : variants) {
+                int current = variantNumber(names.get(function));
+                if (current == previous) throw new IllegalArgumentException();
+                previous = current;
+            }
+        }
+        Set<String> checkedGroups = new TreeSet<>();
+        int suppliedCount = 0;
+        for (Object row : requested) {
+            if (!(row instanceof JSONArray supplied) || supplied.isEmpty()) throw new IllegalArgumentException();
+            Set<String> suppliedNames = new TreeSet<>();
+            String base = null;
+            for (Object value : supplied) {
+                if (!(value instanceof String name) || !allVariants.contains(name)
+                        || !suppliedNames.add(name) || ++suppliedCount > MAX_VARIANTS)
+                    throw new IllegalArgumentException();
+                Matcher match = VARIANT.matcher(name);
+                if (!match.matches()) throw new IllegalArgumentException();
+                if (base == null) base = match.group(1);
+                else if (!base.equals(match.group(1))) throw new IllegalArgumentException();
+            }
+            if (!checkedGroups.add(base)) throw new IllegalArgumentException();
+            Set<String> expectedNames = new TreeSet<>();
+            for (Func function : groups.get(base)) expectedNames.add(names.get(function));
+            if (!suppliedNames.equals(expectedNames)) throw new IllegalArgumentException();
+        }
+        if (!checkedGroups.equals(groups.keySet()) || suppliedCount != allVariants.size())
+            throw new IllegalArgumentException();
+
+        Expr facts = module.getAllReachableFacts();
+        Set<String> strings = new TreeSet<>(BehaviorFeedback.stringConstants(facts));
+        // Pin one literal universe for the unchanged original reachable model,
+        // including ordinary helper declarations, parameters and return types.
+        for (CompModule reachable : module.getAllReachableModules()) {
+            for (Func function : reachable.getAllFunc()) {
+                strings.addAll(BehaviorFeedback.stringConstants(function.getBody()));
+                for (Decl declaration : function.decls)
+                    strings.addAll(BehaviorFeedback.stringConstants(declaration.expr));
+                if (function.returnDecl != null)
+                    strings.addAll(BehaviorFeedback.stringConstants(function.returnDecl));
+            }
+        }
+        for (Sig signature : module.getAllReachableUserDefinedSigs()) {
+            for (Expr fact : signature.getFacts()) strings.addAll(BehaviorFeedback.stringConstants(fact));
+            for (Sig.Field field : signature.getFields())
+                strings.addAll(BehaviorFeedback.stringConstants(field.decl().expr));
+        }
+        for (String literal : strings)
+            facts = facts.and(ExprConstant.Op.STRING.make(Pos.UNKNOWN, literal).in(Sig.STRING));
+        if (!ExerciseValidator.solve(module, facts, scope).satisfiable()) return rejected("INCONSISTENT_FACTS");
+        for (List<Func> variants : groups.values()) {
+            Expr primary = variants.get(0).call();
+            for (int index = 1; index < variants.size(); index++) {
+                Expr mismatch = facts.and(primary.iff(variants.get(index).call()).not());
+                if (ExerciseValidator.solve(module, mismatch, scope).satisfiable())
+                    return rejected("NOT_EQUIVALENT");
+            }
+        }
+        return new JSONObject().put("groupCount", groups.size()).put("variantCount", allVariants.size())
+                .put("scope", scope).put("bitwidth", 5).put("maxSequence", scope)
+                .put("minTrace", 1).put("maxTrace", 10).put("solver", "SAT4J")
+                .put("moduleFacts", true).put("factsSatisfiable", true).put("equivalence", "bounded");
+    }
+
+    private static int variantNumber(String name) {
+        Matcher match = VARIANT.matcher(name);
+        if (!match.matches()) throw new IllegalArgumentException();
+        return Integer.parseInt(match.group(3));
     }
 
     private static TreeSet<String> ownCalls(List<Func> functions, Map<Func, String> names) {

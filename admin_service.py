@@ -9,7 +9,7 @@ import time
 
 from admin_auth import AuthError
 from admin_luna import suggest
-from admin_upload import prepare_upload, UploadError
+from admin_upload import prepare_upload, discover_upload, prepared_size, _envelope, UploadError
 from exercise_store import (StoreError, commit_upload, text, library_list, library_detail,
                             edit_question, remove_question, exercise_version, prepare_approval)
 import candidate_store
@@ -18,6 +18,7 @@ import candidate_review
 DRAFT_SECONDS = 900
 MAX_DRAFTS = 8
 MAX_OWNER_DRAFTS = 2
+MAX_RETAINED_PREPARED_BYTES = 32 * 1048576
 NO_REVISION = object()
 
 
@@ -35,6 +36,7 @@ class Draft:
     state: str = 'preparing'
     revision: int = 0
     prepared: object = None
+    prepared_bytes: int = 0
     groups: list = field(default_factory=list)
     filename: str = ''
     source_hash: str = ''
@@ -111,12 +113,10 @@ class AdminService:
         return {'status':'discarded'}
 
     def prepare(self, principal, envelope):
-        if (type(envelope) is not dict or not {'source','filename','modelId'} <= set(envelope)
-                or set(envelope) - {'source','filename','modelId','equivalenceScope'}):
-            raise AdminError(400,'Provide source, filename and modelId.')
-        text(envelope['source'],262144,empty=False)
-        text(envelope['filename'],256,empty=False)
-        text(envelope['modelId'],128,empty=False)
+        try:
+            _envelope(envelope)
+        except UploadError as error:
+            raise AdminError(400, str(error)) from None
         envelope = deepcopy(envelope)
         with self.lock:
             self._available()
@@ -144,12 +144,31 @@ class AdminService:
             with self.lock:
                 if self._owned(draft.principal,draft.identifier) is not draft:
                     return
+            if envelope.get('practicePredicates') == []:
+                discovery = discover_upload(self.portal.root,envelope,java=self.portal.java,timeout=60)
+                with self.lock:
+                    self._cleanup()
+                    if self.drafts.get(draft.identifier) is not draft:
+                        return
+                    draft.filename, draft.source_hash = discovery['filename'], discovery['sourceSha256']
+                    draft.scope, draft.groups = discovery['equivalenceScope'], discovery['groups']
+                    draft.state = 'selecting'
+                    draft.message = ('Choose the predicates to practise. Other predicates will remain unchanged '
+                                     'in the model environment. Validate your selection before publishing.')
+                    draft.revision += 1
+                return
             prepared = prepare_upload(self.portal.root,envelope,java=self.portal.java,timeout=60)
+            size = prepared_size(prepared)
             with self.lock:
                 self._cleanup()
                 if self.drafts.get(draft.identifier) is not draft:
                     return
+                # Serialized-data accounting bounds retained drafts; it does
+                # not purport to measure Python object overhead or process RSS.
+                if size + sum(item.prepared_bytes for item in self.drafts.values()) > MAX_RETAINED_PREPARED_BYTES:
+                    raise UploadError('Prepared drafts use the available storage. Discard an earlier draft and retry.')
                 draft.prepared = prepared
+                draft.prepared_bytes = size
                 witness = prepared['witness']
                 draft.filename, draft.source_hash = witness['filename'],witness['sourceSha256']
                 draft.scope = prepared['documents'][0].get('equivalenceScope',5)
@@ -246,6 +265,7 @@ class AdminService:
                 self.portal.snapshot = snapshot
             identifiers = [item['id'] for item in draft.prepared['documents']]
             draft.prepared = None
+            draft.prepared_bytes = 0
             draft.state, draft.revision = 'committed',draft.revision+1
             draft.message = 'Published. The exercises are available in Alloy Studio.'
             return {'status':'committed','exerciseIds':identifiers,'exerciseCount':snapshot.exercise_count}

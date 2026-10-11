@@ -1,7 +1,6 @@
 """Deterministic, private .als preparation; no HTTP or provider authority here."""
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 import os
@@ -16,14 +15,18 @@ from scripts.import_correct_pools import body_token_sha256
 
 
 MAX_SOURCE = 262144
-MAX_GROUPS = 8
-MAX_VARIANTS = 64
+MAX_GROUPS = 100
+MAX_VARIANTS = 256
 MAX_BODY = 8192
+MAX_PREPARED_BYTES = 8 * 1048576
+MAX_BATCH_FRAMES = 200
+MAX_BATCH_BYTES = 16 * 1048576
+MAX_FRAME_BYTES = 1048576
 GENERATED_STARTER = '// Write your predicate here.'
 NAME = re.compile(r'[A-Za-z_][A-Za-z0-9_]{0,127}\Z')
 IDENTIFIER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z')
 VARIANT = re.compile(r'([iI][nN][vV](0|[1-9][0-9]*))[cC](0|[1-9][0-9]*)\Z')
-FIELDS = frozenset(('source', 'filename', 'modelId', 'equivalenceScope'))
+FIELDS = frozenset(('source', 'filename', 'modelId', 'equivalenceScope', 'practicePredicates'))
 SPAN_FIELDS = ('name', 'startByte', 'endByte', 'bodyStartByte', 'bodyEndByte')
 
 
@@ -59,7 +62,22 @@ def _envelope(envelope):
     scope = envelope.get('equivalenceScope', 5)
     if type(scope) is not int or not 1 <= scope <= 8:
         raise UploadError('Equivalence scope must be an integer from 1 to 8.')
+    if 'practicePredicates' in envelope:
+        if envelope['practicePredicates'] is None:
+            raise UploadError('Select predicate groups using a list.')
+        _selection(envelope['practicePredicates'])
     return source, filename, model_id, scope
+
+
+def _selection(value):
+    """None preserves select-all private clients; [] requests discovery only."""
+    if value is None:
+        return None
+    if (type(value) is not list or len(value) > MAX_GROUPS
+            or any(type(name) is not str or not NAME.fullmatch(name) for name in value)
+            or len(set(value)) != len(value)):
+        raise UploadError('Select distinct predicate groups from the uploaded model.')
+    return value
 
 
 def _inventory(source):
@@ -159,17 +177,16 @@ def _retained(length, cuts, insertion):
     return before, after
 
 
-def _plan(source, filename, model_id, scope):
-    raw = source.encode('utf-8')
+def _groups(source):
     declarations = _inventory(source)
     if any(VARIANT.fullmatch(item['name']) and (item['kind'] != 'pred' or item['parameterCount'])
            for item in declarations):
         raise UploadError('Every invariant variant must be a parameterless oracle.')
     parameterless = [item for item in declarations if item['kind'] == 'pred' and item['parameterCount'] == 0]
-    # At most 64 oracle declarations plus one bare starter per group can be
+    # At most 256 oracle declarations plus one bare starter per group can be
     # valid. Bound this before grouping and variant-ID duplicate comparisons.
     if len(parameterless) > MAX_VARIANTS + MAX_GROUPS:
-        raise UploadError('An upload may contain at most 64 solution declarations.')
+        raise UploadError('An upload may contain at most 256 solution declarations.')
     groups = {}
     spelling = {}
     for item in parameterless:
@@ -201,11 +218,32 @@ def _plan(source, filename, model_id, scope):
         groups[item['name']] = dict(predicate=item['name'], kind='standalone', variants=[item], starter=None)
     values = sorted(groups.values(), key=lambda group: min(item['startByte'] for item in group['variants']))
     if not 1 <= len(values) <= MAX_GROUPS:
-        raise UploadError('An upload must contain between one and eight exercises.')
+        raise UploadError('An upload must contain between one and 100 predicate groups.')
     if sum(len(group['variants']) for group in values) > MAX_VARIANTS:
-        raise UploadError('An upload may contain at most 64 solution declarations.')
+        raise UploadError('An upload may contain at most 256 solution declarations.')
+    raw = source.encode('utf-8')
+    for group in values:
+        for item in group['variants']:
+            _text(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8'), MAX_BODY)
+        if group['starter']:
+            item = group['starter']
+            _text(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8'), MAX_BODY, empty=True)
+    return declarations, values
+
+
+def _plan(source, filename, model_id, scope, practice_predicates=None):
+    raw = source.encode('utf-8')
+    declarations, values = _groups(source)
+    selection = _selection(practice_predicates)
+    if selection is not None:
+        names = {group['predicate'] for group in values}
+        if not selection or set(selection) - names:
+            raise UploadError('Choose at least one existing predicate group to practise.')
+        values = [group for group in values if group['predicate'] in selection]
+    # Only selected solutions are private. All non-practice declarations remain
+    # byte-for-byte in the public environment, including their original bodies.
     oracle_cuts = {(item['startByte'], item['endByte']) for group in values for item in group['variants']}
-    documents, witnesses = [], []
+    documents, witnesses, document_bytes = [], [], 0
     for group in values:
         predicate = group['predicate']
         identifier = model_id + '-' + predicate
@@ -240,8 +278,14 @@ def _plan(source, filename, model_id, scope):
                               starter=_body_record(starter, raw) if starter else None,
                               insertionByte=insertion, beforeSpans=before, afterSpans=after))
         documents.append(document)
-    return documents, dict(version=1, originalSource=source, sourceSha256=_hash(raw), filename=filename,
-                           modelId=model_id, equivalenceScope=scope, groups=witnesses), declarations
+        document_bytes += len(json.dumps(document, ensure_ascii=False).encode('utf-8'))
+        if document_bytes > MAX_PREPARED_BYTES:
+            raise UploadError('The selected environments are too large. Select fewer predicates.')
+    witness = dict(version=1, originalSource=source, sourceSha256=_hash(raw), filename=filename,
+                   modelId=model_id, equivalenceScope=scope, groups=witnesses)
+    if selection is not None:
+        witness['practicePredicates'] = [group['predicate'] for group in values]
+    return documents, witness, declarations
 
 
 def validate_witness(witness, documents):
@@ -249,9 +293,13 @@ def validate_witness(witness, documents):
     try:
         if type(witness) is not dict or type(documents) not in (list, tuple) or type(witness.get('version')) is not int:
             raise UploadError('Invalid upload witness.')
-        source, filename, model_id, scope = _envelope(dict(source=witness['originalSource'],
-            filename=witness['filename'], modelId=witness['modelId'], equivalenceScope=witness['equivalenceScope']))
-        expected_docs, expected_witness, _ = _plan(source, filename, model_id, scope)
+        envelope = dict(source=witness['originalSource'], filename=witness['filename'],
+                        modelId=witness['modelId'], equivalenceScope=witness['equivalenceScope'])
+        if 'practicePredicates' in witness:
+            envelope['practicePredicates'] = witness['practicePredicates']
+        source, filename, model_id, scope = _envelope(envelope)
+        expected_docs, expected_witness, _ = _plan(source, filename, model_id, scope,
+                                                 envelope.get('practicePredicates'))
         # JSON equality alone treats booleans like integers. Canonical encoding
         # keeps span/index types exact, as well as rejecting extra metadata.
         if json.dumps(witness, sort_keys=True, ensure_ascii=False) != json.dumps(expected_witness, sort_keys=True, ensure_ascii=False):
@@ -300,9 +348,52 @@ def _worker(classpath, main, payload, java, deadline, *, root):
     return result
 
 
-def _check_inspection(inspection, source, declarations, witnesses):
-    if set(inspection) != {'status', 'sourceSha256', 'moduleName', 'declarations', 'factCalls', 'assertionCalls', 'commandCalls'}:
+def _batch_worker(classpath, payloads, java, deadline, *, root):
+    """One sequential validator JVM; no JVM per exercise or source spelling."""
+    from exercise_store import parse_json
+    if not 1 <= len(payloads) <= MAX_BATCH_FRAMES:
+        raise UploadError('Invalid validation batch size.')
+    frames, total = [], 0
+    for payload in payloads:
+        frame = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+        size = len(frame.encode('utf-8'))
+        total += size + 1
+        if size > MAX_FRAME_BYTES or total > MAX_BATCH_BYTES:
+            raise UploadError('The selected validation batch is too large. Select fewer predicates.')
+        frames.append(frame)
+    environment = {key: value for key, value in os.environ.items() if key.upper() not in {
+        'CLASSPATH', 'JAVA_TOOL_OPTIONS', '_JAVA_OPTIONS', 'JDK_JAVA_OPTIONS', 'JDK_JAVAC_OPTIONS'}}
+    try:
+        run = run_engine([str(java), '-Dfile.encoding=UTF-8', '-Xmx256m', '-XX:ActiveProcessorCount=2',
+                          '-cp', classpath, 'live.ExerciseValidator', '--batch'],
+                         input='\n'.join(frames) + '\n', capture_output=True, text=True,
+                         encoding='utf-8', timeout=_remaining(deadline), env=environment, check=False, root=root)
+        lines = run.stdout.splitlines()
+        if run.returncode or len(lines) != len(payloads):
+            raise ValueError()
+        results = [parse_json(line) for line in lines]
+        if any(type(result) is not dict or result.get('status') != 'ok' for result in results):
+            raise ValueError()
+    except (OSError, subprocess.TimeoutExpired, ValueError, UnicodeError):
+        raise UploadError('The selected predicates did not pass bounded Alloy validation; nothing was imported.') from None
+    return results
+
+
+def _check_inspection(inspection, source, declarations, witnesses, *, variant_groups=None, scope=None):
+    fields = {'status', 'sourceSha256', 'moduleName', 'declarations', 'factCalls', 'assertionCalls', 'commandCalls'}
+    if variant_groups is not None:
+        fields.add('variantEquivalence')
+    if set(inspection) != fields:
         raise UploadError('Incomplete Alloy source inspection.')
+    if variant_groups is not None:
+        expected = dict(groupCount=len(variant_groups), variantCount=sum(map(len, variant_groups)),
+                        scope=scope, bitwidth=5, maxSequence=scope, minTrace=1, maxTrace=10,
+                        solver='SAT4J', moduleFacts=True, factsSatisfiable=True, equivalence='bounded')
+        observed = inspection['variantEquivalence']
+        if (type(observed) is not dict or set(observed) != set(expected)
+                or any(type(observed[key]) is not type(value) or observed[key] != value
+                       for key, value in expected.items())):
+            raise UploadError('Alloy did not check every original invariant variant.')
     if inspection['sourceSha256'] != _hash(source) or type(inspection['declarations']) is not list:
         raise UploadError('Alloy inspection does not match the uploaded source.')
     if len(inspection['declarations']) != len(declarations):
@@ -356,40 +447,105 @@ def _check_inspection(inspection, source, declarations, witnesses):
             raise UploadError('A learner starter depends on a removed oracle.')
 
 
-def prepare_upload(root, envelope, *, java='java', timeout=60):
-    """Prepare trusted backend data only; this function never writes a database."""
-    from exercise_store import _engine_identity, normalize_import, validate_import, StoreError
-    source, filename, model_id, scope = _envelope(envelope)
+def _deadline(timeout):
     if type(timeout) not in (int, float) or not 0 < timeout <= 60:
         raise UploadError('Invalid upload validation deadline.')
-    deadline = time.monotonic() + timeout
-    documents, witness, declarations = _plan(source, filename, model_id, scope)
+    return time.monotonic() + timeout
+
+
+def prepared_size(prepared):
+    """Bound serialized retained data, not a claim about process RSS."""
+    size = len(json.dumps(prepared, ensure_ascii=False).encode('utf-8'))
+    if size > MAX_PREPARED_BYTES:
+        raise UploadError('The selected environments are too large. Select fewer predicates.')
+    return size
+
+
+def discover_upload(root, envelope, *, java='java', timeout=60):
+    """Full original-source parse, lightweight selection metadata, no authority to publish."""
+    from exercise_store import _engine_identity, StoreError
+    source, filename, model_id, scope = _envelope(envelope)
+    if envelope.get('practicePredicates') != []:
+        raise UploadError('Discovery requires an empty predicate selection.')
+    deadline = _deadline(timeout)
+    declarations, groups = _groups(source)
+    metadata = []
+    raw = source.encode('utf-8')
+    for group in groups:
+        identifier = model_id + '-' + group['predicate']
+        if not IDENTIFIER.fullmatch(identifier):
+            raise UploadError('Model and predicate names exceed the exercise identifier limit.')
+        count = len({body_token_sha256(raw[v['bodyStartByte']:v['bodyEndByte']].decode('utf-8'))
+                     for v in group['variants']})
+        metadata.append(dict(id=identifier, predicate=group['predicate'], title=group['predicate'],
+                             question=f"Complete the {group['predicate']} predicate in {model_id}.",
+                             oracleCount=count, variants=[item['name'] for item in group['variants']]))
     classpath = runtime_classpath(Path(root))
     try:
         identity = _engine_identity(classpath)
         inspected = _worker(classpath, 'live.UploadInspector', {'source': source}, java, deadline, root=root)
-        _check_inspection(inspected, source, declarations, witness['groups'])
-        certificates = []
+        _check_inspection(inspected, source, declarations, [])
+        if identity != _engine_identity(classpath):
+            raise UploadError('The Alloy engine changed while discovering the upload.')
+        _remaining(deadline)
+        return dict(filename=filename, sourceSha256=_hash(source), equivalenceScope=scope, groups=metadata)
+    except (StoreError, OSError, UnicodeError):
+        raise UploadError('The uploaded model did not pass Alloy source inspection.') from None
+
+
+def prepare_upload(root, envelope, *, java='java', timeout=60):
+    """Prepare trusted backend data only: one inspector and one validation JVM."""
+    from exercise_store import _engine_identity, _validation_payload, _validation_certificate, StoreError
+    source, filename, model_id, scope = _envelope(envelope)
+    deadline = _deadline(timeout)
+    documents, witness, declarations = _plan(source, filename, model_id, scope,
+                                            envelope.get('practicePredicates'))
+    # Selection never exempts an original InvXC group from its equality gate.
+    # Inspect the original world once, without copying it into extra frames.
+    variant_groups = [[item['name'] for item in group['variants']]
+                      for group in _groups(source)[1] if group['kind'] == 'group']
+    classpath = runtime_classpath(Path(root))
+    try:
+        identity = _engine_identity(classpath)
+        inspected = _worker(classpath, 'live.UploadInspector',
+                            dict(source=source, equivalenceScope=scope, variantGroups=variant_groups),
+                            java, deadline, root=root)
+        _check_inspection(inspected, source, declarations, witness['groups'],
+                          variant_groups=variant_groups, scope=scope)
+        payloads, jobs = [], []
+        raw = source.encode('utf-8')
         for document, group in zip(documents, witness['groups']):
-            normalize_import(document)
             # Token-identical references share one stored solution. Distinct
             # original byte spellings still receive an independent reparse and
             # comparison in the generated context before this deduplication.
-            raw = source.encode('utf-8')
             originals = list(dict.fromkeys(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8')
                                           for item in group['variants']))
             if originals != document['oracleSolutions']:
-                payload = dict(predicate=document['predicate'], starter=document['starter'],
+                payloads.append(dict(predicate=document['predicate'], starter=document['starter'],
                     sourcePrefix=document['environmentBefore'] + document['predicateHeader'] + '{\n',
-                    sourceSuffix='\n}' + document['environmentAfter'], oracleBodies=originals, correctBodies=[], scope=scope)
-                result = _worker(classpath, 'live.ExerciseValidator', payload, java, deadline, root=root)
-                if type(result.get('evaluatedCandidates')) is not int or result['evaluatedCandidates'] != len(originals):
+                    sourceSuffix='\n}' + document['environmentAfter'], oracleBodies=originals, correctBodies=[], scope=scope))
+                jobs.append((document, len(originals)))
+            payloads.append(_validation_payload(document))
+            jobs.append((document, None))
+        results = _batch_worker(classpath, payloads, java, deadline, root=root)
+        certificates = []
+        for (document, original_count), result in zip(jobs, results):
+            if original_count is None:
+                certificates.append(_validation_certificate(document, result, identity))
+            else:
+                expected = dict(scope=scope, bitwidth=5, maxSequence=scope, minTrace=1, maxTrace=10,
+                                solver='SAT4J', oracleCount=original_count, correctCount=0,
+                                evaluatedCandidates=original_count, moduleFacts=True, factsSatisfiable=True)
+                if any(type(result.get(key)) is not type(value) or result.get(key) != value
+                       for key, value in expected.items()):
                     raise UploadError('Alloy did not check every source variant.')
-            certificates.append(validate_import(root, document, java=java, timeout=_remaining(deadline)))
         if identity != _engine_identity(classpath):
             raise UploadError('The Alloy engine changed while preparing the upload.')
         _remaining(deadline)
         validate_witness(witness, documents)
-        return dict(documents=copy.deepcopy(documents), certificates=certificates, witness=witness)
-    except (StoreError, OSError, UnicodeError) as error:
+        prepared = dict(documents=documents, certificates=certificates, witness=witness)
+        prepared_size(prepared)
+        _remaining(deadline)
+        return prepared
+    except (StoreError, OSError, UnicodeError):
         raise UploadError('The upload did not pass bounded Alloy validation; nothing was imported.') from None

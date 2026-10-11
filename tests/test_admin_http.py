@@ -182,6 +182,7 @@ class AdminHTTPTests(unittest.TestCase):
             for raw in (b'{"source":"a","source":"b"}', b'[]', b'{bad', b'\xff', b'{"x":NaN}'):
                 self.assertEqual(self.request('POST', '/api/admin/prepare', body=raw)[0], 400)
             self.assertEqual(self.request('POST', '/api/admin/prepare', headers=self.headers() | {'Content-Length': '2097153'}, timeout=2)[0], 413)
+            self.assertEqual(self.request('POST', '/api/admin/commit', headers=self.headers() | {'Content-Length': '2097153'}, timeout=2)[0], 413)
             self.assertEqual(self.request('POST', '/api/admin/commit', {'id': 'a', 'exercises': []})[0], 400)
             self.assertEqual(self.request('POST', '/api/admin/logout', {'surprise': True})[0], 400)
             self.assertEqual(self.request('POST', '/api/admin/no-such-route', {})[0], 404)
@@ -340,6 +341,82 @@ class AdminHTTPTests(unittest.TestCase):
         self.assertEqual(self.app.snapshot.admin_uploads[0]['originalSource'].encode('utf-8'), SOURCE.encode('utf-8'))
         self.assertEqual(self.request('POST', '/api/admin/commit',
                                      {'id': draft['id'], 'revision': draft['revision'], 'exercises': metadata})[0], 409)
+
+    def test_real_discovery_selection_keeps_nonpractice_code_in_public_environment(self):
+        self.sign_in()
+        source = ('sig Node {}\n'
+                  'pred keptRule { some Node }\n'
+                  'pred inv1C0 { no Node }\npred inv1C1 { not some Node }\n'
+                  'pred keptGroupedC0 { some Node }\n')
+        envelope = dict(source=source, filename='selection.als', modelId='selection', practicePredicates=[])
+
+        def await_draft(value):
+            deadline = time.monotonic() + 30
+            while value['state'] == 'preparing' and time.monotonic() < deadline:
+                threading.Event().wait(0.02)
+                status, value, _ = self.request('GET', '/api/admin/drafts/' + value['id'])
+                self.assertEqual(status, 200)
+            return value
+
+        with patch('admin_upload.runtime_classpath', return_value=runtime_classpath(ROOT)), \
+                patch.object(admin_service, 'suggest') as provider:
+            status, discovery, _ = self.request('POST', '/api/admin/prepare', envelope)
+            self.assertEqual(status, 202)
+            discovery = await_draft(discovery)
+            self.assertEqual(discovery['state'], 'selecting', discovery)
+            self.assertEqual([group['predicate'] for group in discovery['groups']],
+                             ['keptRule', 'inv1', 'keptGroupedC0'])
+            self.assertNotIn('some Node', json.dumps(discovery))
+            identity = dict(id=discovery['id'], revision=discovery['revision'])
+            self.assertEqual(self.request('POST', '/api/admin/suggest', dict(identity, questionSeed=''))[0], 409)
+            self.assertEqual(self.request('POST', '/api/admin/commit', dict(identity, exercises=[]))[0], 409)
+            self.assertEqual(self.request('POST', '/api/admin/discard', {'id': discovery['id']})[0], 200)
+            status, draft, _ = self.request('POST', '/api/admin/prepare', dict(envelope, practicePredicates=['inv1']))
+            self.assertEqual(status, 202)
+            draft = await_draft(draft)
+            self.assertEqual(draft['state'], 'ready', draft)
+            self.assertEqual([group['predicate'] for group in draft['groups']], ['inv1'])
+            metadata = [dict(predicate='inv1', title='No nodes', question='Require the set of nodes to be empty.')]
+            status, result, _ = self.request('POST', '/api/admin/commit',
+                dict(id=draft['id'], revision=draft['revision'], exercises=metadata))
+            self.assertEqual(status, 200, result)
+            self.assertEqual(result['exerciseIds'], ['selection-inv1'])
+            provider.assert_not_called()
+        status, public, _ = self.request('GET', '/api/exercises/selection-inv1')
+        self.assertEqual(status, 200)
+        environment = public['environmentBefore'] + public['environmentAfter']
+        self.assertIn('pred keptRule { some Node }', environment)
+        self.assertIn('pred keptGroupedC0 { some Node }', environment)
+        self.assertNotIn('pred inv1C0', environment)
+        self.assertNotIn('pred inv1C1', environment)
+        self.assertEqual(self.app.snapshot.admin_uploads[0]['practicePredicates'], ['inv1'])
+
+    def test_100_exercises_publish_through_http_above_the_old_body_limit(self):
+        self.sign_in()
+        source = 'sig Node {}\n' + ''.join(f'pred practice{i} {{some Node}}\n' for i in range(100))
+        with patch('admin_upload.runtime_classpath', return_value=runtime_classpath(ROOT)):
+            status, draft, _ = self.request('POST', '/api/admin/prepare',
+                dict(source=source, filename='hundred.als', modelId='hundred',
+                     practicePredicates=[f'practice{i}' for i in range(100)]))
+            self.assertEqual(status, 202)
+            deadline = time.monotonic() + 30
+            while draft['state'] == 'preparing' and time.monotonic() < deadline:
+                threading.Event().wait(0.02)
+                status, draft, _ = self.request('GET', '/api/admin/drafts/' + draft['id'])
+                self.assertEqual(status, 200)
+            self.assertEqual(draft['state'], 'ready', draft)
+            self.assertEqual(len(draft['groups']), 100)
+            metadata = [dict(predicate=group['predicate'], title='Title ' + 'x' * 250,
+                             question='Question' + '\t' * 8184) for group in draft['groups']]
+            payload = dict(id=draft['id'], revision=draft['revision'], exercises=metadata)
+            size = len(json.dumps(payload).encode('utf-8'))
+            self.assertGreater(size, 131072)
+            self.assertLess(size, 2097152)
+            status, result, _ = self.request('POST', '/api/admin/commit', payload, timeout=30)
+            self.assertEqual(status, 200, result)
+            self.assertEqual(result['exerciseCount'], 101)
+        self.assertEqual(len(self.app.snapshot.admin_uploads[0]['groups']), 100)
+        self.assertEqual(self.app.snapshot.exercises['hundred-practice99']['description'], metadata[-1]['question'])
 
 
 if __name__ == '__main__':

@@ -101,6 +101,19 @@ class AdminLunaTests(unittest.TestCase):
         self.assertEqual(luna.validate_metadata({'exercises':[item]},['acyclic']),[item])
         self.assertEqual(luna.request_payload('pred acyclic { no none }',['acyclic'],'')['model'],'gpt-6-luna')
 
+    def test_100_selected_names_preserved_with_bounded_metadata_budget(self):
+        names = [f'inv{i}' for i in range(100)]
+        payload = luna.request_payload(SOURCE, names, '')
+        self.assertEqual(payload['max_output_tokens'], 20000)
+        self.assertEqual(json.loads(payload['input'])['predicates'], names)
+        schema = payload['text']['format']['schema']['properties']['exercises']
+        self.assertEqual((schema['minItems'], schema['maxItems']), (100, 100))
+        items = [dict(predicate=name, title=name, question='Require at least one node.') for name in reversed(names)]
+        self.assertEqual([item['predicate'] for item in luna.validate_metadata({'exercises': items}, names)], names)
+        for bad_names in (names + ['extra'], ['inv1', 'inv1'], [['unhashable']], [], [None]):
+            with self.subTest(names=bad_names[:2]), self.assertRaises(StoreError):
+                luna.request_payload(SOURCE, bad_names, '')
+
     def test_code_and_identity_changes_or_incomplete_suggestions_are_rejected(self):
         bad = [dict(GOOD,source='changed'),{'exercises':[]},
                {'exercises':[dict(GOOD['exercises'][0],predicate='inv1C0')]},

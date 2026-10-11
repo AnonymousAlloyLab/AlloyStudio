@@ -1,6 +1,6 @@
 # Authenticated model import: specification before implementation
 
-Version 1, 2026-09-29. This is the acceptance contract for the new admin feature,
+Version 1, 2026-09-29; upload-capacity amendment 2026-10-11. This is the acceptance contract for the new admin feature,
 not a claim of completed verification. It extends the SQLite specification:
 its CLI-only/no-hot-reload restrictions are superseded only for the authenticated
 routes described here. The learner API and public field allowlists stay in force.
@@ -68,8 +68,8 @@ Accept one UTF-8 .als file, at most 256 KiB, through a JSON envelope at most
 2 MiB. Decode browser files with fatal UTF-8 validation; reject NUL, invalid
 Unicode, duplicate JSON keys, unrecognized fields and malformed Alloy. Filename
 and model ID are metadata, never filesystem paths. IDs use the existing store
-identifier format. Scope defaults to 5, range 1..8. Limit eight exercise groups,
-64 source solution declarations total, 8 KiB per body and the existing aggregate
+identifier format. Scope defaults to 5, range 1..8. Limit 100 exercise groups,
+256 source solution declarations total, 8 KiB per body and the existing aggregate
 engine request bound. A bounded worker admits at most one preparation/provider
 operation globally; excess work gets a retryable busy result. Draft/job records (including failed and completed jobs) are capped
 at eight globally and two per session, expire after 15 minutes, and are memory
@@ -91,13 +91,15 @@ exercise. Every variant is a parameterless oracle. If a bare `inv1` declaration
 also exists, it is the learner starter, not another oracle. Otherwise create a
 backend-generated parameterless `inv1` learner slot with a comment starter.
 Other source-backed parameterless predicates become standalone exercises with
-their original names. Parameterized predicates and functions are retained
+their original names. The administrator selects which groups become exercises;
+nonselected predicates and their original bodies remain in the displayed model
+environment. Parameterized predicates and functions are retained
 helpers, not exercises. The lowest numeric variant is the primary oracle;
 standalone predicates use their sole body. Group order follows source order.
 
 Keep the complete uploaded source unchanged in a private SQLite TEXT witness.
 Use verified UTF-8 byte spans to take exact oracle/starter body slices. Include
-private modifiers in declaration-removal spans. Remove all oracle declarations
+private modifiers in declaration-removal spans. Remove all selected oracle declarations
 from the learner projection, preserving every retained environment fragment
 exactly. Generated selected-predicate wrappers are explicitly derived text;
 they do not purport to be byte-identical to the original wrapper. Never rewrite
@@ -107,6 +109,24 @@ run commands, recursion and references hidden in helpers or facts. Do not delete
 or rewrite commands to make an upload pass. A retained learner starter cannot
 be embedded as a hidden solution to another generated exercise.
 
+Discovery uses an empty `practicePredicates` list and cannot produce a publishable
+draft. A nonempty list chooses exact, distinct group names; unknown names are
+rejected, and final exercise order follows source order. Omitting this field keeps
+the older private API's select-all behavior. Selection never splits an InvXC group.
+Only selected oracle declarations and selected learner wrappers are removed.
+All original code is parsed before selection; selected groups then receive full
+validation in their retained, selection-specific environments.
+
+Final preparation also checks every original numbered InvXC group, including
+unselected groups, in the original parsed model. Require satisfiable model facts
+and UNSAT for each variant's mismatch with its group's first variant at the
+requested bounds. Selection must never bypass the original InvXC equivalence
+requirement. The existing inspection JVM performs this gate without extra source
+frames or JVM launches, and reports the checked group/variant counts and scope
+for backend verification. Discovery remains type checking only. Compared original
+expressions share the original model's reachable string-literal universe; selected
+exercise validation retains its separate existing string-universe guard.
+
 Independently reparse every generated starter and reference in its fixed
 exercise environment. Require satisfiable module facts and UNSAT for
 `facts and not (primary iff variant)` for EVERY variant. This reuses the existing
@@ -115,6 +135,43 @@ gets a 60-second total parse/solver deadline, with a 256-MiB Java heap and sanit
 invalid late variant rejects the entire upload. Identical token bodies may be
 stored once after full-source typing; retain all original declaration names and
 body/span hashes in provenance. No primary match permits skipping later variants.
+
+Upload validation uses one inspection JVM and one sequential, framed validation
+JVM, with one live administrator JVM. Commands request two processors; the
+existing shared runtime profile controls the effective processor count.
+The preceding discovery stage uses one inspection JVM; the complete two-stage
+browser workflow therefore starts three JVMs sequentially, regardless of whether
+one or 100 groups are selected. Discovery is rechecked on final preparation,
+since the authenticated private API can submit different source at that stage.
+Each validation frame remains at most 1 MiB; the batch is at most 200 frames and
+16 MiB. Dependency identity is checked before and after the whole preparation,
+not rehashed for every exercise. Prepared data is capped at 8 MiB per draft and
+32 MiB across retained prepared drafts. These serialized-data limits are not RSS
+proofs. Publication JSON is capped at 2 MiB, independently of per-field limits;
+oversized escaped metadata is rejected. All existing authorization, deadline,
+equivalence, source-witness and atomic-publication gates remain in force.
+
+The 2026-10-11 acceptance fixtures exercise 100 standalone groups through
+preparation, atomic SQLite publication and reload; 100 equivalent variant pairs;
+and 100 byte-distinct, token-identical pairs (200 validation frames). Each final
+preparation starts exactly two JVMs and checks dependency identity exactly twice.
+The tests also reject 101 groups and 257 variants before launching a JVM,
+preserve unselected declarations through the public HTTP projection, and publish
+100 questions through HTTP above the former 128-KiB body limit. Original-world
+checks reject unequal unselected InvXC groups and prevent string literals from
+making equivalence vacuous; equivalent retained helpers remain usable. A real batch
+timeout test observes child reaping, empty owned scratch directories and a
+successful retry. Failed/stale browser drafts are discarded without deleting a
+newer upload, and discovery cannot invoke Luna or publish.
+
+From the source checkout, run `python scripts/test_upload_capacity.py` for fresh, source-hashed evidence
+under `build/upload-capacity-validation/`. On the recorded Linux host pinned to
+two CPU cores, the three synthetic cases took 1.074, 1.372 and 1.726 seconds;
+maximum individual JVM RSS was approximately 233–244 MiB. Every case had one
+live admin JVM at most, zero remaining reservations and no scratch files after
+completion. These examples do not establish arbitrary SAT runtimes or combined
+service RSS. The Windows/macOS CI lanes include batch, selection and capacity
+regressions; native IIS acceptance remains a deployment check.
 
 Equivalence is bounded: scope 1..8, bitwidth 5, max sequence equal to scope,
 trace range 1..10. It is not an unbounded proof or proof that the primary oracle

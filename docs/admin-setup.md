@@ -103,14 +103,29 @@ Open `/admin/` under your application path and log in. Upload one UTF-8 `.als`
 file up to 256 KiB. Numbered solution predicates such as `inv1C0` and `inv1C1`
 become one `inv1` exercise; standalone parameterless predicates keep their
 names. The backend preserves original source and checks every solution with
-Alloy. Unsupported dependencies or a nonequivalent late variant reject the
-whole upload. See [the security contract](admin-security-spec.md) for naming,
+Alloy. The selection step shows up to 100 predicate groups, with up to 256
+solution declarations in total. Select which groups become practices, then click
+**Validate selected predicates**. Numbered variants stay together; they cannot be
+selected individually. Unselected predicates and their original bodies remain
+in the model environment shown to learners. The full original upload must parse;
+every original numbered InvXC group must agree, including unselected groups.
+Every selected solution also passes bounded equivalence in its retained exercise
+environment. Unsupported dependencies or a nonequivalent late variant reject the
+whole preparation. See [the security contract](admin-security-spec.md) for naming,
 source-preservation rules and bounded-equivalence limits.
 
 Preparation and Luna suggestions run as bounded jobs, so the browser can poll
 without keeping a request open for the full solver duration. Drafts remain in
 memory, expire after 15 minutes and are visible only to their owning session.
 Restarting the backend discards unpublished drafts.
+Discovery starts one inspection JVM. Selected preparation starts one inspector
+and one sequential validation JVM, independent of the number selected. These
+JVMs run one at a time, requesting two processors and a 256-MiB heap. The
+backend's shared runtime profile controls the effective processor count.
+Preparation has a 60-second total deadline; a difficult model can still
+time out and remains unpublished. Large repeated environments may require a
+smaller selection: prepared data is bounded to 8 MiB per draft and 32 MiB across
+retained drafts. Discard an earlier draft to free its budget.
 
 Luna suggestions send the uploaded model and optional question seed to OpenAI
 using the server's existing private key configuration. The page identifies

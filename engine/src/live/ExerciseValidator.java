@@ -19,6 +19,8 @@ import org.json.JSONObject;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -33,6 +35,8 @@ import java.util.Set;
 /** Private import gate: type checking, body containment and bounded equivalence. */
 public final class ExerciseValidator {
     private static final int MAX_INPUT_BYTES = 1_048_576;
+    private static final int MAX_BATCH_FRAMES = 200;
+    private static final int MAX_BATCH_BYTES = 16_777_216;
     private static final int MAX_BODY_BYTES = 8_192;
     private static final int MAX_SOURCE_BYTES = 262_144;
     private static final int MAX_REFERENCES = 256;
@@ -45,6 +49,14 @@ public final class ExerciseValidator {
         PrintStream wire = System.out;
         System.setOut(new PrintStream(OutputStream.nullOutputStream()));
         System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+        if (arguments.length == 1 && arguments[0].equals("--batch")) {
+            batch(wire);
+            return;
+        }
+        if (arguments.length != 0) {
+            wire.println(rejected("INVALID_REQUEST", -1));
+            return;
+        }
         JSONObject result;
         try {
             byte[] bytes = System.in.readNBytes(MAX_INPUT_BYTES + 1);
@@ -59,6 +71,59 @@ public final class ExerciseValidator {
             result = rejected("INVALID_REQUEST", -1);
         }
         wire.println(result);
+    }
+
+    /** One owned process, with no parsed model retained between request frames.
+     * Frame lengths exclude LF separators; the aggregate includes every input
+     * byte. A rejection terminates the batch before any later request runs. */
+    private static void batch(PrintStream wire) {
+        try {
+            BufferedInputStream input = new BufferedInputStream(System.in);
+            int frames = 0, total = 0;
+            while (true) {
+                int next = input.read();
+                if (next == -1) {
+                    if (frames == 0) wire.println(rejected("INVALID_REQUEST", -1));
+                    return;
+                }
+                if (frames >= MAX_BATCH_FRAMES) {
+                    wire.println(rejected("TOO_MANY_REQUESTS", -1));
+                    return;
+                }
+                ByteArrayOutputStream frame = new ByteArrayOutputStream();
+                while (next != -1) {
+                    if (++total > MAX_BATCH_BYTES) {
+                        wire.println(rejected("BATCH_TOO_LARGE", -1));
+                        return;
+                    }
+                    if (next == '\n') break;
+                    if (frame.size() >= MAX_INPUT_BYTES) {
+                        wire.println(rejected("REQUEST_TOO_LARGE", -1));
+                        return;
+                    }
+                    frame.write(next);
+                    next = input.read();
+                }
+                JSONObject result;
+                try {
+                    String json = StandardCharsets.UTF_8.newDecoder()
+                            .onMalformedInput(CodingErrorAction.REPORT)
+                            .onUnmappableCharacter(CodingErrorAction.REPORT)
+                            .decode(ByteBuffer.wrap(frame.toByteArray())).toString();
+                    WorkerJson.check(json);
+                    result = evaluate(new JSONObject(json));
+                } catch (Throwable error) {
+                    result = rejected("INVALID_REQUEST", -1);
+                }
+                wire.println(result);
+                wire.flush();
+                frames++;
+                if (!result.optString("status").equals("ok") || next == -1) return;
+            }
+        } catch (Throwable error) {
+            wire.println(rejected("INVALID_REQUEST", -1));
+            wire.flush();
+        }
     }
 
     public static JSONObject evaluate(JSONObject request) {
@@ -187,7 +252,7 @@ public final class ExerciseValidator {
         }
     }
 
-    private static A4Solution solve(CompModule world, Expr expression, int scope) throws Err {
+    static A4Solution solve(CompModule world, Expr expression, int scope) throws Err {
         A4Options options = new A4Options();
         options.solver = A4Options.SatSolver.SAT4J;
         // The installed Alloy constructor's final integer is "expects", not

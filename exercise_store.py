@@ -652,17 +652,42 @@ def _engine_identity(classpath):
             'dependencySha256':{p.name:sha(p.read_bytes()) for p in entries[1:]}}
 
 
-def validate_import(root, document, *, java='java', timeout=60):
-    if type(timeout) not in (int, float) or not 0 < timeout <= 60:
-        raise StoreError('Alloy validation deadline expired.')
+def _validation_payload(document):
+    """Normalize one import and retain its existing bounded validator wire."""
     record, oracles, correct, scope = normalize_import(document)
     payload = dict(predicate=record['predicate'],
                    sourcePrefix=record['environmentBefore'] + record['predicateHeader'] + '{\n',
                    sourceSuffix='\n}' + record['environmentAfter'], starter=record['starter'],
                    oracleBodies=oracles, correctBodies=correct, scope=scope)
-    request = json.dumps(payload)
-    if len(request.encode('utf-8')) > MAX_ENGINE:
+    if len(json.dumps(payload).encode('utf-8')) > MAX_ENGINE:
         raise StoreError('Validation request exceeds the engine limit.')
+    return payload
+
+
+def _validation_certificate(document, result, identity):
+    """Bind one complete result to the same protected import and engine hashes."""
+    record, oracles, correct, scope = normalize_import(document)
+    if type(result) is not dict or result.get('status') != 'ok':
+        code = str(result.get('code', 'validation_failed')).lower() if isinstance(result, dict) else 'validation_failed'
+        if not re.fullmatch('[a-z_]{1,64}', str(code)):
+            code = 'validation_failed'
+        raise StoreError('Alloy rejected the import: ' + code + '. Nothing was imported.')
+    expected = dict(scope=scope,bitwidth=5,maxSequence=scope,minTrace=1,maxTrace=10,
+                    solver='SAT4J',oracleCount=len(oracles),correctCount=len(correct),
+                    evaluatedCandidates=len(oracles)+len(correct),moduleFacts=True,factsSatisfiable=True)
+    if any(type(result.get(k)) is not type(v) or result[k] != v for k,v in expected.items()):
+        raise StoreError('Incomplete Alloy validation result.')
+    # Do not retain unrestricted worker strings in the validation record.
+    return dict(kind='alloy-bounded-equivalence',version=1,result=expected,
+                environmentSha256=environment_sha256(record),
+                bodySha256=[sha(v) for v in oracles + correct],starterSha256=sha(record['starter']),
+                **identity)
+
+
+def validate_import(root, document, *, java='java', timeout=60):
+    if type(timeout) not in (int, float) or not 0 < timeout <= 60:
+        raise StoreError('Alloy validation deadline expired.')
+    request = json.dumps(_validation_payload(document))
     environment = {k:v for k,v in os.environ.items() if k.upper() not in (
         'CLASSPATH','JAVA_TOOL_OPTIONS','_JAVA_OPTIONS','JDK_JAVA_OPTIONS','JDK_JAVAC_OPTIONS')}
     classpath = runtime_classpath(Path(root))
@@ -677,22 +702,11 @@ def validate_import(root, document, *, java='java', timeout=60):
             raise StoreError('Engine changed during validation.')
     except (OSError, subprocess.TimeoutExpired, UnicodeError, StoreError) as error:
         raise StoreError('Alloy validation failed or timed out; nothing was imported.') from error
-    if completed.returncode or type(result) is not dict or result.get('status') != 'ok':
-        code = str(result.get('code', 'validation_failed')).lower() if isinstance(result, dict) else 'validation_failed'
-        if not re.fullmatch('[a-z_]{1,64}', str(code)):
-            code = 'validation_failed'
-        raise StoreError('Alloy rejected the import: ' + code + '. Nothing was imported.')
-    expected = dict(scope=scope,bitwidth=5,maxSequence=scope,minTrace=1,maxTrace=10,
-                    solver='SAT4J',oracleCount=len(oracles),correctCount=len(correct),
-                    evaluatedCandidates=len(oracles)+len(correct),moduleFacts=True,factsSatisfiable=True)
-    if any(type(result.get(k)) is not type(v) or result[k] != v for k,v in expected.items()):
-        raise StoreError('Incomplete Alloy validation result.')
-    # Do not retain unrestricted worker strings in the validation record.
-    certificate = dict(kind='alloy-bounded-equivalence',version=1,result=expected,
-                       environmentSha256=environment_sha256(record),
-                       bodySha256=[sha(v) for v in oracles + correct],starterSha256=sha(record['starter']),
-                       **identity)
-    return certificate
+    if completed.returncode:
+        rejected_result = dict(result) if isinstance(result, dict) else {}
+        rejected_result['status'] = 'rejected'
+        return _validation_certificate(document, rejected_result, identity)
+    return _validation_certificate(document, result, identity)
 
 
 def _validate_authored(record, entries, certificate):
@@ -822,10 +836,10 @@ def commit_upload(root, prepared, metadata, *, guard):
     This is an internal capability: HTTP callers never provide `prepared` or its
     certificates. Only reviewed public prose enters through `metadata`.
     """
-    from admin_upload import validate_witness
+    from admin_upload import MAX_GROUPS, validate_witness
     if (type(prepared) is not dict or set(prepared) != {'documents','certificates','witness'}
             or type(prepared['documents']) is not list
-            or not 1 <= len(prepared['documents']) <= 8
+            or not 1 <= len(prepared['documents']) <= MAX_GROUPS
             or type(prepared['certificates']) is not list
             or len(prepared['certificates']) != len(prepared['documents'])):
         raise StoreError('Incomplete upload validation.')

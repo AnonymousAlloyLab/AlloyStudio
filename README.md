@@ -34,6 +34,13 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Maintenance alpha `v0.0.7-alpha.1`** supports 100 upload predicate groups,
+manual practice selection, and unchanged nonpractice predicates in the displayed
+environment. Selected exercises share a sequential validation JVM, with bounded
+draft storage and reliable failed-draft cleanup. See the
+[release notes](docs/releases/v0.0.7-alpha.1.md) and
+[upload contract and measurements](docs/admin-security-spec.md).
+
 **Alpha `v0.0.7-alpha`** reserves a behavioral score of **1.000** for completed,
 fact-aware bounded checks with no undercoverage or overcoverage. Private LFU
 instance pools refresh across edits in the reusable behavior JVM; fresh checks
@@ -267,11 +274,19 @@ allow the same address in the edge rule as well; see the
 [IIS guide](deploy/iis/README.md#administration-network-admission-default-deny).
 Use the site's exact HTTPS origin in production. The password is stored only as
 a private salted hash; no password or OpenAI key belongs in the public web root.
-`inv1C0`, `inv1C1`, … become one `inv1` exercise after every variant passes the
-Alloy bounded-equivalence check. Other predicates keep their names. Luna suggests
+Uploads support **100 predicate groups** and **256 solution declarations** per
+model. Parse the model, choose its practice predicates, and validate the selection.
+Unselected predicates keep their original code in the learner's model environment.
+`inv1C0`, `inv1C1`, … stay together as one `inv1` exercise. All original numbered
+groups must pass bounded equivalence, including unselected groups; selected
+solutions are also checked in their exercise environments. Other predicates keep
+their names. Luna suggests
 metadata and question wording while original source stays unchanged. Review the
 questions before publishing the complete batch. See [admin setup](docs/admin-setup.md)
 and the [security contract](docs/admin-security-spec.md).
+Validation batches all selected exercises in one JVM: two sequential JVM starts
+per preparation, plus one for the preceding discovery stage. Only one admin JVM
+can run at a time; the 60-second preparation deadline and 256-MiB heap remain.
 
 The administration page also has an **Exercise library** tab to edit public
 titles/questions or remove exercises, and a **Candidate cache** tab. The private

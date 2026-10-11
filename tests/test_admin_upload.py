@@ -246,8 +246,8 @@ class AdminUploadTests(unittest.TestCase):
                 with self.subTest(values=list(values)):
                     with self.assertRaises(UploadError):
                         prepare_upload(ROOT, dict(good, **values))
-            for source in (BASE + ''.join(f'pred p{i} {{some Node}}\n' for i in range(9)),
-                           BASE + ''.join(f'pred inv1C{i} {{some Node}}\n' for i in range(65)),
+            for source in (BASE + ''.join(f'pred p{i} {{some Node}}\n' for i in range(101)),
+                           BASE + ''.join(f'pred inv1C{i} {{some Node}}\n' for i in range(257)),
                            BASE + 'pred target {some Node' + ' ' * 8193 + '}',
                            BASE + 'pred onlyHelper[n:Node] {some n}'):
                 with self.assertRaises(UploadError):
@@ -263,8 +263,9 @@ class AdminUploadTests(unittest.TestCase):
         from exercise_store import _engine_identity
         actual = _engine_identity(runtime_classpath(ROOT))
         changed = dict(actual, engineSha256='0' * 64)
-        # Preparation entry, certificate start/end, preparation final check.
-        with mock.patch('exercise_store._engine_identity', side_effect=[actual, actual, actual, changed]):
+        # The batch binds all certificates to one preparation identity, checked
+        # before inspection and after validation rather than once per exercise.
+        with mock.patch('exercise_store._engine_identity', side_effect=[actual, changed]):
             with self.assertRaisesRegex(UploadError, 'engine changed'):
                 prepared(source)
 

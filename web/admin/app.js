@@ -2,7 +2,9 @@
 const $ = id => document.getElementById(id);
 const bytes = value => new TextEncoder().encode(value).length;
 let csrf = '', draft = null, source = '', epoch = 0, busy = false;
+let uploadEnvelope = null;
 const cards = [];
+const choices = [];
 const library = { offset: 0, total: 0, limit: 50, items: [], loading: false, sequence: 0 };
 const candidates = { offset: 0, total: 0, limit: 25, items: [], loading: false, sequence: 0 };
 let selectedQuestion = null, selectedCandidate = null, activePanel = 'upload';
@@ -11,17 +13,25 @@ const identifier = value => typeof value === 'string' && value.length > 0 && val
 function notice(message, error = false) { $('notice').textContent = message; $('notice').classList.toggle('error', error); }
 function lock(value) {
   busy = value;
-  for (const id of ['prepare','suggest','publish','discard','tab-upload','tab-library','tab-candidates',
+  for (const id of ['prepare','suggest','publish','discard','selection-discard','select-all','clear-all','validate-selection',
+    'model-file','model-id','scope','question-seed','tab-upload','tab-library','tab-candidates',
     'library-refresh','candidates-refresh']) $(id).disabled = value;
   document.querySelectorAll('.library-choice').forEach(button => { button.disabled = value; });
   for (const item of cards) { item.title.disabled = value; item.question.disabled = value; }
+  for (const item of choices) item.input.disabled = value;
   $('reviewed').disabled = value;
   updateLibraryControls();
 }
+function clearUpload() {
+  draft = null; source = ''; uploadEnvelope = null; cards.length = 0; choices.length = 0;
+  $('selection').hidden = true; $('preview').hidden = true; $('success').hidden = true;
+  $('predicate-choices').replaceChildren(); $('exercise-cards').replaceChildren(); $('source-preview').textContent = '';
+  $('selection-summary').textContent = ''; $('source-hash').textContent = ''; $('validation').textContent = '';
+  $('published-count').textContent = ''; $('reviewed').checked = false;
+}
 function signedOut() {
-  epoch += 1; csrf = ''; draft = null; source = ''; cards.length = 0;
+  epoch += 1; csrf = ''; clearUpload();
   $('workspace').hidden = true; $('logout').hidden = true; $('preview').hidden = true;
-  $('success').hidden = true; $('exercise-cards').replaceChildren(); $('source-preview').textContent = '';
   $('model-file').value = ''; $('question-seed').value = ''; $('password').value = '';
   clearLibraryState();
   lock(false);
@@ -53,6 +63,18 @@ async function api(path, data) {
     throw error;
   } finally { clearTimeout(timer); }
 }
+async function discardDetached(identifier, token) {
+  if (typeof identifier !== 'string' || !identifier || identifier.length > 512 || !token) return;
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    // Cleanup has no authority to change a newer upload or sign-in state.
+    const response = await fetch('../api/admin/discard', { method: 'POST', credentials: 'same-origin',
+      cache: 'no-store', redirect: 'error', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+      body: JSON.stringify({ id: identifier }) });
+    await response.body?.cancel();
+  } catch {} finally { clearTimeout(timer); }
+}
 async function bootstrap(showNotice = true) {
   const state = await api('session');
   if (!state.authenticated) signedOut();
@@ -64,7 +86,10 @@ async function bootstrap(showNotice = true) {
     : state.authenticated ? 'Signed in. Choose a model to prepare.' : 'Sign in to upload and publish exercises.');
 }
 function renderPreview(value) {
+  if (value.state !== 'ready') throw new Error('Validate the selected predicates before reviewing questions.');
+  validateGroups(value.groups);
   draft = value; cards.length = 0;
+  choices.length = 0; $('predicate-choices').replaceChildren(); $('selection').hidden = true;
   $('preview').hidden = false; $('success').hidden = true; $('reviewed').checked = false;
   $('source-preview').textContent = source;
   $('source-hash').textContent = `Source SHA-256: ${value.sourceSha256}`;
@@ -86,25 +111,59 @@ function renderPreview(value) {
     cards.push({ predicate: group.predicate, title, question });
   }
 }
-async function waitForDraft(value, currentEpoch) {
+function validateGroups(groups) {
+  if (!Array.isArray(groups) || groups.length < 1 || groups.length > 100
+      || groups.some(group => !group || typeof group.predicate !== 'string' || !group.predicate
+        || bytes(group.predicate) > 512 || !Array.isArray(group.variants) || group.variants.length < 1
+        || group.variants.some(name => typeof name !== 'string' || bytes(name) > 512))
+      || new Set(groups.map(group => group.predicate)).size !== groups.length
+      || groups.reduce((total, group) => total + group.variants.length, 0) > 256) {
+    throw new Error('The predicate list could not be read. Parse the model again.');
+  }
+}
+function updateSelectionSummary() {
+  $('selection-summary').textContent = `${choices.filter(item => item.input.checked).length} of ${choices.length} practice predicates selected.`;
+}
+function renderSelection(value) {
+  if (value.state !== 'selecting') throw new Error('The model is not ready for predicate selection.');
+  validateGroups(value.groups);
+  draft = value; choices.length = 0; cards.length = 0;
+  $('preview').hidden = true; $('success').hidden = true; $('selection').hidden = false;
+  $('exercise-cards').replaceChildren(); $('source-preview').textContent = '';
+  const container = $('predicate-choices'); container.replaceChildren();
+  for (const group of value.groups) {
+    const label = document.createElement('label'); label.className = 'predicate-choice';
+    const input = document.createElement('input'); input.type = 'checkbox'; input.checked = true;
+    const content = document.createElement('span');
+    const name = document.createElement('strong'); name.textContent = group.predicate;
+    const detail = document.createElement('small'); detail.textContent = group.variants.join(', ');
+    content.append(name, detail); label.append(input, content); container.append(label);
+    input.addEventListener('change', updateSelectionSummary);
+    choices.push({ predicate: group.predicate, input });
+  }
+  updateSelectionSummary();
+}
+async function waitForDraft(value, currentEpoch, token = csrf) {
   const deadline = Date.now() + 125000;
   while (['preparing','suggesting'].includes(value.state)) {
-    if (currentEpoch !== epoch) return null;
+    if (currentEpoch !== epoch) { await discardDetached(value.id, token); return null; }
     notice(value.message);
     await new Promise(resolve => setTimeout(resolve, 700));
-    if (currentEpoch !== epoch) return null;
+    if (currentEpoch !== epoch) { await discardDetached(value.id, token); return null; }
     value = await api(`drafts/${encodeURIComponent(value.id)}`);
+    if (currentEpoch !== epoch) { await discardDetached(value.id, token); return null; }
     if (Date.now() > deadline) throw new Error('This job has not finished. Refresh to reconnect or start again later.');
   }
-  if (currentEpoch !== epoch) return null;
+  if (currentEpoch !== epoch) { await discardDetached(value.id, token); return null; }
   draft = value;
   if (value.state === 'rejected') throw new Error(value.message);
   return value;
 }
 async function suggest(currentEpoch) {
-  const seed = $('question-seed').value;
+  if (!draft || draft.state !== 'ready') throw new Error('Validate the selected predicates before requesting wording.');
+  const seed = $('question-seed').value, token = csrf;
   if (bytes(seed) > 8192) throw new Error('The teaching goal must fit within 8 KiB.');
-  const value = await waitForDraft(await api('suggest', { id: draft.id, revision: draft.revision, questionSeed: seed }), currentEpoch);
+  const value = await waitForDraft(await api('suggest', { id: draft.id, revision: draft.revision, questionSeed: seed }), currentEpoch, token);
   if (value) { renderPreview(value); notice(value.message); }
 }
 $('login-form').addEventListener('submit', async event => {
@@ -123,12 +182,14 @@ $('logout').addEventListener('click', async () => {
 });
 $('retry').addEventListener('click', () => bootstrap().catch(error => notice(error.message, true)));
 $('model-file').addEventListener('change', () => {
+  const previous = draft, token = csrf; epoch += 1; clearUpload(); lock(false);
+  if (previous) discardDetached(previous.id, token);
   const file = $('model-file').files[0];
   if (file) $('model-id').value = file.name.replace(/\.als$/i, '').replace(/[^A-Za-z0-9_.-]/g, '-').replace(/^[^A-Za-z0-9]+/, '').slice(0, 100) || 'model';
 });
 $('upload-form').addEventListener('submit', async event => {
   event.preventDefault(); if (busy) return;
-  const currentEpoch = ++epoch; lock(true);
+  const currentEpoch = ++epoch, token = csrf; lock(true);
   try {
     const file = $('model-file').files[0];
     if (!file || !/\.als$/i.test(file.name) || file.size > 262144) throw new Error('Choose a UTF-8 .als file up to 256 KiB.');
@@ -139,41 +200,99 @@ $('upload-form').addEventListener('submit', async event => {
     if (bytes($('question-seed').value) > 8192) throw new Error('The teaching goal must fit within 8 KiB.');
     if (currentEpoch !== epoch) return;
     if (draft) await api('discard', { id: draft.id });
-    source = input; draft = null; $('preview').hidden = true; $('success').hidden = true;
-    let value = await api('prepare', { source, filename: file.name, modelId: $('model-id').value, equivalenceScope: Number($('scope').value) });
+    if (currentEpoch !== epoch) return;
+    clearUpload(); source = input;
+    uploadEnvelope = { source, filename: file.name, modelId: $('model-id').value, equivalenceScope: Number($('scope').value) };
+    let value = await api('prepare', { ...uploadEnvelope, practicePredicates: [] });
+    if (currentEpoch !== epoch) { await discardDetached(value.id, token); return; }
     draft = value;
-    value = await waitForDraft(value, currentEpoch);
-    if (value) { renderPreview(value); await suggest(currentEpoch); }
-  } catch (error) { notice(error.message, true); }
+    value = await waitForDraft(value, currentEpoch, token);
+    if (value) { renderSelection(value); notice('Choose the predicates to practice, then validate the selection.'); }
+  } catch (error) {
+    if (currentEpoch === epoch) {
+      const failedId = draft?.id;
+      await discardDetached(failedId, token);
+      if (currentEpoch === epoch) { clearUpload(); notice(error.message, true); }
+    }
+  }
+  finally { if (currentEpoch === epoch) lock(false); }
+});
+$('select-all').addEventListener('click', () => {
+  if (busy) return;
+  for (const item of choices) item.input.checked = true;
+  updateSelectionSummary();
+});
+$('clear-all').addEventListener('click', () => {
+  if (busy) return;
+  for (const item of choices) item.input.checked = false;
+  updateSelectionSummary();
+});
+$('selection-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !draft || draft.state !== 'selecting' || !uploadEnvelope) return;
+  const selected = choices.filter(item => item.input.checked).map(item => item.predicate);
+  if (!selected.length) { notice('Select at least one predicate to practice.', true); return; }
+  const currentEpoch = epoch, token = csrf, envelope = { ...uploadEnvelope, practicePredicates: selected };
+  let ready = false;
+  lock(true);
+  try {
+    await api('discard', { id: draft.id });
+    if (currentEpoch !== epoch) return;
+    draft = null;
+    let value = await api('prepare', envelope);
+    if (currentEpoch !== epoch) { await discardDetached(value.id, token); return; }
+    draft = value;
+    value = await waitForDraft(value, currentEpoch, token);
+    if (value) { renderPreview(value); ready = true; await suggest(currentEpoch); }
+  } catch (error) {
+    if (currentEpoch === epoch) {
+      if (!ready) {
+        const failedId = draft?.id;
+        await discardDetached(failedId, token);
+        if (currentEpoch !== epoch) return;
+        clearUpload();
+      }
+      notice(error.message + (ready ? '' : ' Parse the model again to retry.'), true);
+    }
+  }
   finally { if (currentEpoch === epoch) lock(false); }
 });
 $('suggest').addEventListener('click', async () => {
-  if (busy || !draft) return;
+  if (busy || !draft || draft.state !== 'ready') return;
   const currentEpoch = epoch; lock(true); $('reviewed').checked = false;
-  try { await suggest(currentEpoch); } catch (error) { notice(error.message, true); }
+  try { await suggest(currentEpoch); } catch (error) { if (currentEpoch === epoch) notice(error.message, true); }
   finally { if (currentEpoch === epoch) lock(false); }
 });
-$('discard').addEventListener('click', async () => {
+async function discardUpload() {
   if (busy || !draft) return;
+  const currentEpoch = epoch; lock(true);
+  let completedEpoch = currentEpoch;
   try {
-    await api('discard', { id: draft.id }); epoch += 1; draft = null; source = '';
-    $('preview').hidden = true; $('source-preview').textContent = ''; cards.length = 0;
+    await api('discard', { id: draft.id });
+    if (currentEpoch !== epoch) return;
+    completedEpoch = ++epoch;
+    clearUpload();
     notice('Draft discarded. Choose another model when ready.');
-  } catch (error) { notice(error.message, true); }
-});
+  } catch (error) { if (currentEpoch === epoch) notice(error.message, true); }
+  finally { if (completedEpoch === epoch) lock(false); }
+}
+$('discard').addEventListener('click', discardUpload);
+$('selection-discard').addEventListener('click', discardUpload);
 $('publish-form').addEventListener('submit', async event => {
-  event.preventDefault(); if (busy || !draft || !$('reviewed').checked) return;
+  event.preventDefault(); if (busy || !draft || draft.state !== 'ready' || !$('reviewed').checked) return;
   lock(true); const currentEpoch = epoch;
   try {
     const exercises = cards.map(item => ({ predicate: item.predicate, title: item.title.value, question: item.question.value }));
     if (exercises.some(item => !item.title.trim() || !item.question.trim() || bytes(item.title) > 256 || bytes(item.question) > 8192)) throw new Error('Each exercise needs a title up to 256 bytes and a question up to 8 KiB.');
-    const result = await api('commit', { id: draft.id, revision: draft.revision, exercises });
+    const payload = { id: draft.id, revision: draft.revision, exercises };
+    if (bytes(JSON.stringify(payload)) > 2097152) throw new Error('The public questions must fit within a 2 MiB publication request. Shorten the wording and try again.');
+    const result = await api('commit', payload);
     if (currentEpoch !== epoch) return;
-    draft = null; source = ''; $('preview').hidden = true; $('success').hidden = false;
+    draft = null; source = ''; uploadEnvelope = null; $('preview').hidden = true; $('success').hidden = false;
     $('source-preview').textContent = ''; $('model-file').value = '';
     $('published-count').textContent = `${result.exerciseIds.length} exercise(s) added. The library now contains ${result.exerciseCount} exercises.`;
     notice('Published. The exercise library is ready to use.');
-  } catch (error) { notice(error.message, true); }
+  } catch (error) { if (currentEpoch === epoch) notice(error.message, true); }
   finally { if (currentEpoch === epoch) lock(false); }
 });
 

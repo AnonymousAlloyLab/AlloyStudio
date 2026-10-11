@@ -327,7 +327,7 @@ def public_post(app, request):
 def admin_body_limit(path):
     if path == '/api/admin/login':
         return 8192
-    return 2 * 1048576 if path == '/api/admin/prepare' else 131072
+    return 2 * 1048576 if path in ('/api/admin/prepare', '/api/admin/commit') else 131072
 
 
 def admin_authorize(app, request):

@@ -8,6 +8,7 @@ import sys
 from urllib.request import Request
 
 from exercise_store import StoreError, parse_json, text
+from admin_upload import MAX_GROUPS
 from luna import ENDPOINT, MODEL, read_key, urlopen
 
 MAX_RESPONSE = 1048576
@@ -45,9 +46,9 @@ def validate_metadata(value, names):
 def request_payload(source, names, seed):
     text(source,262144,empty=False)
     text(seed,8192)
-    if (type(names) is not list or not 1 <= len(names) <= 8
-            or len(set(names)) != len(names)
-            or any(type(name) is not str or not 1 <= len(name) <= 128 for name in names)):
+    if (type(names) is not list or not 1 <= len(names) <= MAX_GROUPS
+            or any(type(name) is not str or not 1 <= len(name) <= 128 for name in names)
+            or len(set(names)) != len(names)):
         raise StoreError('Invalid exercise names.')
     schema = {'type':'object','additionalProperties':False,'required':['exercises'],
               'properties':{'exercises':{'type':'array','minItems':len(names),'maxItems':len(names),
@@ -58,7 +59,7 @@ def request_payload(source, names, seed):
                                 'question':{'type':'string','minLength':1,'maxLength':8192}}}}}}
     return dict(model=MODEL,store=False,instructions=INSTRUCTIONS,
                 input=json.dumps({'source':source,'predicates':names,'questionSeed':seed}),
-                reasoning={'effort':'low'},max_output_tokens=5000,
+                reasoning={'effort':'low'},max_output_tokens=min(20000, max(5000, 200 * len(names))),
                 text={'format':{'type':'json_schema','name':'exercise_metadata','strict':True,'schema':schema}})
 
 

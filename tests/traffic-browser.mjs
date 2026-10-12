@@ -115,7 +115,7 @@ try {
       assert.equal(explanation.channel, structural.channel); assert.equal(explanation.revision, structural.revision);
       assert.equal(explanation.body, structural.body); assert.equal(explanation.metric, structural.metric);
       assert.equal(explanation.evidenceToken, token);
-      assert.equal(Object.hasOwn(count('behavior')[0].payload, 'evidenceToken'), false);
+      assert.equal(count('behavior')[0].payload.evidenceToken, token);
     } finally { pendingFeedback?.(); pendingBehavior?.(); await s.context.close(); }
   });
   await check('editing-cancels-own-channel-and-stale-feedback-cannot-start-downstream', async () => {

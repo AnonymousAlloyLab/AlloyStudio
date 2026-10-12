@@ -80,7 +80,7 @@ try {
         && request.revision === requests[0].revision && request.metric === 'canonical'));
       assert.equal(requests[2].evidenceToken, structural.evidenceToken);
       assert.equal(requests[2].behaviorToken, behavioral.behaviorToken);
-      assert.equal(Object.hasOwn(requests[1], 'evidenceToken'), false);
+      assert.equal(requests[1].evidenceToken, structural.evidenceToken);
       await page.locator('.explanation-unavailable').waitFor();
       assert.equal(await page.locator('#feedback-state').textContent(), 'Checked');
       assert.equal(await page.locator('#behavior-state').textContent(), 'Checked');

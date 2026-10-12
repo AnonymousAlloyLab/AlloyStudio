@@ -82,8 +82,14 @@ class AdminStoreTests(unittest.TestCase):
             self.assertEqual(db.execute("SELECT count(*) FROM exercises WHERE origin='authored'").fetchone()[0],0)
 
     def test_duplicate_id_in_later_group_does_not_publish_earlier_group(self):
+        # Create an independently validated private-import collision. Upload
+        # plans themselves require an archive and cannot be stripped of their
+        # authority checks merely to build this transaction rollback fixture.
+        independent = deepcopy(self.prepared['documents'][1])
+        independent.pop('practicePlan')
+        independent.pop('sourceInspectionSha256')
         with patch('exercise_store.runtime_classpath',return_value=runtime_classpath(ROOT)):
-            store.add_exercise(self.root,self.prepared['documents'][1])
+            store.add_exercise(self.root,independent)
         before = store.load_store(self.root)
         with self.assertRaisesRegex(store.StoreError,'already exists'):
             self.publish()

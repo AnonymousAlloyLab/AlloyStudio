@@ -318,11 +318,16 @@ class AdminSelectionTests(unittest.TestCase):
             with self.subTest(source=source), self.assertRaises(upload.UploadError):
                 upload.prepare_upload(self.root, envelope(source))
 
-    def test_hidden_c_dependency_names_are_actionable_without_disclosing_the_body(self):
+    def test_hidden_c_forwarding_keeps_dormant_helpers_without_disclosing_the_body(self):
         source = BASE + 'pred inv1C0 {some Node}\npred helper[n: Node] {inv1C0}\n'
-        with self.assertRaisesRegex(upload.UploadError, r'helper calls hidden inv1C0.*Deselect') as failure:
-            upload.prepare_upload(self.root, envelope(source, practicePredicates=['inv1']))
-        self.assertNotIn('some Node', str(failure.exception))
+        prepared, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['inv1'])
+        document = prepared['documents'][0]
+        environment = document['environmentBefore'] + document['environmentAfter']
+        self.assertIn('pred helper[n: Node] {inv1C0}', environment)
+        self.assertIn('pred inv1C0 {\ninv1[]\n}', environment)
+        self.assertNotIn('some Node', environment)
+        self.assertEqual(document['practicePlan']['dependencies'], [])
+        self.assertTrue(upload.validate_witness(prepared['witness'], prepared['documents']))
         kept, _ = self.measured_prepare(source, expected_frames=1, practicePredicates=['helper'])
         self.assertIn('pred inv1C0 {some Node}', kept['documents'][0]['environmentBefore'])
 

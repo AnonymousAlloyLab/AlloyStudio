@@ -71,7 +71,7 @@ class NavigationEvidenceTests(unittest.TestCase):
             root = Path(directory)
             (root / 'tests').mkdir()
             shutil.copyfile(ROOT / 'tests/browser-suite.mjs', root / 'tests/browser-suite.mjs')
-            names = ('browser.mjs', 'navigation.mjs', 'progress.mjs', 'traffic-browser.mjs',
+            names = ('browser.mjs', 'navigation.mjs', 'progress.mjs', 'progress-save.mjs', 'traffic-browser.mjs',
                      'persistent-browser.mjs', 'admin-library.mjs', 'progressive-hints.mjs',
                      'alloy-editor.mjs', 'instance-labels.mjs')
             for name, report in zip(names, (*reports, *(reports[0] for _ in range(len(names)-2)))):
@@ -99,10 +99,11 @@ class NavigationEvidenceTests(unittest.TestCase):
         result = self.run_fixture((good, good))
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertEqual(report['checks'], 18)
+        self.assertEqual(report['checks'], 20)
         self.assertEqual(report['passed'], ['tests/browser.mjs:one', 'tests/browser.mjs:two',
                                             'tests/navigation.mjs:one', 'tests/navigation.mjs:two',
                                             'tests/progress.mjs:one', 'tests/progress.mjs:two',
+                                            'tests/progress-save.mjs:one', 'tests/progress-save.mjs:two',
                                             'tests/traffic-browser.mjs:one', 'tests/traffic-browser.mjs:two',
                                             'tests/persistent-browser.mjs:one', 'tests/persistent-browser.mjs:two',
                                             'tests/admin-library.mjs:one', 'tests/admin-library.mjs:two',

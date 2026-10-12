@@ -20,6 +20,7 @@ import threading
 
 import luna
 import server
+from practice_progress import context_version
 from scripts.verify_closure import inventory
 
 
@@ -309,7 +310,8 @@ class CredentialHTTPTests(unittest.TestCase):
         exercise = self.app.exercises[payload['exerciseId']]
         explain.assert_called_once_with(feedback, student_body="some Node", behavior=None,
             question=exercise['description'], solution_comparison=luna.solution_length_comparison(
-                "some Node", self.app.correct_pools[exercise['id']]))
+                "some Node", self.app.correct_pools[exercise['id']]),
+            dependency_context=context_version(exercise, {})[1])
         self.assertNotIn(KEY_A, body)
 
 

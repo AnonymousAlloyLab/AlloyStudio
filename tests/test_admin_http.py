@@ -335,8 +335,17 @@ class AdminHTTPTests(unittest.TestCase):
         for identifier in result['exerciseIds']:
             status, public, _ = self.request('GET', '/api/exercises/' + identifier)
             self.assertEqual(status, 200)
-            self.assertEqual(set(public), set(server.PUBLIC_FIELDS))
-            for private in ('pred inv1C0', 'pred inv2C1', 'some Node', 'oracleSolutions', 'originalSource'):
+            self.assertEqual(set(public), set(server.PUBLIC_FIELDS) | {'dependencies', 'dependencySlots'})
+            self.assertEqual(public['dependencies'], [])
+            self.assertEqual(len(public['dependencySlots']), 1)
+            slot = public['dependencySlots'][0]
+            self.assertEqual(set(slot), {'id', 'part', 'start', 'end'})
+            self.assertIn(slot['part'], ('environmentBefore', 'environmentAfter'))
+            raw = public[slot['part']].encode('utf-16-le')
+            self.assertEqual(raw[slot['start'] * 2:slot['end'] * 2].decode('utf-16-le'),
+                             admin_upload.GENERATED_STARTER)
+            for private in ('pred inv1C0', 'pred inv2C1', 'some Node', 'oracleSolutions', 'originalSource',
+                            'practicePlan', 'validationEnvironment', 'sourceInspectionSha256', 'dependencyPlanSha256'):
                 self.assertNotIn(private, json.dumps(public))
         self.assertEqual(self.app.snapshot.admin_uploads[0]['originalSource'].encode('utf-8'), SOURCE.encode('utf-8'))
         self.assertEqual(self.request('POST', '/api/admin/commit',

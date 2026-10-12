@@ -46,7 +46,8 @@ def install_route_fixture(app, exercises, *, root=None, issue_channel=None):
     # missing service dynamically. None of these callbacks may be used here.
     for name in ('admin_auth', 'admin', 'evidence', 'explainer', 'cache_lock',
                  'behavior_cache', 'capture', 'diagnostics', 'evaluate',
-                 'evaluate_behavior', 'evidence_identity', 'behavior_payload', '_key'):
+                 'evaluate_behavior', 'evidence_identity', 'behavior_payload', '_key',
+                 'resolve_practice', 'progress_status', 'mint_completion'):
         setattr(app, name, UnexpectedCapability(name, unexpected))
     app.unexpected_route_calls = unexpected
     return app

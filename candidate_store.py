@@ -32,7 +32,11 @@ def candidate_version(record):
 
 def _evidence(value):
     keys = {'score', 'moduleFacts', 'undercoverage', 'overcoverage', 'scope', 'sampling'}
-    if (type(value) is not dict or set(value) != keys or type(value['score']) not in (int, float)
+    optional = {'dependencyContextVersion'}
+    if (type(value) is not dict or not keys <= set(value) or set(value) - keys - optional
+            or 'dependencyContextVersion' in value and (type(value['dependencyContextVersion']) is not str
+                or not HASH.fullmatch(value['dependencyContextVersion']))
+            or type(value['score']) not in (int, float)
             or value['score'] != 1 or value['moduleFacts'] is not True
             or value['undercoverage'] != 'unsat' or value['overcoverage'] != 'unsat'):
         raise store.StoreError('Candidate requires perfect bounded behavioral checks.')
@@ -80,9 +84,12 @@ def behavioral_evidence(behavior):
                 or item.get('student') is not truth[1] or type(item.get('instances')) is not list
                 or not item['instances']):
             raise store.StoreError('Candidate requires positive and negative witnesses.')
-    return _evidence(dict(score=behavior.get('score'), moduleFacts=True, undercoverage='unsat',
+    evidence = dict(score=behavior.get('score'), moduleFacts=True, undercoverage='unsat',
                           overcoverage='unsat', scope={k: v for k, v in scope.items() if k != 'moduleFacts'},
-                          sampling=behavior.get('sampling')))
+                          sampling=behavior.get('sampling'))
+    if 'dependencyContextVersion' in behavior:
+        evidence['dependencyContextVersion'] = behavior['dependencyContextVersion']
+    return _evidence(evidence)
 
 
 def _review(value, record):

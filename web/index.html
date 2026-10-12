@@ -32,6 +32,8 @@
           <div class="breadcrumbs"><span>Workspace</span><span aria-hidden="true">/</span><span id="exercise-group">Predicate exercises</span></div>
           <div class="title-row"><div><div class="eyebrow">WRITE · COMPARE · REFINE</div><h1 id="exercise-title">Your next idea starts here.</h1></div><button id="download-button" class="button secondary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"></path></svg>Download .als</button></div>
           <p id="exercise-description" class="exercise-description">Choose a predicate, write your answer, and use the feedback to improve it.</p>
+          <div class="progress-actions" role="group" aria-label="Saved progress"><button id="save-progress" class="button secondary" type="button">Save progress</button><button id="load-progress" class="button secondary" type="button">Load progress</button><button id="restore-progress" class="button secondary" type="button" hidden>Restore checks</button><button id="cancel-restore-progress" class="button secondary" type="button" hidden>Cancel restore</button><input id="progress-file" type="file" accept="application/json,.json" hidden><span id="progress-status" role="status" aria-live="polite">Drafts stay in this browser. Save a file to move your progress.</span></div>
+          <div id="practice-lock" class="practice-lock" role="status" hidden></div>
           <nav class="exercise-pagination" aria-label="Previous and next exercise">
             <button id="previous-exercise" class="button secondary" type="button" aria-label="Previous exercise" aria-describedby="exercise-position" disabled><span aria-hidden="true">←</span> Previous</button>
             <span id="exercise-position" class="exercise-position" role="status" aria-live="polite" aria-atomic="true">Choose an exercise</span>
@@ -60,6 +62,7 @@
             <details id="environment-panel" class="environment-card" open>
               <summary><span class="panel-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v13H4ZM4 11h16"></path></svg><span>Model environment</span></span><span class="summary-meta">READ ONLY<span class="chevron" aria-hidden="true">⌄</span></span></summary>
               <div class="environment-description">The model's declarations and commands appear together below. The TODO marks the predicate body you write in the editor above.</div>
+              <p id="dependency-implementations" class="dependency-implementations" hidden></p>
               <pre id="environment-code" class="environment-code alloy-code" tabindex="0" aria-label="Model environment with TODO predicate body">Select an exercise to inspect its model.</pre>
               <div id="source-info" class="source-info">Original model · preserved as supplied</div>
             </details>

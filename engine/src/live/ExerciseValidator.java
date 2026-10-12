@@ -43,7 +43,7 @@ public final class ExerciseValidator {
     private static final int MAX_PARAMETERS = ParameterContext.MAX_PARAMETERS;
     private static final int MAX_HEADER_BYTES = 8_192;
     private static final Set<String> FIELDS = Set.of("predicate", "sourcePrefix", "sourceSuffix",
-            "starter", "oracleBodies", "correctBodies", "scope");
+            "starter", "oracleBodies", "correctBodies", "scope", "blockedPredicates");
 
     private ExerciseValidator() { }
 
@@ -131,11 +131,13 @@ public final class ExerciseValidator {
     public static JSONObject evaluate(JSONObject request) {
         String predicate, prefix, suffix, starter;
         int scope;
+        List<String> blockedPredicates;
         List<String> oracles, correct, candidates = new ArrayList<>();
         try {
             if (!FIELDS.containsAll(request.keySet())) throw new IllegalArgumentException();
             predicate = text(request.get("predicate"), 128, false);
             if (!predicate.matches("[A-Za-z_][A-Za-z0-9_]{0,127}")) throw new IllegalArgumentException();
+            blockedPredicates = PracticeDependencyGuard.read(request, predicate);
             prefix = text(request.get("sourcePrefix"), MAX_SOURCE_BYTES, false);
             suffix = text(request.get("sourceSuffix"), MAX_SOURCE_BYTES, false);
             if (!prefix.endsWith("{\n") || !suffix.startsWith("\n}")) throw new IllegalArgumentException();
@@ -155,12 +157,12 @@ public final class ExerciseValidator {
         }
 
         try {
-            checkedModel(prefix, suffix, starter, predicate, -1);
+            checkedModel(prefix, suffix, starter, predicate, -1, blockedPredicates);
             CompModule world = null;
             // Every candidate is independently parsed before SAT checking. Even
             // an exact earlier match cannot skip a malformed later reference.
             for (int index = 0; index < candidates.size(); index++) {
-                CompModule checked = checkedModel(prefix, suffix, candidates.get(index), predicate, index);
+                CompModule checked = checkedModel(prefix, suffix, candidates.get(index), predicate, index, blockedPredicates);
                 if (index == 0) world = checked;
             }
             if (world == null) throw new IllegalStateException();
@@ -208,7 +210,7 @@ public final class ExerciseValidator {
     }
 
     private static CompModule checkedModel(String prefix, String suffix, String body, String predicate,
-            int candidateIndex) throws Rejected {
+            int candidateIndex, List<String> blockedPredicates) throws Rejected {
         if (!contained(body)) throw new Rejected("BODY_CONTAINMENT", candidateIndex);
         String source = prefix + body + suffix;
         if (source.getBytes(StandardCharsets.UTF_8).length > MAX_SOURCE_BYTES)
@@ -225,6 +227,12 @@ public final class ExerciseValidator {
             selected = function;
         }
         if (selected == null) throw new Rejected("UNSUPPORTED_PREDICATE", candidateIndex);
+        try { PracticeDependencyGuard.check(world, predicate, blockedPredicates); }
+        catch (PracticeDependencyGuard.InvalidSelection error) {
+            throw new Rejected("INVALID_REQUEST", candidateIndex);
+        } catch (PracticeDependencyGuard.UnsolvedCall | PracticeDependencyGuard.UnsafeContext error) {
+            throw new Rejected("UNSUPPORTED_DEPENDENCY", candidateIndex);
+        }
         if (selected.count() > MAX_PARAMETERS
                 || selected.params().stream().anyMatch(variable -> variable.label.equals("this")))
             throw new Rejected("UNSUPPORTED_PARAMETERS", candidateIndex);

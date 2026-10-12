@@ -34,6 +34,15 @@ The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
 
+**Maintenance alpha `v0.0.7-alpha.3`** supports dependent practices: solve and
+verify prerequisites before opening their downstream questions. The environment
+uses your last verified prerequisite implementations. Save and load a portable
+progress file; Restore checks revalidates saved implementations sequentially
+after a backend restart or transfer. See the
+[release notes](docs/releases/v0.0.7-alpha.3.md),
+[progress guide](docs/progress-save.md), and
+[dependency and progress contract](docs/practice-dependencies-progress-spec.md).
+
 **Maintenance alpha `v0.0.7-alpha.2`** supports parameterized practice predicates
 with fixed, visible typed headers. Selected standalone predicates keep blank
 sibling slots so unchanged helpers and aggregate commands can still resolve

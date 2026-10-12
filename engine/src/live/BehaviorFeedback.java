@@ -140,12 +140,14 @@ public final class BehaviorFeedback {
 
     public static synchronized JSONObject evaluate(JSONObject request) {
         String studentSource, oracleSource, studentBody, predicate;
+        List<String> blockedPredicates;
         try {
             studentSource = required(request, "studentSource");
             oracleSource = required(request, "oracleSource");
             studentBody = request.getString("studentBody");
             predicate = required(request, "predicate");
             if (!predicate.matches("[A-Za-z_][A-Za-z0-9_]*")) throw new IllegalArgumentException();
+            blockedPredicates = PracticeDependencyGuard.read(request, predicate);
         } catch (RuntimeException error) {
             return failure("invalid_request", "INVALID_REQUEST");
         }
@@ -155,8 +157,15 @@ public final class BehaviorFeedback {
             // Do not let a learner call resolve to a private oracle predicate.
             learner = WorkerSafety.parse(studentSource);
             learnerTarget = selected(learner, predicate);
+            PracticeDependencyGuard.check(learner, predicate, blockedPredicates);
             if (hasUnsafeDependencies(learner, learnerTarget))
                 return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
+        } catch (PracticeDependencyGuard.InvalidSelection error) {
+            return failure("invalid_request", "INVALID_REQUEST");
+        } catch (PracticeDependencyGuard.UnsolvedCall error) {
+            return failure("unsupported", "UNSOLVED_PRACTICE_CALL");
+        } catch (PracticeDependencyGuard.UnsafeContext error) {
+            return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
         } catch (Err error) {
             WorkerSafety.rethrowFatal(error);
             return failure("invalid", "INVALID_LEARNER");
@@ -172,6 +181,8 @@ public final class BehaviorFeedback {
             }
             Context context = activeContext;
             CompModule world = context.world;
+            // A changed policy cannot reuse an earlier permissive context check.
+            PracticeDependencyGuard.check(world, predicate, blockedPredicates);
             Func oracleTarget = context.target;
             int[] learnerBody = bodyRange(learnerTarget, studentSource);
             int[] oracleBody = bodyRange(oracleTarget, oracleSource);
@@ -237,6 +248,15 @@ public final class BehaviorFeedback {
                             .put("positiveAccepted", positiveCounts[1]).put("negativeTested", negativeCounts[0])
                             .put("negativeRejected", negativeCounts[1]).put("semanticCounterexamples", semanticCounterexamples))
                     .put("categories", categories);
+        } catch (PracticeDependencyGuard.InvalidSelection error) {
+            activeContext = null;
+            return failure("invalid_request", "INVALID_REQUEST");
+        } catch (PracticeDependencyGuard.UnsolvedCall error) {
+            activeContext = null;
+            return failure("unsupported", "UNSOLVED_PRACTICE_CALL");
+        } catch (PracticeDependencyGuard.UnsafeContext error) {
+            activeContext = null;
+            return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
         } catch (UnsafeContext error) {
             return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY");
         } catch (Throwable error) {

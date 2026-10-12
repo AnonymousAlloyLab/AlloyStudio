@@ -185,7 +185,7 @@ class AdminSelectionTests(unittest.TestCase):
                   'pred secondRule {no Node}\n' + aggregate)
         prepared, _ = self.measured_prepare(source, expected_frames=2,
                                             practicePredicates=['secondRule', 'firstRule'])
-        self.assertEqual(prepared['witness']['version'], 2)
+        self.assertEqual(prepared['witness']['version'], 3)
         self.assertEqual(prepared['witness']['practicePredicates'], ['firstRule', 'secondRule'])
         for document in prepared['documents']:
             environment = document['environmentBefore'] + document['environmentAfter']

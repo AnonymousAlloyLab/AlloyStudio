@@ -36,6 +36,8 @@ REQUIRED_CLASSES = (
     'live/UploadInspector.class', 'live/UploadInspector$Declaration.class',
     'live/ExerciseValidator.class', 'live/ExerciseValidator$Rejected.class',
     'live/ParameterContext.class',
+    'live/PracticeDependencyGuard.class', 'live/PracticeDependencyGuard$InvalidSelection.class',
+    'live/PracticeDependencyGuard$UnsolvedCall.class', 'live/PracticeDependencyGuard$UnsafeContext.class',
     'live/BridgePolicies.class', 'live/VerifiedPoolSelection.class', 'live/VerifiedPoolSelection$Result.class',
     'live/LiveFeedback$Candidate.class', 'live/AstFeedback$Candidate.class',
     'live/LiveFeedback.class', 'live/EngineSelfTest.class', 'live/BehaviorFeedback.class',

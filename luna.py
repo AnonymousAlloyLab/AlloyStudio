@@ -582,18 +582,23 @@ class Explainer:
         return dict(model=MODEL, status='unavailable',
                     message='Luna could not complete the explanation. Distance feedback remains available.')
 
-    def explain(self, feedback, *, student_body='', behavior=None, question='', solution_comparison=None):
+    def explain(self, feedback, *, student_body='', behavior=None, question='', solution_comparison=None,
+                dependency_context=None):
         base = {'model': MODEL}
         key = self.key_reader()
         if not key: return dict(base, status='disabled', message='Luna is not configured. Distance feedback remains available.')
-        try: trace = prompt_education(feedback, student_body, behavior, question=question,
+        try:
+            if dependency_context is not None:
+                _require(type(dependency_context) is str and re.fullmatch(r'[0-9a-f]{64}', dependency_context) is not None)
+            trace = prompt_education(feedback, student_body, behavior, question=question,
                                      solution_comparison=solution_comparison)
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
             return dict(base, status='unavailable', message='The complete learner evidence cannot be explained within the supported limits.')
         encoded = json.dumps(trace, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
         # Exact prompt bytes are retained for equality; a prompt digest alone is
         # not identity. Credentials contribute only their one-way account scope.
-        identity = (hashlib.sha256(key.encode()).hexdigest(), base['model'], INSTRUCTIONS, encoded)
+        identity = (hashlib.sha256(key.encode()).hexdigest(), base['model'], INSTRUCTIONS, encoded,
+                    dependency_context)
         with self.lock:
             cached = self.cache.get(identity)
             if cached is not None:

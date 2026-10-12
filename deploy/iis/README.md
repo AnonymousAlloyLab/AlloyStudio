@@ -22,6 +22,16 @@ ordered correct pools and primary oracle identities. A running backend reads one
 consistent snapshot. Host-side CLI additions require a restart; authenticated
 browser publication refreshes the live snapshot atomically.
 
+Version `v0.0.7-alpha.3` also supports acyclic dependent practices and portable
+learner progress files. Refresh both backend modules and public assets during an
+upgrade; the package includes `practice_dependencies.py`, `practice_progress.py`
+and the learner progress guide. Restarting the backend discards process-local
+completion receipts, so learners use **Restore checks** to revalidate saved
+implementations sequentially before opening dependent questions. Saving and
+loading files do not start Java or AI jobs. See the
+[progress guide](../../docs/progress-save.md) and
+[dependency contract](../../docs/practice-dependencies-progress-spec.md).
+
 To add an exercise, run the host-only command from `backend` with a validated
 exercise import file (see [the storage security specification](../../docs/sqlite-security-spec.md)):
 

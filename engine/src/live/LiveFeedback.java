@@ -146,6 +146,7 @@ public final class LiveFeedback {
         String predicate;
         String referencePrefix = null, referenceSuffix = null;
         JSONArray referenceBodies = null;
+        List<String> blockedPredicates;
         boolean poolMode = request.has("referenceBodies") || request.has("referencePrefix") || request.has("referenceSuffix");
         try {
             studentSource = requiredString(request, "studentSource");
@@ -153,6 +154,7 @@ public final class LiveFeedback {
             if (!predicate.matches("[A-Za-z_][A-Za-z0-9_]*")) {
                 throw new IllegalArgumentException("invalid predicate");
             }
+            blockedPredicates = PracticeDependencyGuard.read(request, predicate);
             if (poolMode) {
                 if (request.has("oracleSource")) throw new IllegalArgumentException("ambiguous reference mode");
                 referencePrefix = requiredString(request, "referencePrefix");
@@ -174,7 +176,14 @@ public final class LiveFeedback {
         CompModule learnerModule;
         try {
             learnerModule = WorkerSafety.parse(studentSource);
+            PracticeDependencyGuard.check(learnerModule, predicate, blockedPredicates);
             student = prepare(learnerModule, predicate);
+        } catch (PracticeDependencyGuard.InvalidSelection error) {
+            return failure("invalid_request", "INVALID_REQUEST", "The practice dependency policy could not be applied.");
+        } catch (PracticeDependencyGuard.UnsolvedCall error) {
+            return failure("unsupported", "UNSOLVED_PRACTICE_CALL", "Complete the required earlier practices before calling them from this predicate.");
+        } catch (PracticeDependencyGuard.UnsafeContext error) {
+            return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY", "This predicate cannot depend on itself or control the model's facts or parameter domains.");
         } catch (Err error) {
             WorkerSafety.rethrowFatal(error);
             JSONObject response = failure("invalid", error instanceof ErrorSyntax ? "SYNTAX_ERROR"
@@ -203,7 +212,9 @@ public final class LiveFeedback {
             VerifiedPoolSelection<Candidate> selection = new VerifiedPoolSelection<>(referenceCount);
             for (int i = 0; i < referenceCount; i++) {
                 String source = poolMode ? referencePrefix + referenceBodies.getString(i) + referenceSuffix : oracleSource;
-                Canonical.Prepared candidate = prepare(source, predicate);
+                CompModule referenceModule = WorkerSafety.parse(source);
+                PracticeDependencyGuard.check(referenceModule, predicate, blockedPredicates);
+                Canonical.Prepared candidate = prepare(referenceModule, predicate);
                 CanonicalDistance.DistanceBreakdown candidateDistance = Canonical.distanceBreakdown(student, candidate);
                 selection.consider(i, new Candidate(candidate, candidateDistance), candidateDistance.distance());
             }

@@ -27,10 +27,12 @@ final class AstFeedback {
     static JSONObject evaluate(JSONObject request) {
         String source, predicate, oracle = null, prefix = null, suffix = null;
         JSONArray bodies = null;
+        List<String> blockedPredicates;
         boolean pool = request.has("referenceBodies") || request.has("referencePrefix") || request.has("referenceSuffix");
         try {
             source = required(request, "studentSource"); predicate = required(request, "predicate");
             if (!predicate.matches("[A-Za-z_][A-Za-z0-9_]*")) throw new IllegalArgumentException();
+            blockedPredicates = PracticeDependencyGuard.read(request, predicate);
             if (pool) {
                 if (request.has("oracleSource")) throw new IllegalArgumentException();
                 prefix = required(request, "referencePrefix"); suffix = required(request, "referenceSuffix");
@@ -46,7 +48,14 @@ final class AstFeedback {
         RawAstTrace.Prepared learner;
         try {
             module = WorkerSafety.parse(source);
+            PracticeDependencyGuard.check(module, predicate, blockedPredicates);
             learner = RawAstTrace.prepare(module, predicate);
+        } catch (PracticeDependencyGuard.InvalidSelection error) {
+            return failure("invalid_request", "INVALID_REQUEST", "The practice dependency policy could not be applied.");
+        } catch (PracticeDependencyGuard.UnsolvedCall error) {
+            return failure("unsupported", "UNSOLVED_PRACTICE_CALL", "Complete the required earlier practices before calling them from this predicate.");
+        } catch (PracticeDependencyGuard.UnsafeContext error) {
+            return failure("unsupported", "RECURSIVE_OR_CONTEXT_DEPENDENCY", "This predicate cannot depend on itself or control the model's facts or parameter domains.");
         } catch (Err error) {
             WorkerSafety.rethrowFatal(error);
             JSONObject response = failure("invalid", error instanceof ErrorSyntax ? "SYNTAX_ERROR"
@@ -68,8 +77,9 @@ final class AstFeedback {
             VerifiedPoolSelection<Candidate> selection = new VerifiedPoolSelection<>(references);
             for (int i = 0; i < references; i++) {
                 String reference = pool ? prefix + bodies.getString(i) + suffix : oracle;
-                RawAstTrace.Prepared candidate = RawAstTrace.prepare(
-                        WorkerSafety.parse(reference), predicate);
+                CompModule referenceModule = WorkerSafety.parse(reference);
+                PracticeDependencyGuard.check(referenceModule, predicate, blockedPredicates);
+                RawAstTrace.Prepared candidate = RawAstTrace.prepare(referenceModule, predicate);
                 int distance = RawAstTrace.distance(learner, candidate);
                 selection.consider(i, new Candidate(candidate, distance), distance);
             }

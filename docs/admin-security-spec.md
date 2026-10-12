@@ -131,6 +131,16 @@ commands are permitted: feedback executes generated facts-and-target queries,
 not uploaded commands. Calling such an incoming helper from the selected body
 would create a cycle and must still be rejected in each independently parsed body.
 
+Version-three witnesses, introduced in `v0.0.7-alpha.3`, supersede the preceding
+selected-to-selected prohibition for acyclic practice dependencies. The
+[dependency and progress contract](practice-dependencies-progress-spec.md)
+governs inspected call graphs, generated typed forwarding wrappers, immutable
+completion receipts and private validation environments. Dependent practices
+remain locked until the backend verifies their prerequisites. Facts, signature
+facts, field domains and parameter domains still cannot depend on selected
+practices; recursion and practice-group cycles remain rejected. Version-one and
+version-two archives retain their original projections and verification rules.
+
 Parameterized equivalence is pointwise at the existing bounds: search for an
 argument assignment where the two bodies disagree, using the same parameter
 variables and declaration domains. Comparing two separately universally closed

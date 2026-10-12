@@ -47,7 +47,7 @@ SOURCES = ('server.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits
            'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'engine_workers.py',
            'traffic_scheduler.py', 'runtime_dependencies.py', 'execution_profile.py',
            'luna.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
-           'exercise_store.py', 'exercise_sql.py', 'scripts/import_exercises.py',
+           'practice_dependencies.py', 'practice_progress.py', 'exercise_store.py', 'exercise_sql.py', 'scripts/import_exercises.py',
            'scripts/import_correct_pools.py', 'scripts/traffic_observation.py',
            'closure/traffic-refinement/observation-spec.json',
            'closure/traffic-refinement/observation-baseline.json',

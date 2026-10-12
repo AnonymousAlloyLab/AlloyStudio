@@ -275,7 +275,9 @@ def _groups(source, *, include_parameters=True):
     return declarations, values
 
 
-def _plan(source, filename, model_id, scope, practice_predicates=None, *, projection_version=2):
+def _plan(source, filename, model_id, scope, practice_predicates=None, *, projection_version=2, inspection=None):
+    if projection_version == 3:
+        return _dependency_plan(source, filename, model_id, scope, practice_predicates, inspection)
     raw = source.encode('utf-8')
     declarations, values = _groups(source, include_parameters=projection_version >= 2)
     selection = _selection(practice_predicates)
@@ -351,11 +353,176 @@ def _plan(source, filename, model_id, scope, practice_predicates=None, *, projec
     return documents, witness, declarations
 
 
+def _dependency_plan(source, filename, model_id, scope, practice_predicates, inspection):
+    """Project the actual inspected graph without reinterpreting source identifiers.
+
+    Reload trusts the immutable private backend inspection binding, rather than
+    claiming a lexical scanner can distinguish an Alloy call from a shadowed name.
+    """
+    from practice_dependencies import render_context, validate_plan
+    raw = source.encode('utf-8')
+    declarations, all_groups = _groups(source)
+    selection = _selection(practice_predicates)
+    names = {group['predicate'] for group in all_groups}
+    if selection is not None and (not selection or set(selection) - names):
+        raise UploadError('Choose at least one existing predicate group to practise.')
+    values = [group for group in all_groups if selection is None or group['predicate'] in selection]
+    variants = [[item['name'] for item in group['variants']] for group in all_groups if group['kind'] == 'group']
+    _check_inspection(inspection, source, declarations, [], variant_groups=variants, scope=scope)
+    rows = {row['name']: row for row in inspection['declarations']}
+    graph = {name: set(row['calls']) for name, row in rows.items()}
+    referenced_names = set().union(*graph.values(), inspection['assertionCalls'], inspection['commandCalls'],
+                                   inspection['factCalls'])
+    ownership = {}
+    for group in values:
+        for item in group['variants'] + ([group['starter']] if group['starter'] else []):
+            ownership[item['name']] = group['predicate']
+        for item in group['variants']:
+            if ('parameterNames' not in rows[item['name']] or 'parameterCalls' not in rows[item['name']]):
+                raise UploadError('Rebuild the Alloy inspector to support dependent practices.')
+            if rows[item['name']]['parameterCount'] > MAX_PARAMETERS:
+                raise UploadError('Practice predicates may have at most 16 parameters.')
+    def reachable(start, *, stop_at_practice=False):
+        found, seen, pending = set(), set(), list(start)
+        while pending:
+            name = pending.pop()
+            if name in seen:
+                continue
+            seen.add(name)
+            if name in ownership:
+                found.add(ownership[name])
+                if stop_at_practice:
+                    continue
+            pending.extend(graph[name])
+        return found
+    for row in rows.values():
+        if reachable(row.get('parameterCalls', [])):
+            raise UploadError('Parameter or return domains depend on a practice. Retain it as a helper.')
+    fact_practices = reachable(inspection['factCalls'])
+    if fact_practices:
+        raise UploadError(f'Model facts depend on practice {sorted(fact_practices)[0]}. Retain it as a helper.')
+    edges = {}
+    for group in values:
+        starts = group['variants'] + ([group['starter']] if group['starter'] else [])
+        edges[group['predicate']] = set().union(*(reachable(graph[item['name']], stop_at_practice=True)
+                                               for item in starts))
+    ordered_names = [group['predicate'] for group in values]
+    def closure(name, visiting=None):
+        visiting = set() if visiting is None else visiting
+        if name in visiting:
+            raise UploadError('Practice dependencies contain a cycle. Keep cyclic predicates as helpers.')
+        visiting = visiting | {name}
+        result = []
+        for dependency in ordered_names:
+            if dependency in edges[name]:
+                for ancestor in closure(dependency, visiting) + [dependency]:
+                    if ancestor not in result:
+                        result.append(ancestor)
+        return result
+    closures = {name: closure(name) for name in ordered_names}
+    identifiers = {name: model_id + '-' + name for name in ordered_names}
+    if any(not IDENTIFIER.fullmatch(identifier) for identifier in identifiers.values()):
+        raise UploadError('Model and predicate names exceed the exercise identifier limit.')
+    cuts = {(item['startByte'], item['endByte']) for group in values
+            for item in group['variants'] + ([group['starter']] if group['starter'] else [])}
+    insertions = {group['predicate']: (group['starter']['startByte'] if group['starter']
+                   else group['variants'][0]['startByte']) for group in values}
+    headers = {group['predicate']: _header(source, group['starter'] or group['variants'][0], group['predicate'])
+               for group in values}
+    primary_bodies = {identifiers[group['predicate']]: raw[group['variants'][0]['bodyStartByte']:
+                                                         group['variants'][0]['bodyEndByte']].decode('utf-8')
+                      for group in values}
+    documents, witnesses = [], []
+    for group in values:
+        predicate, insertion = group['predicate'], insertions[group['predicate']]
+        before, after = _retained(len(raw), cuts, insertion)
+        events = []
+        for sibling in values:
+            name = sibling['predicate']
+            if name != predicate:
+                events.append((insertions[name], 0, headers[name] + '{\n' + GENERATED_STARTER + '\n}', name))
+            if sibling['kind'] == 'group':
+                for item in sibling['variants']:
+                    if item['name'] not in referenced_names:
+                        continue
+                    parameters = rows[item['name']]['parameterNames']
+                    if (type(parameters) is not list or len(parameters) > MAX_PARAMETERS
+                            or any(type(name) is not str or not NAME.fullmatch(name) for name in parameters)
+                            or len(set(parameters)) != len(parameters)):
+                        raise UploadError('Invalid Alloy parameter forwarding inventory.')
+                    call = name + ('[' + ', '.join(parameters) + ']' if parameters else '[]')
+                    events.append((item['startByte'], 1, _header(source, item) + '{\n' + call + '\n}', None))
+        slots = []
+        def environment(spans, side):
+            parts = [(start, 2, raw[start:end], None) for start, end in spans]
+            parts.extend((start, order, text.encode('utf-8'), slot)
+                         for start, order, text, slot in events
+                         if (start < insertion) == (side == 'before'))
+            output = bytearray()
+            for _, _, value, slot in sorted(parts, key=lambda item: (item[0], item[1])):
+                if slot is not None:
+                    offset = len(output) + len((headers[slot] + '{\n').encode('utf-8'))
+                    slots.append(dict(side=side, startByte=offset,
+                                      endByte=offset + len(GENERATED_STARTER.encode('utf-8')),
+                                      header=headers[slot], predicate=slot, exerciseId=identifiers[slot]))
+                output.extend(value)
+            return output.decode('utf-8')
+        bodies, indices, variants = [], {}, []
+        for item in group['variants']:
+            value = raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8')
+            _text(value, MAX_BODY)
+            token_hash = body_token_sha256(value)
+            if token_hash not in indices:
+                indices[token_hash] = len(bodies); bodies.append(value)
+            variant = _body_record(item, raw)
+            variant['solutionIndex'] = indices[token_hash]; variants.append(variant)
+        starter = group['starter']
+        initial = raw[starter['bodyStartByte']:starter['bodyEndByte']].decode('utf-8') if starter else GENERATED_STARTER
+        _text(initial, MAX_BODY, empty=True)
+        document = dict(id=identifiers[predicate], title=predicate, group=model_id, predicate=predicate,
+                        description=f'Complete the {predicate} predicate in {model_id}.',
+                        environmentBefore=environment(before, 'before'), environmentAfter=environment(after, 'after'),
+                        predicateHeader=headers[predicate], starter=initial,
+                        oracleSolutions=bodies, correctSolutions=[], equivalenceScope=scope)
+        document['sourceInspectionSha256'] = _hash(json.dumps(inspection, sort_keys=True, ensure_ascii=False,
+                                                             separators=(',', ':')))
+        allowed = set(closures[predicate]) | {predicate}
+        blocked = sorted({name for name, owner in ownership.items() if owner not in allowed
+                          and (name in ordered_names or name in referenced_names)}
+                         | {name for name in ordered_names if name not in allowed})
+        document['practicePlan'] = dict(version=1, direct=[identifiers[name] for name in ordered_names if name in edges[predicate]],
+                                       dependencies=[identifiers[name] for name in closures[predicate]], slots=slots,
+                                       blockedPredicates=blocked, validationEnvironmentBefore=document['environmentBefore'],
+                                       validationEnvironmentAfter=document['environmentAfter'])
+        private = render_context(document, {identifiers[name]: primary_bodies[identifiers[name]]
+                                             for name in closures[predicate]})
+        document['practicePlan']['validationEnvironmentBefore'] = private['environmentBefore']
+        document['practicePlan']['validationEnvironmentAfter'] = private['environmentAfter']
+        validate_plan(document)
+        witnesses.append(dict(exerciseId=document['id'], predicate=predicate, kind=group['kind'], variants=variants,
+                              starter=_body_record(starter, raw) if starter else None, insertionByte=insertion,
+                              beforeSpans=before, afterSpans=after))
+        sibling_slots = [dict(predicate=sibling['predicate'], startByte=insertions[sibling['predicate']],
+                              endByte=(sibling['starter'] or sibling['variants'][0])['endByte'],
+                              header=headers[sibling['predicate']])
+                         for sibling in values if sibling['predicate'] != predicate]
+        if sibling_slots:
+            witnesses[-1]['siblingSlots'] = sibling_slots
+        documents.append(document)
+        if len(json.dumps(documents, ensure_ascii=False).encode('utf-8')) > MAX_PREPARED_BYTES:
+            raise UploadError('The selected environments are too large. Select fewer predicates.')
+    witness = dict(version=3, originalSource=source, sourceSha256=_hash(raw), filename=filename,
+                   modelId=model_id, equivalenceScope=scope, groups=witnesses, inspection=inspection)
+    if selection is not None:
+        witness['practicePredicates'] = [group['predicate'] for group in values]
+    return documents, witness, declarations
+
+
 def validate_witness(witness, documents):
     """Recompute all protected slices and bindings without a runtime parser job."""
     try:
         if (type(witness) is not dict or type(documents) not in (list, tuple)
-                or type(witness.get('version')) is not int or witness['version'] not in (1, 2)):
+                or type(witness.get('version')) is not int or witness['version'] not in (1, 2, 3)):
             raise UploadError('Invalid upload witness.')
         envelope = dict(source=witness['originalSource'], filename=witness['filename'],
                         modelId=witness['modelId'], equivalenceScope=witness['equivalenceScope'])
@@ -363,7 +530,8 @@ def validate_witness(witness, documents):
             envelope['practicePredicates'] = witness['practicePredicates']
         source, filename, model_id, scope = _envelope(envelope)
         expected_docs, expected_witness, _ = _plan(source, filename, model_id, scope,
-                                                 envelope.get('practicePredicates'), projection_version=witness['version'])
+                                                 envelope.get('practicePredicates'), projection_version=witness['version'],
+                                                 inspection=witness.get('inspection'))
         # JSON equality alone treats booleans like integers. Canonical encoding
         # keeps span/index types exact, as well as rejecting extra metadata.
         if json.dumps(witness, sort_keys=True, ensure_ascii=False) != json.dumps(expected_witness, sort_keys=True, ensure_ascii=False):
@@ -465,7 +633,10 @@ def _check_inspection(inspection, source, declarations, witnesses, *, variant_gr
     names = {item['name'] for item in declarations}
     graph = {}
     for actual, expected in zip(inspection['declarations'], declarations):
-        if type(actual) is not dict or set(actual) != set(expected) | {'calls'}:
+        extension = {'parameterNames', 'parameterCalls'}
+        if (type(actual) is not dict or not set(expected) | {'calls'} <= set(actual)
+                or set(actual) - (set(expected) | {'calls'} | extension)
+                or bool(extension & set(actual)) and not extension <= set(actual)):
             raise UploadError('Incomplete Alloy declaration inventory.')
         for key, value in expected.items():
             observed = actual[key]
@@ -477,6 +648,15 @@ def _check_inspection(inspection, source, declarations, witnesses, *, variant_gr
         calls = actual['calls']
         if type(calls) is not list or any(type(name) is not str or name not in names for name in calls):
             raise UploadError('Invalid Alloy dependency inventory.')
+        if extension <= set(actual):
+            parameters, parameter_calls = actual['parameterNames'], actual['parameterCalls']
+            if (type(parameters) is not list or len(parameters) != actual['parameterCount']
+                    or any(type(name) is not str or not NAME.fullmatch(name) for name in parameters)
+                    or len(set(parameters)) != len(parameters)
+                    or type(parameter_calls) is not list
+                    or any(type(name) is not str or name not in names for name in parameter_calls)
+                    or not set(parameter_calls) <= set(calls)):
+                raise UploadError('Invalid Alloy parameter inventory.')
         graph[actual['name']] = set(calls)
     contexts = {}
     for key in ('factCalls', 'assertionCalls', 'commandCalls'):
@@ -584,20 +764,28 @@ def prepare_upload(root, envelope, *, java='java', timeout=60):
     from exercise_store import _engine_identity, _validation_payload, _validation_certificate, StoreError
     source, filename, model_id, scope = _envelope(envelope)
     deadline = _deadline(timeout)
-    documents, witness, declarations = _plan(source, filename, model_id, scope,
-                                            envelope.get('practicePredicates'))
+    declarations, original_groups = _groups(source)
+    selection = _selection(envelope.get('practicePredicates'))
+    if selection is not None and (not selection or set(selection) - {group['predicate'] for group in original_groups}):
+        raise UploadError('Choose at least one existing predicate group to practise.')
+    # Pure preliminary projection preserves early body/header/identifier and
+    # public-environment amplification checks before even the inspector JVM.
+    # Its legacy slots carry no authority and are discarded immediately.
+    _plan(source, filename, model_id, scope, envelope.get('practicePredicates'), projection_version=2)
     # Selection never exempts an original InvXC group from its equality gate.
     # Inspect the original world once, without copying it into extra frames.
     variant_groups = [[item['name'] for item in group['variants']]
-                      for group in _groups(source)[1] if group['kind'] == 'group']
+                      for group in original_groups if group['kind'] == 'group']
     classpath = runtime_classpath(Path(root))
     try:
         identity = _engine_identity(classpath)
         inspected = _worker(classpath, 'live.UploadInspector',
                             dict(source=source, equivalenceScope=scope, variantGroups=variant_groups),
                             java, deadline, root=root)
-        _check_inspection(inspected, source, declarations, witness['groups'],
+        _check_inspection(inspected, source, declarations, [],
                           variant_groups=variant_groups, scope=scope)
+        documents, witness, _ = _plan(source, filename, model_id, scope,
+                                     envelope.get('practicePredicates'), projection_version=3, inspection=inspected)
         payloads, jobs = [], []
         raw = source.encode('utf-8')
         for document, group in zip(documents, witness['groups']):
@@ -607,9 +795,12 @@ def prepare_upload(root, envelope, *, java='java', timeout=60):
             originals = list(dict.fromkeys(raw[item['bodyStartByte']:item['bodyEndByte']].decode('utf-8')
                                           for item in group['variants']))
             if originals != document['oracleSolutions']:
+                from practice_dependencies import validation_record
+                private = validation_record(document)
                 payloads.append(dict(predicate=document['predicate'], starter=document['starter'],
-                    sourcePrefix=document['environmentBefore'] + document['predicateHeader'] + '{\n',
-                    sourceSuffix='\n}' + document['environmentAfter'], oracleBodies=originals, correctBodies=[], scope=scope))
+                    sourcePrefix=private['environmentBefore'] + document['predicateHeader'] + '{\n',
+                    sourceSuffix='\n}' + private['environmentAfter'], oracleBodies=originals, correctBodies=[], scope=scope,
+                    blockedPredicates=document['practicePlan']['blockedPredicates']))
                 jobs.append((document, len(originals)))
             payloads.append(_validation_payload(document))
             jobs.append((document, None))

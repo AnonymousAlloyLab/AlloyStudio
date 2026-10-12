@@ -14,6 +14,7 @@ from exercise_store import (StoreError, commit_upload, text, library_list, libra
                             edit_question, remove_question, exercise_version, prepare_approval)
 import candidate_store
 import candidate_review
+from practice_dependencies import validation_record
 
 DRAFT_SECONDS = 900
 MAX_DRAFTS = 8
@@ -175,6 +176,8 @@ class AdminService:
                 draft.groups = [dict(id=doc['id'],predicate=doc['predicate'],title=doc['title'],
                                       question=doc['description'],oracleCount=len(doc['oracleSolutions']),
                                       predicateHeader=doc['predicateHeader'],
+                                      **({'dependencies': list(doc['practicePlan']['dependencies'])}
+                                         if 'practicePlan' in doc else {}),
                                       variants=[variant['name'] for variant in group['variants']])
                                 for doc, group in zip(prepared['documents'],witness['groups'])]
                 draft.state, draft.message = 'ready','All solution variants agree within the displayed bounds. Review the public questions.'
@@ -394,10 +397,11 @@ class AdminService:
                             or current['exerciseVersion'] != exercise_version(record)):
                         raise AdminError(409, 'This candidate changed before its operation started.')
             if draft.kind == 'review':
+                review_record = validation_record(record)
                 context = dict(exerciseId=record['id'], exerciseVersion=exercise_version(record),
                                candidateHash=candidate['candidateHash'], predicate=record['predicate'],
-                               question=record['description'], environmentBefore=record['environmentBefore'],
-                               environmentAfter=record['environmentAfter'], predicateHeader=record['predicateHeader'],
+                               question=record['description'], environmentBefore=review_record['environmentBefore'],
+                               environmentAfter=review_record['environmentAfter'], predicateHeader=record['predicateHeader'],
                                candidateBody=candidate['body'], oracleBodies=[record['oracleBody']],
                                boundedCheck=candidate['behavioralEvidence'])
                 result = candidate_review.review(self.portal.root, context)

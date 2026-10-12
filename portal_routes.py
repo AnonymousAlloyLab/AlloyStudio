@@ -15,6 +15,8 @@ from types import SimpleNamespace
 
 from admin_service import AdminError
 from exercise_store import content_version
+from practice_dependencies import public_slots, validate_plan
+from practice_progress import ProgressError, token_list
 from luna import solution_length_comparison
 from traffic_scheduler import CapacityError, Superseded, ChannelExpired
 
@@ -38,7 +40,7 @@ STATIC.update({'/admin/' + name: ('admin/' + name, mime) for name, mime in (
     ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
     ('styles.css', 'text/css; charset=utf-8'))})
 STATIC['/admin/'] = STATIC['/admin/index.html']
-PUBLIC_POST_ROUTES = frozenset(('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel'))
+PUBLIC_POST_ROUTES = frozenset(('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel', '/api/progress'))
 # Only these request fields cross the boundary; X-Forwarded-For is consumed by ingress.
 HEADER_ALLOWLIST = frozenset(('origin', 'host', 'cookie', 'x-csrf-token', 'sec-fetch-site',
                               'content-length', 'transfer-encoding'))
@@ -108,6 +110,22 @@ NOT_FOUND = Reply(404, {'error': 'Not found.'})
 
 def project(record, fields):
     return {key: content_version(record) if key == 'contentVersion' else record[key] for key in fields}
+
+
+def dependency_requirements(record, snapshot):
+    plan = validate_plan(record)
+    return [dict(id=identifier, predicate=snapshot.exercises[identifier]['predicate'],
+                 contentVersion=content_version(snapshot.exercises[identifier]))
+            for identifier in plan['direct']] if plan else []
+
+
+def exercise_projection(record, fields, snapshot):
+    result = project(record, fields)
+    if 'practicePlan' in record:
+        result['dependencies'] = dependency_requirements(record, snapshot)
+        if 'environmentBefore' in fields:
+            result['dependencySlots'] = public_slots(record)
+    return result
 
 
 def behavior_token(exercise_id, body, evidence):
@@ -183,11 +201,13 @@ def public_get(app, request):
     snapshot = app.snapshot
     if path == '/api/exercises':
         return Reply.public(('catalogue',), lambda: {
-            'exercises': [project(e, SUMMARY_FIELDS) for e in snapshot.exercises.values()]}, generation=snapshot)
+            'exercises': [exercise_projection(e, SUMMARY_FIELDS, snapshot)
+                          for e in snapshot.exercises.values()]}, generation=snapshot)
     if path.startswith('/api/exercises/'):
         record = snapshot.exercises.get(path[len('/api/exercises/'):])
         if record:
-            return Reply.public(('exercise', record['id']), lambda: project(record, PUBLIC_FIELDS), generation=snapshot)
+            return Reply.public(('exercise', record['id']),
+                lambda: exercise_projection(record, PUBLIC_FIELDS, snapshot), generation=snapshot)
     if path in STATIC:
         name, mime = STATIC[path]
         target = app.root / 'web' / name
@@ -208,6 +228,15 @@ def public_get(app, request):
 
 def public_post(app, request):
     path, data = request.path, request.body
+    if path == '/api/progress':
+        try:
+            if type(data) is not dict or set(data) != {'completionTokens'}:
+                raise ProgressError('Invalid completion query.')
+            tokens = token_list(data['completionTokens'], 200)
+            snapshot, _ = app.capture()
+            return Reply.json(200, app.progress_status(tokens, snapshot))
+        except (ProgressError, ValueError, TypeError, KeyError, UnicodeError):
+            return Reply.json(400, {'error': 'Supply at most 200 distinct completion tokens.'})
     if path == '/api/channel':
         if data:
             return Reply.json(400, {'error': 'No channel fields are accepted.'})
@@ -232,7 +261,9 @@ def public_post(app, request):
             pass  # a delayed cancel cannot roll a channel back
         return Reply.json(200, {'status': 'ok'})
     expected = {'exerciseId', 'body', 'revision'}
-    optional = {'metric', 'channel'} | ({'behaviorToken', 'evidenceToken'} if path == '/api/explain' else set())
+    optional = {'metric', 'channel', 'prerequisiteTokens'} | (
+        {'behaviorToken', 'evidenceToken'} if path == '/api/explain' else
+        {'evidenceToken'} if path == '/api/behavior' else set())
     fields = set(data)
     if (not expected <= fields or not fields <= expected | optional
             or not isinstance(data['exerciseId'], str)
@@ -244,15 +275,28 @@ def public_post(app, request):
                 or re.fullmatch(r'[0-9a-f]{64}', data[name]) is None)
                    for name in ('behaviorToken', 'evidenceToken'))):
         return Reply.json(400, {'error': 'Expected exerciseId, body, and a nonnegative integer revision.'})
+    try:
+        tokens = token_list(data.get('prerequisiteTokens', []))
+    except ProgressError:
+        return Reply.json(400, {'error': 'Supply at most 99 distinct prerequisite tokens.'})
     snapshot, generation = app.capture()
-    record = snapshot.exercises.get(data['exerciseId'])
-    if not record:
+    base = snapshot.exercises.get(data['exerciseId'])
+    if not base:
         return Reply.json(404, {'error': 'Exercise not found.'})
+    base_version = content_version(base)
+    try:
+        record, dependency_context = app.resolve_practice(base, tokens, snapshot)
+    except (ProgressError, ValueError, TypeError, KeyError, UnicodeError):
+        return Reply.json(423, dict(status='locked', code='prerequisites_required',
+            message='Complete or restore the required prerequisite checks before starting this practice.',
+            required=dependency_requirements(base, snapshot), exerciseId=base['id'],
+            revision=data['revision'], contentVersion=base_version))
     metric, channel, revision = data.get('metric', 'canonical'), data.get('channel'), data['revision']
     error = validate_body(data['body'])
     if not error:
         try:
-            app.scheduler.observe(channel, revision, (generation, record['id'], data['body'], metric))
+            app.scheduler.observe(channel, revision, (generation, record['id'], data['body'], metric,
+                                                       dependency_context.version))
         except ChannelExpired:
             return Reply.json(410, {'status': 'expired', 'code': 'channel_expired'})
         except Superseded:
@@ -266,12 +310,18 @@ def public_post(app, request):
         result = ({'status': 'invalid', 'message': error} if error else
                   app.evaluate_behavior(record, data['body'], **context))
         if result.get('status') == 'ok':
+            completion = app.mint_completion(record, data['body'], metric, data.get('evidenceToken'),
+                result, dependency_context, generation, channel, revision)
             token = behavior_token(record['id'], data['body'], result)
             # Each channel gets its own accounted pin; the public behavior
             # token remains derived only from displayed evidence as before.
             if channel is not None:
                 app.evidence.pin(behavior_identity, result)
             result = dict(result, behaviorToken=token)
+            if completion is not None:
+                result.update(completionToken=completion,
+                              completionBodySha256=hashlib.sha256(data['body'].encode('utf-8')).hexdigest(),
+                              completionPrerequisiteTokens=list(dependency_context.direct_tokens))
     else:
         evidence_token = data.get('evidenceToken')
         if error:
@@ -311,14 +361,16 @@ def public_post(app, request):
                     comparison = (solution_length_comparison(data['body'], selected.correct_pools[record['id']])
                                   if type(result.get('distance')) is int and result['distance'] == 0 else None)
                     result = app.explainer.explain(result, student_body=data['body'], behavior=evidence,
-                                                   question=record['description'], solution_comparison=comparison)
+                                                   question=record['description'], solution_comparison=comparison,
+                                                   dependency_context=dependency_context.version)
                     if token is not None:
                         result = dict(result, behaviorToken=token)
     with app.scheduler.lock:
         if not error and not app.scheduler.current(channel, revision):
             result = {'status': 'superseded'}
     status = 503 if result.get('code') == 'capacity' and result.get('dispatched') is False else 200
-    delivery = {'exerciseId': record['id'], 'revision': revision, 'contentVersion': content_version(record)}
+    delivery = {'exerciseId': record['id'], 'revision': revision, 'contentVersion': base_version,
+                'dependencyContextVersion': dependency_context.version}
     if path != '/api/behavior':
         delivery['requestedMetric'] = metric
     return Reply.json(status, dict(result, **delivery))

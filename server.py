@@ -23,7 +23,9 @@ from execution_profile import resolve_profile
 from traffic_scheduler import Scheduler, EvidenceStore, CapacityError, Superseded, encode
 from traffic_http import BoundedHTTPServer, TrafficProfile, DeadlineReader, HTTPInputError, bounded_json
 from traffic_decode import strict_request_line, strict_request_headers
-from exercise_store import load_store, StoreError, parse_json, exercise_version
+from exercise_store import load_store, StoreError, parse_json, exercise_version, content_version
+from practice_dependencies import render_context, validate_plan
+from practice_progress import CompletionAuthority, ProgressError
 import candidate_store
 import repair_grammar
 from admin_auth import AuthManager, AuthError
@@ -65,6 +67,9 @@ class RouteServices:
     evidence_identity: object
     behavior_payload: object
     _key: object
+    resolve_practice: object
+    progress_status: object
+    mint_completion: object
 
 
 def route_services(app):
@@ -77,7 +82,9 @@ def route_services(app):
         behavior_cache=app.behavior_cache, capture=app.capture,
         diagnostics=app.diagnostics, evaluate=app.evaluate,
         evaluate_behavior=app.evaluate_behavior, evidence_identity=app.evidence_identity,
-        behavior_payload=app.behavior_payload, _key=app._key)
+        behavior_payload=app.behavior_payload, _key=app._key,
+        resolve_practice=app.resolve_practice, progress_status=app.progress_status,
+        mint_completion=app.mint_completion)
 
 
 def model(record, body):
@@ -454,6 +461,7 @@ class Portal(BoundedHTTPServer):
         self.cache = self.scheduler.caches['feedback']
         self.behavior_cache = self.scheduler.caches['behavior']
         self.evidence = EvidenceStore()
+        self.completions = CompletionAuthority()
         self.engine_pool = EnginePool(self.root, self.java, feedback_workers=execution.workers, behavior_workers=1,
                                       startup_timeout=execution.startup_timeout,
                                       java_processors=execution.java_processors)
@@ -482,6 +490,45 @@ class Portal(BoundedHTTPServer):
     def capture(self):
         with self.snapshot_lock:
             return self._snapshot, self.generation
+
+    def progress_status(self, tokens, snapshot):
+        return self.completions.inspect(tokens, snapshot)
+
+    def resolve_practice(self, record, tokens, snapshot):
+        context = self.completions.resolve(record, tokens, snapshot)
+        resolved = render_context(record, dict(context.implementations))
+        resolved['_baseExerciseVersion'] = exercise_version(record)
+        resolved['_publicContentVersion'] = content_version(record)
+        resolved['_dependencyContextVersion'] = context.version
+        plan = validate_plan(record)
+        if plan:
+            resolved['_blockedPredicates'] = list(plan['blockedPredicates'])
+            resolved['_dependentPractice'] = bool(plan['dependencies'])
+        return resolved, context
+
+    def mint_completion(self, record, body, metric, evidence_token, behavior, context,
+                        generation, channel, revision):
+        if evidence_token is None:
+            return None
+        with self.snapshot_lock:
+            if self.stopping or self.generation != generation:
+                return None
+            snapshot = self._snapshot
+            base = snapshot.exercises.get(record['id'])
+            if base is None or exercise_version(base) != record['_baseExerciseVersion']:
+                return None
+            with self.scheduler.lock:
+                if not self.scheduler.current(channel, revision):
+                    return None
+                identity = self.evidence_identity(record, body, metric, generation, channel)
+                structural = self.evidence.get(evidence_token, identity)
+                if structural is None:
+                    return None
+                try:
+                    return self.completions.mint(base, body, metric, structural,
+                                                  behavior, context, snapshot)
+                except (ProgressError, ValueError, TypeError, KeyError, UnicodeError):
+                    return None
 
     @property
     def exercises(self):
@@ -532,19 +579,26 @@ class Portal(BoundedHTTPServer):
             return {'status': 'error', 'message': 'Analysis could not complete. Try again.'}
 
     def feedback_payload(self, record, body, metric, snapshot):
-        return {'studentSource': model(record, body),
+        payload = {'studentSource': model(record, body),
                 'referenceBodies': snapshot.correct_pools[record['id']],
                 'referencePrefix': record['environmentBefore'] + record['predicateHeader'] + '{\n',
                 'referenceSuffix': '\n}' + record['environmentAfter'],
                 'predicate': record['predicate'], 'metric': metric}
+        if '_blockedPredicates' in record:
+            payload['blockedPredicates'] = record['_blockedPredicates']
+        return payload
 
     def behavior_payload(self, record, body):
-        return {'studentSource': model(record, body), 'studentBody': body,
+        payload = {'studentSource': model(record, body), 'studentBody': body,
                 'oracleSource': model(record, record['oracleBody']), 'predicate': record['predicate']}
+        if '_blockedPredicates' in record:
+            payload['blockedPredicates'] = record['_blockedPredicates']
+        return payload
 
     def evidence_identity(self, record, body, metric, generation, channel, kind='feedback'):
         return (self.service_identity, generation, kind, record['id'], body,
-                metric if kind == 'feedback' else None, channel)
+                metric if kind == 'feedback' else None,
+                record.get('_dependencyContextVersion'), channel)
 
     def diagnostics(self):
         """AP01-C10 bounded aggregate projection for the private control listener.
@@ -611,6 +665,8 @@ class Portal(BoundedHTTPServer):
         if snapshot is None:
             snapshot, generation = self.capture()
         payload = self.feedback_payload(record, body, metric, snapshot)
+        if len(model(record, body).encode('utf-8')) > 262144 or len(encode(payload)) > 1048576:
+            return {'status': 'invalid', 'diagnostics': [{'message': 'The resolved prerequisite model is too large.'}]}
         snapshot = None  # retain only this bounded request, not an old whole catalogue
         key = self._key('feedback', payload, generation)
         return self._schedule('feedback', key, lambda: self._feedback(record, body, metric, payload), channel, revision)
@@ -659,6 +715,8 @@ class Portal(BoundedHTTPServer):
         if snapshot is None:
             snapshot, generation = self.capture()
         payload = self.behavior_payload(record, body)
+        if len(model(record, body).encode('utf-8')) > 262144 or len(encode(payload)) > 1048576:
+            return {'status': 'invalid', 'message': 'The resolved prerequisite model is too large.'}
         snapshot = None
         key = self._key('behavior', payload, generation)
         # Fresh sequential observations update the worker's LFU instance pools.
@@ -666,6 +724,8 @@ class Portal(BoundedHTTPServer):
         # are retained below solely to explain the instances already displayed.
         result = self._schedule('behavior', key, lambda: self._behavior(payload),
                                 channel, revision, cacheable=False)
+        if result.get('status') == 'ok' and '_dependencyContextVersion' in record:
+            result = dict(result, dependencyContextVersion=record['_dependencyContextVersion'])
         if result.get('status') == 'ok':
             with self.cache_lock:
                 self.behavior_cache[key] = result
@@ -692,7 +752,10 @@ class Portal(BoundedHTTPServer):
                 return
             snapshot = self._snapshot
             current = snapshot.exercises.get(record['id'])
-            if current is None or exercise_version(current) != exercise_version(record):
+            expected_version = record.get('_baseExerciseVersion')
+            if expected_version is None:
+                expected_version = exercise_version(record)
+            if current is None or exercise_version(current) != expected_version:
                 return
             candidate_store.capture(self.root, current, exercise_version(current),
                                     snapshot.pool_tokens[record['id']], body, result)

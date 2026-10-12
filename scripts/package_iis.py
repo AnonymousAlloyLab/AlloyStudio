@@ -38,10 +38,11 @@ RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_d
                    'prepare_private_data.py', 'manage_exercises.py', 'configure_admin.py')
 ADMIN_MODULES = ('admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
                  'candidate_store.py', 'candidate_review.py')
-STORE_FILES = ('exercise_store.py', 'exercise_sql.py', 'sql/schema.json',
+STORE_FILES = ('exercise_store.py', 'exercise_sql.py', 'practice_dependencies.py', 'practice_progress.py', 'sql/schema.json',
                'sql/queries.json', 'sql/compiled-queries.json', 'vendor/sqlean/provenance.json')
 ADMIN_FILES = ('docs/private-exercises.md', 'docs/sqlite-security-spec.md',
                'docs/admin-security-spec.md', 'docs/admin-setup.md',
+               'docs/practice-dependencies-progress-spec.md', 'docs/progress-save.md',
                'docs/admin-library-candidates-spec.md', 'examples/private-exercise.json')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)

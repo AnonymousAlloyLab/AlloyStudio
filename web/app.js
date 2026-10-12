@@ -34,10 +34,19 @@ const state = {
   history: [], lastHistoryBody: null, feedbackStatus: 'waiting', storageAvailable: true,
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null, progressiveHints: null,
   solved: new Map(), structuralCompletionEvidence: null,
+  completedBodies: new Map(), savedRecords: new Map(), validCompletionTokens: new Set(),
+  memoryDrafts: new Map(),
+  progressRestore: null, progressEpoch: 0,
+  progressSavedAt: 0,
   channel: null, channelPromise: null, checkFlight: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
 const MAX_SOLVED_EXERCISES = 1000;
+const MAX_PROGRESS_RECORDS = 200;
+const MAX_PROGRESS_BYTES = 4 * 1024 * 1024;
+const BODY_BYTES = 8192;
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+const VERSION_PATTERN = /^[a-f0-9]{64}$/;
 const APP_BASE = new URL('.', import.meta.url);
 const METRICS = {
   canonical: { id: 'acgn-fast-rewrite-canonical-distance', basis: 'nearest-known-correct-v1', label: 'Canonical' },
@@ -59,8 +68,452 @@ function readStorage(key, fallback) {
 }
 
 function writeStorage(key, value) {
-  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); }
-  catch { state.storageAvailable = false; }
+  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); return true; }
+  catch { state.storageAvailable = false; return false; }
+}
+
+function progressStatus(message) { $('#progress-status').textContent = message; }
+
+function validToken(value) { return typeof value === 'string' && TOKEN_PATTERN.test(value); }
+function validVersion(value) { return typeof value === 'string' && VERSION_PATTERN.test(value); }
+
+function strictObject(value, keys, required = keys) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    && Object.keys(value).every(key => keys.includes(key) && !['__proto__', 'constructor', 'prototype'].includes(key))
+    && required.every(key => Object.hasOwn(value, key));
+}
+
+function progressBody(value) {
+  if (typeof value !== 'string' || value.length > BODY_BYTES || value.includes('\0')) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const unit = value.charCodeAt(index);
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      const next = value.charCodeAt(++index);
+      if (!(next >= 0xDC00 && next <= 0xDFFF)) return false;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) return false;
+  }
+  return new TextEncoder().encode(value).length <= BODY_BYTES;
+}
+
+async function bodySha256(body) {
+  if (!globalThis.crypto?.subtle) throw new Error('Saved checks require HTTPS or localhost. Saved code remains available.');
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+  return [...new Uint8Array(bytes)].map(value => value.toString(16).padStart(2, '0')).join('');
+}
+
+function tokenList(value, cap = 99) {
+  return Array.isArray(value) && value.length <= cap && new Set(value).size === value.length && value.every(token => validToken(token));
+}
+
+function parseProgress(text) {
+  if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_PROGRESS_BYTES) throw new Error('Progress files must be at most 4 MiB.');
+  let value;
+  try { value = JSON.parse(text); } catch { throw new Error('This is not a readable progress file.'); }
+  if (Array.isArray(value?.records) && value.records.length > MAX_PROGRESS_RECORDS) {
+    throw new Error('Progress supports at most 200 exercise-code records. No learner code was omitted.');
+  }
+  const topKeys = ['format', 'version', 'savedAt', 'selectedExerciseId', 'metric', 'live', 'records', 'solved'];
+  const timestamp = at => Number.isSafeInteger(at) && at > 0;
+  const identity = id => typeof id === 'string' && id.length > 0 && id.length <= 256 && !['__proto__', 'constructor', 'prototype'].includes(id);
+  if (!strictObject(value, topKeys) || value.format !== 'alloy-studio-progress' || value.version !== 1
+    || !timestamp(value.savedAt) || (value.selectedExerciseId !== null && !identity(value.selectedExerciseId))
+    || !Object.hasOwn(METRICS, value.metric) || typeof value.live !== 'boolean'
+    || !Array.isArray(value.records) || value.records.length > MAX_PROGRESS_RECORDS
+    || !Array.isArray(value.solved) || value.solved.length > MAX_SOLVED_EXERCISES) throw new Error('This progress file has an unsupported or malformed format.');
+  const seen = new Set();
+  for (const record of value.records) {
+    if (!strictObject(record, ['id', 'contentVersion', 'sourceSha256', 'draft', 'completed', 'history'], ['id', 'contentVersion', 'sourceSha256', 'history'])
+      || !identity(record.id) || seen.has(record.id) || !validVersion(record.contentVersion)
+      || !validVersion(record.sourceSha256)
+      || (!Object.hasOwn(record, 'draft') && !Object.hasOwn(record, 'completed'))
+      || !strictObject(record.history, ['canonical', 'ast'])) throw new Error('This progress file contains an invalid exercise record.');
+    seen.add(record.id);
+    if (Object.hasOwn(record, 'draft') && (!strictObject(record.draft, ['body', 'updatedAt'])
+      || !progressBody(record.draft.body) || !timestamp(record.draft.updatedAt))) throw new Error('A saved draft is malformed or exceeds 8 KiB.');
+    if (Object.hasOwn(record, 'completed')) {
+      const completed = record.completed;
+      if (!strictObject(completed, ['body', 'metric', 'at', 'completionToken', 'dependencyContextVersion', 'prerequisiteTokens'], ['body', 'metric', 'at'])
+        || !progressBody(completed.body) || !timestamp(completed.at) || !Object.hasOwn(METRICS, completed.metric)
+        || (Object.hasOwn(completed, 'completionToken') && !validToken(completed.completionToken))
+        || (Object.hasOwn(completed, 'dependencyContextVersion') && !validVersion(completed.dependencyContextVersion))
+        || (Object.hasOwn(completed, 'prerequisiteTokens') && !tokenList(completed.prerequisiteTokens))) throw new Error('A saved implementation is malformed.');
+    }
+    for (const metric of ['canonical', 'ast']) {
+      const points = record.history[metric];
+      if (!Array.isArray(points) || points.length > 12 || !points.every(point => strictObject(point, ['distance', 'at', 'basis'])
+        && Number.isFinite(point.distance) && point.distance >= 0 && timestamp(point.at)
+        && point.basis === METRICS[metric].basis)) throw new Error('A saved history is malformed.');
+    }
+  }
+  const solvedSeen = new Set();
+  for (const record of value.solved) {
+    if (!strictObject(record, ['id', 'version', 'at', 'metric']) || !identity(record.id) || solvedSeen.has(record.id)
+      || !validVersion(record.version) || !timestamp(record.at) || !Object.hasOwn(METRICS, record.metric)) throw new Error('Saved completion history is malformed.');
+    solvedSeen.add(record.id);
+  }
+  return value;
+}
+
+function dependencyList(exercise) {
+  if (exercise?.dependencies === undefined) return [];
+  if (!Array.isArray(exercise.dependencies) || exercise.dependencies.length > 99) return null;
+  const seen = new Set();
+  if (!exercise.dependencies.every(dependency => strictObject(dependency, ['id', 'predicate', 'contentVersion'])
+    && typeof dependency.id === 'string' && dependency.id !== exercise.id && !seen.has(dependency.id) && seen.add(dependency.id)
+    && typeof dependency.predicate === 'string' && validVersion(dependency.contentVersion))) return null;
+  return exercise.dependencies;
+}
+
+function prerequisiteTokens(exercise) {
+  const dependencies = dependencyList(exercise);
+  if (dependencies === null) return null;
+  const tokens = [];
+  for (const dependency of dependencies) {
+    const saved = state.completedBodies.get(dependency.id);
+    if (!saved || saved.contentVersion !== dependency.contentVersion || !validToken(saved.completionToken)
+      || !state.validCompletionTokens.has(saved.completionToken)) return null;
+    tokens.push(saved.completionToken);
+  }
+  return tokens;
+}
+
+function lockedExercise(exercise) { return prerequisiteTokens(exercise) === null; }
+
+function rejectPrerequisites(result, tokens) {
+  tokens.forEach(token => state.validCompletionTokens.delete(token));
+  if (Array.isArray(result.required) && dependencyList({ ...state.exercise, dependencies: result.required }) !== null) {
+    state.exercise.dependencies = result.required;
+    const summary = state.exercises.find(item => item.id === state.exercise.id);
+    if (summary) summary.dependencies = result.required;
+  }
+  applyPracticeLock(); renderExercises();
+}
+
+function dependencyClosure(exercise, found = new Set(), visiting = new Set()) {
+  const dependencies = dependencyList(exercise);
+  if (dependencies === null || visiting.has(exercise.id)) throw new Error('This exercise has invalid prerequisite metadata.');
+  visiting.add(exercise.id);
+  for (const dependency of dependencies) {
+    const record = state.exercises.find(item => item.id === dependency.id);
+    if (!record || exerciseVersion(record) !== dependency.contentVersion) throw new Error('A prerequisite has changed or is unavailable.');
+    dependencyClosure(record, found, visiting); found.add(dependency.id);
+  }
+  visiting.delete(exercise.id);
+  return found;
+}
+
+function resolvedEnvironment(exercise) {
+  const environment = { environmentBefore: exercise.environmentBefore || '', environmentAfter: exercise.environmentAfter || '' };
+  if (!exercise.dependencySlots?.length) return environment;
+  if (!Array.isArray(exercise.dependencySlots) || exercise.dependencySlots.length > 100) throw new Error('This exercise has invalid prerequisite slots.');
+  const closure = dependencyClosure(exercise);
+  const intervals = { environmentBefore: [], environmentAfter: [] };
+  for (const slot of exercise.dependencySlots) {
+    if (!strictObject(slot, ['id', 'part', 'start', 'end']) || !Object.hasOwn(intervals, slot.part)
+      || !Number.isSafeInteger(slot.start) || !Number.isSafeInteger(slot.end) || slot.start < 0 || slot.end < slot.start
+      || slot.end > environment[slot.part].length) throw new Error('This exercise has invalid prerequisite slots.');
+    const text = environment[slot.part].slice(slot.start, slot.end);
+    if (text !== '// Write your predicate here.') throw new Error('A prerequisite slot has changed. Reload the exercises.');
+    intervals[slot.part].push(slot);
+  }
+  for (const part of Object.keys(intervals)) {
+    const ordered = intervals[part].sort((left, right) => left.start - right.start);
+    if (ordered.some((slot, index) => index > 0 && slot.start < ordered[index - 1].end)) throw new Error('Prerequisite slots overlap.');
+    for (const slot of ordered.reverse()) {
+      const saved = state.completedBodies.get(slot.id);
+      if (closure.has(slot.id) && saved && state.validCompletionTokens.has(saved.completionToken)) {
+        environment[part] = environment[part].slice(0, slot.start) + '\n' + saved.body + '\n' + environment[part].slice(slot.end);
+      }
+    }
+  }
+  return environment;
+}
+
+function cancelProgressRestore(message = 'Restore cancelled. Saved code is unchanged.') {
+  state.progressEpoch += 1;
+  if (!state.progressRestore) return;
+  state.progressRestore.abort(); state.progressRestore = null;
+  cancelChannel(++state.revision);
+  $('#cancel-restore-progress').hidden = true;
+  $('#restore-progress').disabled = false;
+  progressStatus(message);
+}
+
+function applyPracticeLock() {
+  if (!state.exercise || state.loadingExercise) return;
+  let locked = lockedExercise(state.exercise), slotError = null;
+  try { resolvedEnvironment(state.exercise); } catch (error) { locked = true; slotError = error.message; }
+  elements.editor.disabled = locked;
+  elements.check.disabled = locked; elements.reset.disabled = locked; elements.download.disabled = locked;
+  $('#indent-button').disabled = locked;
+  const panel = $('#practice-lock'); panel.hidden = !locked;
+  if (locked) {
+    const missing = (dependencyList(state.exercise) || []).filter(dependency => {
+      const saved = state.completedBodies.get(dependency.id);
+      return !saved || saved.contentVersion !== dependency.contentVersion || !state.validCompletionTokens.has(saved.completionToken);
+    });
+    panel.replaceChildren(node('span', '', slotError || `Complete and check ${missing.map(item => item.predicate).join(', ') || 'the prerequisites'} before working on this predicate.`));
+    missing.forEach(dependency => {
+      const button = node('button', 'button text-button', `Open ${dependency.predicate}`); button.type = 'button';
+      button.addEventListener('click', () => selectExercise(dependency.id)); panel.append(button);
+    });
+    showWaiting('This practice is locked until its prerequisites are checked.');
+  }
+  $('#restore-progress').hidden = ![...state.completedBodies.values()].some(saved => !state.validCompletionTokens.has(saved.completionToken));
+}
+
+function buildProgress() {
+  if (state.exercise && !state.loadingExercise && !progressBody(elements.editor.value)) {
+    throw new Error('Progress was not saved: the current draft must be valid text of at most 8 KiB, without NUL characters. Your editor is unchanged.');
+  }
+  if (state.exercise && !state.loadingExercise && !saveDraft()) {
+    throw new Error('Progress was not saved because the current draft cannot be retained. Your code stays in this editor; download the model before leaving.');
+  }
+  const records = [];
+  for (const exercise of state.exercises) {
+    const version = exerciseVersion(exercise);
+    if (!version) continue;
+    const saved = state.savedRecords.get(exercise.id);
+    const stored = state.memoryDrafts.get(exercise.id) || readStorage(`draft:${exercise.id}`, null);
+    const currentStored = stored && (!saved?.draft || stored.progressSavedAt === state.progressSavedAt);
+    if (currentStored && (!stored.version || stored.version === version) && typeof stored.body === 'string' && !progressBody(stored.body)) {
+      throw new Error(`Progress was not saved: the draft for ${exercise.predicate || exercise.id} must be valid text of at most 8 KiB, without NUL characters. No learner code was omitted.`);
+    }
+    const useStored = currentStored && progressBody(stored.body) && validVersion(stored.source)
+      && (!stored.version || stored.version === version) && Number.isSafeInteger(stored.updatedAt) && stored.updatedAt > 0
+      && (!saved?.draft || stored.progressSavedAt === state.progressSavedAt);
+    const draft = useStored ? { body: stored.body, updatedAt: stored.updatedAt } : saved?.draft;
+    const completed = state.completedBodies.get(exercise.id);
+    const source = (useStored ? stored.source : saved?.sourceSha256) || completed?.sourceSha256;
+    if ((!draft && !completed) || !validVersion(source)) continue;
+    const history = Object.fromEntries(['canonical', 'ast'].map(metric => {
+      const legacy = readStorage(`history:${exercise.id}${metric === 'canonical' ? '' : ':ast'}`, []);
+      const stamp = readStorage(`history:${exercise.id}${metric === 'canonical' ? '' : ':ast'}:progress`, null);
+      const raw = saved?.history?.[metric] && stamp !== state.progressSavedAt
+        ? saved.history[metric] : legacy;
+      const points = (Array.isArray(raw) ? raw : []).filter(point => strictObject(point, ['distance', 'at', 'basis'])
+        && Number.isFinite(point.distance) && point.distance >= 0 && Number.isSafeInteger(point.at) && point.at > 0
+        && point.basis === METRICS[metric].basis).slice(-12);
+      return [metric, points];
+    }));
+    const record = { id: exercise.id, contentVersion: version, sourceSha256: source, ...(draft ? { draft } : {}), history };
+    if (completed && completed.contentVersion === version) {
+      record.completed = { body: completed.body, metric: completed.metric, at: completed.at,
+        ...(completed.completionToken ? { completionToken: completed.completionToken } : {}),
+        ...(completed.dependencyContextVersion ? { dependencyContextVersion: completed.dependencyContextVersion } : {}),
+        ...(completed.prerequisiteTokens ? { prerequisiteTokens: completed.prerequisiteTokens } : {}) };
+    }
+    records.push(record);
+  }
+  const snapshot = { format: 'alloy-studio-progress', version: 1, savedAt: Math.max(Date.now(), state.progressSavedAt + 1),
+    selectedExerciseId: state.exercise?.id || null, metric: state.metric, live: elements.live.checked, records,
+    solved: [...state.solved].filter(([, record]) => validVersion(record.version))
+      .slice(0, MAX_SOLVED_EXERCISES).map(([id, record]) => ({ id, ...record })) };
+  parseProgress(JSON.stringify(snapshot));
+  return snapshot;
+}
+
+function persistProgress() {
+  try {
+    const snapshot = buildProgress();
+    if (!writeStorage('progress', snapshot)) {
+      progressStatus('Browser storage is full or unavailable. Your progress is still in memory; use Save progress to keep a file.'); return false;
+    }
+    state.savedRecords = new Map(snapshot.records.map(record => [record.id, record]));
+    state.progressSavedAt = snapshot.savedAt;
+    state.memoryDrafts.clear();
+    return true;
+  } catch (error) { progressStatus(error.message); return false; }
+}
+
+function applyProgress(snapshot) {
+  const versions = new Map(state.exercises.map(exercise => [exercise.id, exerciseVersion(exercise)]));
+  const records = snapshot.records.filter(record => versions.get(record.id) === record.contentVersion);
+  state.savedRecords = new Map(records.map(record => [record.id, record]));
+  state.progressSavedAt = snapshot.savedAt;
+  state.memoryDrafts.clear();
+  state.completedBodies = new Map(records.filter(record => record.completed).map(record => [record.id,
+    { ...record.completed, contentVersion: record.contentVersion, sourceSha256: record.sourceSha256 }]));
+  state.validCompletionTokens.clear();
+  state.solved = new Map(snapshot.solved.filter(record => versions.get(record.id) === record.version)
+    .map(({ id, ...record }) => [id, record]));
+  return snapshot.records.length - records.length;
+}
+
+async function validateCompletionTokens(signal = null) {
+  const tokens = [...new Set([...state.completedBodies.values()].map(saved => saved.completionToken).filter(token => validToken(token)))];
+  if (!tokens.length) return;
+  const epoch = state.progressEpoch;
+  const reply = await fetchJSON('api/progress', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ completionTokens: tokens }), ...(signal ? { signal } : {}) });
+  if (epoch !== state.progressEpoch || signal?.aborted) return;
+  if (!strictObject(reply, ['status', 'completions', 'expiredTokens']) || reply.status !== 'ok'
+    || !Array.isArray(reply.completions) || reply.completions.length > tokens.length
+    || !Array.isArray(reply.expiredTokens) || reply.expiredTokens.length > tokens.length) throw new Error('Saved checks could not be verified. Use Restore checks.');
+  const requested = new Set(tokens), seen = new Set(), verified = new Map();
+  for (const completion of reply.completions) {
+    const saved = state.completedBodies.get(completion?.exerciseId);
+    if (!strictObject(completion, ['exerciseId', 'contentVersion', 'completionToken', 'dependencyContextVersion', 'bodySha256', 'prerequisiteTokens'])
+      || !saved || !requested.has(completion.completionToken) || seen.has(completion.completionToken)
+      || saved.completionToken !== completion.completionToken || saved.contentVersion !== completion.contentVersion
+      || !validVersion(completion.dependencyContextVersion)
+      || saved.dependencyContextVersion !== completion.dependencyContextVersion
+      || !validVersion(completion.bodySha256) || !tokenList(completion.prerequisiteTokens)) throw new Error('Saved checks could not be verified. Use Restore checks.');
+    seen.add(completion.completionToken);
+    if (await bodySha256(saved.body) === completion.bodySha256) verified.set(completion.exerciseId, completion);
+    if (epoch !== state.progressEpoch || signal?.aborted) return;
+  }
+  for (const token of reply.expiredTokens) {
+    if (!requested.has(token) || seen.has(token)) throw new Error('Saved checks could not be verified. Use Restore checks.');
+    seen.add(token);
+  }
+  if (seen.size !== requested.size) throw new Error('Saved checks could not be verified. Use Restore checks.');
+  const valid = new Set(), visited = new Set(), visiting = new Set();
+  const visit = id => {
+    if (visited.has(id)) return valid.has(state.completedBodies.get(id)?.completionToken);
+    if (visiting.has(id)) return false;
+    visiting.add(id);
+    const completion = verified.get(id), exercise = state.exercises.find(item => item.id === id);
+    const dependencies = dependencyList(exercise);
+    const direct = dependencies?.map(dependency => state.completedBodies.get(dependency.id)?.completionToken);
+    const okay = completion && direct && direct.length === completion.prerequisiteTokens.length
+      && direct.every(token => completion.prerequisiteTokens.includes(token))
+      && dependencies.every(dependency => visit(dependency.id));
+    visiting.delete(id); visited.add(id);
+    if (okay) {
+      state.completedBodies.get(id).prerequisiteTokens = completion.prerequisiteTokens;
+      valid.add(completion.completionToken);
+    }
+    return okay;
+  };
+  [...verified.keys()].forEach(visit);
+  state.validCompletionTokens = valid;
+}
+
+function saveProgressFile() {
+  try {
+    const snapshot = buildProgress();
+    const browserSaved = writeStorage('progress', snapshot);
+    if (browserSaved) { state.savedRecords = new Map(snapshot.records.map(record => [record.id, record])); state.progressSavedAt = snapshot.savedAt; state.memoryDrafts.clear(); }
+    const blob = new Blob([JSON.stringify(snapshot)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), link = node('a');
+    link.href = url; link.download = `alloy-studio-progress-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    progressStatus(browserSaved ? 'Progress saved in this browser and downloaded. Keep the file to continue elsewhere.'
+      : 'Progress downloaded. Browser storage is full or unavailable; keep the downloaded file.');
+  } catch (error) { progressStatus(error.message); }
+}
+
+async function loadProgressFile(file) {
+  cancelProgressRestore('Loading saved progress…');
+  const epoch = state.progressEpoch;
+  try {
+    if (!file || file.size > MAX_PROGRESS_BYTES) throw new Error('Progress files must be at most 4 MiB.');
+    const snapshot = parseProgress(await file.text());
+    if (epoch !== state.progressEpoch) return;
+    const versions = new Map(state.exercises.map(exercise => [exercise.id, exerciseVersion(exercise)]));
+    const filtered = { ...snapshot, savedAt: Math.max(Date.now(), state.progressSavedAt + 1), records: snapshot.records.filter(record => versions.get(record.id) === record.contentVersion),
+      solved: snapshot.solved.filter(record => versions.get(record.id) === record.version) };
+    const omitted = snapshot.records.length - filtered.records.length;
+    if (!writeStorage('progress', filtered)) throw new Error('Progress was not loaded because browser storage is full or unavailable. Existing drafts are unchanged.');
+    invalidateFeedback(); applyProgress(filtered);
+    state.metric = snapshot.metric; elements.live.checked = snapshot.live; renderMetric();
+    writeStorage('metric', snapshot.metric); writeStorage('live', snapshot.live);
+    try { await validateCompletionTokens(); } catch (error) { progressStatus(error.message); }
+    if (epoch !== state.progressEpoch) return;
+    const id = state.exercises.some(exercise => exercise.id === snapshot.selectedExerciseId) ? snapshot.selectedExerciseId : state.exercise?.id;
+    state.exercise = null;
+    if (id) await selectExercise(id, { restoring: true });
+    renderExercises(); applyPracticeLock();
+    progressStatus(`Loaded ${filtered.records.length} saved exercise${filtered.records.length === 1 ? '' : 's'}${omitted ? `; omitted ${omitted} changed or removed exercises` : ''}. ${[...state.completedBodies.values()].some(saved => !state.validCompletionTokens.has(saved.completionToken)) ? 'Use Restore checks to verify saved implementations.' : 'Saved code is ready.'}${state.storageAvailable ? '' : ' Browser storage could not retain every preference.'}`);
+  } catch (error) { if (epoch === state.progressEpoch) progressStatus(error.message); }
+  finally { $('#progress-file').value = ''; }
+}
+
+function recordVerifiedImplementation(result, payload, metric) {
+  if (!validToken(result.completionToken) || !validVersion(result.dependencyContextVersion)) return;
+  const old = state.completedBodies.get(payload.exerciseId);
+  if (!old && state.completedBodies.size >= MAX_PROGRESS_RECORDS) {
+    progressStatus('Only 200 exercise implementations can be saved in one progress file. This checkmark is kept; the new implementation was not added to saved progress.'); return;
+  }
+  if (old && (old.body !== payload.body || old.completionToken !== result.completionToken
+    || old.dependencyContextVersion !== result.dependencyContextVersion)) {
+    for (const exercise of state.exercises) {
+      try {
+        if (dependencyClosure(exercise).has(payload.exerciseId)) {
+          const saved = state.completedBodies.get(exercise.id);
+          if (saved) state.validCompletionTokens.delete(saved.completionToken);
+        }
+      } catch { /* Invalid metadata remains locked. */ }
+    }
+  }
+  if (old?.completionToken) state.validCompletionTokens.delete(old.completionToken);
+  state.completedBodies.set(payload.exerciseId, { body: payload.body, metric, at: Date.now(),
+    contentVersion: exerciseVersion(state.exercise), sourceSha256: state.exercise.source?.sha256,
+    completionToken: result.completionToken, dependencyContextVersion: result.dependencyContextVersion,
+    prerequisiteTokens: [...(payload.prerequisiteTokens || [])] });
+  state.validCompletionTokens.add(result.completionToken);
+  persistProgress(); renderExercises(); applyPracticeLock(); renderContext();
+}
+
+async function restoreProgressChecks() {
+  cancelProgressRestore(); invalidateFeedback();
+  const controller = new AbortController(); state.progressRestore = controller;
+  const epoch = state.progressEpoch, current = () => !controller.signal.aborted && epoch === state.progressEpoch;
+  $('#cancel-restore-progress').hidden = false; $('#restore-progress').disabled = true;
+  const savedSelection = state.exercise?.id;
+  try {
+    const ordered = [], visited = new Set(), visiting = new Set();
+    const visit = exercise => {
+      if (visited.has(exercise.id)) return;
+      if (visiting.has(exercise.id)) throw new Error('Saved prerequisites contain a cycle.');
+      visiting.add(exercise.id);
+      for (const dependency of dependencyList(exercise) || []) {
+        const predecessor = state.exercises.find(item => item.id === dependency.id);
+        if (!predecessor || !state.completedBodies.has(predecessor.id)) throw new Error(`Save and check ${dependency.predicate} before restoring this chain.`);
+        visit(predecessor);
+      }
+      visiting.delete(exercise.id); visited.add(exercise.id); ordered.push(exercise);
+    };
+    state.exercises.filter(exercise => state.completedBodies.has(exercise.id)).forEach(visit);
+    const { channel } = await ensureChannel(controller.signal);
+    for (const [index, exercise] of ordered.entries()) {
+      if (!current()) return;
+      const saved = state.completedBodies.get(exercise.id);
+      if (state.validCompletionTokens.has(saved.completionToken)) continue;
+      const tokens = prerequisiteTokens(exercise);
+      if (tokens === null) throw new Error(`Restore stopped: ${exercise.predicate} still has an unchecked prerequisite.`);
+      progressStatus(`Restoring ${index + 1} of ${ordered.length}: ${exercise.predicate}…`);
+      const revision = ++state.revision;
+      const payload = { exerciseId: exercise.id, body: saved.body, metric: saved.metric, revision,
+        ...(channel ? { channel } : {}), ...(tokens.length ? { prerequisiteTokens: tokens } : {}) };
+      const feedback = await learnerJSON('api/feedback', payload, controller.signal, current);
+      if (!current()) return;
+      if (feedback.status !== 'ok' || feedback.distance !== 0 || feedback.exerciseId !== exercise.id
+        || feedback.revision !== revision || feedback.requestedMetric !== saved.metric || feedback.metric !== METRICS[saved.metric].id
+        || feedback.contentVersion !== exerciseVersion(exercise) || !validVersion(feedback.evidenceToken)
+        || !validVersion(feedback.dependencyContextVersion)) throw new Error(`Restore stopped: ${exercise.predicate} needs another check.`);
+      const behavior = await learnerJSON('api/behavior', { ...payload, evidenceToken: feedback.evidenceToken }, controller.signal, current);
+      if (!current()) return;
+      if (!validBehaviorResult(behavior) || !completedBehavior(behavior) || behavior.exerciseId !== exercise.id || behavior.revision !== revision
+        || behavior.contentVersion !== exerciseVersion(exercise) || behavior.dependencyContextVersion !== feedback.dependencyContextVersion
+        || !validToken(behavior.completionToken)) throw new Error(`Restore stopped: ${exercise.predicate} is not a completed solution within the current bounds.`);
+      state.completedBodies.set(exercise.id, { ...saved, completionToken: behavior.completionToken,
+        dependencyContextVersion: behavior.dependencyContextVersion, prerequisiteTokens: [...tokens] });
+      state.validCompletionTokens.add(behavior.completionToken); persistProgress(); renderExercises();
+    }
+    if (current()) {
+      progressStatus('Saved implementations checked. Their dependent practices are available.');
+      if (savedSelection && state.exercise?.id === savedSelection) { applyPracticeLock(); renderContext(); }
+    }
+  } catch (error) { if (current()) progressStatus(error.message); }
+  finally {
+    if (state.progressRestore === controller) {
+      state.progressRestore = null;
+      $('#cancel-restore-progress').hidden = true; $('#restore-progress').disabled = false;
+      applyPracticeLock();
+    }
+  }
 }
 
 function exerciseVersion(exercise) {
@@ -94,6 +547,18 @@ function solvedExercise(exercise) {
   return Boolean(saved && (saved.version === exerciseVersion(exercise)));
 }
 
+function completedBehavior(result) {
+  return result.scoreStatus === 'ok' && result.scoreReason === 'OK' && result.score === 1
+    && result.sampling.semanticCounterexamples === 0
+    && result.sampling.positiveTested > 0 && result.sampling.negativeTested > 0
+    && result.sampling.positiveAccepted === result.sampling.positiveTested
+    && result.sampling.negativeRejected === result.sampling.negativeTested
+    && ['both', 'neither'].every(id => result.categories.some(category => category.id === id
+      && category.status === 'sat' && category.instances.length > 0))
+    && ['undercoverage', 'overcoverage'].every(id => result.categories.some(category => category.id === id
+      && category.status === 'unsat' && category.enumerationComplete && category.instances.length === 0));
+}
+
 function recordSolvedExercise(result, payload, selection, metric) {
   const structural = state.structuralCompletionEvidence;
   if (!structural || structural.distance !== 0 || structural.exerciseId !== payload.exerciseId
@@ -103,18 +568,11 @@ function recordSolvedExercise(result, payload, selection, metric) {
     || payload.exerciseId !== state.exercise?.id || payload.body !== elements.editor.value
     || structural.version !== exerciseVersion(state.exercise)
     || structural.responseVersion !== structural.version || (result.contentVersion ?? null) !== structural.version
-    || result.scoreStatus !== 'ok' || result.scoreReason !== 'OK' || result.score !== 1
-    || result.sampling.semanticCounterexamples !== 0
-    || result.sampling.positiveTested <= 0 || result.sampling.negativeTested <= 0
-    || result.sampling.positiveAccepted !== result.sampling.positiveTested
-    || result.sampling.negativeRejected !== result.sampling.negativeTested
-    || !['both', 'neither'].every(id => result.categories.some(category => category.id === id
-      && category.status === 'sat' && category.instances.length > 0))
-    || !['undercoverage', 'overcoverage'].every(id => result.categories.some(category => category.id === id
-      && category.status === 'unsat' && category.enumerationComplete && category.instances.length === 0))) return;
+    || !completedBehavior(result)) return;
   state.solved.set(payload.exerciseId, { version: structural.version, at: Date.now(), metric });
   saveSolvedExercises();
   renderExercises();
+  return true;
 }
 
 function renderWorkspaceBadge() {
@@ -130,7 +588,10 @@ function historyStorageKey() {
 }
 
 function loadHistory() {
-  const saved = state.exercise ? readStorage(historyStorageKey(), []) : [];
+  const legacy = state.exercise ? readStorage(historyStorageKey(), []) : [];
+  const restored = state.savedRecords.get(state.exercise?.id)?.history?.[state.metric];
+  const stamp = state.exercise ? readStorage(`${historyStorageKey()}:progress`, null) : null;
+  const saved = restored && stamp !== state.progressSavedAt ? restored : legacy;
   state.history = (Array.isArray(saved) ? saved : []).filter(item => item
     && item.basis === METRICS[state.metric].basis && typeof item.distance === 'number'
     && Number.isFinite(item.distance) && item.distance >= 0 && typeof item.at === 'number').slice(-12);
@@ -153,7 +614,7 @@ function renderMetric() {
 function selectMetric() {
   const metric = elements.metric.value;
   if (!Object.hasOwn(METRICS, metric) || metric === state.metric) return;
-  invalidateFeedback();
+  cancelProgressRestore(); invalidateFeedback();
   state.metric = metric;
   writeStorage('metric', metric);
   renderMetric();
@@ -383,21 +844,21 @@ function visibleExercises() {
 
 function renderExerciseNavigation(visible = visibleExercises()) {
   const index = visible.findIndex(exercise => exercise.id === state.exercise?.id);
-  const ready = index >= 0 && !elements.editor.disabled;
+  const ready = index >= 0 && !state.loadingExercise && (!elements.editor.disabled || lockedExercise(state.exercise));
   elements.previousExercise.disabled = !ready || index === 0;
   elements.nextExercise.disabled = !ready || index === visible.length - 1;
   const filtered = Boolean(elements.search.value.trim() || elements.group.value);
   elements.exercisePosition.textContent = !visible.length ? 'No matching exercises'
     : state.loadingExercise ? 'Loading exercise…'
       : index < 0 ? (state.exercise ? 'Select a matching exercise' : 'Choose an exercise')
-        : elements.editor.disabled ? 'Choose an exercise to continue'
+        : elements.editor.disabled ? (lockedExercise(state.exercise) ? `${index + 1} of ${visible.length} · Prerequisites required` : 'Choose an exercise to continue')
         : `${index + 1} of ${visible.length}${filtered ? ' matching exercises' : ' exercises'}`;
   elements.previousExercise.title = ready && index > 0 ? `Previous: ${visible[index - 1].title}` : 'Previous exercise';
   elements.nextExercise.title = ready && index < visible.length - 1 ? `Next: ${visible[index + 1].title}` : 'Next exercise';
 }
 
 function navigateExercise(offset) {
-  if (elements.editor.disabled) return;
+  if (!state.exercise || state.loadingExercise) return;
   const visible = visibleExercises();
   const index = visible.findIndex(exercise => exercise.id === state.exercise?.id);
   if (index < 0) return;
@@ -419,7 +880,9 @@ function renderExercises() {
     button.type = 'button';
     button.dataset.exerciseId = exercise.id;
     const solved = solvedExercise(exercise);
+    const locked = lockedExercise(exercise);
     button.dataset.solved = String(solved);
+    button.dataset.locked = String(locked);
     button.setAttribute('aria-label', `${exercise.title}, ${exercise.group || 'Exercise'}${solved ? ', Solved' : ''}`);
     if (state.exercise?.id === exercise.id) button.setAttribute('aria-current', 'page');
     const text = node('span', 'exercise-item-text');
@@ -430,6 +893,11 @@ function renderExercises() {
       check.setAttribute('aria-hidden', 'true');
       check.title = 'Solved: zero edit distance and 1.000 behavioral score, with no bounded counterexamples.';
       button.append(check);
+    }
+    if (locked) {
+      const lock = node('span', 'exercise-item-lock', '🔒'); lock.setAttribute('aria-hidden', 'true');
+      lock.title = `Complete ${(dependencyList(exercise) || []).map(item => item.predicate).join(', ') || 'the prerequisites'} first.`;
+      button.append(lock);
     }
     if (state.exercise?.id === exercise.id) button.append(node('span', 'exercise-item-arrow', '›'));
     button.addEventListener('click', () => selectExercise(exercise.id));
@@ -695,20 +1163,41 @@ function updateCursor() {
 
 function saveDraft() {
   if (!state.exercise) return;
-  writeStorage(`draft:${state.exercise.id}`, { body: elements.editor.value, source: state.exercise.source?.sha256, updatedAt: Date.now() });
+  const draft = { body: elements.editor.value, source: state.exercise.source?.sha256,
+    version: exerciseVersion(state.exercise), updatedAt: Date.now(), progressSavedAt: state.progressSavedAt };
+  const written = writeStorage(`draft:${state.exercise.id}`, draft);
+  if (written) state.memoryDrafts.delete(state.exercise.id);
+  else if ((state.memoryDrafts.has(state.exercise.id) || state.memoryDrafts.size < MAX_PROGRESS_RECORDS)
+    && draft.body.length <= BODY_BYTES) state.memoryDrafts.set(state.exercise.id, draft);
+  else {
+    progressStatus('Browser storage is unavailable and the in-memory draft limit is full. Your code stays in this editor; download the model before leaving.'); return false;
+  }
   elements.draft.textContent = state.storageAvailable ? 'Draft saved' : 'Draft in memory';
+  return true;
 }
 
 function renderContext() {
   if (!state.exercise) return;
   const exercise = state.exercise;
-  renderAlloyCode($('#environment-code'), exercise.environmentBefore + exercise.predicateHeader
-    + '{\n  // TODO: write the predicate body in the editor above\n}' + exercise.environmentAfter);
+  let environment;
+  try { environment = resolvedEnvironment(exercise); }
+  catch { environment = exercise; }
+  renderAlloyCode($('#environment-code'), environment.environmentBefore + exercise.predicateHeader
+    + '{\n  // TODO: write the predicate body in the editor above\n}' + environment.environmentAfter);
+  const used = $('#dependency-implementations');
+  try {
+    const names = [...dependencyClosure(exercise)].filter(id => {
+      const saved = state.completedBodies.get(id); return saved && state.validCompletionTokens.has(saved.completionToken);
+    }).map(id => state.exercises.find(item => item.id === id)?.predicate || id);
+    used.hidden = !names.length; used.textContent = names.length
+      ? `Using your last checked implementations of ${names.join(', ')}. New drafts do not replace these until checked successfully.` : '';
+  } catch { used.hidden = true; }
 }
 
-async function selectExercise(id) {
+async function selectExercise(id, { restoring = false } = {}) {
+  if (!restoring) cancelProgressRestore();
   if (state.exercise?.id === id && !elements.editor.disabled) return;
-  if (state.exercise && !elements.editor.disabled) saveDraft();
+  if (state.exercise && !elements.editor.disabled && !saveDraft()) return;
   invalidateFeedback();
   const selection = ++state.selection;
   state.detailAbort?.abort();
@@ -730,7 +1219,9 @@ async function selectExercise(id) {
     state.exercise = exercise;
     const summary = state.exercises.find(item => item.id === exercise.id);
     if (summary) {
-      for (const field of ['title', 'group', 'predicate', 'description', 'contentVersion']) summary[field] = exercise[field];
+      for (const field of ['title', 'group', 'predicate', 'description', 'contentVersion', 'dependencies']) {
+        if (exercise[field] !== undefined) summary[field] = exercise[field];
+      }
     }
     const completion = state.solved.get(exercise.id);
     if (completion && completion.version !== exerciseVersion(exercise)) {
@@ -740,8 +1231,12 @@ async function selectExercise(id) {
     state.loadingExercise = false;
     state.context = 'before';
     loadHistory();
-    const draft = readStorage(`draft:${id}`, null);
-    elements.editor.value = draft && typeof draft.body === 'string' && draft.source === exercise.source?.sha256 ? draft.body : exercise.starter;
+    const legacy = state.memoryDrafts.get(id) || readStorage(`draft:${id}`, null), saved = state.savedRecords.get(id);
+    const fileDraft = saved?.contentVersion === exerciseVersion(exercise) && saved?.sourceSha256 === exercise.source?.sha256
+      && saved.draft ? { ...saved.draft, source: saved.sourceSha256, version: saved.contentVersion } : null;
+    const draft = fileDraft && (!legacy || legacy.progressSavedAt !== state.progressSavedAt) ? fileDraft : legacy;
+    elements.editor.value = draft && typeof draft.body === 'string' && draft.source === exercise.source?.sha256
+      && (!draft.version || draft.version === exerciseVersion(exercise)) ? draft.body : exercise.starter;
     elements.editor.disabled = false;
     elements.check.disabled = false;
     elements.reset.disabled = false;
@@ -764,7 +1259,8 @@ async function selectExercise(id) {
     renderContext();
     renderHistory();
     showWaiting();
-    if (elements.live.checked) scheduleFeedback(200);
+    applyPracticeLock(); renderExercises();
+    if (elements.live.checked && !elements.editor.disabled && !restoring) scheduleFeedback(200);
   } catch (error) {
     if (error.name === 'AbortError' || selection !== state.selection) return;
     state.loadingExercise = false;
@@ -780,6 +1276,7 @@ function scheduleFeedback(delay = 650) {
 }
 
 function onEdit() {
+  cancelProgressRestore();
   invalidateFeedback();
   updateEditor();
   saveDraft();
@@ -788,9 +1285,12 @@ function onEdit() {
 }
 
 function checkPredicate() {
+  if (state.progressRestore) cancelProgressRestore();
   clearTimeout(state.timer);
   if (!state.exercise || elements.editor.disabled) return;
-  const identity = JSON.stringify([state.exercise.id, state.selection, state.metric, elements.editor.value]);
+  const tokens = prerequisiteTokens(state.exercise);
+  if (tokens === null) { applyPracticeLock(); return; }
+  const identity = JSON.stringify([state.exercise.id, state.selection, state.metric, elements.editor.value, tokens]);
   if (state.checkFlight?.identity === identity) return state.checkFlight.promise;
   const flight = { identity, promise: null };
   state.checkFlight = flight;
@@ -815,6 +1315,8 @@ async function runPredicateCheck() {
   const selection = state.selection;
   const body = elements.editor.value;
   const metric = state.metric;
+  const tokens = prerequisiteTokens(state.exercise);
+  if (tokens === null) { applyPracticeLock(); return; }
   const current = () => revision === state.revision && selection === state.selection && metric === state.metric
     && exerciseId === state.exercise?.id && body === elements.editor.value && !controller.signal.aborted;
   saveDraft();
@@ -828,9 +1330,13 @@ async function runPredicateCheck() {
     const { channel } = await ensureChannel(controller.signal);
     if (!current()) return;
     // Fallback omits the channel field entirely; a present JSON null is rejected.
-    const channelField = channel ? { channel } : {};
+    const channelField = { ...(channel ? { channel } : {}), ...(tokens.length ? { prerequisiteTokens: tokens } : {}) };
     const result = await learnerJSON('api/feedback', { exerciseId, body, revision, metric, ...channelField }, controller.signal, current);
     if (revision !== state.revision || selection !== state.selection || metric !== state.metric || exerciseId !== state.exercise?.id || body !== elements.editor.value || controller.signal.aborted) return;
+    if (result.status === 'locked') {
+      rejectPrerequisites(result, tokens); return;
+    }
+    if (tokens.length && !validVersion(result.dependencyContextVersion)) throw new Error('Feedback could not be matched to your prerequisite implementations.');
     // Atom order is registered by SessionBridge.feedbackAtomNames.
     if (result.status === 'ok' && !verifiedPolicy('feedbackSuccess', [
       revision === state.revision, selection === state.selection, metric === state.metric,
@@ -852,7 +1358,8 @@ async function runPredicateCheck() {
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
       state.structuralCompletionEvidence = { exerciseId, revision, selection, body, metric,
-        distance: result.distance, version: exerciseVersion(state.exercise), responseVersion: result.contentVersion ?? null };
+        distance: result.distance, version: exerciseVersion(state.exercise), responseVersion: result.contentVersion ?? null,
+        dependencyContextVersion: result.dependencyContextVersion ?? null };
       state.education = { context: { exerciseId, revision, selection, body, metric }, phase: 'waiting',
         operationIds: (Array.isArray(result.operations) ? result.operations : []).map((_, index) => `operation-${index + 1}`),
         operations: new Map(), instances: new Map() };
@@ -862,10 +1369,11 @@ async function runPredicateCheck() {
     renderFeedback(result, result.exerciseId === exerciseId && result.revision === revision
       ? { exerciseId, revision, selection, body, metric } : null);
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0 && state.lastHistoryBody !== body) {
-      state.history.push({ distance: result.distance, at: Date.now(), basis: METRICS[metric].basis });
+      state.history.push({ distance: result.distance, at: Math.max(Date.now(), state.progressSavedAt + 1), basis: METRICS[metric].basis });
       state.history = state.history.slice(-12);
       state.lastHistoryBody = body;
       writeStorage(historyStorageKey(), state.history);
+      writeStorage(`${historyStorageKey()}:progress`, state.progressSavedAt);
       renderHistory();
     }
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
@@ -1373,9 +1881,11 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
   let allowExplanation = true;
   try {
     if (!current()) return;
-    const { evidenceToken: structuralEvidence, ...behaviorPayload } = payload;
-    const result = await learnerJSON('api/behavior', behaviorPayload, controller.signal, current);
+    const result = await learnerJSON('api/behavior', payload, controller.signal, current);
     if (!current()) return;
+    if (result.status === 'locked') {
+      rejectPrerequisites(result, payload.prerequisiteTokens || []); allowExplanation = false; return;
+    }
     if (['superseded', 'expired'].includes(result.status)) allowExplanation = false;
     if (result.exerciseId !== payload.exerciseId || result.revision !== payload.revision) throw new Error('Behavioral feedback for this draft is unavailable. Check your predicate again.');
     if (result.status !== 'ok') {
@@ -1390,7 +1900,12 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
       return;
     }
     if (!validBehaviorResult(result)) throw new Error('The behavioral checker returned an invalid result. Check your predicate again.');
-    recordSolvedExercise(result, payload, selection, metric);
+    const structuralContext = state.structuralCompletionEvidence?.dependencyContextVersion;
+    if ((structuralContext && result.dependencyContextVersion !== structuralContext)
+      || (payload.prerequisiteTokens?.length && !validVersion(result.dependencyContextVersion))) {
+      throw new Error('Behavioral feedback could not be matched to your prerequisite implementations.');
+    }
+    if (recordSolvedExercise(result, payload, selection, metric)) recordVerifiedImplementation(result, payload, metric);
     state.behaviorEvidence = { token: typeof result.behaviorToken === 'string' && /^[a-f0-9]{64}$/.test(result.behaviorToken) ? result.behaviorToken : null,
       instanceIds: result.categories.flatMap(category => category.instances.map((_, index) => `${category.id}-${index + 1}`)) };
     renderBehavior(result);
@@ -1485,6 +2000,10 @@ async function requestExplanation(payload, selection) {
     if (!current()) return;
     const explanation = await learnerJSON('api/explain', payload, controller.signal, current);
     if (!current()) return;
+    const structuralContext = state.structuralCompletionEvidence?.dependencyContextVersion;
+    if (explanation.status === 'ok' && structuralContext && explanation.dependencyContextVersion !== structuralContext) {
+      throw new Error('Guidance could not be matched to your prerequisite implementations. Check again.');
+    }
     if (explanation.status !== 'ok' && (explanation.exerciseId !== payload.exerciseId || explanation.revision !== payload.revision)) throw new Error('Guidance for this draft is unavailable. Please check again.');
     if (explanation.status !== 'ok' && !responseMetricMatches(explanation, payload.metric)) throw new Error('Guidance for this comparison method is unavailable. Check again or retry guidance.');
     const container = $('#luna-explanation-body');
@@ -1569,7 +2088,9 @@ function showError(message, retry) {
 function downloadModel() {
   const exercise = state.exercise;
   if (!exercise) return;
-  const fullModel = (exercise.environmentBefore || '') + (exercise.predicateHeader || '') + '{\n' + elements.editor.value + '\n}' + (exercise.environmentAfter || '');
+  let environment;
+  try { environment = resolvedEnvironment(exercise); } catch (error) { progressStatus(error.message); return; }
+  const fullModel = environment.environmentBefore + (exercise.predicateHeader || '') + '{\n' + elements.editor.value + '\n}' + environment.environmentAfter;
   const blob = new Blob([fullModel], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -1595,6 +2116,11 @@ async function initialize() {
   elements.previousExercise.addEventListener('click', () => navigateExercise(-1));
   elements.nextExercise.addEventListener('click', () => navigateExercise(1));
   elements.metric.addEventListener('change', selectMetric);
+  $('#save-progress').addEventListener('click', saveProgressFile);
+  $('#load-progress').addEventListener('click', () => $('#progress-file').click());
+  $('#progress-file').addEventListener('change', event => loadProgressFile(event.target.files[0]));
+  $('#restore-progress').addEventListener('click', restoreProgressChecks);
+  $('#cancel-restore-progress').addEventListener('click', () => cancelProgressRestore());
   elements.editor.addEventListener('input', onEdit);
   elements.editor.addEventListener('scroll', syncEditorOverlay);
   new ResizeObserver(syncEditorOverlay).observe(elements.editor);
@@ -1636,6 +2162,7 @@ async function initialize() {
     if (previous !== elements.editor.value) showToast('Restored the starter predicate.');
   });
   elements.live.addEventListener('change', () => {
+    cancelProgressRestore();
     writeStorage('live', elements.live.checked);
     if (elements.live.checked) scheduleFeedback(0);
     else { clearTimeout(state.timer); }
@@ -1650,6 +2177,7 @@ async function initialize() {
     elements.editor.focus();
   });
   window.addEventListener('beforeunload', () => {
+    cancelProgressRestore();
     if (!elements.editor.disabled) saveDraft();
     if (state.checkFlight || state.explainAbort) cancelChannel(state.revision + 1);
   });
@@ -1657,12 +2185,20 @@ async function initialize() {
 }
 
 async function loadExercises() {
+  cancelProgressRestore();
   $('#startup-error').hidden = true;
   try {
     const data = await fetchJSON('api/exercises', { cache: 'no-cache' });
     if (!Array.isArray(data.exercises)) throw new Error('The exercise catalog could not be read.');
     state.exercises = data.exercises;
     loadSolvedExercises();
+    const progress = readStorage('progress', null);
+    if (progress !== null) {
+      try {
+        applyProgress(parseProgress(JSON.stringify(progress)));
+        await validateCompletionTokens();
+      } catch (error) { state.validCompletionTokens.clear(); progressStatus(error.message); }
+    }
     $('#exercise-count').textContent = String(state.exercises.length);
     elements.group.replaceChildren(new Option('All models', ''));
     [...new Set(state.exercises.map((exercise) => exercise.group).filter(Boolean))].forEach((group) => elements.group.append(new Option(group, group)));

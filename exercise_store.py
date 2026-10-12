@@ -40,7 +40,7 @@ FIELD_MAP = {'id': 'id', 'title': 'title', 'group': 'model_group',
 IMPORT_REQUIRED = frozenset(('id', 'title', 'group', 'predicate', 'description',
                              'environmentBefore', 'environmentAfter', 'predicateHeader',
                              'starter', 'oracleSolutions'))
-IMPORT_OPTIONAL = frozenset(('correctSolutions', 'equivalenceScope'))
+IMPORT_OPTIONAL = frozenset(('correctSolutions', 'equivalenceScope', 'practicePlan', 'sourceInspectionSha256'))
 PUBLIC_VERSION_FIELDS = ('id', 'title', 'group', 'predicate', 'description',
                          'environmentBefore', 'environmentAfter', 'predicateHeader', 'starter')
 MAX_APPROVALS_PER_EXERCISE = 100
@@ -61,12 +61,20 @@ def sha(value):
 
 def content_version(record):
     """Public content identity; never hash private solution material into it."""
-    return sha(encoded({key: record[key] for key in PUBLIC_VERSION_FIELDS}))
+    values = {key: record[key] for key in PUBLIC_VERSION_FIELDS}
+    if 'practicePlan' in record:
+        from practice_dependencies import public_plan
+        values['practicePlan'] = public_plan(record)
+    return sha(encoded(values))
 
 
 def exercise_version(record):
     """Stable private authority identity, independent of approved pool additions."""
-    return sha(encoded(dict(public={key: record[key] for key in PUBLIC_VERSION_FIELDS},
+    public = {key: record[key] for key in PUBLIC_VERSION_FIELDS}
+    if 'practicePlan' in record:
+        from practice_dependencies import public_plan
+        public['practicePlan'] = public_plan(record)
+    return sha(encoded(dict(public=public,
                             oracleBody=record['oracleBody'], source=record['source'])))
 
 
@@ -159,6 +167,14 @@ def model(record, value):
 
 
 def validate_record_fields(record, references, *, authored=False):
+    from practice_dependencies import validate_plan, validation_record
+    validate_plan(record)
+    private = validation_record(record)
+    if ('practicePlan' in record) != ('sourceInspectionSha256' in record):
+        raise StoreError('Incomplete private practice inspection binding.')
+    if 'sourceInspectionSha256' in record and (type(record['sourceInspectionSha256']) is not str
+            or not re.fullmatch('[a-f0-9]{64}', record['sourceInspectionSha256'])):
+        raise StoreError('Invalid private practice inspection binding.')
     if not ID.fullmatch(text(record['id'], 128, empty=False)):
         raise StoreError('Invalid exercise identifier.')
     if not NAME.fullmatch(text(record['predicate'], 128, empty=False)):
@@ -205,6 +221,8 @@ def validate_record_fields(record, references, *, authored=False):
         body(value)
         if len(model(record, value).encode('utf-8')) > 262144:
             raise StoreError('Model exceeds the private import limit.')
+        if len(model(private, value).encode('utf-8')) > 262144:
+            raise StoreError('Private validation model exceeds the import limit.')
     # Reserve the worst JSON encoding of any future allowed learner body (a
     # control byte expands to six ASCII bytes), for all engine entry points.
     learner = '\x01' * 8192
@@ -317,7 +335,9 @@ def _snapshot(connection):
         if row['ordinal'] != index:
             raise StoreError('Invalid exercise order.')
         record = parse_json(row['metadata'])
-        if set(record) != {'source','descriptionProvenance','sourceClassification','preservation'}:
+        required_metadata = {'source','descriptionProvenance','sourceClassification','preservation'}
+        if (not required_metadata <= set(record)
+                or set(record) - required_metadata - {'practicePlan', 'sourceInspectionSha256'}):
             raise StoreError('Invalid exercise metadata.')
         record.update({key: row[column] for key, column in FIELD_MAP.items()})
         entries = solutions.pop(record['id'], [])
@@ -357,7 +377,31 @@ def _snapshot(connection):
                                  for identifier, (_, _, certificate) in authored_documents.items()}
     result.exercise_ordinals = {row['id']: row['ordinal'] for row in records}
     _apply_extensions(result, extensions)
+    _validate_dependency_library(result)
     return result
+
+
+def _validate_dependency_library(snapshot):
+    """Removing or losing an active prerequisite cannot leave executable orphans."""
+    from practice_dependencies import validate_plan
+    for record in snapshot.exercises.values():
+        plan = validate_plan(record)
+        if not plan:
+            continue
+        if any(identifier not in snapshot.exercises for identifier in plan['dependencies']):
+            raise StoreError('A prerequisite is missing. Remove dependent practices first.')
+        for identifier in plan['dependencies']:
+            dependency = snapshot.exercises[identifier]
+            if dependency['group'] != record['group'] or 'practicePlan' not in dependency:
+                raise StoreError('Practice dependency context changed.')
+        ordered = []
+        for identifier in plan['direct']:
+            dependency = snapshot.exercises[identifier]
+            for ancestor in dependency['practicePlan']['dependencies'] + [identifier]:
+                if ancestor not in ordered:
+                    ordered.append(ancestor)
+        if ordered != plan['dependencies']:
+            raise StoreError('Practice dependency closure changed.')
 
 
 def load_store(root, database_path=None):
@@ -387,6 +431,8 @@ def _size_guard(connection):
 
 def _approval_document(record, candidate_body, scope):
     return {**{key: record[key] for key in IMPORT_REQUIRED if key != 'oracleSolutions'},
+            **({key: record[key] for key in ('practicePlan', 'sourceInspectionSha256')}
+               if 'practicePlan' in record else {}),
             'starter': candidate_body, 'oracleSolutions': [record['oracleBody']],
             'correctSolutions': [candidate_body], 'equivalenceScope': scope}
 
@@ -396,6 +442,9 @@ def validate_approval(record, candidate_body, certificate, *, minimum_scope=5):
     body(candidate_body)
     keys = {'kind','version','result','environmentSha256','bodySha256','starterSha256',
             'engineSha256','dependencySha256'}
+    version = 2 if 'practicePlan' in record else 1
+    if version == 2:
+        keys |= {'validationEnvironmentSha256', 'dependencyPlanSha256', 'sourceInspectionSha256'}
     if type(certificate) is not dict or set(certificate) != keys:
         raise StoreError('Missing candidate equivalence provenance.')
     result = certificate['result']
@@ -404,7 +453,7 @@ def validate_approval(record, candidate_body, certificate, *, minimum_scope=5):
                     solver='SAT4J', oracleCount=1, correctCount=1, evaluatedCandidates=2,
                     moduleFacts=True, factsSatisfiable=True)
     if (certificate['kind'] != 'alloy-bounded-equivalence' or type(certificate['version']) is not int
-            or certificate['version'] != 1 or type(scope) is not int
+            or certificate['version'] != version or type(scope) is not int
             or not max(5, minimum_scope) <= scope <= 8 or result != expected
             or any(type(result[k]) is not type(v) for k, v in expected.items())
             or certificate['environmentSha256'] != environment_sha256(record)
@@ -413,6 +462,7 @@ def validate_approval(record, candidate_body, certificate, *, minimum_scope=5):
             or type(certificate['engineSha256']) is not str
             or not re.fullmatch('[a-f0-9]{64}', certificate['engineSha256'])):
         raise StoreError('Candidate equivalence provenance changed.')
+    _validate_certificate_dependency_context(record, certificate)
     dependencies = certificate['dependencySha256']
     if (type(dependencies) is not dict or set(dependencies) != set(JAR_FILES)
             or any(type(value) is not str or not re.fullmatch('[a-f0-9]{64}', value)
@@ -514,6 +564,9 @@ def _change_question(root, identifier, expected_version, title, question, *, gua
         snapshot = _snapshot(connection)
         library_detail(snapshot, identifier, expected_version)
         if title is None:
+            if any(identifier in record.get('practicePlan', {}).get('dependencies', [])
+                   for record in snapshot.exercises.values() if record['id'] != identifier):
+                raise StoreError('Remove dependent practices before removing this prerequisite.')
             _insert(connection, 'auxiliary', dict(kind='adminRemoved', ordinal=snapshot.exercise_ordinals[identifier],
                     payload=encoded(dict(exerciseId=identifier, exerciseVersion=expected_version,
                                          removedAt=int(time.time() * 1000))), original_source=''))
@@ -653,6 +706,10 @@ def normalize_import(document):
     if type(scope) is not int or not 1 <= scope <= 8:
         raise StoreError('Equivalence scope must be an integer from 1 to 8.')
     record = {k:document[k] for k in IMPORT_REQUIRED if k != 'oracleSolutions'}
+    if 'practicePlan' in document:
+        record['practicePlan'] = document['practicePlan']
+    if 'sourceInspectionSha256' in document:
+        record['sourceInspectionSha256'] = document['sourceInspectionSha256']
     validate_record_fields(record, oracles + correct, authored=True)
     hashes = [body_token_sha256(value) for value in oracles + correct]
     if len(set(hashes)) != len(hashes):
@@ -675,10 +732,14 @@ def _engine_identity(classpath):
 def _validation_payload(document):
     """Normalize one import and retain its existing bounded validator wire."""
     record, oracles, correct, scope = normalize_import(document)
+    from practice_dependencies import validation_record
+    private = validation_record(record)
     payload = dict(predicate=record['predicate'],
-                   sourcePrefix=record['environmentBefore'] + record['predicateHeader'] + '{\n',
-                   sourceSuffix='\n}' + record['environmentAfter'], starter=record['starter'],
+                   sourcePrefix=private['environmentBefore'] + record['predicateHeader'] + '{\n',
+                   sourceSuffix='\n}' + private['environmentAfter'], starter=record['starter'],
                    oracleBodies=oracles, correctBodies=correct, scope=scope)
+    if 'practicePlan' in record:
+        payload['blockedPredicates'] = record['practicePlan']['blockedPredicates']
     if len(json.dumps(payload).encode('utf-8')) > MAX_ENGINE:
         raise StoreError('Validation request exceeds the engine limit.')
     return payload
@@ -698,10 +759,25 @@ def _validation_certificate(document, result, identity):
     if any(type(result.get(k)) is not type(v) or result[k] != v for k,v in expected.items()):
         raise StoreError('Incomplete Alloy validation result.')
     # Do not retain unrestricted worker strings in the validation record.
-    return dict(kind='alloy-bounded-equivalence',version=1,result=expected,
+    certificate = dict(kind='alloy-bounded-equivalence',version=2 if 'practicePlan' in record else 1,result=expected,
                 environmentSha256=environment_sha256(record),
                 bodySha256=[sha(v) for v in oracles + correct],starterSha256=sha(record['starter']),
                 **identity)
+    if 'practicePlan' in record:
+        from practice_dependencies import dependency_plan_sha, validation_record
+        certificate.update(validationEnvironmentSha256=environment_sha256(validation_record(record)),
+                           dependencyPlanSha256=dependency_plan_sha(record),
+                           sourceInspectionSha256=record['sourceInspectionSha256'])
+    return certificate
+
+
+def _validate_certificate_dependency_context(record, certificate):
+    if 'practicePlan' in record:
+        from practice_dependencies import dependency_plan_sha, validation_record
+        if (certificate['validationEnvironmentSha256'] != environment_sha256(validation_record(record))
+                or certificate['dependencyPlanSha256'] != dependency_plan_sha(record)
+                or certificate['sourceInspectionSha256'] != record['sourceInspectionSha256']):
+            raise StoreError('Practice dependency validation provenance changed.')
 
 
 def validate_import(root, document, *, java='java', timeout=60):
@@ -738,9 +814,15 @@ def _validate_authored(record, entries, certificate):
             or (provenance == 'Administrator reviewed' and (type(preservation) is not dict
                 or set(preservation) != {'adminUploadSha256', 'modelId'}))):
         raise StoreError('Invalid authored source provenance.')
-    if set(certificate) != {'kind','version','result','environmentSha256','bodySha256','starterSha256','engineSha256','dependencySha256'}:
+    keys = {'kind','version','result','environmentSha256','bodySha256','starterSha256','engineSha256','dependencySha256'}
+    version = 2 if 'practicePlan' in record else 1
+    if version == 2:
+        if provenance != 'Administrator reviewed':
+            raise StoreError('Practice dependencies require a private upload source witness.')
+        keys |= {'validationEnvironmentSha256', 'dependencyPlanSha256', 'sourceInspectionSha256'}
+    if set(certificate) != keys:
         raise StoreError('Missing equivalence provenance.')
-    if certificate['kind'] != 'alloy-bounded-equivalence' or type(certificate['version']) is not int or certificate['version'] != 1:
+    if certificate['kind'] != 'alloy-bounded-equivalence' or type(certificate['version']) is not int or certificate['version'] != version:
         raise StoreError('Unsupported equivalence provenance.')
     oracle_count = sum(x['kind'] == 'oracle' for x in entries)
     if (not oracle_count or any(x['kind'] != ('oracle' if i < oracle_count else 'correct-author') for i,x in enumerate(entries))
@@ -759,6 +841,7 @@ def _validate_authored(record, entries, certificate):
             or certificate['starterSha256'] != sha(record['starter'])
             or not re.fullmatch('[a-f0-9]{64}', certificate['engineSha256'])):
         raise StoreError('Equivalence provenance changed.')
+    _validate_certificate_dependency_context(record, certificate)
     dependencies = certificate['dependencySha256']
     if (type(dependencies) is not dict or set(dependencies) != set(JAR_FILES)
             or any(type(value) is not str or not re.fullmatch('[a-f0-9]{64}',value) for value in dependencies.values())):
@@ -819,6 +902,8 @@ def read_import(path):
 
 def _upload_document(record, entries, certificate):
     return {**{key: record[key] for key in IMPORT_REQUIRED if key != 'oracleSolutions'},
+            **({key: record[key] for key in ('practicePlan', 'sourceInspectionSha256')}
+               if 'practicePlan' in record else {}),
             'oracleSolutions': [item['body'] for item in entries if item['kind'] == 'oracle'],
             'correctSolutions': [item['body'] for item in entries if item['kind'] != 'oracle'],
             'equivalenceScope': certificate['result']['scope']}

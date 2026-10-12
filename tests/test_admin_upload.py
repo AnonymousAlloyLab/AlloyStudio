@@ -79,7 +79,7 @@ class AdminUploadTests(unittest.TestCase):
     def test_multiple_standalones_have_independent_private_solutions(self):
         result = prepared(BASE + 'pred firstRule {some Node}\npred secondRule {no Node}\n')
         self.assertEqual([item['predicate'] for item in result['documents']], ['firstRule', 'secondRule'])
-        self.assertEqual(result['witness']['version'], 2)
+        self.assertEqual(result['witness']['version'], 3)
         for document, witness in zip(result['documents'], result['witness']['groups']):
             environment = document['environmentBefore'] + document['environmentAfter']
             sibling = 'secondRule' if document['predicate'] == 'firstRule' else 'firstRule'
@@ -167,21 +167,28 @@ class AdminUploadTests(unittest.TestCase):
             with self.subTest(declaration=declaration):
                 self.rejected(BASE + declaration + '\npred inv1C1 {some Node}\n')
 
-    def test_private_run_assert_fact_and_retained_helper_references_rejected(self):
+    def test_private_forwarding_preserves_dormant_callers_but_facts_and_group_cycles_reject(self):
         variants = 'pred inv1C0 {some Node}\npred inv1C1 {not no Node}\n'
-        for suffix in ('run inv1C0', 'run {inv1C0}', 'assert checked {inv1C0}',
-                       'fact {inv1C0}', 'pred helper[n:Node] {inv1C0}',
-                       'pred inv1 {inv1C0}'):
+        for suffix in ('fact {inv1C0}', 'pred inv1 {inv1C0}'):
             with self.subTest(suffix=suffix):
                 self.rejected(BASE + variants + suffix + '\n')
+        for suffix in ('run inv1C0', 'run {inv1C0}', 'assert checked {inv1C0}',
+                       'pred helper[n:Node] {inv1C0}'):
+            with self.subTest(suffix=suffix):
+                result = prepared(BASE + variants + suffix + '\n')
+                self.assertTrue(validate_witness(result['witness'], result['documents']))
+                self.assertIn('pred inv1C0 {\ninv1[]\n}',
+                              result['documents'][0]['environmentBefore'] + result['documents'][0]['environmentAfter'])
 
     def test_oracle_aliases_and_transitive_starter_dependence_rejected(self):
         self.rejected(BASE + 'pred inv1C0 {some Node}\npred inv1C1 {inv1C0}\n')
         self.rejected(BASE + 'pred inv1 {some Node}\npred helper[n:Node] {inv1}\n'
                       'pred inv1C0 {all n:Node|helper[n]}\n')
-        self.rejected(BASE + 'pred inv1 {}\npred inv1C0 {some Node}\n'
-                      'pred inv2 {some Node}\npred helper[n:Node] {inv2}\npred inv2C0 {some Node}\n'
-                      'pred third {all n:Node|helper[n]}\n')
+        result = prepared(BASE + 'pred inv1 {}\npred inv1C0 {some Node}\n'
+                          'pred inv2 {some Node}\npred helper[n:Node] {inv2}\npred inv2C0 {some Node}\n'
+                          'pred third {all n:Node|helper[n]}\n')
+        third = next(document for document in result['documents'] if document['predicate'] == 'third')
+        self.assertEqual(third['practicePlan']['dependencies'], ['lesson-inv2', 'lesson-helper'])
 
     def test_external_module_is_rejected_by_actual_inspector(self):
         with tempfile.TemporaryDirectory(prefix='alloy-upload-external-') as folder:

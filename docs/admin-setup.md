@@ -134,9 +134,21 @@ practice slots. Other selected standalone answers are replaced with named blank
 TODO slots in each exercise, so their bodies stay hidden and aggregates still
 parse. Uploaded assertions and commands are displayed unchanged; live feedback
 uses its own queries rather than running those commands. A practice answer may
-not call another selected answer, and model facts may not depend on selected
-practices. Keep such dependencies unselected. References to removed `inv1C0`
-aliases are rejected with the declaration name, so the selection can be corrected.
+call another selected practice in new version-three uploads. The backend derives
+the prerequisite graph from actual Alloy calls, including retained helpers.
+Downstream practices stay locked until their prerequisites pass both structural
+and behavioral checks. Their environment uses the learner's last verified
+prerequisite code. Required numbered aliases such as `inv1C0[n]` become typed
+forwarding wrappers to `inv1[n]`, without revealing the hidden answer. Cycles and
+dependencies from facts or declaration domains remain rejected. Existing
+version-one and version-two archives retain their original rules.
+
+The complete private upload and unselected declarations stay unchanged. Private
+publication validation uses the author's correct prerequisite implementations;
+learner feedback compares student and reference bodies in the same verified
+learner context. An active prerequisite cannot be removed until its dependents
+are removed. See the [dependency contract](practice-dependencies-progress-spec.md)
+and [learner progress guide](progress-save.md).
 
 Parameterized equivalence checks both bodies for the same legal argument values.
 Behavioral examples show those values beside the diagram; the score samples

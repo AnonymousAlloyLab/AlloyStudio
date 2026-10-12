@@ -106,6 +106,14 @@ public final class UploadInspector {
             for (Declaration declaration : declarations) {
                 if (declaration.start < previous) return rejected("OVERLAPPING_DECLARATIONS");
                 previous = declaration.end;
+                JSONArray parameterNames = new JSONArray();
+                List<Func> parameterCalls = new ArrayList<>();
+                for (Decl parameter : declaration.function.decls) {
+                    for (ExprHasName variable : parameter.names) parameterNames.put(variable.label);
+                    parameterCalls.addAll(BehaviorFeedback.calls(parameter.expr));
+                }
+                if (declaration.function.returnDecl != null)
+                    parameterCalls.addAll(BehaviorFeedback.calls(declaration.function.returnDecl));
                 rows.put(new JSONObject().put("name", declaration.name)
                         .put("kind", declaration.function.isPred ? "pred" : "fun")
                         .put("parameterCount", declaration.function.count())
@@ -114,6 +122,8 @@ public final class UploadInspector {
                         .put("endByte", byteOffset(source, declaration.end))
                         .put("bodyStartByte", byteOffset(source, declaration.bodyStart))
                         .put("bodyEndByte", byteOffset(source, declaration.bodyEnd))
+                        .put("parameterNames", parameterNames)
+                        .put("parameterCalls", ownCalls(parameterCalls, names))
                         .put("calls", ownCalls(BehaviorFeedback.calls(declaration.function), names)));
             }
             TreeSet<String> facts = new TreeSet<>(), assertions = new TreeSet<>(), commands = new TreeSet<>();

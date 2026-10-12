@@ -40,8 +40,12 @@ exerciseId, exerciseVersion and candidateHash. Compare the unchanged candidate t
 supplied authoritative oracle bodies in the exact environment, including every module fact,
 signature, helper and temporal condition. Relate your explanation to the public question.
 A score of 1 and no overcoverage or undercoverage within the supplied bounded checks are
-not a universal equivalence proof. Inspect possible differences beyond those bounds,
-vacuous cases, cardinalities, quantifier scope, relation direction and temporal behavior
+not a universal equivalence proof.
+When boundedCheck includes dependencyContextVersion, those observations used verified
+learner prerequisites; the supplied review environment uses the author's validated
+prerequisites. Do not claim that these are the same code or repeat the observations.
+Inspect possible differences beyond those bounds, vacuous cases, cardinalities,
+quantifier scope, relation direction and temporal behavior
 when relevant. Do not invent a defect or claim a proof without supporting evidence.
 Use recommend when the candidate appears suitable for further administrator approval;
 reject when you can describe a concrete potentially distinguishing instance; uncertain
@@ -86,8 +90,11 @@ def validate_context(context):
     for oracle in oracles:
         body(oracle)
     evidence = context['boundedCheck']
-    if (type(evidence) is not dict or set(evidence) !=
-            {'score', 'moduleFacts', 'undercoverage', 'overcoverage', 'scope', 'sampling'}
+    fields = {'score', 'moduleFacts', 'undercoverage', 'overcoverage', 'scope', 'sampling'}
+    if (type(evidence) is not dict or not fields <= set(evidence)
+            or set(evidence) - fields - {'dependencyContextVersion'}
+            or 'dependencyContextVersion' in evidence and (type(evidence['dependencyContextVersion']) is not str
+                or not HASH.fullmatch(evidence['dependencyContextVersion']))
             or type(evidence['score']) not in (int, float) or evidence['score'] != 1
             or evidence['moduleFacts'] is not True
             or evidence['undercoverage'] != 'unsat' or evidence['overcoverage'] != 'unsat'):

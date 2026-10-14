@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
 from scripts.package_iis import build_package
-from scripts.verify_closure import discover_ids
+from scripts.verify_closure import discover_test_sources
 
 
-def python_outcome_summary(raw, registered):
+def python_outcome_summary(raw, registered, sources=None):
     """Project only source-registered identifiers, never runtime test descriptions."""
     if type(raw) is not dict or type(raw.get('outcomes')) is not dict:
         raise ValueError('Invalid Python outcome report.')
@@ -24,7 +24,21 @@ def python_outcome_summary(raw, registered):
     failed = sorted(identifier for identifier in registered
                     if type(outcomes.get(identifier)) is str
                     and outcomes[identifier] in {'BLOCK', 'UNRESOLVED'})
-    return {'count': count(raw.get('tests_run')), 'failedRegisteredTests': failed}
+    details = []
+    supplied = raw.get('failureDetails')
+    if type(supplied) is dict and sources is not None:
+        for identifier in failed:
+            detail = supplied.get(identifier)
+            if (type(detail) is not dict or type(detail.get('kind')) is not str
+                    or detail['kind'] not in {'assertion', 'timeout', 'error'}
+                    or identifier not in sources):
+                continue
+            line = detail.get('line')
+            if line is not None and (type(line) is not int or not 1 <= line <= sources[identifier][1]):
+                continue
+            details.append({'test': identifier, 'line': line, 'kind': detail['kind']})
+    return {'count': count(raw.get('tests_run')), 'failedRegisteredTests': failed,
+            'failureDetails': details}
 
 
 def build_failure_code(stdout, stderr):
@@ -71,6 +85,7 @@ def execute(name, root=ROOT):
     private_report = output / 'unittest-private.json'
     if name == 'python':
         report['failedRegisteredTests'] = []
+        report['failureDetails'] = []
     # Browser profiles/shared-memory fallback and child runtimes must not fill
     # the host's shared temporary directory. Keep diagnostic leftovers owned by
     # this checkout too; a full /tmp directory index can fail despite free disk.
@@ -89,7 +104,8 @@ def execute(name, root=ROOT):
         if name == 'python':
             # A failed child must never inherit a successful previous report.
             private_report.unlink(missing_ok=True)
-            registered = frozenset(discover_ids(root))
+            sources = discover_test_sources(root)
+            registered = frozenset(sources)
         if name == 'build':
             commands[name] = build_command(environment)
         elif name == 'browser':
@@ -103,7 +119,7 @@ def execute(name, root=ROOT):
             if private_report.is_symlink() or not private_report.is_file():
                 raise ValueError('Python outcome report must be a regular file.')
             raw = json.loads(private_report.read_text(encoding='utf-8'))
-            report.update(python_outcome_summary(raw, registered))
+            report.update(python_outcome_summary(raw, registered, sources))
             if (result.returncode == 0 and raw.get('successful') is True
                     and report['count'] is not None
                     and all(value == 'PASS' for value in raw['outcomes'].values())):

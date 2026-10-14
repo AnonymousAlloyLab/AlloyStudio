@@ -363,6 +363,12 @@ class ShellEntrypointTests(unittest.TestCase):
 
 
 class RelocatedLocalSetupTests(unittest.TestCase):
+    # These witnesses copy/clone a complete distribution and compile/check the
+    # engine twice (setup.sh, then run.sh). They test installation correctness,
+    # not cold-build speed on a shared CI runner. Keep a finite overall deadline
+    # without confusing cold provisioning with the unchanged HTTP/JVM deadlines.
+    INSTALLATION_BUDGET = 300
+
     def assert_served_portal(self, root, working_directory, environment, budget, log_path,
                              *, exercises, exercise_id, body, pool_size):
         with log_path.open('w+', encoding='utf-8') as log:
@@ -371,7 +377,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 cwd=working_directory, env=environment, stdout=log, stderr=subprocess.STDOUT,
                 start_new_session=True)
             try:
-                startup_deadline = time.monotonic() + budget(35)
+                startup_deadline = time.monotonic() + budget(90)
                 address = None
                 while time.monotonic() < startup_deadline:
                     log.seek(0)
@@ -456,11 +462,11 @@ class RelocatedLocalSetupTests(unittest.TestCase):
                 process.wait(timeout=5)
 
     def test_real_git_clone_sets_up_bundled_181_exercises_without_data_flags(self):
-        deadline = time.monotonic() + 85
+        deadline = time.monotonic() + self.INSTALLATION_BUDGET
 
         def budget(maximum):
             remaining = deadline - time.monotonic()
-            self.assertGreater(remaining, 0, 'Fresh Git clone exceeded its 85-second budget.')
+            self.assertGreater(remaining, 0, 'Fresh Git clone exceeded its installation budget.')
             return min(maximum, remaining)
 
         with tempfile.TemporaryDirectory(prefix='alloy-bundled-clone-') as directory:
@@ -488,7 +494,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             def git(*arguments, cwd=source):
                 result = subprocess.run([git_executable, *arguments], cwd=cwd, env=git_environment,
                                         capture_output=True, text=True, encoding='utf-8',
-                                        timeout=budget(10), check=False)
+                                        timeout=budget(30), check=False)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
 
@@ -523,7 +529,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             unrelated.mkdir()
             completed = subprocess.run([str(checkout / 'scripts/setup.sh')],
                                        cwd=unrelated, env=environment, capture_output=True,
-                                       text=True, encoding='utf-8', timeout=budget(45), check=False)
+                                       text=True, encoding='utf-8', timeout=budget(180), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 181 (validated-existing)', completed.stdout)
             self.assertIn('Engine ready: 500 checks passed', completed.stdout)
@@ -571,11 +577,11 @@ class RelocatedLocalSetupTests(unittest.TestCase):
         return bundle
 
     def test_real_relocated_setup_run_feedback_privacy_and_sigint_without_node_or_corpus(self):
-        deadline = time.monotonic() + 85
+        deadline = time.monotonic() + self.INSTALLATION_BUDGET
 
         def budget(maximum):
             remaining = deadline - time.monotonic()
-            self.assertGreater(remaining, 0, 'Local setup witness exceeded its 85-second budget.')
+            self.assertGreater(remaining, 0, 'Local setup witness exceeded its installation budget.')
             return min(maximum, remaining)
 
         with tempfile.TemporaryDirectory(prefix='alloy-local-portability-') as directory:
@@ -596,7 +602,7 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             completed = subprocess.run(
                 [str(checkout / 'scripts/setup.sh'), '--from-bundle', relative_bundle],
                 cwd=unrelated, env=environment, capture_output=True,
-                text=True, encoding='utf-8', timeout=budget(45), check=False)
+                text=True, encoding='utf-8', timeout=budget(180), check=False)
             self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
             self.assertIn('Private exercises: 1 (restored-bundle)', completed.stdout)
             self.assertIn('Engine ready: 500 checks passed', completed.stdout)

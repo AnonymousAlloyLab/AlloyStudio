@@ -155,23 +155,54 @@ def tcb_record():
                                    "root_hash": sha(canonical(browser_inventory))}}
 
 
-def discover_ids(root):
-    identifiers = []
+def discover_test_sources(root):
+    """Map source-declared test IDs to their source file and line count only."""
+    identifiers = {}
     for path in sorted((root / "tests").glob("test_*.py")):
-        tree = ast.parse(path.read_text())
+        source = path.read_text()
+        tree = ast.parse(source)
         for node in tree.body:
             if isinstance(node, ast.ClassDef):
-                identifiers.extend(f"{path.stem}.{node.name}.{method.name}"
-                                   for method in node.body if isinstance(method, ast.FunctionDef)
-                                   and method.name.startswith("test_"))
-    return sorted(identifiers)
+                for method in node.body:
+                    if isinstance(method, ast.FunctionDef) and method.name.startswith("test_"):
+                        identifiers[f"{path.stem}.{node.name}.{method.name}"] = (
+                            path.resolve(), len(source.splitlines()))
+    return identifiers
+
+
+def discover_ids(root):
+    return sorted(discover_test_sources(root))
+
+
+def failure_location(identifier, error, sources):
+    """Return fixed metadata without formatting exceptions, frames or locals."""
+    if identifier not in sources:
+        return None
+    source, maximum_line = sources[identifier]
+    exception_type, _, traceback = error
+    kind = ('timeout' if issubclass(exception_type, (TimeoutError, subprocess.TimeoutExpired))
+            else 'assertion' if issubclass(exception_type, AssertionError) else 'error')
+    line = None
+    while traceback is not None:
+        if (Path(traceback.tb_frame.f_code.co_filename).resolve() == source
+                and 1 <= traceback.tb_lineno <= maximum_line):
+            line = traceback.tb_lineno
+        traceback = traceback.tb_next
+    return {'line': line, 'kind': kind}
 
 
 def python_tests(report_path):
     sys.path[:0] = [str(ROOT), str(ROOT / "tests")]
     outcomes = {}
+    sources = discover_test_sources(ROOT)
+    failure_details = {}
 
     class Results(unittest.TextTestResult):
+        def recordFailureLocation(self, test, error):
+            detail = failure_location(test.id(), error, sources)
+            if detail is not None:
+                failure_details.setdefault(test.id(), detail)
+
         def startTest(self, test):
             outcomes[test.id()] = "UNRESOLVED"
             super().startTest(test)
@@ -182,10 +213,12 @@ def python_tests(report_path):
 
         def addFailure(self, test, error):
             outcomes[test.id()] = "BLOCK"
+            self.recordFailureLocation(test, error)
             super().addFailure(test, error)
 
         def addError(self, test, error):
             outcomes[test.id()] = "BLOCK"
+            self.recordFailureLocation(test, error)
             super().addError(test, error)
 
         def addSkip(self, test, reason):
@@ -193,11 +226,14 @@ def python_tests(report_path):
             super().addSkip(test, reason)
 
         def addSubTest(self, test, subtest, error):
-            if error is not None: outcomes[test.id()] = "BLOCK"
+            if error is not None:
+                outcomes[test.id()] = "BLOCK"
+                self.recordFailureLocation(test, error)
             super().addSubTest(test, subtest, error)
 
         def addExpectedFailure(self, test, error):
             outcomes[test.id()] = "BLOCK"
+            self.recordFailureLocation(test, error)
             super().addExpectedFailure(test, error)
 
         def addUnexpectedSuccess(self, test):
@@ -206,7 +242,8 @@ def python_tests(report_path):
 
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), pattern="test_*.py")
     result = unittest.TextTestRunner(verbosity=2, resultclass=Results).run(suite)
-    report = {"tests_run": result.testsRun, "outcomes": outcomes, "successful": result.wasSuccessful()
+    report = {"tests_run": result.testsRun, "outcomes": outcomes, "failureDetails": failure_details,
+              "successful": result.wasSuccessful()
               and all(value == "PASS" for value in outcomes.values())}
     write_json(Path(report_path), report)
     return 0 if report["successful"] else 1

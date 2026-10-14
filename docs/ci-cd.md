@@ -23,7 +23,17 @@ without this preparation cannot silently report success.
 
 `.github/workflows/release.yml` checks tag/package version agreement and builds and validates the engine for a tagged source release. It produces a readiness dashboard; publication of a GitHub release and deployment to IIS remain explicit maintainer steps. It has no write token or server credentials. CI results are recorded tests, not the two-build offline mechanical closure. Run `OPENAI_DISABLED=1 python3 scripts/verify_closure.py` on a host that supports the repository’s network-namespace closure protocol for that evidence.
 
-Actions use full commit pins, read-only repository permissions, and no persisted checkout credentials. All test commands run with `OPENAI_DISABLED=1`. Failure output can contain a model in an assertion, so the CI wrapper publishes only check names, status, counts, and revision. Reproduce a failed command locally to inspect its full output.
+Actions use full commit pins, read-only repository permissions, and no persisted checkout credentials. All test commands run with `OPENAI_DISABLED=1`. Failure output can contain a model in an assertion, so the CI wrapper publishes check names, status, counts, revision, and source-registered failing test identifiers. For Python failures it also reports a validated source line when available and a fixed category (`assertion`, `timeout`, or `error`); exception messages, frame contents, paths, and model text remain private. Reproduce a failed command locally to inspect its full output.
+
+Fresh-clone and relocated-installation witnesses have a 300-second overall
+allowance, with bounded Git, setup, and startup phases. They copy the distribution,
+compile the engine, and run its self-tests twice. These are functional installation
+checks; their allowance is separate from the portal's unchanged request, worker,
+and HTTP test deadlines. Every exercise, privacy, feedback, and shutdown assertion
+still runs. The alpha.4 tag run failed the fresh-clone witness while the same
+commit's master run passed the full Python suite. The old output identified only
+the test, so the exact assertion is unknown; the larger provisioning allowance is
+a mitigation for timing sensitivity, not evidence of a confirmed timeout cause.
 
 Windows checkouts preserve the exact repository bytes through `.gitattributes`,
 including Bash line endings and snapshot-bound vendor licenses. The CI build

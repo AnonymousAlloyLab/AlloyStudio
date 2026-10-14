@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from scripts import ci_check, ci_dashboard, release_preflight
+from scripts import ci_check, ci_dashboard, release_preflight, verify_closure
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = 'a' * 40
@@ -153,7 +153,11 @@ class DashboardTests(unittest.TestCase):
             prefix + 'test_failure': 'BLOCK', prefix + 'test_success': 'PASS',
             prefix + 'test_unresolved': 'UNRESOLVED', 'PRIVATE_SENTINEL': 'BLOCK',
             prefix + 'test_failure (body=PRIVATE_SENTINEL)': 'BLOCK',
-            '_FailedTest.PRIVATE_SENTINEL': 'BLOCK'}, 'error': 'PRIVATE_SENTINEL'}
+            '_FailedTest.PRIVATE_SENTINEL': 'BLOCK'}, 'error': 'PRIVATE_SENTINEL',
+            'failureDetails': {prefix + 'test_failure': {'line': 3, 'kind': 'assertion',
+                'message': 'PRIVATE_SENTINEL', 'path': 'PRIVATE_SENTINEL'},
+                prefix + 'test_success': {'line': 4, 'kind': 'error'},
+                'PRIVATE_SENTINEL': {'line': 1, 'kind': 'error'}}}
         child = self.root / 'scripts/verify_closure.py'
         child.parent.mkdir()
         child.write_text('import json, sys\nfrom pathlib import Path\n'
@@ -171,8 +175,66 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(report['count'], 3)
         self.assertEqual(report['failedRegisteredTests'],
                          [prefix + 'test_failure', prefix + 'test_unresolved'])
+        self.assertEqual(report['failureDetails'],
+                         [{'test': prefix + 'test_failure', 'line': 3, 'kind': 'assertion'}])
         self.assertNotIn('PRIVATE_SENTINEL', stream.getvalue() + json.dumps(report))
         self.assertFalse(stale.exists())
+
+    def test_failure_locations_never_export_exception_text_or_subtest_values(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
+        path = self.root / 'tests/test_registered.py'
+        path.parent.mkdir(parents=True)
+        source = ('class Registered(unittest.TestCase):\n'
+                  '    def test_assertion(self):\n'
+                  '        self.fail("PRIVATE_SENTINEL")\n'
+                  '    def test_timeout(self):\n'
+                  '        raise subprocess.TimeoutExpired("PRIVATE_SENTINEL", 5)\n'
+                  '    def test_error(self):\n'
+                  '        raise ValueError("PRIVATE_SENTINEL")\n'
+                  '    def test_subtest(self):\n'
+                  '        with self.subTest(body="PRIVATE_SENTINEL"):\n'
+                  '            self.fail("PRIVATE_SENTINEL")\n')
+        path.write_text(source)
+        namespace = {'__name__': 'test_registered', 'unittest': unittest, 'subprocess': subprocess}
+        exec(compile(source, str(path), 'exec'), namespace)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(namespace['Registered'])
+        report = self.root / 'private-result.json'
+        with patch.object(verify_closure, 'ROOT', self.root), \
+             patch.object(unittest.defaultTestLoader, 'discover', return_value=suite), \
+             patch.object(verify_closure.sys, 'path', list(verify_closure.sys.path)), \
+             redirect_stderr(StringIO()):
+            self.assertEqual(verify_closure.python_tests(report), 1)
+        raw = json.loads(report.read_text())
+        prefix = 'test_registered.Registered.'
+        self.assertEqual(raw['failureDetails'], {
+            prefix + 'test_assertion': {'line': 3, 'kind': 'assertion'},
+            prefix + 'test_timeout': {'line': 5, 'kind': 'timeout'},
+            prefix + 'test_error': {'line': 7, 'kind': 'error'},
+            prefix + 'test_subtest': {'line': 10, 'kind': 'assertion'}})
+        self.assertNotIn('PRIVATE_SENTINEL', report.read_text())
+        self.assertNotIn(str(self.root), report.read_text())
+
+    def test_python_failure_details_are_revalidated_against_registered_source(self):
+        prefix = self.register_python_fixture()
+        identifier = prefix + 'test_failure'
+        sources = verify_closure.discover_test_sources(self.root)
+        cases = [None, [], 'PRIVATE_SENTINEL', {'kind': 'PRIVATE_SENTINEL', 'line': 3},
+                 {'kind': ['PRIVATE_SENTINEL'], 'line': 3},
+                 {'kind': 'error', 'line': True}, {'kind': 'error', 'line': -1},
+                 {'kind': 'error', 'line': 6}, {'kind': 'error', 'line': 'PRIVATE_SENTINEL'}]
+        for detail in cases:
+            with self.subTest(detail=detail):
+                raw = {'tests_run': 1, 'outcomes': {identifier: 'BLOCK'},
+                       'failureDetails': {identifier: detail}}
+                summary = ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+                self.assertEqual(summary['failureDetails'], [])
+                self.assertNotIn('PRIVATE_SENTINEL', json.dumps(summary))
+        for line in (None, 1, 5):
+            raw = {'tests_run': 1, 'outcomes': {identifier: 'BLOCK'},
+                   'failureDetails': {identifier: {'line': line, 'kind': 'error'}}}
+            self.assertEqual(ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+                             ['failureDetails'], [{'test': identifier, 'line': line, 'kind': 'error'}])
 
     def test_python_exit_and_report_must_both_pass_and_runtime_values_never_escape(self):
         from contextlib import redirect_stdout

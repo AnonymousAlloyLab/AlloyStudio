@@ -33,6 +33,11 @@ applicable edits and documents the sample and pool-policy limits.
 The [181-invariant hint-quality report](docs/alloy4fun-181-hint-quality.md)
 extends coverage and measured guidance properties to the complete catalogue,
 keeping Canonical, AST, TAR, and both HiGenA configurations separate.
+The [150-invariant matched hint collection](docs/alloy4fun-five-arm-hint-examples.md)
+shows the same learner drafts across Canonical, AST, TAR, HiGenA-H, and HiGenA-M,
+including actual production AI explanations for both live modes. It covers all
+invariants with eligible hints from all five arms and records unresolved TAR
+verification separately from hint availability.
 The [181-invariant image audit](docs/instance-audit-v003.md) records real solver
 instances, desktop/mobile layout checks, and any cases without drawable results.
 The [engine and corpus diagnostic report](docs/hint-diagnostics.md) investigates

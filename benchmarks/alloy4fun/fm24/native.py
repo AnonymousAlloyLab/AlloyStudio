@@ -26,7 +26,7 @@ def build_classpath(baselines: Path, *, compile_adapter=True) -> str:
             *sorted((baselines / 'fm24-dependencies').glob('*.jar'))]
     for jar in jars:
         if not jar.is_file():
-            raise FileNotFoundError('Missing FM24 dependency: ' + str(jar))
+            raise FileNotFoundError('Missing HiGenA dependency: ' + str(jar))
     output = ROOT / 'build/benchmarks/fm24-classes'
     output.mkdir(parents=True, exist_ok=True)
     cp = os.pathsep.join(map(str, jars))
@@ -34,7 +34,7 @@ def build_classpath(baselines: Path, *, compile_adapter=True) -> str:
     compiled = output / 'FM24Native.class'
     if not compiled.is_file() or compiled.stat().st_mtime_ns < source.stat().st_mtime_ns:
         if not compile_adapter:
-            raise RuntimeError('FM24 adapter must be compiled during preparation before measurement')
+            raise RuntimeError('HiGenA adapter must be compiled during preparation before measurement')
         subprocess.run(['javac', '-cp', cp, '-d', str(output), str(source)],
                        check=True, env=clean_java_environment())
     return str(output) + os.pathsep + cp

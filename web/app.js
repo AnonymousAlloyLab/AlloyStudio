@@ -1575,9 +1575,9 @@ function renderFeedback(result, sourceContext = null) {
   }
   const explanation = node('section', 'explanation-section');
   explanation.id = 'luna-explanation';
-  explanation.setAttribute('aria-label', 'Luna learning guidance');
+  explanation.setAttribute('aria-label', 'AI learning guidance');
   const explanationHeading = node('div', 'section-label');
-  explanationHeading.append(node('span', '', 'Luna · summary'), node('span', 'ai-badge', 'AI'));
+  explanationHeading.append(node('span', '', 'AI · summary'), node('span', 'ai-badge', 'AI'));
   explanation.append(explanationHeading, node('p', 'explanation-caption', 'Short learning hints appear beside each edit and example.'));
   const explanationBody = node('div', 'explanation-body');
   explanationBody.id = 'luna-explanation-body';
@@ -1614,7 +1614,7 @@ function renderEducationSummary() {
   const hints = state.progressiveHints;
   const withheld = hints && hints.revealed < hints.list.length;
   container.replaceChildren(node('p', withheld ? 'explanation-withheld' : 'explanation-text', withheld
-    ? 'Try the hint you have opened. Luna’s summary will appear after you choose to show all hints.'
+    ? 'Try the hint you have opened. The AI summary will appear after you choose to show all hints.'
     : education.summary));
 }
 
@@ -1937,7 +1937,7 @@ function educationSlot(kind, id) {
   const slot = node('aside', `education-slot ${kind}-explanation`);
   slot.dataset.educationKind = kind;
   slot.dataset.educationId = id;
-  slot.append(node('span', 'education-label', kind === 'operation' ? 'Luna · edit hint' : 'Luna · example hint'), node('div', 'education-copy'));
+  slot.append(node('span', 'education-label', kind === 'operation' ? 'AI · edit hint' : 'AI · example hint'), node('div', 'education-copy'));
   updateEducationSlot(slot);
   return slot;
 }

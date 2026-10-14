@@ -37,13 +37,14 @@ DEPLOY_FILES = (
 RUNTIME_HELPERS = ('import_correct_pools.py', 'import_exercises.py', 'exercise_descriptions.json',
                    'prepare_private_data.py', 'manage_exercises.py', 'configure_admin.py')
 ADMIN_MODULES = ('admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
-                 'candidate_store.py', 'candidate_review.py')
+                 'candidate_store.py', 'candidate_review.py', 'ai_provider.py')
 STORE_FILES = ('exercise_store.py', 'exercise_sql.py', 'practice_dependencies.py', 'practice_progress.py', 'sql/schema.json',
                'sql/queries.json', 'sql/compiled-queries.json', 'vendor/sqlean/provenance.json')
 ADMIN_FILES = ('docs/private-exercises.md', 'docs/sqlite-security-spec.md',
                'docs/admin-security-spec.md', 'docs/admin-setup.md',
                'docs/practice-dependencies-progress-spec.md', 'docs/progress-save.md',
-               'docs/admin-library-candidates-spec.md', 'examples/private-exercise.json')
+               'docs/admin-library-candidates-spec.md', 'examples/private-exercise.json',
+               'docs/ai-providers.md', 'docs/ai-providers-spec.md')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
@@ -175,6 +176,14 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
     if parse_json(example_bytes, 'OpenAI configuration template') != {'api_key': ''}:
         raise PackageError('The OpenAI configuration template must contain only an empty api_key.')
     entries['backend/openai.example.json'] = example_bytes
+    ai_example = read_source(root, 'ai.example.json')
+    ai_template = parse_json(ai_example, 'AI configuration template')
+    from ai_provider import validate_template
+    try:
+        validate_template(ai_template)
+    except ValueError as error:
+        raise PackageError('The AI configuration template must be valid and contain only empty credentials.') from error
+    entries['backend/ai.example.json'] = ai_example
     for name in RUNTIME_HELPERS:
         entries[f'backend/scripts/{name}'] = read_source(root, f'scripts/{name}')
 

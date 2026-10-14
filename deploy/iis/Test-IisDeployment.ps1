@@ -9,6 +9,7 @@ param(
     [ValidateRange(130, 300)][int]$RequestTimeoutSeconds = 130,
     [switch]$ExpectAdminAccess,
     [switch]$CheckDiagnostics,
+    [Alias('CheckAI')]
     [switch]$CheckLuna,
     [switch]$UseDefaultCredentials
 )
@@ -130,11 +131,11 @@ try {
         Assert-PrivateAcl -Path $localOpenAIConfig
     }
     foreach ($name in @('server.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
-        'candidate_store.py', 'candidate_review.py')) {
+        'candidate_store.py', 'candidate_review.py', 'ai_provider.py')) {
         Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)
     }
     Assert-BackendWriteScope -Path $config.backend_root
-    foreach ($name in @('admin.local.json', 'openai.local.json')) {
+    foreach ($name in @('admin.local.json', 'openai.local.json', 'ai.local.json')) {
         $privateConfig = Join-Path $config.backend_root $name
         if (Test-Path -LiteralPath $privateConfig) {
             Assert-PrivatePath -Path (Get-LocalPath $privateConfig) -PublicRoots $publicRoots
@@ -306,19 +307,20 @@ try {
         'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py',
         'candidate_store.py', 'candidate_review.py', 'backend/candidate_store.py', 'backend/candidate_review.py',
         'admin/upload.als', 'admin/source.als', 'admin/.admin-config-fixture.tmp',
-        'vendor/acgn/lib/alloy.jar', 'openai.key', 'openai.local.json', 'backend/openai.local.json', '.env',
+        'vendor/acgn/lib/alloy.jar', 'openai.key', 'openai.local.json', 'backend/openai.local.json', 'ai.local.json', 'backend/ai.local.json', 'ai_provider.py', 'backend/ai_provider.py', '.env',
         'deploy/iis/run_backend.py', 'backend-task.json', 'api/exercises/../../catalogue.json')) {
         $response = Invoke-PortalRequest $privateRoute
         Assert-Check ($response.Status -in @(400, 403, 404)) "private route unavailable: $privateRoute"
     }
 
     if ($CheckLuna) {
-        $stage = 'live Luna explanation'
+        $stage = 'live AI explanation'
         $payload.body = 'some (iden & adj)'
         $payload.revision = 3
         $response = Invoke-PortalRequest 'api/explain' $payload
         $explanation = $response.Body | ConvertFrom-Json
-        Assert-Check ($response.Status -eq 200 -and $explanation.status -eq 'ok' -and $explanation.model -eq 'gpt-6-luna') 'configured Luna returns a live explanation'
+        Assert-Check ($response.Status -eq 200 -and $explanation.status -eq 'ok' -and $explanation.model -is [string] -and
+            $explanation.model.Length -gt 0 -and $explanation.model.Length -le 200) 'configured AI returns a live explanation'
     }
 } catch {
     $failed = $true

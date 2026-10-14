@@ -9,7 +9,7 @@
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
     <dc:title>Alloy4Fun native hint benchmark</dc:title>
     <dc:date>2026-09-30T20:00:58.979515+00:00</dc:date>
-    <dc:description>Five methods on 42,388 incorrect inputs. Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM. Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</dc:description>
+    <dc:description>Five methods on 42,388 incorrect inputs. Sequential arms: Alloy Studio/HiGenA, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM. Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</dc:description>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -531,77 +531,77 @@ L 811.44 414.72
    </g>
    <g id="legend_1">
     <g id="patch_5">
-     <path d="M 570.288437 409.72 
+     <path d="M 560.015 409.72 
 L 804.44 409.72 
 Q 806.44 409.72 806.44 407.72 
 L 806.44 335.329375 
 Q 806.44 333.329375 804.44 333.329375 
-L 570.288437 333.329375 
-Q 568.288437 333.329375 568.288437 335.329375 
-L 568.288437 407.72 
-Q 568.288437 409.72 570.288437 409.72 
+L 560.015 333.329375 
+Q 558.015 333.329375 558.015 335.329375 
+L 558.015 407.72 
+Q 558.015 409.72 560.015 409.72 
 z
 " style="fill: #ffffff; opacity: 0.95; stroke: #cccccc; stroke-linejoin: miter"/>
     </g>
     <g id="line2d_45">
-     <path d="M 572.288437 341.427812 
-L 582.288437 341.427812 
-L 592.288437 341.427812 
+     <path d="M 562.015 341.427812 
+L 572.015 341.427812 
+L 582.015 341.427812 
 " style="fill: none; stroke: #0072b2; stroke-width: 2; stroke-linecap: square"/>
      <g>
-      <use xlink:href="#m98818d16dd" x="582.288437" y="341.427812" style="fill: #0072b2; stroke: #ffffff; stroke-width: 0.5"/>
+      <use xlink:href="#m98818d16dd" x="572.015" y="341.427812" style="fill: #0072b2; stroke: #ffffff; stroke-width: 0.5"/>
      </g>
     </g>
     <g id="text_18">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="600.288437" y="344.927812" transform="rotate(-0 600.288437 344.927812)">Alloy Studio canonical (16 workers)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="590.015" y="344.927812" transform="rotate(-0 590.015 344.927812)">Alloy Studio canonical (16 workers)</text>
     </g>
     <g id="line2d_46">
-     <path d="M 572.288437 356.105937 
-L 582.288437 356.105937 
-L 592.288437 356.105937 
+     <path d="M 562.015 356.105937 
+L 572.015 356.105937 
+L 582.015 356.105937 
 " style="fill: none; stroke: #d55e00; stroke-width: 2; stroke-linecap: square"/>
      <g>
-      <use xlink:href="#me42546de0e" x="582.288437" y="356.105937" style="fill: #d55e00; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
+      <use xlink:href="#me42546de0e" x="572.015" y="356.105937" style="fill: #d55e00; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
      </g>
     </g>
     <g id="text_19">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="600.288437" y="359.605937" transform="rotate(-0 600.288437 359.605937)">Alloy Studio raw AST (16 workers)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="590.015" y="359.605937" transform="rotate(-0 590.015 359.605937)">Alloy Studio raw AST (16 workers)</text>
     </g>
     <g id="line2d_47">
-     <path d="M 572.288437 370.784062 
-L 582.288437 370.784062 
-L 592.288437 370.784062 
+     <path d="M 562.015 370.784062 
+L 572.015 370.784062 
+L 582.015 370.784062 
 " style="fill: none; stroke: #009e73; stroke-width: 2; stroke-linecap: square"/>
      <g>
-      <use xlink:href="#m7f5c019775" x="582.288437" y="370.784062" style="fill: #009e73; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
+      <use xlink:href="#m7f5c019775" x="572.015" y="370.784062" style="fill: #009e73; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
      </g>
     </g>
     <g id="text_20">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="600.288437" y="374.284062" transform="rotate(-0 600.288437 374.284062)">TAR (depth 2) (4 workers)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="590.015" y="374.284062" transform="rotate(-0 590.015 374.284062)">TAR (depth 2) (4 workers)</text>
     </g>
     <g id="line2d_48">
-     <path d="M 572.288437 385.462187 
-L 582.288437 385.462187 
-L 592.288437 385.462187 
+     <path d="M 562.015 385.462187 
+L 572.015 385.462187 
+L 582.015 385.462187 
 " style="fill: none; stroke: #cc79a7; stroke-width: 2; stroke-linecap: square"/>
      <g>
-      <use xlink:href="#m58e86c1450" x="582.288437" y="385.462187" style="fill: #cc79a7; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
+      <use xlink:href="#m58e86c1450" x="572.015" y="385.462187" style="fill: #cc79a7; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
      </g>
     </g>
     <g id="text_21">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="600.288437" y="388.962187" transform="rotate(-0 600.288437 388.962187)">FM24 historical (16 workers)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="590.015" y="388.962187" transform="rotate(-0 590.015 388.962187)">HiGenA historical (16 workers)</text>
     </g>
     <g id="line2d_49">
-     <path d="M 572.288437 400.140312 
-L 582.288437 400.140312 
-L 592.288437 400.140312 
+     <path d="M 562.015 400.140312 
+L 572.015 400.140312 
+L 582.015 400.140312 
 " style="fill: none; stroke: #6b5b1e; stroke-width: 2; stroke-linecap: square"/>
      <g>
-      <use xlink:href="#m5d49434c34" x="582.288437" y="400.140312" style="fill: #6b5b1e; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
+      <use xlink:href="#m5d49434c34" x="572.015" y="400.140312" style="fill: #6b5b1e; stroke: #ffffff; stroke-width: 0.5; stroke-linejoin: miter"/>
      </g>
     </g>
     <g id="text_22">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="600.288437" y="403.640312" transform="rotate(-0 600.288437 403.640312)">FM24 historical + mutation (16 workers)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start" x="590.015" y="403.640312" transform="rotate(-0 590.015 403.640312)">HiGenA historical + mutation (16 workers)</text>
     </g>
    </g>
   </g>
@@ -609,7 +609,7 @@ L 592.288437 400.140312
    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="99.36" y="471.744" transform="rotate(-0 99.36 471.744)">Points are measured at the stated thresholds; connecting lines are visual guides.</text>
   </g>
   <g id="text_24">
-   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="99.36" y="495.072" transform="rotate(-0 99.36 495.072)">Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.</text>
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="99.36" y="495.072" transform="rotate(-0 99.36 495.072)">Sequential arms: Alloy Studio/HiGenA, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.</text>
   </g>
   <g id="text_25">
    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="99.36" y="508.032" transform="rotate(-0 99.36 508.032)">Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</text>

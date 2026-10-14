@@ -69,7 +69,7 @@ def inventory(root, exclude=True):
         for name in sorted(names + [n for n in folders if (base / n).is_symlink()]):
             path = base / name
             relative = str(path.relative_to(root))
-            if exclude and (name in {".env", "openai.key", "openai.local.json", "admin.local.json"} or
+            if exclude and (name in {".env", "openai.key", "openai.local.json", "ai.local.json", "admin.local.json"} or
                             name.startswith(".env.") and name != ".env.example" or
                             (name.startswith(".admin-config-") and name.endswith(".tmp")) or
                             name.endswith(".pyc")):
@@ -399,7 +399,7 @@ def execute():
         config = {"schema_version": SCHEMA, "closure_id": closure_id, **policy,
                   "claim_file": "claims.json", "tcb_file": "tcb.json", "manifest_file": "manifest.json",
                   "provenance_file": "provenance.json", "verifier_registry": "verifier-registry.json",
-                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json", "admin.local.json", ".admin-config-*.tmp"],
+                  "source_exclusions": {"directories": sorted(SKIP_DIRS | SKIP_PATHS), "private_files": [".env", ".env.* except .env.example", "openai.key", "openai.local.json", "ai.local.json", "admin.local.json", ".admin-config-*.tmp"],
                                         "generated_files": ["*.pyc"]}}
         for name, value in {"closure-config.json": config, "tcb.json": tcb,
                             "provenance.json": provenance, "verifier-registry.json": registry,

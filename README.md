@@ -2,29 +2,37 @@
 
 A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
-operations, the learner's canonical form, saved drafts, and GPT-6 Luna guidance.
+operations, the learner's canonical form, saved drafts, and configurable AI guidance.
+
+**Current release: [v0.0.7-alpha.4](docs/releases/v0.0.7-alpha.4.md).**
+Guidance, upload suggestions and private candidate-review advice can each use
+OpenAI, Claude, Gemini, DeepSeek or an OpenAI-compatible service. Configure the
+model and key in private `ai.local.json`; there is no browser credential input.
+The release also incorporates the reviewed reward/binding audit regressions and
+the HiGenA naming corrections in evaluation documentation.
+
 Feedback uses the closest member of each bundled correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
 
 The completed [Alloy4Fun baseline comparison](docs/alloy4fun-comparison.md) evaluates
-**both Canonical and raw AST hints** against TAR and the FM24 historical-data
+**both Canonical and raw AST hints** against TAR and the HiGenA historical-data
 approach on the 61,598-model cohort, with hit-rate definitions, runtime,
 held-out submission paths, reproducible adapters, and explicit study limits.
 All five arms completed on 2026-09-30. Incorrect-input native hint rates were
-100% for each Live mode, 44.59% for TAR, 34.02% for FM24 history, and 50.42% for
-FM24 with mutation. TAR's independently checked bounded repair rate was 43.73%.
+100% for each Live mode, 44.59% for TAR, 34.02% for HiGenA history, and 50.42% for
+HiGenA with mutation. TAR's independently checked bounded repair rate was 43.73%.
 Hint availability is not repair quality; worker resources also differed.
 [Results, figures, and the evidence index](docs/benchmarks/README.md) accompany the report.
 Its five-fold reference exclusion is a benchmark adaptation; nonempty hints on
 held-out CORRECT submissions do not measure recognition of members of the
 original complete correct pool.
 The [ten-exercise hint-quality pilot](docs/alloy4fun-hint-quality.md) adds current
-Canonical/AST hints beside TAR and FM24 outputs, two literal-edit checks, and
+Canonical/AST hints beside TAR and HiGenA outputs, two literal-edit checks, and
 separate Luna reviews. It distinguishes useful source highlights from directly
 applicable edits and documents the sample and pool-policy limits.
 The [181-invariant hint-quality report](docs/alloy4fun-181-hint-quality.md)
 extends coverage and measured guidance properties to the complete catalogue,
-keeping Canonical, AST, TAR, and both FM24 configurations separate.
+keeping Canonical, AST, TAR, and both HiGenA configurations separate.
 The [181-invariant image audit](docs/instance-audit-v003.md) records real solver
 instances, desktop/mobile layout checks, and any cases without drawable results.
 The [engine and corpus diagnostic report](docs/hint-diagnostics.md) investigates
@@ -309,7 +317,7 @@ Unselected predicates keep their original code in the learner's model environmen
 `inv1C0`, `inv1C1`, … stay together as one `inv1` exercise. All original numbered
 groups must pass bounded equivalence, including unselected groups; selected
 solutions are also checked in their exercise environments. Other predicates keep
-their names. Luna suggests
+their names. The configured upload model suggests
 metadata and question wording while original source stays unchanged. Review the
 questions before publishing the complete batch. See [admin setup](docs/admin-setup.md)
 and the [security contract](docs/admin-security-spec.md).
@@ -328,8 +336,8 @@ must finish UNSAT with model facts enforced. Drafts with a counterexample,
 incomplete checks, or unavailable evidence never enter the cache; a rounded
 `1.000` alone is insufficient. The cache is a private review queue, separate
 from the approved correct-predicate pool.
-**Review with Sol** explicitly requests GPT-6.1 Sol at High effort using the
-backend's private OpenAI key. It gives advice; the administrator approves or
+**Review with AI** requests the configured review model (by default GPT-6.1 Sol at High effort) using the
+backend's private provider configuration. It gives advice; the administrator approves or
 dismisses. Approval runs a fresh facts-aware Alloy equivalence check before
 extending the correct pool used by both distance modes. These checks are bounded
 agreement, not an unbounded proof. See the [library/cache contract](docs/admin-library-candidates-spec.md).
@@ -519,7 +527,16 @@ draft, and a process timeout of at least 30 seconds (`max(30, --timeout)`).
 Canonical checks remain independent. Scores are bounded sample measurements,
 not probabilities of correctness or unrestricted equivalence proofs.
 
-## GPT-6 Luna
+## AI guidance providers
+
+OpenAI, Claude, Gemini, DeepSeek and OpenAI-compatible services can supply
+guidance, upload metadata and candidate-review advice. Keys and model choices
+stay in private `ai.local.json`, with a separate selected model for each role.
+See the [provider setup guide](docs/ai-providers.md) and
+[acceptance contract](docs/ai-providers-spec.md). Legacy OpenAI setup below remains
+supported when the new configuration is absent.
+
+### Default OpenAI guidance
 
 The server uses the [GPT-6 Luna model](https://developers.openai.com/api/docs/models/gpt-6-luna)
 through the [Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create).

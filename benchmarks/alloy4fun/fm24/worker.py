@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""JSONL benchmark adapter for FM24 MIN-TED, with optional one-step mutations.
+"""JSONL benchmark adapter for HiGenA MIN-TED, with optional one-step mutations.
 
 Accepts {case_id,path,predicate,timeout_seconds}; emits deterministic engine
 results only. Published Java normalizer, TAR mutants and HiGenA hint generator

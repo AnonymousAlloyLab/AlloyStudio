@@ -87,9 +87,9 @@ current preview version; refresh after another administrator changes it.
 The **Candidate cache** tab shows private drafts whose exact samples and bounded
 disagreement checks agree with the primary oracle. Retention starts only after
 administration is configured. The limits are 100 drafts total and 10 per exercise.
-Select a draft to read its code and check evidence. **Review with Sol** makes one
-explicit GPT-6.1 Sol High-effort request through the existing private OpenAI
-configuration. Viewing candidates never makes a paid request.
+Select a draft to read its code and check evidence. **Review with AI** makes one
+explicit request through the private review-provider configuration (GPT-6.1 Sol
+at high effort by default). See [provider setup](ai-providers.md). Viewing candidates never makes a paid request.
 
 Advice can recommend, reject, or remain uncertain; it cannot publish a solution.
 Confirm **Approve** to run a fresh facts-aware Alloy check at scope at least five.
@@ -155,7 +155,7 @@ Behavioral examples show those values beside the diagram; the score samples
 model-and-argument assignments. Counterexamples in either direction prevent a
 score of 1.000. These are bounded checks, not an unbounded equivalence proof.
 
-Preparation and Luna suggestions run as bounded jobs, so the browser can poll
+Preparation and AI suggestions run as bounded jobs, so the browser can poll
 without keeping a request open for the full solver duration. Drafts remain in
 memory, expire after 15 minutes and are visible only to their owning session.
 Restarting the backend discards unpublished drafts.
@@ -168,10 +168,10 @@ time out and remains unpublished. Large repeated environments may require a
 smaller selection: prepared data is bounded to 8 MiB per draft and 32 MiB across
 retained drafts. Discard an earlier draft to free its budget.
 
-Luna suggestions send the uploaded model and optional question seed to OpenAI
+AI suggestions send the uploaded model and optional question seed to the configured upload provider
 using the server's existing private key configuration. The page identifies
-that transfer. Luna can suggest titles and questions; it cannot rewrite model
-code or decide whether solutions are equivalent. If Luna is unavailable or no
+that transfer. AI can suggest titles and questions; it cannot rewrite model
+code or decide whether solutions are equivalent. If AI is unavailable or no
 key is configured, edit the questions manually. **Published titles and questions
 are public**: review them for correctness and accidental solution disclosure.
 

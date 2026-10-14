@@ -101,8 +101,8 @@ class AdversarialLunaTests(unittest.TestCase):
 
     def test_malformed_provider_shapes_are_sanitized(self):
         malformed = [[], None, {'status': 'completed', 'output': [None]},
-                     {'status': 'completed', 'output': [{'type': 'message', 'content': [None]}]},
-                     {'status': 'completed', 'output': [{'type': 'message', 'content': 'PRIVATE_SENTINEL'}]},
+                     {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [None]}]},
+                     {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': 'PRIVATE_SENTINEL'}]},
                      {'status': 'incomplete', 'error': 'PRIVATE_SENTINEL'}]
         for index, value in enumerate(malformed):
             with self.subTest(fixture=index):
@@ -131,7 +131,7 @@ class AdversarialLunaTests(unittest.TestCase):
             with self.subTest(fixture=index):
                 def transport(*args, **kwargs):
                     return io.BytesIO(json.dumps({'status': 'completed', 'output': [
-                        {'type': 'message', 'content': [{'type': 'output_text', 'text': json.dumps(value)}]}]}).encode())
+                        {'type': 'message', 'role': 'assistant', 'content': [{'type': 'output_text', 'text': json.dumps(value)}]}]}).encode())
                 client = luna.Explainer(transport=transport, key_reader=lambda: 'UNIT_TEST_KEY')
                 result = client.explain(TRACE)
                 self.assertEqual(result['status'], 'unavailable')

@@ -21,8 +21,8 @@ ARMS = {'canonical': ('live-full', 'live-canonical'),
         'fm24-history': ('fm24-history', 'fm24-history'),
         'fm24-mutation': ('fm24-mutation', 'fm24-mutation'),
         'tar': ('tar', 'tar-depth-2')}
-LABELS = {'canonical': 'Canonical', 'ast': 'AST', 'fm24-history': 'FM24 history',
-          'fm24-mutation': 'FM24 + mutation', 'tar': 'TAR'}
+LABELS = {'canonical': 'Canonical', 'ast': 'AST', 'fm24-history': 'HiGenA history',
+          'fm24-mutation': 'HiGenA + mutation', 'tar': 'TAR'}
 PURPOSE = (' to specify ', ' to combine ', ' to find ', ' to perform ',
            ' to remove elements ', ' to get the ', ' to transpose ', ' to restrict ',
            ' to reverse ', ' to count ')
@@ -41,7 +41,7 @@ def load(path):
 
 
 def public_native_hint(hint):
-    """Conservatively hide all FM24 operand identities, including source ones."""
+    """Conservatively hide all HiGenA operand identities, including source ones."""
     if not hint:
         return hint
     hint = re.sub(r'((?:signature|variable) of type )\w+', r'\1[operand type hidden]', hint)
@@ -171,7 +171,7 @@ def percent(n, d):
 def make_markdown(out):
     total = out['global']
     lines = ['# Hint availability and guidance across all 181 invariants', '',
-        'This audit compares **Canonical, raw AST, FM24 historical, FM24 historical + mutation, and TAR** '
+        'This audit compares **Canonical, raw AST, HiGenA historical, HiGenA historical + mutation, and TAR** '
         'on every one of the 181 imported Alloy4Fun invariants. It separates **whether a hint exists** '
         'from **what guidance is actually present**. These are observed presentation properties, '
         'not learner-success scores.', '',
@@ -188,7 +188,7 @@ def make_markdown(out):
         '- Current-portal layer: **181 existing catalogue starters**, selected without looking at outputs '
         '(175 UNDERCONSTRAINED and 6 OVERCONSTRAINED), with one fresh Canonical and AST request each. '
         'The portal uses its full compatible CORRECT pool, including its oracle; archived Canonical/AST '
-        'and FM24 use their recorded five-fold held-out pools. The archived Canonical/AST starter controls '
+        'and HiGenA use their recorded five-fold held-out pools. The archived Canonical/AST starter controls '
         'remain in the JSON. This is not an equal-training-data comparison.',
         '- TAR was not rerun: depth two, recorded 60-second search budget, and an independent bounded '
         'Alloy validation attempt for emitted candidate repairs. Successful, rejected and unresolved '
@@ -196,8 +196,8 @@ def make_markdown(out):
         '- No paid Luna explanations, new AI quality ratings, learner study, or all-corpus literal-edit '
         'success experiment was performed. Current request wall times are diagnostics, not a new runtime ranking.',
         '- Public evidence omits oracle bodies, hidden target expressions and complete candidate repairs. '
-        'FM24 operand type/name phrases are conservatively redacted, including source-side identities; '
-        'operator names and explanatory wording remain. This records a disclosure difference, not an error in FM24.', '',
+        'HiGenA operand type/name phrases are conservatively redacted, including source-side identities; '
+        'operator names and explanatory wording remain. This records a disclosure difference, not an error in HiGenA.', '',
         'The [frozen 181-input selection](../benchmarks/alloy4fun/protocol/quality-selection-181.json) '
         'is included in the repository, containing only learner drafts, public questions and source identities. '
         'The [reproducer](../benchmarks/alloy4fun/quality_all.py) reads one archive at a time and retains '
@@ -233,7 +233,7 @@ def make_markdown(out):
         macro = sum(x['hint_cases']/x['responses'] for x in profiles)/len(profiles)
         lines.append(f"| {LABELS[arm]} | {c['hint_cases']:,} / {c['responses']:,} | {percent(c['hint_cases'], c['responses'])} | {sum(x['hint_cases']>0 for x in profiles)} / 181 | {100*macro:.2f}% |")
     lines += ['', 'Macro availability weights each invariant equally; overall availability weights each submission equally. '
-        'FM24 history and mutation-enabled FM24 are separate configurations and must not be merged into one result.', '',
+        'HiGenA history and mutation-enabled HiGenA are separate configurations and must not be merged into one result.', '',
         '## Guidance properties observed across the whole incorrect corpus', '',
         'For Canonical/AST, an **exact raw location** means metadata identifies the selected learner node; '
         'it is not independent evidence that the node is the learner’s conceptual defect. An insertion may '
@@ -267,14 +267,14 @@ def make_markdown(out):
         'will compile or improve behavior**. The earlier pilot constructed a type-error counterexample '
         'for a literal Canonical operator replacement. That limitation remains applicable; this audit '
         'does not reinterpret a high location or trace-consistency rate as repair correctness.', '',
-        '| Native baseline guidance property | FM24 history | FM24 + mutation | TAR |',
+        '| Native baseline guidance property | HiGenA history | HiGenA + mutation | TAR |',
         '| --- | ---: | ---: | ---: |']
     for label,key in [('Hints with an operator-purpose phrase','operator_purpose_phrase_cases')]:
         lines.append('| '+label+' | '+' | '.join(f"{total[a]['counts'].get(key,0):,} / {total[a]['counts']['hint_cases']:,}" for a in ('fm24-history','fm24-mutation','tar'))+' |')
     for label,key in [('Hints naming an operator/quantifier','named_operator_or_quantifier_cases'),
                       ('Hints with a relative-context phrase','relative_context_phrase_cases'),
                       ('Hints requiring operand-identity redaction','operand_identity_redacted_cases')]:
-        lines.append('| '+label+' | '+' | '.join(f"{total[a]['counts'].get(key,0):,} / {total[a]['counts']['hint_cases']:,}" for a in ('fm24-history','fm24-mutation'))+' | Not assessed by this FM24-specific detector |')
+        lines.append('| '+label+' | '+' | '.join(f"{total[a]['counts'].get(key,0):,} / {total[a]['counts']['hint_cases']:,}" for a in ('fm24-history','fm24-mutation'))+' | Not assessed by this HiGenA-specific detector |')
     tc=total['tar']['counts']
     lines += [f"| TAR hints with all native line/column ranges | — | — | {tc.get('all_raw_range_cases',0):,} / {tc['hint_cases']:,} |",
         f"| TAR hints with a bounded-validated complete repair behind them | — | — | {tc.get('bounded_checked_cases',0):,} / {tc['hint_cases']:,} |", '',
@@ -282,19 +282,19 @@ def make_markdown(out):
         f"**{tc['validation_error_cases']} validation errors** and **{tc['validation_timeout_cases']} validation timeouts** "
         'among native-hint cases. These remain native-hint availability hits; they are not counted as '
         'validated repairs. An unknown validation result is not a constructed counterexample.', '',
-        'The phrase detector is intentionally mechanical: it tests the fixed FM24 templates for '
+        'The phrase detector is intentionally mechanical: it tests the fixed HiGenA templates for '
         'operator/quantifier names, phrases such as “to specify” or “to combine”, and “within the” '
         'or “inside of the”. It does not judge whether an explanation is relevant, correct, understandable '
         'or sufficient. TAR’s absence of those phrases reflects its terse mutation cues, not a failed repair. '
         'TAR line/column ranges were counted as supplied; these are not portal body-offset highlights. '
-        'FM24’s relative context is also different from an exact editor address.', '',
+        'HiGenA’s relative context is also different from an exact editor address.', '',
         '### Assessment', '',
         '**Canonical and AST have the strongest availability in this corpus** and provide inspectable '
         'multi-step structure with source references. Their long and repetitive traces, hidden operands '
         'and normalization/tree-edit semantics leave interpretation to the learner. AST avoids canonical '
         'normalization, but its delete/insert operations can also differ from ordinary text edits. '
         'Neither trace length nor distance establishes a quality ordering between these two modes.', '',
-        '**FM24 history explains operator purpose more directly when a historical hint is available.** '
+        '**HiGenA history explains operator purpose more directly when a historical hint is available.** '
         'The mutation-enabled arm extends availability, but its extra mutation cues use terser wording. '
         'Some native hints disclose operand identities; the public comparison marks those omissions '
         'rather than awarding the portal an unfair specificity disadvantage under its stricter disclosure policy.', '',
@@ -326,12 +326,12 @@ def make_markdown(out):
         '## Per-invariant availability and guidance', '',
         'Every row uses all incorrect submissions of that invariant. **C/A** means Canonical/AST. '
         'The raw-location column is the percentage of atomic operations carrying exact raw-node metadata; '
-        'the length column is median atomic operations per available hint. FM24 columns count available '
+        'the length column is median atomic operations per available hint. HiGenA columns count available '
         'native hints, with “H/+M” denoting history/mutation-enabled. Guidance details, statuses, '
         'operator specificity, repetition and the matched starter outputs are in the linked JSON. '
-        'FM24 purpose counts apply equally to both variants because all extra mutation hints lack these '
+        'HiGenA purpose counts apply equally to both variants because all extra mutation hints lack these '
         'particular purpose phrases. TAR checked counts show the verified subset of the adjacent hint count.', '',
-        '| Invariant | Incorrect N | Canonical hints | AST hints | FM24 H / +M hints | TAR hints / checked | C/A raw exact % | C/A median steps | FM24 purpose hints |',
+        '| Invariant | Incorrect N | Canonical hints | AST hints | HiGenA H / +M hints | TAR hints / checked | C/A raw exact % | C/A median steps | HiGenA purpose hints |',
         '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |']
     for row in out['invariants']:
         p=row['corpus']; c=p['canonical']['counts']; a=p['ast']['counts']
@@ -447,7 +447,7 @@ def main():
          'scope':{'invariants':181,'corpus_cases':61598,'incorrect_cases':42388,'fresh_requests':362,
              'measures':'Observed guidance features, not learner outcomes or first-edit correctness.',
              'deterministic_only':True,'luna_calls':0,'new_subjective_quality_ratings':False,
-             'operand_redaction':'FM24 operand types and double-quoted names hidden conservatively; operators preserved.'},
+             'operand_redaction':'HiGenA operand types and double-quoted names hidden conservatively; operators preserved.'},
          'provenance':{'final_report_sha256':sha(report_path),'response_audit_sha256':sha(audit_path),
              'cases_sha256':sha(args.data/'cases.jsonl'),'selection_sha256':sha(selection_path),
              'current_responses_sha256':sha(current_path),'analyzer_sha256':sha(Path(__file__)),

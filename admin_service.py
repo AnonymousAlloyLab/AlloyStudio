@@ -202,7 +202,7 @@ class AdminService:
                 raise AdminError(409,'Wait for model validation before requesting suggestions.')
             if not self.slot.acquire(blocking=False):
                 raise AdminError(429,'An upload operation is running. Try again shortly.')
-            draft.state, draft.message = 'suggesting','Luna is drafting question suggestions…'
+            draft.state, draft.message = 'suggesting','AI is drafting question suggestions…'
             draft.revision += 1
             self.idle.clear()
             try:
@@ -351,7 +351,7 @@ class AdminService:
             draft = Draft(secrets.token_urlsafe(32), principal, self.clock(),
                           state='reviewing' if action == 'review' else 'approving',
                           kind=action, candidate_id=identifier,
-                          message=('Sol is reviewing this candidate…' if action == 'review' else
+                          message=('AI is reviewing this candidate…' if action == 'review' else
                                    'Alloy is checking agreement with the unchanged model facts…'))
             self.drafts[draft.identifier] = draft
             self.idle.clear()

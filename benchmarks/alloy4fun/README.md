@@ -1,6 +1,6 @@
 # Reproducing the Alloy4Fun comparison
 
-The [comparison report](../../docs/alloy4fun-comparison.md) presents the measurements. The [measurement protocol](protocol/README.md) defines their denominators and limits. This directory executes five deterministic variants: Live canonical, Live raw AST using Zhang–Shasha, TAR at depth 2, FM24 historical hints, and FM24 historical hints with one mutation. Canonical remains the portal default.
+The [comparison report](../../docs/alloy4fun-comparison.md) presents the measurements. The [measurement protocol](protocol/README.md) defines their denominators and limits. This directory executes five deterministic variants: Live canonical, Live raw AST using Zhang–Shasha, TAR at depth 2, HiGenA historical hints, and HiGenA historical hints with one mutation. Canonical remains the portal default.
 
 All five registered arms are **complete**, with 61,598 recorded outcomes each. The [versioned results JSON](../../docs/benchmarks/alloy4fun-results.json) records the final metrics, source audit, passing raw-response audit, and execution provenance. The measured experiment is the five-fold held-out comparison described below; an original-policy full-pool operational comparison remains unmeasured.
 
@@ -19,18 +19,18 @@ BENCH_DATA=build/benchmarks/alloy4fun-reproduction
 BENCH_WORKERS=16
 ```
 
-The completed Canonical, AST, and two FM24 arms used **16 workers each**. After a recorded global-memory incident, TAR completed a fresh run with **four workers inside a 6 GiB cgroup**, retaining the 60-second budget. The four earlier completed arms remained byte-for-byte unchanged. The interrupted 16-worker TAR attempt is archived separately under `build/benchmarks/alloy4fun-v2/tar-interrupted-oom-20260929T234811/`; none of its rows enters the final comparison. Runtime and deadline-conditioned availability therefore describe unequal resource configurations, not an equal-resource speed ranking. Earlier overlapping runs also remain separate diagnostic evidence. The two legacy label corrections are recorded in [label-corrections.json](protocol/label-corrections.json), with source labels retained separately.
+The completed Canonical, AST, and two HiGenA arms used **16 workers each**. After a recorded global-memory incident, TAR completed a fresh run with **four workers inside a 6 GiB cgroup**, retaining the 60-second budget. The four earlier completed arms remained byte-for-byte unchanged. The interrupted 16-worker TAR attempt is archived separately under `build/benchmarks/alloy4fun-v2/tar-interrupted-oom-20260929T234811/`; none of its rows enters the final comparison. Runtime and deadline-conditioned availability therefore describe unequal resource configurations, not an equal-resource speed ranking. Earlier overlapping runs also remain separate diagnostic evidence. The two legacy label corrections are recorded in [label-corrections.json](protocol/label-corrections.json), with source labels retained separately.
 
 The commands below document the component invocations, not an automatic registration of a new experiment. Before a fresh run, choose a host-safe aggregate memory limit and record the actual worker counts, sequential schedule, and input provenance. The strict publisher currently accepts the registered uniform 16-worker profile or the specific documented 16/4 recovery profile; another worker configuration requires a separately registered reporting contract. No script here creates a fresh resource profile automatically. Copying the completed run's schedule, guard report, or preservation hashes into a new experiment would misrepresent its execution and fail validation. The published metrics and figures are available without rerunning the private corpus.
 
-Each JVM owns a private directory under `build/benchmarks/tmp/`; override the base with `ALLOY_BENCHMARK_TMP_ROOT` if needed. Parent processes remove only their own worker directories after exit or forced termination. Live and TAR workers recycle after 256 learner requests, charging cleanup/restart to the next request. FM24 workers recycle after 256 native actions: cleanup is charged to the completing action and startup to the next one, within the relevant learner request deadlines. Tests can also avoid the host's system temporary directory:
+Each JVM owns a private directory under `build/benchmarks/tmp/`; override the base with `ALLOY_BENCHMARK_TMP_ROOT` if needed. Parent processes remove only their own worker directories after exit or forced termination. Live and TAR workers recycle after 256 learner requests, charging cleanup/restart to the next request. HiGenA workers recycle after 256 native actions: cleanup is charged to the completing action and startup to the next one, within the relevant learner request deadlines. Tests can also avoid the host's system temporary directory:
 
 ```bash
 mkdir -p build/tests/tmp
 export TMPDIR="$PWD/build/tests/tmp"
 ```
 
-1. **Fetch the pinned author artifacts and historical metadata.** The FM24 fetcher checks repository commits, bundled JAR SHA-256 values, Maven dependency hashes, and publisher checksums for all 17 historical JSON files. It refuses an existing checkout at a different commit. [sources.json](fm24/sources.json) records the exact resources. TAR is checked out separately at the commit used by this comparison; skip its clone/checkout commands if that exact checkout already exists.
+1. **Fetch the pinned author artifacts and historical metadata.** The HiGenA fetcher checks repository commits, bundled JAR SHA-256 values, Maven dependency hashes, and publisher checksums for all 17 historical JSON files. It refuses an existing checkout at a different commit. [sources.json](fm24/sources.json) records the exact resources. TAR is checked out separately at the commit used by this comparison; skip its clone/checkout commands if that exact checkout already exists.
 
 ```bash
 python3 benchmarks/alloy4fun/fm24/fetch_resources.py \
@@ -40,7 +40,7 @@ git clone https://github.com/Kaixi26/TAR.git "$BENCH_BASELINES/TAR"
 git -C "$BENCH_BASELINES/TAR" checkout --detach aad990e405b811bd245518cbb63ecc4f065c5275
 ```
 
-The FM24 resources are the paper's [Alloy4Fun fork](https://github.com/anaines14/Alloy4Fun), [SpecAssistant](https://github.com/K1yps/SpecAssistant), and [HiGenA](https://github.com/anaines14/higena). Their downloaded code and binaries remain outside this repository. No root license file was found in those FM24 checkouts; public download availability is not a redistribution license. Dependency and upstream licenses retain their own terms.
+The HiGenA resources are the paper's [Alloy4Fun fork](https://github.com/anaines14/Alloy4Fun), [SpecAssistant](https://github.com/K1yps/SpecAssistant), and [HiGenA](https://github.com/anaines14/higena). Their downloaded code and binaries remain outside this repository. No root license file was found in those HiGenA checkouts; public download availability is not a redistribution license. Dependency and upstream licenses retain their own terms.
 
 2. **Build the production engine and the two benchmark bridges.** This avoids rebuilding the portal or deployment ZIP. The TAR builder downloads one pinned Eclipse annotation dependency and also compiles the independent Alloy repair validator. `--javac /path/to/javac` is available for a nondefault compiler; `--java8-rt` selects the Java 8 bootstrap library. Leave TAR's output at its default location because `run_tar.py` reads that build manifest.
 
@@ -81,11 +81,11 @@ python3 benchmarks/alloy4fun/fm24/lineage.py \
   --output "$BENCH_DATA/lineage-all.json"
 ```
 
-Each branch starts at the first descendant of the original instructor model. All descendants, including submissions to other questions, share a fold. The fold is the big-endian integer SHA-256 of `alloy4fun-path-v1:` plus `original:branch_root`, modulo five. Each evaluation case uses the other four folds for historical graphs and CORRECT student reference pools. Every pool also retains its fixed teacher oracle. This five-fold experiment differs from the FM24 paper's single 70/30 split.
+Each branch starts at the first descendant of the original instructor model. All descendants, including submissions to other questions, share a fold. The fold is the big-endian integer SHA-256 of `alloy4fun-path-v1:` plus `original:branch_root`, modulo five. Each evaluation case uses the other four folds for historical graphs and CORRECT student reference pools. Every pool also retains its fixed teacher oracle. This five-fold experiment differs from the HiGenA paper's single 70/30 split.
 
 The fold exclusion was introduced by this benchmark. Original `Alloy4FunAugmenter` pools contain all admitted CORRECT submissions and an oracle, deduplicate raw ASTs, and rank only incorrect submissions. The production pool importer also has no fold exclusion, but restricts candidates to its selected exercise's exact environment and oracle and uses lexical deduplication. Benchmark nonempty hints on held-out CORRECT submissions must not be attributed to either full-pool policy. The recorded full-compatible-pool membership audit establishes inclusion of those bodies, not new full-pool distances, hint rates, or runtimes. Removing only the fold filter would still not reproduce the original augmenter's grouping and deduplication rules.
 
-4. **Build fresh FM24 graphs and compile its native bridge.** This step calls the unchanged author normalizer and APTED components and writes all five graph files before any online measurement. Use the new output directory shown below to measure uncached preprocessing.
+4. **Build fresh HiGenA graphs and compile its native bridge.** This step calls the unchanged author normalizer and APTED components and writes all five graph files before any online measurement. Use the new output directory shown below to measure uncached preprocessing.
 
 ```bash
 python3 benchmarks/alloy4fun/fm24/prepare_graphs.py \
@@ -157,7 +157,7 @@ python3 benchmarks/alloy4fun/summarize.py \
 
 By default, this intentionally updates `docs/benchmarks/alloy4fun-results.json` and the generated-results section of `docs/alloy4fun-comparison.md`. To save a separate rerun report, use `--json-output` and `--markdown`; the chosen Markdown file must already contain the generated-results marker pair, for example by copying the comparison document first. `--allow-partial` writes a clearly marked progress artifact under `build/` and does not update final public results.
 
-The cohort files, both required tool-build manifests, current compiled classes, pinned baseline JARs, evaluation `lineage.json`, FM24 graph files, `evidence-audit.json`, the registered `resource-profile.json`, all five completed runs, and their raw response archives must remain available for this check. The recovery profile additionally requires the hash-bound guard source and completed guard evidence, the separately archived interrupted TAR run, and unchanged hashes for the four preserved arms. Extra provenance files such as `environment.json` and `fm24-final/fresh-native-preprocessing.json` are included when present, but are not prerequisites. A separate `history-audit.json` is useful supplemental evidence and is not required by the strict summarizer. A fresh graph build already writes its timings to `fm24-final/preprocessing.json`; do not replace them with cached-rebuild timings and describe them as fresh construction.
+The cohort files, both required tool-build manifests, current compiled classes, pinned baseline JARs, evaluation `lineage.json`, HiGenA graph files, `evidence-audit.json`, the registered `resource-profile.json`, all five completed runs, and their raw response archives must remain available for this check. The recovery profile additionally requires the hash-bound guard source and completed guard evidence, the separately archived interrupted TAR run, and unchanged hashes for the four preserved arms. Extra provenance files such as `environment.json` and `fm24-final/fresh-native-preprocessing.json` are included when present, but are not prerequisites. A separate `history-audit.json` is useful supplemental evidence and is not required by the strict summarizer. A fresh graph build already writes its timings to `fm24-final/preprocessing.json`; do not replace them with cached-rebuild timings and describe them as fresh construction.
 
 The two final report figures have been generated with Matplotlib 3.10.9. To regenerate them from the completed JSON:
 
@@ -167,7 +167,7 @@ python3 benchmarks/alloy4fun/plot_results.py \
   --output-dir docs/benchmarks
 ```
 
-This exports native Hit Rate and timely-hint availability figures in SVG and PNG, together with `alloy4fun-figures.json` binding the input and output hashes. Both canonical and raw-AST modes appear alongside TAR and both FM24 variants. The figures label the incorrect-input denominator, the four preserved 16-worker arms, and the fresh 4-worker TAR arm. They disclose the unequal resource configurations and do not present an equal-resource speed ranking. The generator refuses `RUNNING`, partial, unaudited, or inconsistent summaries; it creates no provisional public figures. A separate rerun can use its own completed summary and output directory.
+This exports native Hit Rate and timely-hint availability figures in SVG and PNG, together with `alloy4fun-figures.json` binding the input and output hashes. Both canonical and raw-AST modes appear alongside TAR and both HiGenA variants. The figures label the incorrect-input denominator, the four preserved 16-worker arms, and the fresh 4-worker TAR arm. They disclose the unequal resource configurations and do not present an equal-resource speed ranking. The generator refuses `RUNNING`, partial, unaudited, or inconsistent summaries; it creates no provisional public figures. A separate rerun can use its own completed summary and output directory.
 
 For ad hoc metric inspection, the generic aggregator remains available. It keeps successful and failed cases in the denominator, but does not replace the strict completion and artifact validation above.
 
@@ -188,4 +188,4 @@ python3 -m unittest discover -s benchmarks/alloy4fun/tar -p 'test_*.py' -v
 python3 -m unittest discover -s benchmarks/alloy4fun/fm24 -p 'test_*.py' -v
 ```
 
-The FM24 native integration tests currently look for downloaded resources at `/home/augustus/lp_baselines`; elsewhere they skip those native checks. The standalone worker and all preparation/running commands accept `--baselines` as shown. Keep raw `responses.jsonl.gz`, graph files, and extracted payloads under the ignored `build/` tree: they can contain complete student and reference expressions. Public reports should contain aggregate metrics and provenance rather than hidden solution bodies.
+The HiGenA native integration tests currently look for downloaded resources at `/home/augustus/lp_baselines`; elsewhere they skip those native checks. The standalone worker and all preparation/running commands accept `--baselines` as shown. Keep raw `responses.jsonl.gz`, graph files, and extracted payloads under the ignored `build/` tree: they can contain complete student and reference expressions. Public reports should contain aggregate metrics and provenance rather than hidden solution bodies.

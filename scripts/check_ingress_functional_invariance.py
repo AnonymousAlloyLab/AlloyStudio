@@ -46,7 +46,7 @@ run under
 SOURCES = ('server.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits.py',
            'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'engine_workers.py',
            'traffic_scheduler.py', 'runtime_dependencies.py', 'execution_profile.py',
-           'luna.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
+           'luna.py', 'ai_provider.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
            'practice_dependencies.py', 'practice_progress.py', 'exercise_store.py', 'exercise_sql.py', 'scripts/import_exercises.py',
            'scripts/import_correct_pools.py', 'scripts/traffic_observation.py',
            'closure/traffic-refinement/observation-spec.json',
@@ -99,7 +99,7 @@ def staged_root(root, destination):
     for name in runtime_dependencies.JAR_FILES:
         shutil.copy2(root / 'vendor/acgn/lib' / name, libraries / name)
     # These names are deliberately absent; only this new owned folder is tested.
-    if any((destination / name).exists() for name in ('admin.local.json', 'openai.local.json', 'secrets')):
+    if any((destination / name).exists() for name in ('admin.local.json', 'openai.local.json', 'ai.local.json', 'secrets')):
         raise ValueError('Synthetic deployment unexpectedly contains private configuration')
     return load_store(destination)
 

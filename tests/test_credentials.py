@@ -39,6 +39,7 @@ class PortableCredentialTests(unittest.TestCase):
         backend = directory / "portable backend with spaces"
         backend.mkdir(parents=True)
         shutil.copy2(ROOT / "luna.py", backend / "luna.py")
+        shutil.copy2(ROOT / "ai_provider.py", backend / "ai_provider.py")
         shutil.copy2(ROOT / "traffic_limits.py", backend / "traffic_limits.py")
         shutil.copy2(ROOT / "traffic_decode.py", backend / "traffic_decode.py")
         return backend
@@ -217,6 +218,28 @@ class PortableCredentialTests(unittest.TestCase):
             rejected = self.observe(backend, directory, directory / "home", platform_override="linux")
             self.assertEqual(rejected["keyHash"], hashlib.sha256(b"").hexdigest())
 
+    @unittest.skipUnless(hasattr(os, 'mkfifo'), 'POSIX named-pipe witness')
+    def test_fifo_credentials_refused_without_waiting_for_a_writer_or_using_fallback(self):
+        scratch = ROOT / 'build/credential-tests/fifo'
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as raw:
+            directory = Path(raw)
+            backend = self.backend(directory)
+            fifo = backend / 'synthetic-credential.fifo'
+            os.mkfifo(fifo, 0o600)
+            fifo.chmod(0o600)
+            self.key_file(backend / 'secrets/openai.key', KEY_B)
+            self.config_file(backend / 'openai.local.json', {'api_key': KEY_A})
+            self.config_file(backend / 'fifo-pointer.json', {'api_key_file': fifo.name})
+            for variables in ({'OPENAI_API_KEY_FILE': fifo.name},
+                              {'OPENAI_CONFIG_FILE': fifo.name},
+                              {'OPENAI_CONFIG_FILE': 'fifo-pointer.json'}):
+                with self.subTest(source=next(iter(variables.items()))):
+                    # observe executes read_key in a child with a five-second
+                    # deadline; no writer is opened, so blocking opens fail it.
+                    result = self.observe(backend, directory, directory / 'home', variables)
+                    self.assertEqual(result['keyHash'], hashlib.sha256(b'').hexdigest())
+
     def test_windows_mode_bits_are_not_treated_as_ntfs_acl_evidence(self):
         with tempfile.TemporaryDirectory() as raw:
             directory = Path(raw)
@@ -249,7 +272,7 @@ class DeploymentCredentialCacheTests(unittest.TestCase):
                 education = {"operations": [{"id": "operation-1", "description": "Review this edit."}],
                              "instances": [], "summary": "Account response " + str(len(seen))}
                 return io.BytesIO(json.dumps({"status": "completed", "output": [
-                    {"type": "message", "content": [{"type": "output_text", "text": json.dumps(education)}]}]}).encode())
+                    {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": json.dumps(education)}]}]}).encode())
             trace = {"distance": 1, "breakdown": {"temporal": 0, "quantifier": 0, "matrix": 1},
                      "operations": [{"kind": "replace", "component": "matrix", "cost": 1}]}
             with patch.object(luna, "BACKEND_ROOT", backend), patch.dict(os.environ, {"OPENAI_DISABLED": "0"}, clear=True):
@@ -320,6 +343,7 @@ class CredentialDeliveryTests(unittest.TestCase):
         self.assertEqual(json.loads((ROOT / "openai.example.json").read_text()), {"api_key": ""})
         rules = (ROOT / ".gitignore").read_text().splitlines()
         self.assertIn("openai.local.json", rules)
+        self.assertIn("ai.local.json", rules)
         self.assertIn("secrets/", rules)
 
     def test_closure_snapshot_omits_local_config_and_secrets_directory(self):
@@ -327,6 +351,7 @@ class CredentialDeliveryTests(unittest.TestCase):
             directory = Path(raw)
             (directory / "openai.local.json").write_text(json.dumps({"api_key": KEY_A}))
             (directory / "admin.local.json").write_text("PRIVATE_PASSWORD_HASH_SENTINEL")
+            (directory / "ai.local.json").write_text("PRIVATE_PROVIDER_KEY_SENTINEL")
             (directory / ".admin-config-test.tmp").write_text("PRIVATE_TEMP_HASH_SENTINEL")
             (directory / "secrets").mkdir()
             (directory / "secrets/private-data.txt").write_text(KEY_B)

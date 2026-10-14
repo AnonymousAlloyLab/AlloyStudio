@@ -1,4 +1,4 @@
-"""Independent worker-level FM24 review regressions; no JVM/data dependency."""
+"""Independent worker-level HiGenA review regressions; no JVM/data dependency."""
 import importlib.util
 from pathlib import Path
 import sys

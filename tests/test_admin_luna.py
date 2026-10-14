@@ -1,5 +1,6 @@
 """The provider can suggest prose, never change protected upload code or names."""
 from copy import deepcopy
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from io import BytesIO
 import json
@@ -26,7 +27,7 @@ class AdminLunaTests(unittest.TestCase):
         # counterexample without using real credentials or external networking.
         followed = []
         redirect = {'status': 302, 'target': ''}
-        payload = json.dumps({'status':'completed','output':[{'type':'message',
+        payload = json.dumps({'status':'completed','output':[{'type':'message','role':'assistant',
             'content':[{'type':'output_text','text':json.dumps(GOOD)}]}]}).encode()
 
         class Receiver(BaseHTTPRequestHandler):
@@ -68,8 +69,9 @@ class AdminLunaTests(unittest.TestCase):
             proxy_environment = {key:'' for key in ('http_proxy','https_proxy','all_proxy',
                                                      'HTTP_PROXY','HTTPS_PROXY','ALL_PROXY')}
             proxy_environment.update(NO_PROXY='127.0.0.1', no_proxy='127.0.0.1')
-            with patch.dict(os.environ, proxy_environment), patch.object(luna,'ENDPOINT',endpoint), \
-                    patch.object(luna,'read_key',return_value='synthetic-redirect-placeholder'):
+            with patch.object(luna, 'read_key', return_value='synthetic-redirect-placeholder'):
+                profile = replace(luna.select_profile('upload', luna.read_key, luna.MODEL, 'low'), endpoint=endpoint)
+            with patch.dict(os.environ, proxy_environment), patch.object(luna, 'select_profile', return_value=profile):
                 for status in (301,302,303,307,308):
                     for port in (origin.server_port,destination.server_port):
                         redirect.update(status=status,target=f'http://127.0.0.1:{port}/redirected')
@@ -167,7 +169,7 @@ class AdminLunaTests(unittest.TestCase):
                 self.assertEqual(luna.suggest(ROOT,WITNESS,'')['status'],'unavailable')
 
     def test_real_transport_shape_validates_structured_response_and_hides_key(self):
-        response = {'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':json.dumps(GOOD)}]}]}
+        response = {'status':'completed','output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':json.dumps(GOOD)}]}]}
         with patch.object(luna,'read_key',return_value='unit-only-placeholder'), \
                 patch.object(luna,'urlopen',return_value=BytesIO(json.dumps(response).encode())) as transport:
             result = luna._provider(SOURCE,['inv1'],'')
@@ -180,8 +182,8 @@ class AdminLunaTests(unittest.TestCase):
 
     def test_duplicate_json_provider_fields_and_incomplete_output_fail(self):
         variants = [{'status':'incomplete','output':[]},
-                    {'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':'{"exercises":[],"exercises":[]}'}]}]},
-                    {'status':'completed','output':[{'type':'message','content':[{'type':'refusal','refusal':'PRIVATE_SENTINEL'}]}]}]
+                    {'status':'completed','output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':'{"exercises":[],"exercises":[]}'}]}]},
+                    {'status':'completed','output':[{'type':'message','role':'assistant','content':[{'type':'refusal','refusal':'PRIVATE_SENTINEL'}]}]}]
         with patch.object(luna,'read_key',return_value='unit-only-placeholder'):
             for response in variants:
                 with self.subTest(response=response),patch.object(luna,'urlopen',return_value=BytesIO(json.dumps(response).encode())),self.assertRaises(StoreError):

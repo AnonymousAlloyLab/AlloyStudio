@@ -1,5 +1,6 @@
-"""Sol candidate advice is identity-bound, bounded, private and advisory only."""
+"""AI candidate advice is identity-bound, bounded, private and advisory only."""
 from copy import deepcopy
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from io import BytesIO
 import hashlib
@@ -38,7 +39,7 @@ ADVICE = dict(exerciseId=CONTEXT['exerciseId'], exerciseVersion=CONTEXT['exercis
 
 def provider_response(advice=ADVICE):
     return {'status': 'completed', 'output': [{'type': 'reasoning'},
-        {'type': 'message', 'content': [{'type': 'output_text', 'text': json.dumps(advice)}]}]}
+        {'type': 'message', 'role': 'assistant', 'content': [{'type': 'output_text', 'text': json.dumps(advice)}]}]}
 
 
 class CandidateReviewTests(unittest.TestCase):
@@ -288,11 +289,11 @@ class CandidateReviewTests(unittest.TestCase):
     def test_provider_incomplete_refusal_duplicate_fields_tools_and_multiple_texts_fail(self):
         variants = [{'status': 'incomplete', 'output': []}, {'status': 'completed', 'output': {}},
                     {'status': 'completed', 'output': []},
-                    {'status': 'completed', 'output': [{'type': 'message', 'content': None}]},
-                    {'status': 'completed', 'output': [{'type': 'message', 'content': [
+                    {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': None}]},
+                    {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                         {'type': 'refusal', 'refusal': 'PRIVATE_SENTINEL'}]}]},
                     {'status': 'completed', 'output': [{'type': 'function_call', 'name': 'approve'}]},
-                    {'status': 'completed', 'output': [{'type': 'message', 'content': [
+                    {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                         {'type': 'output_text', 'text': '{"verdict":"recommend","verdict":"reject"}'}]}]}]
         multiple = provider_response()
         multiple['output'][1]['content'].append(deepcopy(multiple['output'][1]['content'][0]))
@@ -355,8 +356,9 @@ class CandidateReviewTests(unittest.TestCase):
                                                'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY')}
             environment.update(NO_PROXY='127.0.0.1', no_proxy='127.0.0.1')
             endpoint = f'http://127.0.0.1:{origin.server_port}/responses'
-            with patch.dict(os.environ, environment), patch.object(review, 'ENDPOINT', endpoint), \
-                    patch.object(review, 'read_key', return_value='synthetic-key'):
+            with patch.object(review, 'read_key', return_value='synthetic-key'):
+                profile = replace(review.select_profile('review', review.read_key, review.MODEL, 'high'), endpoint=endpoint)
+            with patch.dict(os.environ, environment), patch.object(review, 'select_profile', return_value=profile):
                 for code in (301, 302, 303, 307, 308):
                     for port in (origin.server_port, destination.server_port):
                         target.update(status=code, url=f'http://127.0.0.1:{port}/redirected')

@@ -1,15 +1,16 @@
-"""Private GPT-6 Luna metadata suggestions; never accepts code modifications."""
+"""Private AI metadata suggestions; never accepts code modifications."""
 from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
-from urllib.request import Request
 
 from exercise_store import StoreError, parse_json, text
 from admin_upload import MAX_GROUPS
-from luna import ENDPOINT, MODEL, read_key, urlopen
+from ai_provider import build_request, normalize_response, select_profile
+from luna import MODEL, read_key, urlopen
 
 MAX_RESPONSE = 1048576
 INSTRUCTIONS = '''Help an Alloy exercise administrator prepare an upload for teaching.
@@ -25,7 +26,18 @@ organizing metadata around the immutable model, including a single-predicate mod
 An administrator will review these public questions before publication.'''
 
 
-def validate_metadata(value, names):
+def _metadata_text(value, limit, key):
+    value = text(value, limit, empty=False)
+    if ('```' in value or '~~~' in value
+            or re.search(r'\b(?:pred|fun)\s+[A-Za-z_][A-Za-z0-9_]*\s*(?:\[[^\]]*\]\s*)?(?::[^{}]*)?\{', value)):
+        raise StoreError('Metadata suggestions must be prose, not source code.')
+    if key:
+        value = value.replace(key, '[redacted]')
+    value = re.sub(r'sk-[A-Za-z0-9_-]{16,}', '[redacted]', value)
+    return text(value, limit, empty=False)
+
+
+def validate_metadata(value, names, *, key=''):
     if (type(value) is not dict or set(value) != {'exercises'}
             or type(value['exercises']) is not list or len(value['exercises']) != len(names)):
         raise StoreError('Invalid metadata suggestions.')
@@ -35,9 +47,10 @@ def validate_metadata(value, names):
                 or type(item['predicate']) is not str or item['predicate'] not in names
                 or item['predicate'] in by_name):
             raise StoreError('Suggestion changed a protected exercise name.')
-        text(item['title'],256,empty=False)
-        text(item['question'],8192,empty=False)
-        by_name[item['predicate']] = dict(item)
+        by_name[item['predicate']] = dict(
+            predicate=item['predicate'],
+            title=_metadata_text(item['title'], 256, key),
+            question=_metadata_text(item['question'], 8192, key))
     if set(by_name) != set(names):
         raise StoreError('Suggestion omitted an exercise.')
     return [by_name[name] for name in names]
@@ -64,17 +77,19 @@ def request_payload(source, names, seed):
 
 
 def _provider(source, names, seed):
-    key = read_key()
-    if not key:
-        return {'status':'disabled','message':'Configure the server OpenAI key to request suggestions.'}
     payload = request_payload(source,names,seed)
-    request = Request(ENDPOINT,data=json.dumps(payload).encode('utf-8'),
-                      headers={'Content-Type':'application/json','Authorization':'Bearer '+key},method='POST')
+    profile = select_profile('upload', read_key, MODEL, 'low')
+    if profile is None:
+        return {'status':'disabled','message':'Configure a private server AI provider to request suggestions.'}
+    request = build_request(profile, payload)
     with urlopen(request,timeout=40) as response:
         raw = response.read(MAX_RESPONSE + 1)
     if len(raw) > MAX_RESPONSE:
         raise StoreError('Provider response too large.')
-    response = parse_json(raw)
+    try:
+        response = normalize_response(profile, parse_json(raw))
+    except ValueError as exc:
+        raise StoreError('Provider returned no usable metadata.') from exc
     if type(response) is not dict or response.get('status') != 'completed':
         raise StoreError('Provider response incomplete.')
     output = response.get('output')
@@ -85,7 +100,7 @@ def _provider(source, names, seed):
               and type(part.get('text')) is str]
     if len(pieces) != 1:
         raise StoreError('Provider returned no single metadata object.')
-    return {'status':'ok','exercises':validate_metadata(parse_json(pieces[0]),names)}
+    return {'status':'ok','exercises':validate_metadata(parse_json(pieces[0]),names,key=profile.key)}
 
 
 def suggest(root, witness, seed):
@@ -93,9 +108,10 @@ def suggest(root, witness, seed):
     source = witness['originalSource']
     names = [group['predicate'] for group in witness['groups']]
     request_payload(source,names,seed)  # validate before allocating a child
-    if not read_key():
-        return {'status':'disabled','message':'Luna is not configured. Enter the question yourself.'}
     try:
+        profile = select_profile('upload', read_key, MODEL, 'low')
+        if profile is None:
+            return {'status':'disabled','message':'AI suggestions are not configured. Enter the question yourself.'}
         completed = subprocess.run([sys.executable,str(Path(__file__).resolve()),'--worker'],
                      input=json.dumps({'source':source,'names':names,'seed':seed}),
                      text=True,encoding='utf-8',capture_output=True,cwd=root,
@@ -106,9 +122,9 @@ def suggest(root, witness, seed):
         result = parse_json(completed.stdout)
         if type(result) is not dict or set(result) != {'status','exercises'} or result['status'] != 'ok':
             raise StoreError('Provider worker unavailable.')
-        return {'status':'ok','exercises':validate_metadata({'exercises':result['exercises']},names)}
+        return {'status':'ok','exercises':validate_metadata({'exercises':result['exercises']},names,key=profile.key)}
     except (OSError,ValueError,TypeError,KeyError,subprocess.TimeoutExpired,RecursionError):
-        return {'status':'unavailable','message':'Luna returned no usable suggestions. Enter the question yourself.'}
+        return {'status':'unavailable','message':'The configured AI provider returned no usable suggestions. Enter the question yourself.'}
 
 
 def main():

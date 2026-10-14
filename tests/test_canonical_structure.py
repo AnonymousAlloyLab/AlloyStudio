@@ -50,6 +50,30 @@ public final class CanonicalStructureHarness {
     if (request.has("forms")) forms = request.getJSONArray("forms");
     CanonicalLocator.attach(learner, forms, operations);
     JSONObject result = new JSONObject().put("forms", forms).put("operations", operations);
+    JSONArray localBindings = new JSONArray();
+    for (int phase=0;phase<normal.size();phase++) {
+      for (QuantiVar variable : normal.get(phase).getLocalQuantiVars()) {
+        localBindings.put(new JSONObject().put("formIndex", phase)
+          .put("name", variable.getName()).put("originalName", variable.getOriginalName())
+          .put("quantifier", variable.getQuantifier().name())
+          .put("bindingPath", variable.getBindingPath()));
+      }
+    }
+    result.put("localBindings", localBindings);
+    // Test-only explicit correspondence: never used by production matching.
+    if (request.has("diagnosticMapping")) {
+      var reference = LiveFeedback.prepare(request.getString("reference"), predicate);
+      var right = CanonicalLocator.normalizedForms(reference);
+      if (normal.size() != 1 || right.size() != 1) throw new IllegalArgumentException();
+      java.util.Map<String, String> mapping = new java.util.HashMap<>();
+      JSONObject supplied = request.getJSONObject("diagnosticMapping");
+      for (String key : supplied.keySet()) mapping.put(key, supplied.getString(key));
+      Method distance = CanonicalDistance.class.getDeclaredMethod("eGraphDistance",
+        EGraphNode.class, EGraphNode.class, java.util.Map.class);
+      distance.setAccessible(true);
+      result.put("explicitMappingMatrixCost", distance.invoke(null,
+        normal.get(0).getMatrixEGraph(), right.get(0).getMatrixEGraph(), mapping));
+    }
     if (request.has("reference")) result.put("feedback", LiveFeedback.evaluate(new JSONObject()
       .put("studentSource", request.getString("source")).put("oracleSource", request.getString("reference"))
       .put("predicate", predicate).put("metric", "canonical")));
@@ -66,16 +90,20 @@ def utf16_slice(value, start, end):
 class CanonicalStructureTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.directory = tempfile.TemporaryDirectory(prefix='canonical-structure-')
+        scratch = ROOT / 'build/canonical-structure'
+        scratch.mkdir(parents=True, exist_ok=True)
+        cls.directory = tempfile.TemporaryDirectory(prefix='canonical-structure-', dir=scratch)
         cls.addClassCleanup(cls.directory.cleanup)
         source = Path(cls.directory.name) / 'CanonicalStructureHarness.java'
         source.write_text(HARNESS, encoding='utf-8')
         classpath = os.pathsep.join((str(ROOT / 'build/engine/classes'), str(ROOT / 'vendor/acgn/lib/*')))
-        compiled = subprocess.run(['javac', '-encoding', 'UTF-8', '-cp', classpath,
+        compiled = subprocess.run(['javac', '-J-Xmx256m', '-J-XX:ActiveProcessorCount=2',
+                                   '-encoding', 'UTF-8', '--release', '17', '-cp', classpath,
                                    '-d', cls.directory.name, str(source)], capture_output=True, timeout=25)
         if compiled.returncode:
             raise AssertionError('Canonical structure harness did not compile')
-        cls.command = ['java', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
+        cls.command = ['java', '-Xmx256m', '-XX:ActiveProcessorCount=2',
+                       '-Djava.io.tmpdir=' + cls.directory.name, '-cp',
                        cls.directory.name + os.pathsep + classpath, 'live.CanonicalStructureHarness']
 
     def locate(self, body, environment='sig A {r, s: set A}\n', **extra):
@@ -267,6 +295,79 @@ class CanonicalStructureTests(unittest.TestCase):
         repeated = [op for op in result['operations'] if op.get('expected') == 'A']
         self.assertGreaterEqual(len(repeated), 3)
         self.assertEqual(len({paths[op['path']]['start'] for op in repeated}), len(repeated))
+
+    def test_one_branch_swap_equal_display_retains_binding_cost_and_occurrence_locations(self):
+        environment = 'sig A {}\n'
+        branches = ('(one a:A | some a)', '(all b:A | some b)')
+        bodies = [' and '.join(branches), ' and '.join(reversed(branches))]
+        sources = [environment + 'pred target {\n' + body + '\n}\n' for body in bodies]
+        results = [self.locate(body, environment, reference=sources[1-i],
+                               diagnosticMapping={'_l0': '_l1', '_l1': '_l0'})
+                   for i, body in enumerate(bodies)]
+        self.assertEqual(results[0]['forms'], results[1]['forms'])
+        for i, result in enumerate(results):
+            with self.subTest(direction=i):
+                bindings = {binding['originalName']: binding for binding in result['localBindings']}
+                self.assertEqual(set(bindings), {'a', 'b'})
+                self.assertEqual(bindings['a']['quantifier'], 'ONE')
+                self.assertEqual(bindings['a']['name'], f'_l{i}')
+                self.assertEqual(bindings['a']['bindingPath'],
+                                 f'root/predicate[0]/and[{i}]/local-decl[0]')
+                self.assertEqual(bindings['b']['quantifier'], 'ALL')
+                self.assertEqual(bindings['b']['name'], f'_l{1-i}')
+                self.assertEqual(bindings['b']['bindingPath'],
+                                 f'root/predicate[0]/and[{1-i}]/local-decl[0]')
+                feedback = result['feedback']
+                self.assertEqual(feedback['status'], 'ok')
+                self.assertEqual(feedback['distance'], 2)
+                self.assertEqual(feedback['breakdown'], {'temporal': 0, 'quantifier': 0, 'matrix': 2})
+                self.assertTrue(feedback['trace']['matrixReplayVerified'])
+                # Diagnostic correspondence is not an authorized production mapping.
+                self.assertEqual(result['explicitMappingMatrixCost'], 0)
+                operations = feedback['operations']
+                self.assertEqual(len(operations), 2)
+                paths = {op['path']: op for op in result['operations']}
+                canonical_starts, raw_precisions = set(), set()
+                for operation in operations:
+                    self.assertEqual((operation['kind'], operation['sourceTerm'], operation['cost']),
+                                     ('replace', 'a', 1))
+                    span = self.span(result, operation)
+                    self.assertEqual(utf16_slice(result['forms'][span['formIndex']],
+                                                span['start'], span['end']), 'a')
+                    self.assertEqual(span, self.span(result, paths[operation['path']]))
+                    canonical_starts.add(span['start'])
+                    raw = operation['sourceLocation']
+                    self.assertEqual(raw['status'], 'located')
+                    self.assertEqual(len(raw['ranges']), 1)
+                    raw_precisions.add(raw['precision'])
+                    raw_span = raw['ranges'][0]
+                    selected = utf16_slice(sources[i], raw_span['start'], raw_span['end'])
+                    if operation['path'].endswith('.child[1].child[1].child[0]'):
+                        self.assertEqual(raw['precision'], 'node')
+                        self.assertEqual(selected, 'a')
+                        self.assertEqual(raw_span['start'], sources[i].index('some a') + len('some '))
+                    else:
+                        # Declaration provenance is enclosing context, not an exact token.
+                        self.assertEqual(raw['precision'], 'related')
+                        self.assertEqual(selected, 'one a:A | some a')
+                self.assertEqual(len(canonical_starts), 2)
+                self.assertEqual(raw_precisions, {'node', 'related'})
+                identity = self.locate(bodies[i], environment, reference=sources[i])['feedback']
+                self.assertEqual(identity['distance'], 0)
+                self.assertEqual(identity['operations'], [])
+
+    def test_one_binding_path_change_alone_does_not_imply_positive_distance(self):
+        bodies = ['some A and (one a:A | some a.r)', '(one a:A | some a.r) and some A']
+        environment = 'sig A {r: set A}\n'
+        sources = [environment + 'pred target {\n' + body + '\n}\n' for body in bodies]
+        results = [self.locate(body, environment, reference=sources[1-i])
+                   for i, body in enumerate(bodies)]
+        self.assertEqual(results[0]['forms'], results[1]['forms'])
+        self.assertNotEqual(results[0]['localBindings'][0]['bindingPath'],
+                            results[1]['localBindings'][0]['bindingPath'])
+        for result in results:
+            self.assertEqual(result['feedback']['distance'], 0)
+            self.assertEqual(result['feedback']['operations'], [])
 
     def test_actual_unary_operator_rendering_is_unchanged(self):
         for operator in ('some', 'no', 'one', 'lone'):

@@ -208,7 +208,7 @@ class NativeTests(unittest.TestCase):
     def setUpClass(cls):
         baselines = Path('/home/augustus/lp_baselines')
         if not (baselines / 'SpecAssistant').is_dir():
-            raise unittest.SkipTest('Fetch pinned public FM24 resources first')
+            raise unittest.SkipTest('Fetch pinned public HiGenA resources first')
         cls.worker = Native(build_classpath(baselines, compile_adapter=False))
     @classmethod
     def tearDownClass(cls):

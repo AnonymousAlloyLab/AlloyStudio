@@ -448,7 +448,7 @@ async function loadCandidates(offset = candidates.offset, keepId = null) {
 }
 function renderAdvice(review) {
   const container = $('candidate-advice'); container.replaceChildren();
-  container.append(plain('h4', 'Sol advice · administrator decides'));
+  container.append(plain('h4', 'AI advice · administrator decides'));
   if (review?.status === 'ok' && review.advice) {
     const advice = review.advice;
     container.append(plain('p', `Recommendation: ${advice.verdict}`), plain('p', advice.reason));

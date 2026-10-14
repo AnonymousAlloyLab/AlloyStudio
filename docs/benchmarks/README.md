@@ -1,7 +1,7 @@
 # Completed Alloy4Fun benchmark evidence
 
 The five-arm deterministic experiment completed on **2026-09-30**: Canonical,
-raw AST Zhang–Shasha, TAR depth 2, FM24 history, and FM24 history with mutation
+raw AST Zhang–Shasha, TAR depth 2, HiGenA history, and HiGenA history with mutation
 each recorded **61,598** outcomes. The final comparison covers **42,388 incorrect
 inputs** and **19,210 held-out CORRECT submissions** after two documented legacy
 label corrections. It uses a 60-second request deadline and excludes Luna.
@@ -22,7 +22,7 @@ inputs, metrics, and reproduction requirements.
 | [Hit rates, SVG](alloy4fun-hit-rates.svg) / [PNG](alloy4fun-hit-rates.png) | Timely native-hint availability on the 42,388 incorrect inputs. |
 | [Availability curves, SVG](alloy4fun-timely-hints.svg) / [PNG](alloy4fun-timely-hints.png) | Measured wall-time thresholds, with the unequal worker configurations disclosed. |
 | [Figure manifest](alloy4fun-figures.json) | Results input SHA-256, generator hash, four figure hashes, denominator, label corrections, and resource profile. |
-| [Ten-exercise quality pilot](../alloy4fun-hint-quality.md) / [evidence JSON](alloy4fun-hint-quality.json) | Fresh current portal hints, matched saved TAR/FM24 outputs, source ranges, held-out Live controls, literal-edit probes, and two separate Luna reviews; a purposive all-underconstrained sample, not a learning study. |
+| [Ten-exercise quality pilot](../alloy4fun-hint-quality.md) / [evidence JSON](alloy4fun-hint-quality.json) | Fresh current portal hints, matched saved TAR/HiGenA outputs, source ranges, held-out Live controls, literal-edit probes, and two separate Luna reviews; a purposive all-underconstrained sample, not a learning study. |
 | [181-invariant hint-quality audit](../alloy4fun-181-hint-quality.md) / [evidence JSON](alloy4fun-181-hint-quality.json) | Complete incorrect-input coverage and per-invariant guidance properties, with current starter responses and explicit distinctions between metadata, bounded repair validation, and teaching quality. |
 | [181-invariant instance audit](../instance-audit-v003.md) / [evidence JSON](instance-audit-v003.json) | Real solver examples rendered at desktop and mobile widths; geometry, tuple correspondence, runtime bindings, and empty-starter limitations. |
 
@@ -35,6 +35,14 @@ f2de6de630721cd22adcb6fb57154b33cf39fcc4a05f900d404dc0beaae07f8e
 The figures bind to those exact bytes. Updating surrounding explanatory Markdown
 does not rerun the engines or replace the measured outcomes. Any future baseline
 fix, alternate pool policy, or timing study needs separately identified results.
+
+The current figures use HiGenA display labels and have regenerated output hashes
+in the figure manifest. The frozen evidence verification records the original
+figure hashes from the completed experiment; those original figures and their
+manifest remain available at Git revision
+`39cfea89cfb6bf752112ba7561d2e5e28cc5915e`. Recorded results, reviewer text, source
+paths, and internal `fm24` identifiers retain their original bytes. This naming
+update does not change measured values or constitute another benchmark run.
 
 ## What supports each conclusion
 

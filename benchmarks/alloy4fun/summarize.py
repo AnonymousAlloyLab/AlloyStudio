@@ -48,22 +48,22 @@ TOOL_DIRECTORIES = {
     'fm24-mutation': 'fm24-mutation',
 }
 LABELS = {'live-canonical': 'Alloy Studio canonical', 'live-ast': 'Alloy Studio raw AST',
-          'tar-depth-2': 'TAR, depth 2', 'fm24-history': 'FM24 historical',
-          'fm24-mutation': 'FM24 historical + mutation'}
+          'tar-depth-2': 'TAR, depth 2', 'fm24-history': 'HiGenA historical',
+          'fm24-mutation': 'HiGenA historical + mutation'}
 NON_ERROR_STATUSES = {'ok', 'hint', 'no_hint', 'known_correct', 'already_correct', 'repaired', 'no_repair'}
 SHA256 = re.compile(r'[0-9a-f]{64}')
 RECOVERY_WORKERS = {arm: 4 if arm == 'tar' else 16 for arm in TOOL_DIRECTORIES.values()}
 RECOVERY_LIMITS = {'workers': 4, 'memory_high_bytes': 4 * 1024**3,
                    'memory_max_bytes': 6 * 1024**3, 'memory_swap_max_bytes': 0,
                    'nice': 10, 'cpu_quota_percent': 400}
-RECOVERY_TIMING = ('Sequential arms: Alloy Studio and FM24 use 16 workers; '
+RECOVERY_TIMING = ('Sequential arms: Alloy Studio and HiGenA use 16 workers; '
                    'TAR uses 4 workers with a 6 GiB memory cap and 4-CPU quota after host OOM. '
                    'Timings and deadline-conditioned availability are descriptive under unequal resource configurations, '
                    'not a controlled speed ranking or isolated interactive latency.')
 UNIFORM_TIMING = ('Sequential method arms with 16 concurrent requests per arm; '
                   'wall times include within-arm contention and are not isolated interactive-service latency.')
 CORRECT_CONTROL_POLICY = (
-    'These CORRECT submissions were held out of Live and FM24 training pools by whole-branch folds. '
+    'These CORRECT submissions were held out of Live and HiGenA training pools by whole-branch folds. '
     'Their nonempty hints describe responses to held-out correct submissions, not failure to recognize '
     'members already admitted to a full correct pool. The original Alloy4FunAugmenter includes its '
     'oracle and all successful CORRECT submissions without this holdout, and ranks incorrect inputs only; '
@@ -396,7 +396,7 @@ def _validate_manifest(manifest, tool, data, root, expected_total, timeout, runt
                                     for path in (root / 'benchmarks/alloy4fun/fm24').glob(pattern))
             expected_sources.update(str(path.relative_to(root)) for path in (root / 'build/benchmarks/fm24-classes').glob('*.class'))
             if 'build/benchmarks/fm24-classes/FM24Native.class' not in expected_sources:
-                raise ValueError('FM24 compiled adapter is absent')
+                raise ValueError('HiGenA compiled adapter is absent')
             if set(manifest['sources']) != expected_sources:
                 raise ValueError(f'{tool}: incomplete or mismatched source pin inventory')
             if manifest.get('mutations') is not (tool == 'fm24-mutation'):
@@ -422,7 +422,7 @@ def _validate_manifest(manifest, tool, data, root, expected_total, timeout, runt
             require_hash(data / 'fm24-final' / name, expected, name)
         if set(manifest['graph_hashes']) != {f'graphs-fold-{fold}.json' for fold in range(5)}:
             raise ValueError('Incomplete graph fold inventory')
-        require_hash(data / 'fm24-final/cases.jsonl', manifest['normalized_cases_sha256'], 'FM24 normalized cohort')
+        require_hash(data / 'fm24-final/cases.jsonl', manifest['normalized_cases_sha256'], 'HiGenA normalized cohort')
 
 
 def validate_observations(rows, cases, tool, lineage):
@@ -572,13 +572,13 @@ def resource_provenance(root, data, baselines, *, verify_resources=True):
     if verify_resources and registry.is_file():
         document = read_json(registry)
         if not document.get('artifacts') or not document.get('maven_dependencies'):
-            raise ValueError('FM24 resource registry cannot omit runtime/dependency pins')
+            raise ValueError('HiGenA resource registry cannot omit runtime/dependency pins')
         for item in document.get('artifacts', []) + document.get('maven_dependencies', []):
             relative = Path(item['path'])
             if relative.is_absolute() or '..' in relative.parts:
                 raise ValueError('Invalid public baseline resource path')
             path = baselines / relative
-            require_hash(path, item['sha256'], 'FM24 resource ' + str(relative))
+            require_hash(path, item['sha256'], 'HiGenA resource ' + str(relative))
             records['lp_baselines/' + str(relative)] = {'sha256': item['sha256'], 'bytes': path.stat().st_size}
     if verify_resources:
         def checked(path, expected, name):
@@ -818,7 +818,8 @@ def render_markdown(summary):
         'and timeouts; “Hints” includes successful incorrect-input hints only. Offline graph construction and '
         'independent repair validation are separate from request latency.',
         '',
-        summary.get('scope', {}).get('timing', UNIFORM_TIMING),
+        # Normalize legacy display names without altering frozen evidence.
+        re.sub(r'\bFM24\b', 'HiGenA', summary.get('scope', {}).get('timing', UNIFORM_TIMING)),
         '',
         '| Tool | Workers | All mean | All median | All p95 | Hints mean | Hints median | Hints p95 |',
         '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',

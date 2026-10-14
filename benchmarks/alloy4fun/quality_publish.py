@@ -22,7 +22,7 @@ def sha(path):
 def public_hint(hint):
     if hint is None:
         return None
-    # This pilot has one native FM24 hint naming a replacement signature.
+    # This pilot has one native HiGenA hint naming a replacement signature.
     # Preserve its requested action but do not publish the target name.
     return re.sub(r'(try using signature of type )(.+?)( to help)',
                   r'\1[target signature hidden]\3', hint)
@@ -55,7 +55,7 @@ def main():
                   'Current portal full correct pools differ from five-fold baseline history/reference pools. Saved Live controls are reported separately.',
                   'Native deterministic hints only. No paid Luna explanation generation, learner study, or comparable runtime measurement.',
                   'Luna reviewer scores are unvalidated model judgments; absent hints have null quality scores. No composite method ranking.',
-                  'Candidate/oracle/target expressions are excluded. One FM24 replacement-signature name is redacted; replacement operator names remain visible.'],
+                  'Candidate/oracle/target expressions are excluded. One HiGenA replacement-signature name is redacted; replacement operator names remain visible.'],
               'input_sha256': {name: sha(path) for name, path in files.items()},
               'archive_sha256': source['baselines-verified']['archive_sha256'],
               'runtime_sha256': source['current']['runtime_sha256'], 'cases': []}

@@ -24,16 +24,16 @@ from benchmarks.alloy4fun.summarize import (
 )
 TOOLS = ('live-canonical', 'live-ast', 'tar-depth-2', 'fm24-history', 'fm24-mutation')
 LABELS = ('Alloy Studio canonical', 'Alloy Studio raw AST', 'TAR (depth 2)',
-          'FM24 historical', 'FM24 historical + mutation')
+          'HiGenA historical', 'HiGenA historical + mutation')
 BAR_LABELS = ('Alloy Studio\ncanonical', 'Alloy Studio\nraw AST', 'TAR\ndepth 2',
-              'FM24\nhistorical', 'FM24 historical\n+ mutation')
+              'HiGenA\nhistorical', 'HiGenA historical\n+ mutation')
 COLORS = ('#0072B2', '#D55E00', '#009E73', '#CC79A7', '#6B5B1E')
 MARKERS = ('o', 's', '^', 'D', 'v')
 THRESHOLDS = (.1, .25, 1., 2., 5., 10., 30., 60.)
 CAVEAT = ('Sequential method arms with 16 concurrent requests per arm; '
           'wall times include contention within each arm, not isolated interactive latency. Luna is excluded.')
 RECOVERY_CAVEAT_LINES = (
-    'Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.',
+    'Sequential arms: Alloy Studio/HiGenA, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.',
     'Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.',
 )
 
@@ -97,7 +97,7 @@ def validate_summary(summary, *, expected_total=EXPECTED_TOTAL, expected_incorre
     if metrics.get('timeout_seconds') != 60:
         raise ValueError('Expected the shared 60-second budget')
     if set(summary['runs']) != set(TOOLS) or set(metrics['tools']) != set(TOOLS):
-        raise ValueError('Figures require canonical, raw AST, TAR and both FM24 arms')
+        raise ValueError('Figures require canonical, raw AST, TAR and both HiGenA arms')
     audit = summary.get('provenance', {}).get('actual_source_audit', {})
     if audit.get('status') != 'MATCHED' or audit.get('source_files_checked') != expected_total:
         raise ValueError('Expected a completed actual-source hash audit')

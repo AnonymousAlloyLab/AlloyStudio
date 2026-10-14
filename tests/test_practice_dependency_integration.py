@@ -5,8 +5,11 @@ formal closure claim is involved. The external SmartContract fixture is optional
 on clones; the portable chain and parameterized fixtures always execute.
 """
 from contextlib import nullcontext
+from copy import deepcopy
 import json
+import os
 from pathlib import Path
+import subprocess
 import tempfile
 import threading
 import time
@@ -153,6 +156,105 @@ class PracticeDependencyIntegrationTests(unittest.TestCase):
             for instance in category['instances']:
                 self.assertEqual([value['name'] for value in instance['parameterBindings']], ['n'])
         self.publish(prepared)
+
+    def test_temporal_dependency_lfu_sequence_and_python_full_reward_gate(self):
+        from candidate_store import behavioral_evidence
+        from server import project_behavior
+
+        # Exactly ten states, with loop 9: shorter traces cannot satisfy the
+        # facts. Left/Right share the same concrete trace but differ as n.
+        tail = 'always Active=Other'
+        for _ in range(9):
+            tail = 'Active=Left+Right and after (' + tail + ')'
+        source = ('abstract sig N {}\none sig Left, Right, Other extends N {}\n'
+                  'var sig Active in N {}\nfact {' + tail + '}\n'
+                  'pred prior[n:N] {n in Active}\npred target[n:N] {prior[n]}\n')
+        prepared = self.prepare(source, ['prior', 'target'], model_id='rwd-sequence')
+        prior, target = prepared['documents']
+        self.assertEqual(target['practicePlan']['dependencies'], [prior['id']])
+
+        def payload(body, prerequisite='n in Active', *, reset=False, blocked=None):
+            resolved = render_context(target, {prior['id']: prerequisite})
+            return dict(studentSource=store.model(resolved, body), studentBody=body,
+                oracleSource=store.model(resolved, target['oracleSolutions'][0]), predicate='target',
+                blockedPredicates=(target['practicePlan']['blockedPredicates']
+                                   if blocked is None else blocked), resetPools=reset)
+
+        requests = [payload('prior[n]'), payload('n=Left'), payload('n=Left'),
+                    payload('eventually n in Active'), payload('prior[n]'),
+                    payload('prior[n]', 'n not in Active'),
+                    payload('prior[n]', 'n not in Active', reset=True),
+                    # Learner does not call prior; the retained oracle does.
+                    payload('n=Left', 'n not in Active', blocked=['prior']),
+                    payload('prior[n]')]
+        classes = self.root / 'sequence-classes'
+        classes.mkdir()
+        classpath = runtime_classpath(ROOT)
+        compiled = subprocess.run(['javac', '-J-Xmx256m', '-J-XX:ActiveProcessorCount=2',
+            '-encoding', 'UTF-8', '--release', '17', '-cp', classpath, '-d', str(classes),
+            str(ROOT / 'engine/test/BehaviorSequence.java')], cwd=ROOT,
+            capture_output=True, timeout=30, env=clean_java_environment())
+        self.assertEqual(compiled.returncode, 0, 'Behavior sequence driver did not compile')
+        run = run_engine(['java', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-cp',
+            str(classes) + os.pathsep + classpath, 'live.BehaviorSequence'],
+            input=json.dumps(requests), text=True, encoding='utf-8', capture_output=True,
+            timeout=60, env=clean_java_environment(), check=False, root=self.root)
+        self.assertEqual((run.returncode, run.stderr), (0, ''), 'Behavior sequence failed')
+        observations = json.loads(run.stdout)
+        self.assertEqual(len(observations), len(requests))
+        checked = {}
+        for index, observation in enumerate(observations):
+            if index == 7:
+                continue
+            checked[index] = project_behavior(observation['result'])
+            for category in checked[index]['categories']:
+                for instance in category['instances']:
+                    self.assertEqual((instance['traceLength'], instance['loopState']), (10, 9))
+                    states = [{s['label']: set(s['atoms']) for s in state['signatures']}
+                              for state in instance['states']]
+                    self.assertEqual([s['Active'] for s in states],
+                                     [{'Left$0', 'Right$0'}] * 9 + [{'Other$0'}])
+                    argument = instance['parameterBindings'][0]['tuples'][0][0]
+                    oracle = argument in states[0]['Active']
+                    if index in (5, 6):
+                        oracle = not oracle
+                    student = (argument == 'Left$0' if index in (1, 2) else
+                               any(argument in s['Active'] for s in states) if index == 3 else oracle)
+                    self.assertEqual((category['oracle'], category['student']), (oracle, student))
+
+        # Both bindings must survive together; categories alone cannot test LFU identity.
+        self.assertEqual(checked[1]['sampling'], dict(positiveTested=2, positiveAccepted=1,
+            negativeTested=1, negativeRejected=1, semanticCounterexamples=0))
+        self.assertEqual(checked[1]['score'], 0.5)
+        left = checked[1]['categories'][0]['instances'][0]
+        right = checked[1]['categories'][1]['instances'][0]
+        self.assertEqual(left['states'], right['states'])
+        self.assertNotEqual(left['parameterBindings'], right['parameterBindings'])
+        # Exhausted cursors + duplicate witnesses: only a mismatch can bump the epoch.
+        self.assertEqual(checked[1], checked[2])
+        before, after = (observations[i]['poolState'] for i in (1, 2))
+        self.assertEqual(after, [before[0], before[1], before[2] + 1, before[3]])
+        self.assertEqual(checked[3]['score'], 0)
+        self.assertEqual(checked[3]['categories'][2]['status'], 'sat')
+        # Warm context replacement must match a cold evaluation, including LFU state.
+        self.assertEqual(observations[5], observations[6])
+        denied = observations[7]['result']
+        self.assertEqual((denied['status'], denied['diagnostics'][0]['code']),
+                         ('unsupported', 'UNSOLVED_PRACTICE_CALL'))
+        self.assertNotIn('score', denied)
+        self.assertEqual(observations[7]['poolState'], [0, 0, 0, 0])
+        self.assertEqual(observations[8], observations[0])
+        for index in (0, 4, 5, 6, 8):
+            self.assertEqual(checked[index]['score'], 1)
+            # This is also the behavioral admission predicate used by completion minting.
+            behavioral_evidence(checked[index])
+        for index in (1, 2, 3):
+            with self.assertRaises(store.StoreError):
+                behavioral_evidence(checked[index])
+            forged = deepcopy(observations[index]['result'])
+            forged['score'] = 1.0
+            with self.assertRaises(ValueError):
+                project_behavior(forged)
 
     def test_unsolved_sibling_and_helper_calls_are_rejected_on_all_live_paths(self):
         source = ('sig Node {}\npred A {some Node}\npred B {A[]}\npred C {no Node}\n'

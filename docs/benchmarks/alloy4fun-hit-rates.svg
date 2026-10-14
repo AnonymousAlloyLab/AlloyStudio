@@ -9,7 +9,7 @@
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
     <dc:title>Alloy4Fun native hint benchmark</dc:title>
     <dc:date>2026-09-30T20:00:58.979515+00:00</dc:date>
-    <dc:description>Five methods on 42,388 incorrect inputs. Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM. Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</dc:description>
+    <dc:description>Five methods on 42,388 incorrect inputs. Sequential arms: Alloy Studio/HiGenA, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM. Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</dc:description>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -89,7 +89,7 @@ L 0 3.5
       </g>
      </g>
      <g id="text_4">
-      <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(574.053964 404.158281)">FM24</text>
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(568.403573 404.158281)">HiGenA</text>
       <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(563.849745 416.475875)">historical</text>
       <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(558.594667 428.793469)">16 workers</text>
      </g>
@@ -101,7 +101,7 @@ L 0 3.5
       </g>
      </g>
      <g id="text_5">
-      <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(689.03574 404.158281)">FM24 historical</text>
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(683.385349 404.158281)">HiGenA historical</text>
       <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(699.541599 416.475875)">+ mutation</text>
       <text style="font-size: 11px; font-family: 'DejaVu Sans'" transform="translate(700.436209 428.793469)">16 workers</text>
      </g>
@@ -285,7 +285,7 @@ L 811.44 388.8
    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="82.8" y="463.968" transform="rotate(-0 82.8 463.968)">A returned hint does not establish a correct repair, behavioral improvement, or educational effectiveness.</text>
   </g>
   <g id="text_20">
-   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="82.8" y="484.704" transform="rotate(-0 82.8 484.704)">Sequential arms: Alloy Studio/FM24, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.</text>
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="82.8" y="484.704" transform="rotate(-0 82.8 484.704)">Sequential arms: Alloy Studio/HiGenA, 16 workers; TAR, 4 workers, 6 GiB cap, 4-CPU quota after host OOM.</text>
   </g>
   <g id="text_21">
    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="82.8" y="497.664" transform="rotate(-0 82.8 497.664)">Unequal resources: descriptive timings and 60s availability, not a speed ranking or isolated latency. Luna excluded.</text>

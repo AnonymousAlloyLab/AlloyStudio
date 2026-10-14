@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure the author-component FM24 adaptation on the complete shared cohort."""
+"""Measure the author-component HiGenA adaptation on the complete shared cohort."""
 from __future__ import annotations
 import argparse
 from collections import Counter
@@ -55,7 +55,7 @@ def main():
                 'scratch_policy': 'private per-JVM directories under ALLOY_BENCHMARK_TMP_ROOT or build/benchmarks/tmp; parent cleanup after exit/kill',
                 'recycle_after_native_actions': 256,
                 'recycling_policy': 'Each completed normalize/hint/mutations action counts separately; cleanup is timed in the completing action and replacement startup in the next action; query cold/recycled flags aggregate all its native actions',
-                'profile': 'Native FM24 normalizer/APTED/HiGenA/TAR components; in-memory five-fold historical graph adapter; warm sequential JVM workers'}
+                'profile': 'Native normalizer/APTED, HiGenA hints and TAR mutations; in-memory five-fold historical graph adapter; warm sequential JVM workers'}
     manifest_path = args.output / 'manifest.json'
     if manifest_path.exists():
         if not args.resume or json.loads(manifest_path.read_text()) != manifest:

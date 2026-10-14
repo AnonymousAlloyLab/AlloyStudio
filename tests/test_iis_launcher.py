@@ -133,6 +133,7 @@ class IISLauncherTests(unittest.TestCase):
         env = dict(os.environ, OPENAI_API_KEY='SYNTHETIC_INHERITED_KEY',
                    OPENAI_CONFIG_FILE='SYNTHETIC_WRONG_CONFIG',
                    OPENAI_API_KEY_FILE='SYNTHETIC_WRONG_FILE', OPENAI_DISABLED='inherited',
+                   ALLOY_AI_CONFIG_FILE='SYNTHETIC_INHERITED_AI_CONFIG', ALLOY_AI_DISABLED='1',
                    PYTHONDONTWRITEBYTECODE='0', PYTHONIOENCODING='ascii')
         process = subprocess.Popen([sys.executable, str(LAUNCHER), '--config', str(config_path)],
                                    cwd=config_path.parent, env=env, stdout=subprocess.PIPE,
@@ -312,6 +313,51 @@ Path('probe.json').write_text(json.dumps(probe), encoding='utf-8')
                 log = (Path(config['log_directory']) / 'backend.log').read_text(encoding='utf-8')
                 self.assertNotIn('SYNTHETIC_LOCAL_CONFIG_KEY', log)
                 self.assertNotIn('SYNTHETIC_INHERITED_KEY', log)
+
+    def test_multi_provider_config_is_backend_local_and_disable_gate_never_reads_it(self):
+        source = """import json
+import os
+from pathlib import Path
+import ai_provider
+probe = {'ai_config_file': os.environ.get('ALLOY_AI_CONFIG_FILE'),
+         'ai_disabled': os.environ.get('ALLOY_AI_DISABLED'),
+         'legacy_disabled': os.environ.get('OPENAI_DISABLED'),
+         'key_present': 'OPENAI_API_KEY' in os.environ}
+if os.environ.get('OPENAI_DISABLED') == '1':
+    def forbidden_read(*args):
+        raise AssertionError('Credential content must not be read while disabled')
+    ai_provider._private_text = forbidden_read
+    probe['roles_disabled'] = all(ai_provider.select_profile(role, lambda: '',
+        'unused-model', None) is None for role in ('guidance', 'upload', 'review'))
+Path('probe.json').write_text(json.dumps(probe), encoding='utf-8')
+"""
+        for enable_luna in (False, True):
+            for config_present in (False, True):
+                with self.subTest(enable_luna=enable_luna, config_present=config_present), \
+                        tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+                    folder = Path(directory).resolve()
+                    config_path, config = self.configure(folder, source, enable_luna=enable_luna)
+                    backend = Path(config['backend_root'])
+                    shutil.copyfile(ROOT / 'ai_provider.py', backend / 'ai_provider.py')
+                    local_config = backend / 'ai.local.json'
+                    if config_present:
+                        # Deliberately not JSON: the launcher chooses a path only.
+                        # No test reads this private configuration's contents.
+                        local_config.write_text('SYNTHETIC_PRIVATE_AI_CONFIG_NOT_READ', encoding='utf-8')
+                        local_config.chmod(0o600)
+                    process, stdout, stderr = self.launch(config_path)
+                    self.assertEqual(process.returncode, 0, stderr)
+                    self.assertEqual((stdout, stderr), ('', ''))
+                    probe = json.loads((backend / 'probe.json').read_text(encoding='utf-8'))
+                    self.assertEqual(probe['ai_config_file'], str(local_config) if config_present else None)
+                    self.assertIsNone(probe['ai_disabled'], 'Inherited provider disable settings must be scrubbed')
+                    self.assertEqual(probe['legacy_disabled'], '0' if enable_luna else '1')
+                    self.assertFalse(probe['key_present'])
+                    if not enable_luna:
+                        self.assertTrue(probe['roles_disabled'])
+                    log = (Path(config['log_directory']) / 'backend.log').read_text(encoding='utf-8')
+                    self.assertEqual(log, '')
+                    self.assertNotIn('SYNTHETIC', stdout + stderr + log + json.dumps(probe))
 
     def test_private_runtime_exception_is_sanitized_and_fails_for_restart(self):
         for exception in ('RuntimeError', 'SystemExit'):

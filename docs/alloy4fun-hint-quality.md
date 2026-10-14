@@ -1,9 +1,9 @@
 # Ten-exercise hint-quality pilot
 
 This pilot compares the **current Canonical/EGraph-backed and raw AST portal
-hints with TAR and both FM24 variants**, using the same ten learner drafts.
+hints with TAR and both HiGenA variants**, using the same ten learner drafts.
 The clearest finding is a tradeoff: our traces provide more inspectable structure
-and source highlights; FM24 often explains an available next step more naturally;
+and source highlights; HiGenA often explains an available next step more naturally;
 TAR's terse hints accompany a searched, independently checked repair. None of
 those properties alone establishes that a novice will repair or learn better.
 
@@ -33,10 +33,10 @@ replaced after selection.
   a fresh server/cache, one worker, and the portal's **full compatible correct
   pool including the oracle**. The installed engine classes matched the
   recently freshly compiled source tree. All twenty requests succeeded.
-- TAR and FM24: exact saved responses from the completed 61,598-case run, matched
+- TAR and HiGenA: exact saved responses from the completed 61,598-case run, matched
   by case/source hashes. They were **not rerun**. The extractor checks the saved
   result-file hashes against the published final report. TAR uses depth two and
-  the recorded 60-second budget. FM24 uses the recorded five-fold held-out history.
+  the recorded 60-second budget. HiGenA uses the recorded five-fold held-out history.
 - We also retain the saved five-fold Canonical/AST results for these same inputs
   as a **pool-policy control**. Current/full-pool and saved/held-out outputs are
   not an equal-training-data experiment. Canonical changes from 26 to 25 edits
@@ -48,7 +48,7 @@ replaced after selection.
   Luna explanations, evaluate the instance diagrams as a teaching intervention,
   or compare these fresh request timings with historical baseline timings.
 
-FM24 may expose replacement expression identities. Its grade example names a
+HiGenA may expose replacement expression identities. Its grade example names a
 replacement signature; that identity is marked **[target signature hidden]** in
 this report and its public evidence. We retain the action and explicitly record
 the redaction. Oracle bodies, historical target expressions, and TAR candidate
@@ -64,7 +64,7 @@ hint, not poor wording. Every emitted TAR candidate in this table passed the
 saved independent bounded check against its original model facts and correctness
 command.
 
-| Exercise | Feature | Canonical | AST | TAR native hints | FM24 history / +mutation |
+| Exercise | Feature | Canonical | AST | TAR native hints | HiGenA history / +mutation |
 | --- | --- | ---: | ---: | --- | --- |
 | `classroom_fol · inv13` | Quantification and role restrictions | 7 | 5 | — | Conjunction cue / same |
 | `classroom_rl · inv8` | Transpose, restriction, multiplicity | 10 | 4 | 1, checked repair | — / — |
@@ -78,9 +78,9 @@ command.
 | `trash_ltl · inv3` | Temporal scope | 6 | 1 | 1, checked repair | `always` with explanation / same |
 
 Thus hints were available on **10/10** drafts for each portal mode, **7/10** for
-TAR, and **5/10** for each FM24 mode. FM24's mutation-enabled variant returned
+TAR, and **5/10** for each HiGenA mode. HiGenA's mutation-enabled variant returned
 exactly the same five historical hints and five misses here; this sample cannot
-assess the quality of mutation-only FM24 hints. The full-corpus study contains
+assess the quality of mutation-only HiGenA hints. The full-corpus study contains
 such hints and remains the availability evidence for that variant.
 
 Canonical supplied **124 operations**: 102 with exact raw-node location metadata,
@@ -93,7 +93,7 @@ and multiple insertion steps can share the same anchor.
 
 ## Side-by-side case observations
 
-The excerpts preserve the engines' wording, apart from the marked FM24 target
+The excerpts preserve the engines' wording, apart from the marked HiGenA target
 redaction. Each observation considers the complete collected output; excerpts
 are shortened for reading. Full faulty drafts and all operations are in the JSON.
 
@@ -109,11 +109,11 @@ all p,pp: Person | p->pp in Tutors implies p in Teacher
 **Canonical:** “Consider the ‘and’ operator in place of ‘in’,” highlighted at
 `p in Teacher`, followed by further replacements and repeated insertion anchors.
 **AST:** five insertion steps, beginning “Inspect this area for a missing part;
-it may need to wrap existing expressions.” **TAR:** no repair/hint. **FM24:**
+it may need to wrap existing expressions.” **TAR:** no repair/hint. **HiGenA:**
 “Consider adding a conjunction operator ('and') to combine two boolean
 expressions,” with context inside the implication.
 
-FM24's conjunction explanation communicates an extension of the condition more
+HiGenA's conjunction explanation communicates an extension of the condition more
 naturally than the canonical replacement wording. **A reproduced literal edit
 of that first canonical instruction produces a type error**; see the probes
 below. The structural trace itself still requires its other edits and hidden
@@ -127,7 +127,7 @@ The learner uses `((~Teaches):>Teacher).(Teaches:>Teacher) in iden`.
 ‘:>’.” **AST:** four steps, starting with removal of the `:>` structure while
 retaining its children, then name-review hints. **TAR:** “Add a binary or unary
 operator,” attached to a native source range; its candidate was checked.
-**FM24:** no hint in either mode.
+**HiGenA:** no hint in either mode.
 
 The portal provides more inspectable detail, but raw/canonical correspondence
 and relation direction still require interpretation. TAR's short cue has a
@@ -140,11 +140,11 @@ The learner writes `all s : Student, c : Course | lone s.(c.grades)`.
 **Canonical:** ten operations; the first proposes `lone` in place of a normalized
 `or` and has no raw location. **AST:** three small name-review steps, for example
 “Check which name this part of your code should use.” **TAR:** “A different
-relation is required,” with a native range and a checked candidate. **FM24:**
+relation is required,” with a native range and a checked candidate. **HiGenA:**
 “Instead of using signature of type Course, try using signature of type
 [target signature hidden] to help satisfy the required property.”
 
-FM24 is more specific about an operand, but part of that specificity comes from
+HiGenA is more specific about an operand, but part of that specificity comes from
 a **different disclosure contract**. The portal deliberately leaves replacement
 names to the learner. A normalized operator absent from the raw draft makes the
 canonical opening harder to follow without reading its canonical display.
@@ -156,7 +156,7 @@ from the same source. The draft quantifies over sources and distinct identifiers
 from `(source.s & User.profile).ids`, then compares those identifiers.
 **Canonical:** 33 operations, beginning with a useful checklist of variable
 domain, multiplicity, and distinctness. **AST:** 22 operations, beginning with
-small deletions such as `User` and `ids`. **TAR and both FM24 modes:** no hint.
+small deletions such as `User` and `ids`. **TAR and both HiGenA modes:** no hint.
 
 Both portal modes provide guidance when these baselines return none, but the
 long trace imposes considerable interpretation. Repeated insert/delete wording
@@ -169,10 +169,10 @@ The draft is `not iden in ^adj`. **Canonical:** four operations, including a
 missing variable declaration and an operator change around `iden`. **AST:**
 three replacements, naming `&` and `no`, with one unavailable raw location.
 **TAR:** “Transform into a unary expression,” with a checked candidate.
-**FM24:** explains replacing negation, which tests falsity, with `no`, which
+**HiGenA:** explains replacing negation, which tests falsity, with `no`, which
 tests that a set has no elements.
 
-FM24 supplies the clearest explicit distinction between two concepts. AST names
+HiGenA supplies the clearest explicit distinction between two concepts. AST names
 useful operators but offers less rationale. Canonical's nearest-reference route
 introduces binding structure rather than simply explaining the learner's
 confusion. None of these redacted strings alone proves a successful first edit.
@@ -182,7 +182,7 @@ confusion. None of these redacted strings alone proves a successful first edit.
 The learner writes `all s:State, s1:State, e:Event | lone e->s1`, without using
 the transition relation. **Canonical:** five steps, including a declaration
 review and “Consider the ‘.’ operator in place of ‘->’.” **AST:** ten edits,
-including deletions around `s1` and its declaration. **TAR and FM24:** no hint.
+including deletions around `s1` and its declaration. **TAR and HiGenA:** no hint.
 
 Canonical offers a concrete relational-operation cue, with raw addresses for
 all five steps. However, the missing connection between the quantified variables
@@ -198,7 +198,7 @@ Every component should instead have exactly one assigned workstation.
 changes involving `one` and a normalized `or`. **AST:** nine steps beginning with
 deletions inside the implication. **TAR:** “A different relation is required”
 and “Add a binary or unary operator,” with native ranges and a checked depth-two
-candidate. **FM24:** no hint.
+candidate. **HiGenA:** no hint.
 
 Canonical's declaration hint points to an important area to inspect. The
 remaining trace does not directly explain why quantifying over materials can
@@ -215,7 +215,7 @@ two-hop suggestions with specified exclusions. **Canonical:** 25 operations,
 beginning with normalized Boolean/set operator replacements, some highlighted
 at a large expression. **AST:** 26 operations. **TAR:** a relation-change cue
 and a binary-operator change/removal cue, with a checked depth-two candidate.
-**FM24:** no hint.
+**HiGenA:** no hint.
 
 This example prevents interpreting a long distance trace as an intrinsically
 good teaching route: it is substantially longer than TAR's emitted mutation
@@ -229,7 +229,7 @@ requirement holds in both directions. **Canonical:** 16 operations beginning
 with normalized Boolean changes. **AST:** one step: “Consider the ‘iff’ operator
 at this part of your code,” precisely attached to the implication expression.
 **TAR:** a binary-operator change/removal hint, with a checked candidate.
-**FM24:** suggests adding conjunction and explains combining Boolean expressions.
+**HiGenA:** suggests adding conjunction and explains combining Boolean expressions.
 
 AST provides the most direct tested edit in this case. Replacing the indicated
 `implies` with `iff` compiles, reaches AST distance zero, and passes the recorded
@@ -243,9 +243,9 @@ state. **Canonical:** six operations, starting “Check for a missing condition
 about when something holds,” with the whole canonical form highlighted and no
 raw location for that temporal insertion. **AST:** one generic wrapping/insertion
 hint around `some File`. **TAR:** “Insert an operator,” with a checked candidate.
-**FM24:** names `always` and explains that the property should always hold.
+**HiGenA:** names `always` and explains that the property should always hold.
 
-FM24 is the clearest available temporal explanation in this sample. Its phrase
+HiGenA is the clearest available temporal explanation in this sample. Its phrase
 “One step away from the solution” is **upstream encouragement**, not a semantic
 progress result established by this pilot. AST's one insertion is concise but
 withholds the operator; canonical's temporal classification is useful but comes
@@ -296,13 +296,13 @@ The useful design leads are consequently specific and provisional:
   normalization can expand a simple raw edit; the transition case shows the
   reverse count pattern. Counts alone do not decide pedagogical value.
 - Add concise operator-purpose explanations where the target-hiding policy
-  permits them. FM24's conjunction, empty-set, and temporal cues illustrate this.
+  permits them. HiGenA's conjunction, empty-set, and temporal cues illustrate this.
 - Preserve explicit source/canonical highlights and disclose related-context
   anchors. A native coordinate or exact tree node does not identify the true
   defect automatically.
 - Evaluate grouped guidance with actual learners and a calibrated human rubric
   before making educational-effectiveness claims. Include other error classes,
-  mutation-only FM24 cases, and identical training/reference policies in the next
+  mutation-only HiGenA cases, and identical training/reference policies in the next
   study.
 
 These are recommendations from the pilot; this documentation task did not change

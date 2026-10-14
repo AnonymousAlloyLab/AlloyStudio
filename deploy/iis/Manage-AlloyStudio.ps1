@@ -89,7 +89,7 @@ if ($Action -eq 'Install') {
         Assert-PrivatePath -Path $private -PublicRoots $publicRoots
     }
     foreach ($file in @($PythonExe, $JavaExe, (Join-Path $BackendRoot 'server.py'),
-        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'exercises\exercises.sqlite3'),
+        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'ai_provider.py'), (Join-Path $BackendRoot 'exercises\exercises.sqlite3'),
         (Join-Path $BackendRoot 'exercise_store.py'), (Join-Path $BackendRoot 'exercise_sql.py'),
         (Join-Path $BackendRoot 'admin_auth.py'), (Join-Path $BackendRoot 'admin_upload.py'),
         (Join-Path $BackendRoot 'admin_luna.py'), (Join-Path $BackendRoot 'admin_service.py'),
@@ -168,8 +168,9 @@ if ($Action -eq 'Install') {
         -Description 'Alloy Studio loopback backend. Private exercise database; static files are served separately by IIS.' | Out-Null
     Start-BackendTask -RuntimeChecked
     if ($EnableLuna -and -not (Test-Path -LiteralPath $config.key_file -PathType Leaf) -and
-        -not (Test-Path -LiteralPath (Join-Path $BackendRoot 'openai.local.json') -PathType Leaf)) {
-        Write-Output 'Luna is enabled but no credential file is installed. Configure backend\openai.local.json and restart, or use Set-OpenAIKey.ps1.'
+        -not (Test-Path -LiteralPath (Join-Path $BackendRoot 'openai.local.json') -PathType Leaf) -and
+        -not (Test-Path -LiteralPath (Join-Path $BackendRoot 'ai.local.json') -PathType Leaf)) {
+        Write-Output 'AI is enabled but no credential file is installed. Configure backend\ai.local.json or backend\openai.local.json and restart, or use Set-OpenAIKey.ps1.'
     }
     return
 }

@@ -1,11 +1,18 @@
 # Alloy4Fun hint-generation comparison
 
 This study compares **both Alloy Studio modes—Canonical and raw AST
-Zhang–Shasha—with TAR and the history-based FM24 approach**, using the requested
+Zhang–Shasha—with TAR and the history-based HiGenA approach**, using the requested
 61,598-model ACGN cohort. It measures the actual deterministic hint engines.
 GPT-6 Luna narration, HTTP/IIS/Cloudflare, browser rendering, and behavioral
 instance enumeration are outside the timed workload. The benchmark makes no Luna
 API requests.
+
+**Naming:** HiGenA is the [authors’ implementation](https://github.com/anaines14/higena)
+of the historical-data approach in *Alloy Repair Hint Generation Based on
+Historical Data*. The history-only and history-plus-mutation configurations
+correspond to the paper’s **Data-driven** and **Data+Mutations** configurations,
+respectively. Internal `fm24` identifiers, source filenames, and archived evidence
+retain their original names for reproducibility.
 
 **Pool-policy scope:** the measured run uses a benchmark-specific five-fold
 holdout. This differs from `Alloy4FunAugmenter`, which includes all admitted
@@ -42,32 +49,32 @@ Native hint availability is distinct from a complete repair, semantic improvemen
 | Alloy Studio canonical | 42,388 | 100.0000% | 100.0000% | 0 | 0 | 0 |
 | Alloy Studio raw AST | 42,388 | 100.0000% | 100.0000% | 0 | 0 | 0 |
 | TAR, depth 2 | 18,901 | 44.5905% | 55.1852% | 0 | 1,641 | 4 |
-| FM24 historical | 14,422 | 34.0238% | 30.6751% | 355 | 0 | 355 |
-| FM24 historical + mutation | 21,373 | 50.4223% | 48.7846% | 355 | 0 | 355 |
+| HiGenA historical | 14,422 | 34.0238% | 30.6751% | 355 | 0 | 355 |
+| HiGenA historical + mutation | 21,373 | 50.4223% | 48.7846% | 355 | 0 | 355 |
 
 Macro Hit Rate gives equal weight to each invariant exercise. Errors include explicit unsupported/error statuses and exclude timeouts; unsupported and error columns are not disjoint categories. Explicit unsupported counts reflect adapter status flags, not a complete classification of compilability (for example, TAR engine errors can include native parsing failures).
 
 Latency is measured wall time in seconds. “All” includes every correct and incorrect request, failures and timeouts; “Hints” includes successful incorrect-input hints only. Offline graph construction and independent repair validation are separate from request latency.
 
-Sequential arms: Alloy Studio and FM24 use 16 workers; TAR uses 4 workers with a 6 GiB memory cap and 4-CPU quota after host OOM. Timings and deadline-conditioned availability are descriptive under unequal resource configurations, not a controlled speed ranking or isolated interactive latency.
+Sequential arms: Alloy Studio and HiGenA use 16 workers; TAR uses 4 workers with a 6 GiB memory cap and 4-CPU quota after host OOM. Timings and deadline-conditioned availability are descriptive under unequal resource configurations, not a controlled speed ranking or isolated interactive latency.
 
 | Tool | Workers | All mean | All median | All p95 | Hints mean | Hints median | Hints p95 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Alloy Studio canonical | 16 | 0.2399 | 0.1334 | 0.7548 | 0.2340 | 0.1178 | 0.7871 |
 | Alloy Studio raw AST | 16 | 0.1309 | 0.0707 | 0.4220 | 0.1223 | 0.0647 | 0.4256 |
 | TAR, depth 2 | 4 | 3.4118 | 0.0896 | 18.4696 | 0.8224 | 0.0464 | 3.1597 |
-| FM24 historical | 16 | 0.0117 | 0.0089 | 0.0252 | 0.0195 | 0.0159 | 0.0361 |
-| FM24 historical + mutation | 16 | 0.0258 | 0.0161 | 0.0647 | 0.0223 | 0.0161 | 0.0447 |
+| HiGenA historical | 16 | 0.0117 | 0.0089 | 0.0252 | 0.0195 | 0.0159 | 0.0361 |
+| HiGenA historical + mutation | 16 | 0.0258 | 0.0161 | 0.0647 | 0.0223 | 0.0161 | 0.0447 |
 
 | Tool | Nonempty hints on held-out CORRECT submissions | Rate over held-out CORRECT submissions |
 | --- | ---: | ---: |
 | Alloy Studio canonical | 1,668 | 8.68% |
 | Alloy Studio raw AST | 4,089 | 21.29% |
 | TAR, depth 2 | 0 | 0.00% |
-| FM24 historical | 0 | 0.00% |
-| FM24 historical + mutation | 478 | 2.49% |
+| HiGenA historical | 0 | 0.00% |
+| HiGenA historical + mutation | 478 | 2.49% |
 
-These CORRECT submissions were held out of Live and FM24 training pools by whole-branch folds. Their nonempty hints describe responses to held-out correct submissions, not failure to recognize members already admitted to a full correct pool. The original Alloy4FunAugmenter includes its oracle and all successful CORRECT submissions without this holdout, and ranks incorrect inputs only; these control counts are not original-policy results. A nonempty hint does not establish an incorrect edit, and positive syntactic distance between different predicates can coexist with bounded semantic correctness.
+These CORRECT submissions were held out of Live and HiGenA training pools by whole-branch folds. Their nonempty hints describe responses to held-out correct submissions, not failure to recognize members already admitted to a full correct pool. The original Alloy4FunAugmenter includes its oracle and all successful CORRECT submissions without this holdout, and ranks incorrect inputs only; these control counts are not original-policy results. A nonempty hint does not establish an incorrect edit, and positive syntactic distance between different predicates can coexist with bounded semantic correctness.
 
 | Alloy Studio mode | Checked trace replay | Exact raw-node locations | Exact canonical-node locations | Incorrect distance-zero cases |
 | --- | ---: | ---: | ---: | ---: |
@@ -80,11 +87,11 @@ Trace replay uses the implementation’s recorded checks: matrix replay for cano
 | --- | --- | ---: | ---: | ---: | ---: |
 | Alloy Studio canonical | Alloy Studio raw AST | 42,388 | 0 | 0 | 0 |
 | Alloy Studio canonical | TAR, depth 2 | 18,901 | 23,487 | 0 | 0 |
-| Alloy Studio canonical | FM24 historical | 14,422 | 27,966 | 0 | 0 |
-| Alloy Studio canonical | FM24 historical + mutation | 21,373 | 21,015 | 0 | 0 |
+| Alloy Studio canonical | HiGenA historical | 14,422 | 27,966 | 0 | 0 |
+| Alloy Studio canonical | HiGenA historical + mutation | 21,373 | 21,015 | 0 | 0 |
 | Alloy Studio raw AST | TAR, depth 2 | 18,901 | 23,487 | 0 | 0 |
-| Alloy Studio raw AST | FM24 historical | 14,422 | 27,966 | 0 | 0 |
-| Alloy Studio raw AST | FM24 historical + mutation | 21,373 | 21,015 | 0 | 0 |
+| Alloy Studio raw AST | HiGenA historical | 14,422 | 27,966 | 0 | 0 |
+| Alloy Studio raw AST | HiGenA historical + mutation | 21,373 | 21,015 | 0 | 0 |
 
 These are descriptive paired counts on the shared incorrect-input cohort; no independence assumptions or significance tests are imposed.
 
@@ -110,12 +117,12 @@ averages do not rank repair quality. AST supplied exact raw-node metadata for
 located **97.12%** in its normalized display. These are strengths of different
 representations, with no independent annotation study of the true defect site.
 
-FM24's mutation fallback added **6,951** incorrect-input hints, increasing native
+HiGenA's mutation fallback added **6,951** incorrect-input hints, increasing native
 availability from **34.02% to 50.42%**. TAR returned hints on **44.59%**, but its
-macro rate (**55.19%**) exceeded FM24 with mutation (**48.78%**). The micro/macro
+macro rate (**55.19%**) exceeded HiGenA with mutation (**48.78%**). The micro/macro
 ordering differs because micro weights each model equally and macro weights
 each exercise equally. Neither ordering establishes better teaching or repair:
-TAR searches for a complete candidate, whereas FM24 can suggest an intermediate
+TAR searches for a complete candidate, whereas HiGenA can suggest an intermediate
 historical step and Live provides a redacted structural trace to a reference.
 
 TAR's independent checks accepted **18,538/18,901 emitted repair candidates**
@@ -127,7 +134,7 @@ errors** when checking the returned candidate; see the
 [final TAR failure inventory](hint-diagnostics.md#6-final-tar-failure-and-validation-inventory).
 
 Within one measured request-second, Canonical returned hints for **98.41%** of
-incorrect inputs, AST **99.73%**, TAR **38.43%**, FM24 history **34.02%**, and FM24
+incorrect inputs, AST **99.73%**, TAR **38.43%**, HiGenA history **34.02%**, and HiGenA
 with mutation **50.42%**. This is an observed availability profile under the
 recorded worker settings, not an equal-resource interactive latency comparison.
 
@@ -146,10 +153,10 @@ timeouts, unsupported forms, unavailable history, and errors. A hit means that
 the engine returned a nonempty native edit hint before the deadline. A distance
 number, an aggregate-only notice, an empty trace, or a response after the deadline
 does not count. This follows the availability interpretation of Hit Rate in the
-[FM24 paper](https://link.springer.com/chapter/10.1007/978-3-031-71177-0_8).
+[HiGenA paper](https://link.springer.com/chapter/10.1007/978-3-031-71177-0_8).
 
 **A hint is not a successful repair.** Canonical and AST feedback redact target
-expressions and guide the learner through structural operations. FM24 suggests
+expressions and guide the learner through structural operations. HiGenA suggests
 a historical next step, optionally reached through a mutation. TAR searches for
 a complete repair and exposes its selected mutators' native hint strings. These
 different output contracts prevent interpreting Hit Rate as equal educational
@@ -160,7 +167,7 @@ overflow-forbidding profile and the corpus's bounded check settings.
 
 Both Live modes can compare directly with the supplied teacher solution and
 training correct pool, even when many edits are required. TAR must first find a
-complete repair within its search depth; FM24 requires usable historical paths
+complete repair within its search depth; HiGenA requires usable historical paths
 or a mutation connecting to them. Consequently, high Live hint availability can
 reflect this broader output contract. It does not by itself demonstrate superior
 repair power or more helpful teaching.
@@ -196,7 +203,7 @@ expressions remain hidden; replay of an internal trace does not make the public
 redacted trace an executable patch. Canonical also recorded **446 aggregate
 notices** across the incorrect-input cohort, separately from its atomic edits.
 
-FM24 history emits a textual first edit toward a reachable historical state.
+HiGenA history emits a textual first edit toward a reachable historical state.
 That state can be an intermediate incorrect submission. The mutation fallback
 can bridge the learner to usable history and emits the native mutator's hint.
 These saved examples illustrate output specificity without publishing a target
@@ -212,7 +219,7 @@ expression:
 These are examples, not a representative quality sample. Upstream encouragement
 such as “One step away from the solution” describes its selected edit target;
 this benchmark has not established one-step semantic progress. The saved private
-FM24 `target` expression is not reproduced here. TAR emits the selected mutation
+HiGenA `target` expression is not reproduced here. TAR emits the selected mutation
 sequence's native hints only after finding and serializing a complete candidate;
 the independently checked repair rate is therefore reported separately.
 
@@ -226,7 +233,7 @@ trace-length, and repair-validation properties are kept separate from the
 smaller qualitative pilot below.
 
 The [ten-exercise quality appendix](alloy4fun-hint-quality.md) now compares fresh
-current-portal Canonical and AST hints with the exact saved TAR and FM24 responses
+current-portal Canonical and AST hints with the exact saved TAR and HiGenA responses
 for the same drafts. It includes every learner draft and operation in a
 [public evidence file](benchmarks/alloy4fun-hint-quality.json), side-by-side
 excerpts, two reproduced literal-edit probes, and two separate GPT-6 Luna
@@ -235,12 +242,12 @@ subagent reviews. No paid portal narration was generated.
 The ten preselected catalogue starters cover ten model families and varied
 constructs, but **all are underconstrained**; they are illustrative, not a
 representative quality sample. Each portal mode emitted hints for 10/10, TAR
-for 7/10, and both FM24 variants for 5/10. All seven emitted TAR candidates passed
-their saved independent bounded check. Both FM24 modes gave the same historical
+for 7/10, and both HiGenA variants for 5/10. All seven emitted TAR candidates passed
+their saved independent bounded check. Both HiGenA modes gave the same historical
 hints here, so mutation-only hint quality is not assessed by this pilot.
 
 The qualitative tradeoff is visible in the actual wording: Canonical/AST give
-structural detail and highlights; available FM24 hints often explain an operator's
+structural detail and highlights; available HiGenA hints often explain an operator's
 purpose more clearly; TAR's short generic cues accompany searched repairs.
 Two probes sharpen that distinction. A literal reading of the first canonical
 tutoring-role operator replacement produces a type error, whereas the AST
@@ -312,7 +319,7 @@ in its held-out pool. This is a membership check, not a new full-pool distance o
 runtime measurement. The original results remain valid for the declared held-out
 experiment and must not be attributed to the original complete-pool policy.
 
-FM24 training retains **all 66,080 historical submissions**, including the 4,482
+HiGenA training retains **all 66,080 historical submissions**, including the 4,482
 teacher-identical records excluded from evaluation. Removing these records would
 erase successful historical transitions and handicap the history baseline. The
 adapter retains 1,204 nontrivial incoming transitions to those additional
@@ -324,7 +331,7 @@ environment; a transition does not authorize changing the learner's declarations
 facts, or helpers.
 
 Fivefold evaluation uses roughly 80% training history per test fold. This is a
-new shared-cohort experiment, **not a replication of FM24's single 70/30 path
+new shared-cohort experiment, **not a replication of HiGenA's single 70/30 path
 split**. Published paper rates and ACGN's existing paired-distance throughput
 are not inserted into the measured results.
 
@@ -334,9 +341,9 @@ are not inserted into the measured results.
 | --- | --- | --- |
 | Live Canonical | Production `live.LiveFeedback.evaluate`, ACGN Fast Rewrite canonical distance, actual nearest-pool selection, trace reconstruction, and locators. | Full structural feedback; solution expressions stay redacted. This is not the separate certificate-integrated ACGN metric. |
 | Live AST | The same production dispatch with `metric: "ast"`, vendored Zhang–Shasha distance, native backtrace and replay, and raw source locations. | Uses the same correct pool as Canonical. Ordered AST labels and wrappers remain significant; canonicalization is not performed first. |
-| TAR, depth 2 | Unmodified repair sources from the supplied TAR checkout, with a thin wrapper exposing `RepairChecker` and `Mutator.hint()`. | Depth 2 matches the FM24 comparison setting. SEFM22's depth-3 results on its different corpus are not claimed to be reproduced. |
-| FM24 history | Author-provided normalization, APTED, and HiGenA JAR components; an in-memory historical graph and MIN-TED policy adapter. | Replaces database/service plumbing and makes ties deterministic; not the original REST deployment. |
-| FM24 + mutation | The same history arm plus the bundled native one-step TAR mutation fallback. | Native mutation hints connect missing states to reachable history. |
+| TAR, depth 2 | Unmodified repair sources from the supplied TAR checkout, with a thin wrapper exposing `RepairChecker` and `Mutator.hint()`. | Depth 2 matches the HiGenA comparison setting. SEFM22's depth-3 results on its different corpus are not claimed to be reproduced. |
+| HiGenA history | Author-provided normalization, APTED, and HiGenA JAR components; an in-memory historical graph and MIN-TED policy adapter. | Replaces database/service plumbing and makes ties deterministic; not the original REST deployment. |
+| HiGenA + mutation | The same history arm plus the bundled native one-step TAR mutation fallback. | Native mutation hints connect missing states to reachable history. |
 
 The TAR wrapper changes the existing correctness check's **label** to its repair
 marker and adds a learner-target marker. The check formula, scopes, trace bounds,
@@ -361,17 +368,17 @@ MiniSatJNI solver and translation settings, including skolem depth 1 and
 `inferPartialInstance=false`; the independent validator uses SAT4J, skolem depth
 0, and `inferPartialInstance=true`. The latter differences affect translation
 and search, with no additional logical mismatch identified by the option audit.
-FM24's mutation fallback enumerates and type-checks candidates without invoking
+HiGenA's mutation fallback enumerates and type-checks candidates without invoking
 the SAT correctness checker.
 
-The FM24 adaptation uses normalized MIN-TED edge weights **before** summing path
+The HiGenA adaptation uses normalized MIN-TED edge weights **before** summing path
 costs. Valid-node outgoing edges are removed in the upstream order. Lexical
 tie-breaking makes otherwise unspecified database ties reproducible. It uses
 the bundled HiGenA default mapping behavior rather than silently substituting
 another diff algorithm. These author artifacts and the local graph adapter are
 identified separately in the provenance.
 
-Two native FM24 corner cases are retained as explicit unavailable outcomes:
+Two native HiGenA corner cases are retained as explicit unavailable outcomes:
 
 - Six historical edge-distance computations fail because native stringifier
   output cannot be reparsed.
@@ -395,29 +402,29 @@ the production repository commit used by the experiment.
 Each engine uses sequential requests within a persistent JVM worker, with
 `-XX:ActiveProcessorCount=1`, Serial GC, and a 512 MiB heap limit. Live requests
 still parse and compare the complete selected pool; no result or prepared-reference
-cache is added. Live and TAR workers recycle after 256 learner requests; FM24 workers recycle after 256 native actions to bound retained parser files and upstream solver resources. Every worker uses an owned directory under `build/`, removed by its parent after exit or forced termination. The default root is `build/benchmarks/tmp/`; guarded TAR used the recorded override `build/benchmarks/alloy4fun-v2/scratch/alloy-recovery-20260930000515-tar/`. First and recycled requests are explicitly marked as cold. Native
+cache is added. Live and TAR workers recycle after 256 learner requests; HiGenA workers recycle after 256 native actions to bound retained parser files and upstream solver resources. Every worker uses an owned directory under `build/`, removed by its parent after exit or forced termination. The default root is `build/benchmarks/tmp/`; guarded TAR used the recorded override `build/benchmarks/alloy4fun-v2/scratch/alloy-recovery-20260930000515-tar/`. First and recycled requests are explicitly marked as cold. Native
 search timing and total API timing are not conflated.
-FM24's initial per-worker graph loading and process launch are separately timed
+HiGenA's initial per-worker graph loading and process launch are separately timed
 setup. Subsequent native restarts are included in request wall time.
 
-The corrected experiment ran its arms sequentially on the same host. Canonical, AST, and both FM24 arms completed with **16 workers each**. The initial TAR attempt was interrupted by global memory exhaustion and is preserved separately; TAR completed a fresh run with **four workers**, a **6 GiB cgroup memory ceiling**, a 4 GiB soft memory threshold, no swap, CPU quota 400%, and reduced scheduling priority. A separate watchdog would stop that workload if global available memory fell below 4 GiB. These are **unequal resource configurations**, so the request latencies are descriptive batch measurements and do not establish an equal-resource speed ranking. No other benchmark arm ran during an arm's measurement. Offline graph/pool construction is reported separately. Successful-hint runtime is shown in addition to all-request runtime so fast unsupported exits cannot masquerade as useful performance.
+The corrected experiment ran its arms sequentially on the same host. Canonical, AST, and both HiGenA arms completed with **16 workers each**. The initial TAR attempt was interrupted by global memory exhaustion and is preserved separately; TAR completed a fresh run with **four workers**, a **6 GiB cgroup memory ceiling**, a 4 GiB soft memory threshold, no swap, CPU quota 400%, and reduced scheduling priority. A separate watchdog would stop that workload if global available memory fell below 4 GiB. These are **unequal resource configurations**, so the request latencies are descriptive batch measurements and do not establish an equal-resource speed ranking. No other benchmark arm ran during an arm's measurement. Offline graph/pool construction is reported separately. Successful-hint runtime is shown in addition to all-request runtime so fast unsupported exits cannot masquerade as useful performance.
 
 | Arm | Recorded whole-batch wall time | Workers |
 | --- | ---: | ---: |
 | Canonical | 924.839 s (15 min 24.839 s) | 16 |
 | Raw AST | 505.204 s (8 min 25.204 s) | 16 |
 | TAR | 53,723.639 s (14 h 55 min 23.639 s) | 4 |
-| FM24 history | 48.977 s | 16 |
-| FM24 history + mutation | 103.112 s | 16 |
+| HiGenA history | 48.977 s | 16 |
+| HiGenA history + mutation | 103.112 s | 16 |
 
 Batch wall time includes concurrent work and harness overhead; it is neither
 the sum of request latencies nor a single-request latency. TAR's batch also
 contains separate independent validation work (**4,575.487 summed validation
 seconds**). Canonical and AST pool preparation took 0.418 and 0.525 seconds;
-FM24 initial worker setup ranged from 2.107–3.421 seconds for history and
+HiGenA initial worker setup ranged from 2.107–3.421 seconds for history and
 1.988–3.380 seconds with mutation, excluded from request latency.
 
-Fresh FM24 preprocessing took **60.365 seconds** with 16 workers: **36.558 seconds** for 66,080 normalizations, **22.724 seconds** for 38,350 distinct edge comparisons, and **1.083 seconds** for policy construction. No normalizations or edge distances were reused. The earlier cached and overlapping run's timings are excluded from the corrected results.
+Fresh HiGenA preprocessing took **60.365 seconds** with 16 workers: **36.558 seconds** for 66,080 normalizations, **22.724 seconds** for 38,350 distinct edge comparisons, and **1.083 seconds** for policy construction. No normalizations or edge distances were reused. The earlier cached and overlapping run's timings are excluded from the corrected results.
 
 The [memory incident and recovery](hint-diagnostics.md#memory-incident-and-preserved-run-recovery) documents the system logs, retained results, and checkpoint changes. The four completed arms are verified byte-for-byte against their pre-recovery hashes. The fresh TAR arm does not mix in the interrupted attempt's rows.
 

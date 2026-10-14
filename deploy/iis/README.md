@@ -956,3 +956,16 @@ counts; run `Test-IisDeployment.ps1` for the full deployment acceptance checks.
 | Task fails after boot | Machine-wide runtime paths and task-account policy; inspect Task Scheduler history. |
 | Luna is disabled/unavailable | Install with `-EnableLuna`, check the private `openai.local.json` values and ACLs, restart after adding/removing that config, and check outbound HTTPS/account access. The masked key setup is available when the config is absent. |
 | `/alloy/` assets or API fail | Use an IIS application and its trailing-slash URL; inspect inherited rewrite/authentication rules. |
+
+### Additional AI providers (alpha.4)
+
+Copy `backend/ai.example.json` to private `backend/ai.local.json`, select the
+guidance/upload/review profiles, and supply their credentials there or in private
+key files. Keep `-EnableLuna` enabled; this legacy flag enables all AI providers.
+Restart the backend after changes. Preserve `backend/ai.local.json` and key files
+when upgrading; never copy them into `wwwroot`. See the packaged
+`backend/docs/ai-providers.md` for Claude, Gemini, DeepSeek and compatible APIs.
+
+The optional `-CheckAI` diagnostic (legacy alias `-CheckLuna`) makes one live
+guidance request to the configured provider; it can incur provider charges.
+It accepts the configured model identity instead of requiring Luna.

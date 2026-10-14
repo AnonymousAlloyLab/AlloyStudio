@@ -112,6 +112,7 @@ class IisPackageTests(unittest.TestCase):
             self.write(module, (ROOT / module).read_bytes())
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
+        self.write('ai.example.json', (ROOT / 'ai.example.json').read_bytes())
         for name in (*STORE_FILES, *ADMIN_FILES, *ADMIN_MODULES):
             self.write(name, (ROOT / name).read_bytes())
         for name in RUNTIME_HELPERS:
@@ -166,6 +167,7 @@ class IisPackageTests(unittest.TestCase):
                      'web/admin/upload.als', 'web/admin/drafts.json'):
             self.write(name, 'PRIVATE_UNLISTED_SENTINEL')
         self.write('openai.local.json', json.dumps({'api_key': 'PRIVATE_UNLISTED_SENTINEL'}))
+        self.write('ai.local.json', '{"PRIVATE_AI_KEY":"PRIVATE_UNLISTED_SENTINEL"}')
         _, entries = self.archive()
         self.assertEqual({name for name in entries if name.startswith('wwwroot/')},
                          {f'wwwroot/{name}' for name in (*WEB_FILES, 'web.config')})
@@ -183,6 +185,9 @@ class IisPackageTests(unittest.TestCase):
         self.assertIn('backend/runtime_dependencies.py', entries)
         self.assertEqual(json.loads(entries['backend/openai.example.json']), {'api_key': ''})
         self.assertNotIn('backend/openai.local.json', entries)
+        self.assertNotIn('backend/ai.local.json', entries)
+        self.assertIn('backend/ai_provider.py', entries)
+        self.assertIn('backend/ai.example.json', entries)
         self.assertNotIn('backend/admin.local.json', entries)
         self.assertTrue(all(f'backend/{name}' in entries for name in ADMIN_MODULES))
         self.assertIn(b'id="local-workspace-badge" data-public-deployment', entries['wwwroot/index.html'])
@@ -608,6 +613,19 @@ class IisPackageTests(unittest.TestCase):
                 self.assertFalse(self.output.exists())
                 self.write(name, original)
 
+    def test_ai_template_rejects_all_credential_sources_and_unknown_fields(self):
+        original = json.loads((ROOT / 'ai.example.json').read_bytes())
+        for change in ({'api_key': 'SYNTHETIC_NONEMPTY'},
+                       {'api_token': 'SYNTHETIC_NONOPENAI_TOKEN'},
+                       {'api_key_file': 'secrets/private.key'},
+                       {'provider': 'openai-compatible', 'endpoint': 'https://example.invalid/v1?key=secret'}):
+            with self.subTest(fields=sorted(change)):
+                document = json.loads(json.dumps(original))
+                document['profiles']['luna'].update(change)
+                self.write('ai.example.json', json.dumps(document))
+                with self.assertRaisesRegex(PackageError, 'AI configuration template'):
+                    build_package(self.root, self.output)
+
     def test_openai_configuration_template_must_be_empty_and_exact(self):
         for document in ({'api_key': 'short-secret'}, {'api_key': None},
                          {'api_key': '', 'private_key': 'another-secret'}, {}, []):
@@ -735,7 +753,7 @@ class IisPackageTests(unittest.TestCase):
                          '/admin_auth.py', '/admin_upload.py', '/admin_luna.py', '/admin_service.py',
                          '/scripts/configure_admin.py',
                          '/scripts/import_correct_pools.py', '/vendor/acgn/lib/alloy.jar',
-                         '/openai.local.json', '/openai.example.json',
+                         '/openai.local.json', '/openai.example.json', '/ai.local.json', '/ai.example.json', '/ai_provider.py',
                          '/manifest.json', '/deploy/iis/Common.ps1', '/.env', '/openai.key', '/index.html'):
                 with self.subTest(path=path):
                     self.assertEqual(request(path)[0], 404)
@@ -787,7 +805,7 @@ class IisPackageTests(unittest.TestCase):
             self.assertIsNone(blocked.fullmatch(path))
         for path in ('web.config', 'manifest.json', 'backend/server.py', 'exercises/catalogue.json',
                      'exercises/correct-pools.json', 'scripts/import_correct_pools.py',
-                     'openai.local.json', 'openai.example.json',
+                     'openai.local.json', 'openai.example.json', 'ai.local.json', 'ai.example.json', 'ai_provider.py',
                      '.env', 'openai.key', 'app.js.map', 'instance-graph.js.map',
                      'instance-graph.js/extra', 'INSTANCE-GRAPH.JS', '../server.py', 'INDEX.HTML',
                      'dashboard/.env', 'dashboard/closure-report.json', 'dashboard/../server.py',

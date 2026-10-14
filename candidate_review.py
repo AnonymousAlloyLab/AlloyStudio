@@ -1,4 +1,4 @@
-"""Private, bounded Sol advice for administrator candidate review.
+"""Private, bounded AI advice for administrator candidate review.
 
 This module cannot publish, approve, edit, or persist predicates. Its context is
 constructed by the backend; advice remains unverified until the administrator
@@ -14,10 +14,9 @@ import re
 import subprocess
 import sys
 
-from urllib.request import Request
-
 from exercise_store import ID, NAME, StoreError, body, parse_json, text
-from luna import ENDPOINT, read_key, urlopen
+from ai_provider import build_request, normalize_response, select_profile
+from luna import read_key, urlopen
 
 MODEL = 'gpt-6.1-sol'
 MAX_REQUEST = 1048576
@@ -61,9 +60,9 @@ Your advice cannot approve or dismiss anything, mutate storage, or add a correct
 The administrator has final authority, and approval separately requires a fresh bounded
 Alloy equivalence check. No tool use or source modification is authorized.'''
 DISABLED = {'status': 'disabled',
-    'message': 'Configure the private server OpenAI key to request Sol advice. Manual review remains available.'}
+    'message': 'Configure a private server AI provider to request advice. Manual review remains available.'}
 UNAVAILABLE = {'status': 'unavailable',
-    'message': 'Sol returned no usable advice. Review the candidate manually or try again later.'}
+    'message': 'The configured AI provider returned no usable advice. Review the candidate manually or try again later.'}
 
 
 def validate_context(context):
@@ -174,17 +173,20 @@ def request_payload(context):
 
 def _provider(context):
     payload = request_payload(context)
-    key = read_key()
-    if not key:
+    profile = select_profile('review', read_key, MODEL, 'high')
+    if profile is None:
         return dict(DISABLED)
-    request = Request(ENDPOINT, data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-                      headers={'Content-Type': 'application/json',
-                               'Authorization': 'Bearer ' + key}, method='POST')
+    request = build_request(profile, payload)
+    if len(request.data) > MAX_REQUEST:
+        raise StoreError('Candidate review request exceeds its byte limit.')
     with urlopen(request, timeout=TRANSPORT_SECONDS) as response:
         raw = response.read(MAX_RESPONSE + 1)
     if len(raw) > MAX_RESPONSE:
         raise StoreError('Provider response exceeds its byte limit.')
-    response = parse_json(raw)
+    try:
+        response = normalize_response(profile, parse_json(raw))
+    except ValueError as exc:
+        raise StoreError('Provider returned no usable advice.') from exc
     if type(response) is not dict or response.get('status') != 'completed':
         raise StoreError('Provider response incomplete.')
     output = response.get('output')
@@ -208,17 +210,17 @@ def _provider(context):
             pieces.append(part['text'])
     if len(pieces) != 1:
         raise StoreError('Provider returned no single advice object.')
-    return {'status': 'ok', 'advice': validate_advice(parse_json(pieces[0]), context, key=key)}
+    return {'status': 'ok', 'advice': validate_advice(parse_json(pieces[0]), context, key=profile.key)}
 
 
 def review(root, context):
     """Bound the complete provider exchange with a separate 50-second process."""
     request_payload(context)  # Reject malformed/oversized input before child allocation.
     context = validate_context(context)
-    key = read_key()
-    if not key:
-        return dict(DISABLED)
     try:
+        profile = select_profile('review', read_key, MODEL, 'high')
+        if profile is None:
+            return dict(DISABLED)
         completed = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--worker'],
             input=json.dumps({'context': context}, ensure_ascii=False), text=True,
             encoding='utf-8', capture_output=True, cwd=root, timeout=WORKER_SECONDS,
@@ -230,7 +232,7 @@ def review(root, context):
         if (type(result) is not dict or set(result) != {'status', 'advice'}
                 or result['status'] != 'ok'):
             raise StoreError('Candidate review worker unavailable.')
-        return {'status': 'ok', 'advice': validate_advice(result['advice'], context, key=key)}
+        return {'status': 'ok', 'advice': validate_advice(result['advice'], context, key=profile.key)}
     except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired, RecursionError):
         return dict(UNAVAILABLE)
 

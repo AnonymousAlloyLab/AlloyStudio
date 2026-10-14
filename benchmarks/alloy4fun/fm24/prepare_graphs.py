@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Five-fold path-held-out MIN-TED graphs with original FM24 normalizer/APTED.
+"""Five-fold path-held-out MIN-TED graphs with original HiGenA normalizer/APTED.
 
 Storage and multi-source Dijkstra replace MongoDB/Quarkus only. This is a
 database-free adaptation, not an execution of the authors' REST deployment.

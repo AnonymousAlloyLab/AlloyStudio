@@ -1,16 +1,16 @@
 # Hint availability and guidance across all 181 invariants
 
-This audit compares **Canonical, raw AST, FM24 historical, FM24 historical + mutation, and TAR** on every one of the 181 imported Alloy4Fun invariants. It separates **whether a hint exists** from **what guidance is actually present**. These are observed presentation properties, not learner-success scores.
+This audit compares **Canonical, raw AST, HiGenA historical, HiGenA historical + mutation, and TAR** on every one of the 181 imported Alloy4Fun invariants. It separates **whether a hint exists** from **what guidance is actually present**. These are observed presentation properties, not learner-success scores.
 
 The complete [machine-readable evidence](benchmarks/alloy4fun-181-hint-quality.json) contains per-invariant corpus counts and guidance profiles, plus one matched starter per invariant with current public portal responses and saved native baseline hints. The [ten-exercise pilot](alloy4fun-hint-quality.md) supplies the earlier qualitative reviews and literal-edit probes; those ten reviews have **not** been extrapolated into 181 subjective ratings.
 
 ## Scope and reproducibility
 
 - Corpus layer: all **42,388 incorrect submissions** in the completed 61,598-model study. The corrected frozen labels include 21,715 BOTH, 8,095 OVERCONSTRAINED and 12,578 UNDERCONSTRAINED inputs. All five saved result and native-response archives were streamed, hash checked against the published evidence, and joined by case identity. The original results are unchanged.
-- Current-portal layer: **181 existing catalogue starters**, selected without looking at outputs (175 UNDERCONSTRAINED and 6 OVERCONSTRAINED), with one fresh Canonical and AST request each. The portal uses its full compatible CORRECT pool, including its oracle; archived Canonical/AST and FM24 use their recorded five-fold held-out pools. The archived Canonical/AST starter controls remain in the JSON. This is not an equal-training-data comparison.
+- Current-portal layer: **181 existing catalogue starters**, selected without looking at outputs (175 UNDERCONSTRAINED and 6 OVERCONSTRAINED), with one fresh Canonical and AST request each. The portal uses its full compatible CORRECT pool, including its oracle; archived Canonical/AST and HiGenA use their recorded five-fold held-out pools. The archived Canonical/AST starter controls remain in the JSON. This is not an equal-training-data comparison.
 - TAR was not rerun: depth two, recorded 60-second search budget, and an independent bounded Alloy validation attempt for emitted candidate repairs. Successful, rejected and unresolved checks are distinguished below. A bounded check is not universal equivalence.
 - No paid Luna explanations, new AI quality ratings, learner study, or all-corpus literal-edit success experiment was performed. Current request wall times are diagnostics, not a new runtime ranking.
-- Public evidence omits oracle bodies, hidden target expressions and complete candidate repairs. FM24 operand type/name phrases are conservatively redacted, including source-side identities; operator names and explanatory wording remain. This records a disclosure difference, not an error in FM24.
+- Public evidence omits oracle bodies, hidden target expressions and complete candidate repairs. HiGenA operand type/name phrases are conservatively redacted, including source-side identities; operator names and explanatory wording remain. This records a disclosure difference, not an error in HiGenA.
 
 The [frozen 181-input selection](../benchmarks/alloy4fun/protocol/quality-selection-181.json) is included in the repository, containing only learner drafts, public questions and source identities. The [reproducer](../benchmarks/alloy4fun/quality_all.py) reads one archive at a time and retains only its compact result index, per-invariant counters and the 181 selected responses. It never starts solvers or connects to a service. The fresh collector is single-worker; scratch data lives in `build/benchmarks/hint-quality-181/`, not the system temporary directory. To collect new current-portal evidence, first build the engine using the repository setup guide, then run the following from the repository root. A fresh study directory is required; existing evidence is never overwritten.
 
@@ -35,11 +35,11 @@ A hit means the saved run reports a nonempty native hint on an incorrect submiss
 | --- | ---: | ---: | ---: | ---: |
 | Canonical | 42,388 / 42,388 | 100.00% | 181 / 181 | 100.00% |
 | AST | 42,388 / 42,388 | 100.00% | 181 / 181 | 100.00% |
-| FM24 history | 14,422 / 42,388 | 34.02% | 156 / 181 | 30.68% |
-| FM24 + mutation | 21,373 / 42,388 | 50.42% | 169 / 181 | 48.78% |
+| HiGenA history | 14,422 / 42,388 | 34.02% | 156 / 181 | 30.68% |
+| HiGenA + mutation | 21,373 / 42,388 | 50.42% | 169 / 181 | 48.78% |
 | TAR | 18,901 / 42,388 | 44.59% | 179 / 181 | 55.19% |
 
-Macro availability weights each invariant equally; overall availability weights each submission equally. FM24 history and mutation-enabled FM24 are separate configurations and must not be merged into one result.
+Macro availability weights each invariant equally; overall availability weights each submission equally. HiGenA history and mutation-enabled HiGenA are separate configurations and must not be merged into one result.
 
 ## Guidance properties observed across the whole incorrect corpus
 
@@ -61,24 +61,24 @@ For Canonical/AST, an **exact raw location** means metadata identifies the selec
 
 Canonical locations are intentionally unavailable in AST mode. Canonical also emitted 446 aggregate notices, excluded from the atomic-unit percentages and lengths; these notices account for remaining edit cost without pretending to be an individual located edit. Replay/count checks concern the internal structural trace; **they do not prove that taking one displayed instruction literally will compile or improve behavior**. The earlier pilot constructed a type-error counterexample for a literal Canonical operator replacement. That limitation remains applicable; this audit does not reinterpret a high location or trace-consistency rate as repair correctness.
 
-| Native baseline guidance property | FM24 history | FM24 + mutation | TAR |
+| Native baseline guidance property | HiGenA history | HiGenA + mutation | TAR |
 | --- | ---: | ---: | ---: |
 | Hints with an operator-purpose phrase | 9,230 / 14,422 | 9,230 / 21,373 | 0 / 18,901 |
-| Hints naming an operator/quantifier | 13,056 / 14,422 | 13,056 / 21,373 | Not assessed by this FM24-specific detector |
-| Hints with a relative-context phrase | 5,313 / 14,422 | 5,313 / 21,373 | Not assessed by this FM24-specific detector |
-| Hints requiring operand-identity redaction | 3,542 / 14,422 | 3,542 / 21,373 | Not assessed by this FM24-specific detector |
+| Hints naming an operator/quantifier | 13,056 / 14,422 | 13,056 / 21,373 | Not assessed by this HiGenA-specific detector |
+| Hints with a relative-context phrase | 5,313 / 14,422 | 5,313 / 21,373 | Not assessed by this HiGenA-specific detector |
+| Hints requiring operand-identity redaction | 3,542 / 14,422 | 3,542 / 21,373 | Not assessed by this HiGenA-specific detector |
 | TAR hints with all native line/column ranges | — | — | 18,901 / 18,901 |
 | TAR hints with a bounded-validated complete repair behind them | — | — | 18,538 / 18,901 |
 
 TAR has **3 independently rejected candidates**, **358 validation errors** and **2 validation timeouts** among native-hint cases. These remain native-hint availability hits; they are not counted as validated repairs. An unknown validation result is not a constructed counterexample.
 
-The phrase detector is intentionally mechanical: it tests the fixed FM24 templates for operator/quantifier names, phrases such as “to specify” or “to combine”, and “within the” or “inside of the”. It does not judge whether an explanation is relevant, correct, understandable or sufficient. TAR’s absence of those phrases reflects its terse mutation cues, not a failed repair. TAR line/column ranges were counted as supplied; these are not portal body-offset highlights. FM24’s relative context is also different from an exact editor address.
+The phrase detector is intentionally mechanical: it tests the fixed HiGenA templates for operator/quantifier names, phrases such as “to specify” or “to combine”, and “within the” or “inside of the”. It does not judge whether an explanation is relevant, correct, understandable or sufficient. TAR’s absence of those phrases reflects its terse mutation cues, not a failed repair. TAR line/column ranges were counted as supplied; these are not portal body-offset highlights. HiGenA’s relative context is also different from an exact editor address.
 
 ### Assessment
 
 **Canonical and AST have the strongest availability in this corpus** and provide inspectable multi-step structure with source references. Their long and repetitive traces, hidden operands and normalization/tree-edit semantics leave interpretation to the learner. AST avoids canonical normalization, but its delete/insert operations can also differ from ordinary text edits. Neither trace length nor distance establishes a quality ordering between these two modes.
 
-**FM24 history explains operator purpose more directly when a historical hint is available.** The mutation-enabled arm extends availability, but its extra mutation cues use terser wording. Some native hints disclose operand identities; the public comparison marks those omissions rather than awarding the portal an unfair specificity disadvantage under its stricter disclosure policy.
+**HiGenA history explains operator purpose more directly when a historical hint is available.** The mutation-enabled arm extends availability, but its extra mutation cues use terser wording. Some native hints disclose operand identities; the public comparison marks those omissions rather than awarding the portal an unfair specificity disadvantage under its stricter disclosure policy.
 
 **TAR provides terse local mutation guidance, with a positively validated bounded repair behind 18,538 of its 18,901 native-hint cases.** That is a stronger repair-evidence property than structural distance for that verified subset, while its missing hints and broad wording limit the guidance available to an individual learner. The experiment does not show that displaying or following its hint alone reproduces its hidden repair.
 
@@ -92,17 +92,17 @@ This layer tests the current public interface. All 181 inputs are incorrect unde
 | --- | ---: |
 | Canonical | 177 / 181 |
 | AST | 177 / 181 |
-| FM24 history | 49 / 181 |
-| FM24 + mutation | 84 / 181 |
+| HiGenA history | 49 / 181 |
+| HiGenA + mutation | 84 / 181 |
 | TAR | 114 / 181 |
 
 The public JSON preserves **all** current Canonical/AST operations and native saved baseline hints for these same inputs, not only successful cases. The archived live-mode controls allow a reader to distinguish current full-pool behavior from the earlier benchmark configuration. No absent native hint is assigned a subjective guidance score.
 
 ## Per-invariant availability and guidance
 
-Every row uses all incorrect submissions of that invariant. **C/A** means Canonical/AST. The raw-location column is the percentage of atomic operations carrying exact raw-node metadata; the length column is median atomic operations per available hint. FM24 columns count available native hints, with “H/+M” denoting history/mutation-enabled. Guidance details, statuses, operator specificity, repetition and the matched starter outputs are in the linked JSON. FM24 purpose counts apply equally to both variants because all extra mutation hints lack these particular purpose phrases. TAR checked counts show the verified subset of the adjacent hint count.
+Every row uses all incorrect submissions of that invariant. **C/A** means Canonical/AST. The raw-location column is the percentage of atomic operations carrying exact raw-node metadata; the length column is median atomic operations per available hint. HiGenA columns count available native hints, with “H/+M” denoting history/mutation-enabled. Guidance details, statuses, operator specificity, repetition and the matched starter outputs are in the linked JSON. HiGenA purpose counts apply equally to both variants because all extra mutation hints lack these particular purpose phrases. TAR checked counts show the verified subset of the adjacent hint count.
 
-| Invariant | Incorrect N | Canonical hints | AST hints | FM24 H / +M hints | TAR hints / checked | C/A raw exact % | C/A median steps | FM24 purpose hints |
+| Invariant | Incorrect N | Canonical hints | AST hints | HiGenA H / +M hints | TAR hints / checked | C/A raw exact % | C/A median steps | HiGenA purpose hints |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `classroom_fol-inv1` | 16 | 16 | 16 | 5 / 14 | 15 / 15 | 39.47% / 90.62% | 2 / 2 | 2 |
 | `classroom_fol-inv2` | 4 | 4 | 4 | 0 / 1 | 4 / 4 | 90.00% / 100.00% | 3 / 2 | 0 |

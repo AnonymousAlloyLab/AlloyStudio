@@ -128,7 +128,7 @@ class EducationHTTPTests(unittest.TestCase):
             public = education_reply()
             document = {key: public[key] for key in ('operations', 'instances', 'summary')}
             return io.BytesIO(json.dumps({'status': 'completed', 'output': [
-                {'type': 'message', 'content': [{'type': 'output_text', 'text': json.dumps(document)}]}]}).encode())
+                {'type': 'message', 'role': 'assistant', 'content': [{'type': 'output_text', 'text': json.dumps(document)}]}]}).encode())
         client = Explainer(transport=transport, key_reader=lambda: 'UNIT_TEST_EDUCATION_KEY')
         with patch('server.subprocess.run', return_value=self.completed(self.canonical())), \
              patch.object(self.app, 'explainer', client):

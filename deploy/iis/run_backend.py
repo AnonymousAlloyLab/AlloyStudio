@@ -131,6 +131,13 @@ def main():
     os.environ['OPENAI_API_KEY_FILE'] = config['key_file']
     os.environ.pop('OPENAI_API_KEY', None)
     os.environ.pop('OPENAI_CONFIG_FILE', None)
+    # Only the installed private backend selects providers; inherited process
+    # configuration must not redirect model data or credentials elsewhere.
+    os.environ.pop('ALLOY_AI_CONFIG_FILE', None)
+    os.environ.pop('ALLOY_AI_DISABLED', None)
+    ai_config = backend / 'ai.local.json'
+    if ai_config.exists():
+        os.environ['ALLOY_AI_CONFIG_FILE'] = str(ai_config)
     local_config = backend / 'openai.local.json'
     if local_config.exists():
         os.environ['OPENAI_CONFIG_FILE'] = str(local_config)

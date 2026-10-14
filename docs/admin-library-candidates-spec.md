@@ -96,10 +96,12 @@ certificate through an approval request.
 
 ## Advisory AI and approval
 
-The administrator explicitly clicks **Review with Sol**. The existing private
-OpenAI key is reused; no key is placed in the browser or review input. Use
-`gpt-6.1-sol`, `reasoning.effort=high`, the Responses API, `store=false`, no tools,
-and at most 8000 output tokens. See the [official model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+The administrator explicitly clicks **Review with AI**. The private deployment
+configuration selects the review provider and model; no key is placed in the
+browser or review input. Legacy defaults use `gpt-6.1-sol`,
+`reasoning.effort=high`, the Responses API and `store=false`. All providers use
+no tools and at most 8000 output tokens. The [provider contract](ai-providers-spec.md)
+extends selection without changing admission or approval authority. See the [official model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
 and [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning).
 
 The request is bounded to 1 MiB and contains the exact candidate, immutable

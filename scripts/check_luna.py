@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check live Luna access using learner code, redacted edits, and public examples."""
+"""Check live configured guidance access using learner code, redacted edits, and public examples."""
 import json
 from pathlib import Path
 import sys
@@ -15,7 +15,7 @@ def main():
         exercise = app.exercises['graphs-inv1']
         feedback = app.evaluate(exercise, exercise['starter'])
         if feedback.get('status') != 'ok':
-            print(json.dumps({'status': 'unavailable', 'message': 'Build the engine before checking Luna.'}))
+            print(json.dumps({'status': 'unavailable', 'message': 'Build the engine before checking AI guidance.'}))
             return 1
         behavior = app.evaluate_behavior(exercise, exercise['starter'])
         result = app.explainer.explain(feedback, student_body=exercise['starter'],

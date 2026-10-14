@@ -42,7 +42,7 @@
 sig Node { edge: set Node }
 pred inv1C0 { some Node }
 pred inv1C1 { not no Node }</pre>
-          <p>The original upload is retained privately. Selected solution declarations are removed from the learner view; every retained environment fragment and every solution body is preserved. Luna formats the exercise metadata, not the Alloy code.</p>
+          <p>The original upload is retained privately. Selected solution declarations are removed from the learner view; every retained environment fragment and every solution body is preserved. The configured model formats the exercise metadata, not the Alloy code.</p>
           <p>Up to 100 exercise groups and 256 solution declarations per file. Select each group as a whole; alternative solutions cannot be split into separate exercises. Every numbered solution group must agree, including unselected groups. Each selected solution body and fixed header may use up to 8 KiB; unselected parameterized helpers retain their original code within the file limit. Alloy checks equivalence with facts enforced, bitwidth 5 and the selected scope (1–8); this is bounded agreement, not an unbounded proof.</p>
         </details>
       </section>
@@ -52,7 +52,7 @@ pred inv1C1 { not no Node }</pre>
         <div class="fields"><div><label for="model-id">Model identifier</label><input id="model-id" type="text" required maxlength="100" pattern="[A-Za-z0-9][A-Za-z0-9_.-]*" placeholder="graph-basics"><small>Used to keep exercise IDs distinct. Existing exercises are never overwritten.</small></div>
         <div><label for="scope">Equivalence scope</label><input id="scope" type="number" min="1" max="8" value="5" required></div></div>
         <label for="question-seed">Question or teaching goal <span class="optional">(optional)</span></label><textarea id="question-seed" rows="3" maxlength="8192" placeholder="For example: Ask students to constrain which nodes can reach one another."></textarea>
-        <p class="disclosure">After validation, Luna will receive this model and your teaching goal to suggest question wording, using the backend's OpenAI configuration. If Luna is unavailable, you can enter the questions yourself.</p>
+        <p class="disclosure">After validation, the AI provider selected in the private backend configuration will receive this model and your teaching goal to suggest question wording. If AI is unavailable, you can enter the questions yourself.</p>
         <button id="prepare" type="submit">Parse model and choose predicates</button>
       </form>
       <section id="selection" hidden>
@@ -99,8 +99,8 @@ pred inv1C1 { not no Node }</pre>
       </section>
       <section id="candidates-panel" hidden aria-labelledby="candidates-heading">
         <div class="section-heading"><h2 id="candidates-heading">Candidate cache</h2><button id="candidates-refresh" class="secondary" type="button">Refresh candidates</button></div>
-        <p class="muted">Up to 100 private learner candidates, with at most 10 for one exercise. Only drafts with reward exactly 1 and completed checks finding no undercoverage or overcoverage enter this review queue. AI review starts only when you click Review with Sol.</p>
-        <p class="public-note">Bounded agreement is not a proof of equivalence. Sol offers advice only. You make the final decision, and approval runs a fresh Alloy check with the model facts enforced.</p>
+        <p class="muted">Up to 100 private learner candidates, with at most 10 for one exercise. Only drafts with reward exactly 1 and completed checks finding no undercoverage or overcoverage enter this review queue. AI review starts only when you click Review with AI.</p>
+        <p class="public-note">Bounded agreement is not a proof of equivalence. The configured model offers advice only. You make the final decision, and approval runs a fresh Alloy check with the model facts enforced.</p>
         <div id="candidates-list" class="library-list" aria-label="Learner candidates"></div>
         <div class="page-controls"><button id="candidates-previous" class="secondary" type="button" disabled>Previous candidates</button><span id="candidates-page" class="muted"></span><button id="candidates-next" class="secondary" type="button" disabled>Next candidates</button></div>
         <article id="candidate-detail" hidden>
@@ -108,8 +108,8 @@ pred inv1C1 { not no Node }</pre>
           <h4>Student predicate body</h4><pre id="candidate-body" tabindex="0"></pre>
           <details><summary>Bounded behavioral evidence</summary><pre id="candidate-evidence" tabindex="0"></pre></details>
           <div id="candidate-advice" class="candidate-advice"></div>
-          <p class="disclosure">Review with Sol sends this candidate, its exercise environment, and the private oracle solutions to GPT-6.1 Sol at high reasoning effort using the backend key. Viewing this page does not call AI.</p>
-          <div class="actions"><button id="candidate-review" class="secondary" type="button">Review with Sol</button><button id="candidate-approve-open" type="button">Approve candidate…</button><button id="candidate-dismiss" class="danger secondary" type="button">Dismiss candidate</button></div>
+          <p class="disclosure">Review with AI sends this candidate, its exercise environment, and the private oracle solutions to the review provider and model selected in the private backend configuration. Viewing this page does not call AI.</p>
+          <div class="actions"><button id="candidate-review" class="secondary" type="button">Review with AI</button><button id="candidate-approve-open" type="button">Approve candidate…</button><button id="candidate-dismiss" class="danger secondary" type="button">Dismiss candidate</button></div>
           <div id="candidate-approval" class="confirmation" hidden>
             <p>Add this exact candidate to this exercise's correct-answer pool if the fresh bounded Alloy check passes? The primary behavioral oracle stays unchanged.</p>
             <label class="review"><input id="candidate-approve-confirm" type="checkbox"> I reviewed this candidate and authorize adding it after validation.</label>

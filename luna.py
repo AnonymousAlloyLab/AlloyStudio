@@ -1,16 +1,17 @@
 """Server-only explanation client. Neither credentials nor oracle data are prompt inputs."""
 from copy import deepcopy
-import hashlib
 import json
 import math
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import threading
 import time
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.request import build_opener, HTTPRedirectHandler
+from ai_provider import select_profile, build_request, normalize_response
 from traffic_limits import validated_int, validated_seconds
 
 class _NoCredentialRedirect(HTTPRedirectHandler):
@@ -111,9 +112,16 @@ def _private_text(path):
     """Bounded credential read; POSIX modes and IIS-installed NTFS ACLs protect it."""
     # Windows stat modes do not describe NTFS ACLs. The IIS installer restricts
     # the backend and secrets directories to administrators and the task account.
-    if sys.platform != 'win32' and path.stat().st_mode & 0o077:
-        raise ValueError('Credential file must be private')
-    with path.open('rb') as source:
+    # Nonblocking open prevents a misconfigured FIFO from holding a request
+    # before provider deadlines or concurrency limits are reached.
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0)
+                         | getattr(os, 'O_BINARY', 0))
+    with os.fdopen(descriptor, 'rb') as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError('Credential file must be regular')
+        if sys.platform != 'win32' and info.st_mode & 0o077:
+            raise ValueError('Credential file must be private')
         content = source.read(16385)
     if len(content) > 16384:
         raise ValueError('Credential file too large')
@@ -578,15 +586,21 @@ class Explainer:
         self.max_followers = max_followers
 
     @staticmethod
-    def unavailable():
-        return dict(model=MODEL, status='unavailable',
-                    message='Luna could not complete the explanation. Distance feedback remains available.')
+    def unavailable(model=MODEL):
+        return dict(model=model, status='unavailable',
+                    message='AI guidance could not complete the explanation. Distance feedback remains available.')
 
     def explain(self, feedback, *, student_body='', behavior=None, question='', solution_comparison=None,
                 dependency_context=None):
         base = {'model': MODEL}
-        key = self.key_reader()
-        if not key: return dict(base, status='disabled', message='Luna is not configured. Distance feedback remains available.')
+        try:
+            profile = select_profile('guidance', self.key_reader, MODEL, 'low')
+        except (OSError, ValueError, TypeError, RecursionError):
+            return self.unavailable()
+        if profile is None:
+            return dict(base, status='disabled', message='AI guidance is not configured. Distance feedback remains available.')
+        base = {'model': profile.model}
+        key = profile.key
         try:
             if dependency_context is not None:
                 _require(type(dependency_context) is str and re.fullmatch(r'[0-9a-f]{64}', dependency_context) is not None)
@@ -597,7 +611,7 @@ class Explainer:
         encoded = json.dumps(trace, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
         # Exact prompt bytes are retained for equality; a prompt digest alone is
         # not identity. Credentials contribute only their one-way account scope.
-        identity = (hashlib.sha256(key.encode()).hexdigest(), base['model'], INSTRUCTIONS, encoded,
+        identity = (profile.cache_identity, base['model'], INSTRUCTIONS, encoded,
                     dependency_context)
         with self.lock:
             cached = self.cache.get(identity)
@@ -607,24 +621,24 @@ class Explainer:
             leader = flight is None
             if leader:
                 if not self.slots.acquire(blocking=False):
-                    return dict(base, status='busy', message='Luna is busy. Retry shortly.')
+                    return dict(base, status='busy', message='AI guidance is busy. Retry shortly.')
                 flight = _ExplanationFlight()
                 self.pending[identity] = flight
             else:
                 if self.followers >= self.max_followers:
-                    return dict(base, status='busy', message='Luna is busy. Retry shortly.')
+                    return dict(base, status='busy', message='AI guidance is busy. Retry shortly.')
                 self.followers += 1
         if not leader:
             try:
                 if not flight.event.wait(self.timeout):
-                    return self.unavailable()
-                return json.loads(flight.result) if flight.result is not None else self.unavailable()
+                    return self.unavailable(profile.model)
+                return json.loads(flight.result) if flight.result is not None else self.unavailable(profile.model)
             finally:
                 with self.lock:
                     self.followers -= 1
-        result = self.unavailable()
+        result = self.unavailable(profile.model)
         try:
-            result = self._produce(trace, encoded, key, base, identity[2])
+            result = self._produce(trace, encoded, key, base, identity[2], profile)
             return deepcopy(result)
         finally:
             # A failing producer releases every follower, including on an
@@ -640,7 +654,7 @@ class Explainer:
                     self.slots.release()
                     flight.event.set()
 
-    def _produce(self, trace, encoded, key, base, instructions):
+    def _produce(self, trace, encoded, key, base, instructions, profile):
         try:
             payload = {'model': base['model'], 'instructions': instructions, 'input': encoded,
                        'reasoning': {'effort': 'low'},
@@ -648,13 +662,12 @@ class Explainer:
                        'text': {'format': {'type': 'json_schema', 'name': 'alloy_education',
                                            'strict': True, 'schema': education_schema(trace)}},
                        'store': False}
-            request = Request(ENDPOINT, data=json.dumps(payload).encode(),
-                              headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'}, method='POST')
+            request = build_request(profile, payload)
             with self.transport(request, timeout=self.timeout) as response:
                 content = response.read(1_048_577)
                 if len(content) > 1_048_576: raise ValueError('Response too large')
                 data = _unique_json(content)
-            education = _education_response(data, trace, key)
+            education = _education_response(normalize_response(profile, data), trace, key)
             result = dict(base, status='ok', **education)
             return result
         except HTTPError as error:
@@ -664,9 +677,9 @@ class Explainer:
                     details = json.loads(error.read(8192)).get('error', {})
                     quota = details.get('type') == 'insufficient_quota' or details.get('code') in ('insufficient_quota', 'credit_balance_exhausted')
                 except (ValueError, OSError, AttributeError): pass
-            message = ('The OpenAI project has no available API credits. Distance feedback remains available.' if quota
-                       else 'Luna credentials or model access were rejected.' if error.code in (401, 403, 404)
-                       else 'Luna is temporarily unavailable. Retry shortly.')
+            message = ('The AI provider reports no available API credits. Distance feedback remains available.' if quota
+                       else 'AI credentials or model access were rejected.' if error.code in (401, 403, 404)
+                       else 'AI guidance is temporarily unavailable. Retry shortly.')
             return dict(base, status='unavailable', message=message)
         except (URLError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
-            return dict(base, status='unavailable', message='Luna could not complete the explanation. Distance feedback remains available.')
+            return self.unavailable(profile.model)

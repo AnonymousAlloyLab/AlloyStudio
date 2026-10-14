@@ -28,7 +28,7 @@ def education_reply(descriptions=('Review the first matrix edit.', 'Review the s
                               for index, description in enumerate(descriptions, 1)],
                'instances': [], 'summary': summary}
     return io.BytesIO(json.dumps({'status': 'completed', 'output': [
-        {'type': 'reasoning'}, {'type': 'message', 'content': [
+        {'type': 'reasoning'}, {'type': 'message', 'role': 'assistant', 'content': [
             {'type': 'output_text', 'text': json.dumps(content)}]}]}).encode())
 
 

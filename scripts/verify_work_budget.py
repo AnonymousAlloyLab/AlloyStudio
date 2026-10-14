@@ -66,9 +66,9 @@ def safe_input(root, relative):
         raise Rejected('Input paths must be canonical relative POSIX paths')
     path = inside(root, relative)
     if any(part.name.startswith('.env') or part.name in
-           {'admin.local.json', 'openai.local.json'} for part in Path(relative).parents) or \
+           {'admin.local.json', 'openai.local.json', 'ai.local.json'} for part in Path(relative).parents) or \
             Path(relative).name.startswith('.env') or Path(relative).name in \
-            {'admin.local.json', 'openai.local.json'}:
+            {'admin.local.json', 'openai.local.json', 'ai.local.json'}:
         raise Rejected('Private configuration is outside the proof surface')
     for part in (path, *path.parents):
         if part == root:

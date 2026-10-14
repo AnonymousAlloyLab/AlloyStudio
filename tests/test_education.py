@@ -343,13 +343,13 @@ class EducationTransportTests(unittest.TestCase):
         evidence = luna.prompt_education(trace())
         valid = expected(evidence)
         providers = [
-            {'status': 'completed', 'output': [{'type': 'message', 'content': [
+            {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                 {'type': 'output_text', 'text': json.dumps(valid)}, {'type': 'refusal', 'refusal': 'PRIVATE_REFUSAL'}]}]},
-            {'status': 'incomplete', 'output': [{'type': 'message', 'content': [
+            {'status': 'incomplete', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                 {'type': 'output_text', 'text': json.dumps(valid)}]}]},
-            {'status': 'completed', 'output': [{'type': 'message', 'content': [
+            {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                 {'type': 'output_text', 'text': json.dumps(valid)[:-1] + ',"summary":"duplicate"}'}]}]},
-            {'status': 'completed', 'output': [{'type': 'message', 'content': [
+            {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant', 'content': [
                 {'type': 'output_text', 'text': json.dumps(valid).replace('"summary":', '"summary": NaN,"discard":')}]}]},
         ]
         for provider in providers:

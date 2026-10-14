@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch public pinned FM24 resources without redistributing upstream sources."""
+"""Fetch public pinned HiGenA resources without redistributing upstream sources."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib

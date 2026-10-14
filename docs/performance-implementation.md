@@ -180,7 +180,7 @@ python3 scripts/verify_traffic_proofs.py
 ```
 
 Full-corpus benchmark outputs and previous successful test evidence are preserved.
-This release does not rerun the 61,598-model TAR/FM24 comparison or claim that
+This release does not rerun the 61,598-model TAR/HiGenA comparison or claim that
 reduced runtime changes hint quality. Native Windows/macOS CI supplements local
 Linux tests; it is not an actual IIS deployment acceptance test.
 

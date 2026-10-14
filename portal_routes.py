@@ -350,7 +350,7 @@ def public_post(app, request):
                     if evidence is not None and behavior_token(record['id'], data['body'], evidence) != token:
                         evidence = None
             if result.get('status') != 'ok' or token is not None and evidence is None:
-                result = {'status': 'unavailable', 'model': 'gpt-6-luna',
+                result = {'status': 'unavailable',
                           'message': 'These hints or examples have expired. Check your predicate again to refresh guidance.'}
             else:
                 with app.scheduler.lock:

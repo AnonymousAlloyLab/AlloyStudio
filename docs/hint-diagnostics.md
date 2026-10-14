@@ -55,7 +55,7 @@ directory index is a strong explanation, but the kernel-internal cause was not
 directly verified.
 
 Alloy creates these source files and registers `deleteOnExit`. The benchmark's
-[Live worker shutdown](../benchmarks/alloy4fun/live/adapter.py) and FM24 native
+[Live worker shutdown](../benchmarks/alloy4fun/live/adapter.py) and HiGenA native
 worker shutdown originally used `SIGKILL`, including at normal benchmark completion. That
 bypasses JVM exit cleanup. This is a **benchmark lifecycle defect** that can
 leave generated parser files behind. The production portal normally runs a
@@ -183,6 +183,84 @@ Replaying all **52 original requests and their unchanged reference pools** resto
 `productionLine_v2/correct/XDQrJquXurHSvKuXF_inv2.als` still has equal displayed text and distance **2** after its body is restored. Reordering conjunction branches moves a local `ONE`-bound variable to a different structural binding path. The binding matcher permits the relevant remapping for `ALL` and `SOME`, but requires identical paths for `ONE`. It therefore charges two variable replacements even though both displays use the same source variable name. The raw locator selects the actual variable occurrence, not both textual matches.
 
 A separate diagnostic supplied the explicit correspondence between the four binders and obtained matrix cost **0** with the same graphs. This identifies a conservative, position-sensitive binder-matching limitation; it is separate from the repaired body omission. The rerun retains the production matching policy and records its nonzero result. Equal displayed text is not an injective encoding of the graph's binding identities, and this audit does not claim otherwise.
+
+### Public ONE binding-path audit (2026-10-13)
+
+This bounded follow-up uses production source pinned to
+`39cfea89cfb6bf752112ba7561d2e5e28cc5915e`. It does not replay the private
+productionLine input or amend any historical measurement or proof.
+
+A small public witness needs no fields, facts, commands, or corpus data:
+
+```alloy
+sig A {}
+pred target { (one a:A | some a) and (all b:A | some b) }
+```
+
+Compare with the same source after exchanging the two parenthesized conjuncts.
+Both render exactly:
+
+```text
+root normal form := target((QT_FORMULA_ALL1(DECLROOT_default((ONE A), b), (SOME b)) && QT_FORMULA_ONE5(DECLROOT_default((ONE A), a), (SOME a))))
+```
+
+The two sources are equivalent by conjunction commutativity (indeed each holds
+exactly when A has one atom); no general normalization soundness claim follows.
+This is a small constructed witness, not a proof of globally minimal syntax.
+
+| Observation | Original order | Exchanged order |
+| --- | --- | --- |
+| ONE variable `a` internal name | `_l0` | `_l1` |
+| ONE binding path | `root/predicate[0]/and[0]/local-decl[0]` | `root/predicate[0]/and[1]/local-decl[0]` |
+| ALL variable `b` internal name | `_l1` | `_l0` |
+| ALL binding path | `root/predicate[0]/and[1]/local-decl[0]` | `root/predicate[0]/and[0]/local-decl[0]` |
+| Production distance to other order | 2 (matrix only) | 2 (matrix only) |
+| Independently reparsed self-distance | 0 | 0 |
+| Test-only explicit-map matrix cost | 0 | 0 |
+
+The explicit map is `_l0 -> _l1, _l1 -> _l0`, supplied only to the test
+harness's reflective call to `eGraphDistance`. It is not supplied to
+`LiveFeedback.evaluate` and does not establish that relaxing the production
+binding policy would be sound generally. `BindingDescriptor.compatibleWith`
+allows matching ALL binders across these paths but rejects the ONE pair.
+The production trace consequently contains two unit-cost replacements of `a`:
+one declaration node and one body occurrence. Matrix trace replay passes.
+
+Canonical locations select two distinct one-character `a` spans by metric path.
+The raw body occurrence is an exact `node` span. The raw declaration location is
+the enclosing `one a:A | some a` context, explicitly marked `related`, not an
+exact declaration-token claim. No incorrect occurrence selection or falsely
+claimed exact location was demonstrated by this witness.
+
+The earlier `reproduce_display_collision.py` checks changed quantifier bodies,
+not this branch exchange. The existing structural-location suite likewise had
+no assertion combining equal text, unequal binding paths, and positive distance.
+Two new tests in `tests/test_canonical_structure.py` cover the witness in both
+directions, binding metadata, self-distance, explicit-map cost, and both locator
+precision levels. A control exchanges `some A` with `(one a:A | some a.r)`:
+its binding path changes but production distance stays zero. Therefore path
+inequality alone must not be used as a detector of positive distance or error.
+
+The minimal display correction is a caption beside the canonical text explaining
+that it omits binding distinctions used by the metric, equal text can have
+nonzero distance, and positive distance alone does not establish a behavior
+error. It does not reveal reference data or change text offsets, matching,
+normalization, distances, or operation generation. Detailed binding paths remain
+test diagnostics rather than learner-facing solution disclosures.
+
+Executed with a fresh Java 17 engine build: all 15 structural-location tests
+passed (13 existing plus 2 new); the unchanged public body-omission replay also
+passed. These are TESTED synthetic observations and CHECKED source analysis,
+not new formal proofs, full-corpus results, or evidence of a numerical-distance
+implementation error. The old arity-rendering defect remains distinct from the
+present display ambiguity and conservative matching policy.
+
+```bash
+bash engine/build.sh
+python3 -m unittest discover -s tests -p test_canonical_structure.py
+# With the existing benchmark LiveWorker bridge built:
+python3 benchmarks/alloy4fun/reproduce_display_collision.py
+```
 
 ## 4. Two stored CORRECT labels are wrong
 
@@ -359,7 +437,7 @@ of all normalization rules under either setting.
 
 The renderer and locator corrections are implemented. Production feedback, behavioral examples, upload inspection, exercise validation, and runtime self-tests use a private per-JVM directory under `build/runtime/tmp/`. IIS places this directory under its protected writable log directory. Operators can override it with `ALLOY_ENGINE_TMP_ROOT`; linked paths are rejected. No existing shared temporary files are removed.
 
-All benchmark engines use owned per-JVM directories under `build/benchmarks/tmp/` (or `ALLOY_BENCHMARK_TMP_ROOT`). Parent processes remove only their own directories after the child exits, including killed or timed-out children. Live and TAR workers recycle after 256 learner requests; FM24 workers recycle after 256 native actions (normalization, hinting, or mutation). This bounds retained parser files. Tests cover actual JVM timeout cleanup, startup failure, normal completion, worker recycling, and preservation of neighboring directories.
+All benchmark engines use owned per-JVM directories under `build/benchmarks/tmp/` (or `ALLOY_BENCHMARK_TMP_ROOT`). Parent processes remove only their own directories after the child exits, including killed or timed-out children. Live and TAR workers recycle after 256 learner requests; HiGenA workers recycle after 256 native actions (normalization, hinting, or mutation). This bounds retained parser files. Tests cover actual JVM timeout cleanup, startup failure, normal completion, worker recycling, and preservation of neighboring directories.
 
 The completed five-arm comparison uses `build/benchmarks/alloy4fun-v2/`, corrected labels, the repaired display, and isolated temporary directories. Old measured outcomes remain in `build/benchmarks/alloy4fun/`. All five new runs have 61,598 outcomes and passed the saved-response correspondence audit. The remaining recommendations about semantic correctness, broader corpus validation, and safe private exception diagnostics are not represented as completed guarantees.
 
@@ -395,7 +473,7 @@ Additional evidence for these corrections:
 
 At **2026-09-29 23:48:11 CDT**, the kernel reported global out-of-memory pressure shortly after the 16-worker TAR arm started. The 16 likely TAR JVMs in the launch-time process cluster used **8.67 GiB RSS** collectively; attribution to individual launch PIDs is inferred from the cluster and workload configuration. The kernel killed `baobab`, which had about **10.7 GiB RSS**. Its D-Bus service failed, and the graphical session logged out one second later. Only 8 KiB of swap remained. This was memory exhaustion, not disk exhaustion. The 512 MiB per-JVM heap setting did not bound aggregate Java, native, Python, and desktop memory; the benchmark contributed to the pressure.
 
-Canonical, AST, FM24 history, and FM24 with mutation had already completed. All four retain exactly **61,598** matched numeric/raw records, valid closed gzip streams, and matching source/runtime hashes. Their 16 files are preserved byte-for-byte. Canonical and AST both finished without errors; the three original AST failures now succeed. Canonical distances and operation counts are unchanged across all 61,598 cases, and AST distances/counts are unchanged for every previously successful case.
+Canonical, AST, HiGenA history, and HiGenA with mutation had already completed. All four retain exactly **61,598** matched numeric/raw records, valid closed gzip streams, and matching source/runtime hashes. Their 16 files are preserved byte-for-byte. Canonical and AST both finished without errors; the three original AST failures now succeed. Canonical distances and operation counts are unchanged across all 61,598 cases, and AST distances/counts are unchanged for every previously successful case.
 
 The interrupted TAR archive retains **296** numeric rows and an incomplete compressed stream containing **220** complete, validated pairs. The 76 numeric-only rows lack complete raw evidence. All original archive bytes remain preserved. The fresh TAR arm completed the entire cohort with four workers and **zero resumed rows**; none of those interrupted measurements was mixed into the new timing population.
 

@@ -119,7 +119,9 @@ same authenticated import path.
 
 Resource SHA-256: `90cdd902e857705b6469c082ca145057a44f096c0b35b4782de5f05c777f5808`.
 
-## Bundled legacy sequence limitation
+## Bundled parser limitations
+
+### Legacy `util/sequence` (all platforms)
 
 The pinned `util/sequence` resource has three pre-existing cardinality/receiver
 precedence errors, at lines 125, 138 and 154. For example, `#s.inds.add[1]` tries
@@ -131,6 +133,27 @@ auditable, but are not presented as working runtime support. The JAR is unchange
 Use Alloy's ordinary `seq` syntax (`util/sequniv`) or `util/seqrel` when appropriate;
 these are separate representations and are not automatic replacements for an
 existing `util/sequence` model. Uploaded code is never rewritten to hide the error.
+
+### `util/natural` on Windows
+
+The bundled parser constructs its implicit integer import with the host separator
+(`util\integer` on Windows). Canonical now normalizes **module filename metadata**
+to `/` before ledger lookup and identity construction, while preserving parser
+call names and aliases. This fixes implicit integer calls, including Sending Ether.
+
+There is a separate parser error before Canonical: `util/natural` line 21 explicitly
+opens `util/integer as integer`, colliding with the implicit `util\integer` under
+the same alias. The parser compares those filenames without separator normalization.
+An explicitly aliased `open util/integer as integer` in a Windows user model has
+the same problem; ordinary implicit integer calls and distinct aliases work.
+
+Consequently, executable coverage is **150 signatures on Linux/macOS and 138 on
+Windows**. Natural's 12 declarations are tested as parser-invalid on Windows and
+must work on Linux/macOS; sequence's 25 remain parser-invalid everywhere. No
+library source or JAR bytes are changed to hide either defect. The source census
+suppresses the parser's automatic integer import using a test-only virtual
+filename, retaining the exact bundled source bytes; runtime coverage independently
+uses normal production parsing and asserts these platform-specific boundaries.
 
 ## Validation and deployment
 

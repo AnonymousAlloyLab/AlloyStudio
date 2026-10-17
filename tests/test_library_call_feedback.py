@@ -77,9 +77,10 @@ class LibraryCallFeedbackTests(unittest.TestCase):
     def test_every_public_callable_in_each_parser_valid_module_has_zero_self_distance(self):
         records = self.observations['identities']
         expected = {key for key in self.observations['declarations']
-                    if not key.startswith('util/sequence/')}
+                    if not key.startswith('util/sequence/')
+                    and not (os.name == 'nt' and key.startswith('util/natural/'))}
         self.assertEqual({record['declaration'] for record in records}, expected)
-        self.assertEqual(len(records), 150)
+        self.assertEqual(len(records), 138 if os.name == 'nt' else 150)
         for record in records:
             with self.subTest(declaration=record['declaration']):
                 self.assert_feedback(record['feedback'], zero=True)
@@ -104,6 +105,35 @@ class LibraryCallFeedbackTests(unittest.TestCase):
 
     def test_forged_nested_alias_member_arity_and_private_import_fail_closed(self):
         self.assertEqual(self.observations['forgedNestedCallsRejected'], 12)
+
+    def test_natural_library_windows_parser_boundary_is_explicit(self):
+        blocked = self.observations['parserBlocked']
+        if os.name == 'nt':
+            self.assertEqual(set(blocked), {'natural'})
+            self.assertEqual(len(blocked['natural']['declarations']), 12)
+            self.assertCountEqual(blocked['natural']['declarations'],
+                                  [key for key in self.observations['declarations']
+                                   if key.startswith('util/natural/')])
+            feedback = blocked['natural']['feedback']
+            self.assertEqual(feedback['status'], 'invalid')
+            self.assertNotIn('distance', feedback)
+            self.assertNotIn('operations', feedback)
+        else:
+            self.assertEqual(blocked, {})
+            self.assertEqual(sum(record['declaration'].startswith('util/natural/')
+                                 for record in self.observations['identities']), 12)
+
+    def test_native_windows_module_filename_metadata_preserves_callable_identity(self):
+        records = self.observations['windowsModuleMetadata']
+        self.assertEqual(len(records), 2)
+        self.assertEqual({record['mapped'] for record in records}, {True, False})
+        for record in records:
+            with self.subTest(mapped=record['mapped']):
+                self.assertGreater(record['rootChanged'], 0)
+                self.assertGreater(record['nestedChanged'], 0)
+                self.assertCountEqual(record['actual'], record['expected'])
+                self.assertCountEqual([call['callee'] for call in record['actual']],
+                                      ['util/graph<Node>/util/relation/dom', 'util/integer/signum'])
 
     def test_upstream_sequence_type_error_is_explicit_and_does_not_poison_feedback(self):
         # The bundled sequence.als line125 applies integer add to SeqIdx because

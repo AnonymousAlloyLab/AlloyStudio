@@ -1460,7 +1460,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
             registerCallable(function, CallSymbol.Kind.EXPRESSION);
         }
         for (OpenDecl open : model.getOpenDeclList()) {
-            String fileName = open.getFileName();
+            String fileName = portableModuleFileName(open.getFileName());
             if (fileName == null || fileName.trim().isEmpty()) {
                 continue;
             }
@@ -1486,12 +1486,19 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
     private static CompModule parsedImport(CompModule owner, String alias,
             String fileName, List<String> arguments) {
         for (CompModule.Open open : owner.getOpens()) {
-            if (open.alias.equals(alias) && open.filename.equals(fileName)
+            if (open.alias.equals(alias) && portableModuleFileName(open.filename).equals(fileName)
                     && open.args.equals(arguments)) {
                 return open.getRealModule();
             }
         }
         return null;
+    }
+
+    /** Alloy's loader uses host separators in Open.filename on Windows.
+     * Normalize that file metadata only; callable labels and import aliases
+     * remain exact parser identities and never receive path rewriting. */
+    private static String portableModuleFileName(String fileName) {
+        return fileName == null ? null : fileName.replace('\\', '/');
     }
 
     /** Only references in the client's own parsed source authorize imports.
@@ -1788,7 +1795,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
 
         private ImportedModuleDescriptor(String fileName, List<String> arguments,
                 String parentIdentity, CompModule parserAuthority) {
-            this.fileName = fileName;
+            this.fileName = portableModuleFileName(fileName);
             this.arguments = arguments == null
                     ? Collections.emptyList()
                     : Collections.unmodifiableList(new java.util.ArrayList<>(arguments));

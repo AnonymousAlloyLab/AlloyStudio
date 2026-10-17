@@ -232,7 +232,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-      "sha256": "d5b8d6a9b5f70e608c67115236a8a7b7c224f11e3c8226368e042cb2fe0668b9"
+      "sha256": "951be65b0d653ae958fb429574d0184663a5af2cd9e44a0ad2051b131c3b8748"
     },
     {
       "path": "src/is/fivefivefive/AlloyDataProcessor/ASGOutputer.java",
@@ -1504,7 +1504,7 @@
     },
     {
       "id": "bundled-library-call-signatures",
-      "description": "Pin all 175 public signatures in the bundled Alloy utility sources, preserve opaque ordered CALLs, and resolve public nested imports using parser-authenticated declarations and full instantiation paths. Keep parser-invalid legacy sequence source unchanged; update signature census.",
+      "description": "Pin all 175 public signatures in the bundled Alloy utility sources, preserve opaque ordered CALLs, normalize host separators only in module filename metadata, and resolve public nested imports using parser-authenticated declarations and full instantiation paths. Keep parser-invalid bundled source unchanged; update signature census.",
       "files": [
         {
           "path": "src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java",

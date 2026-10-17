@@ -17,6 +17,8 @@ import java.util.IdentityHashMap;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,7 +54,7 @@ public final class LibraryCallableSelfTest {
             for (var entry : sources.entrySet()) {
                 // Parse declarations without resolving bodies: util/sequence has
                 // a separately tested upstream type error in this bundled jar.
-                CompModule module = CompUtil.parseOneModule(entry.getValue());
+                CompModule module = parseBundledDeclarations(entry.getValue());
                 int count = 0;
                 for (Func function : module.getAllFunc()) if (function.isPrivate == null) {
                     String member = member(function);
@@ -68,8 +70,20 @@ public final class LibraryCallableSelfTest {
             output.put("resources", sources.size());
             output.put("ledger", ledgerControls(census));
             JSONArray identities = new JSONArray();
+            JSONObject parserBlocked = new JSONObject();
+            boolean windows = java.io.File.separatorChar == '\\';
             for (String name : sources.keySet()) {
                 if (name.equals("sequence") || name.equals("time")) continue;
+                if (name.equals("natural") && windows) {
+                    // The pinned Alloy parser itself rejects natural on Windows:
+                    // implicit util\\integer and explicit util/integer share alias
+                    // integer. Keep this visible; no source rewriting or silent skip.
+                    JSONArray declarations = new JSONArray();
+                    for (String key : census) if (key.startsWith("util/natural/")) declarations.put(key);
+                    parserBlocked.put(name, new JSONObject().put("declarations", declarations)
+                            .put("feedback", compare(environment(name), "pred target {\n", "some Node", "some Node")));
+                    continue;
+                }
                 begin();
                 try {
                     String environment = environment(name);
@@ -108,13 +122,37 @@ public final class LibraryCallableSelfTest {
                 } finally { WorkerSafety.end(); }
             }
             output.put("identities", identities);
+            output.put("parserBlocked", parserBlocked);
             output.put("controls", controls());
             output.put("forgedNestedCallsRejected", forgedNestedCalls());
+            output.put("windowsModuleMetadata", windowsModuleMetadata());
         } finally {
             System.setOut(wire);
             System.setErr(errors);
         }
         wire.println(output);
+    }
+
+    /** The pinned parser's public parseOneModule injects an automatic integer
+     * import with a native filename. On Windows this collides with natural's
+     * explicit forward-slash import before declarations can be inspected.
+     * Invoke the same syntax-only parser with its integer-library
+     * filename check, which suppresses that automatic import. Exact bundled
+     * source bytes, explicit imports and every declaration remain unchanged.
+     * Actual production wrappers below still resolve every real import normally.
+     */
+    private static CompModule parseBundledDeclarations(String source) throws Exception {
+        String filename = Path.of("census", "util", "integer.als").toString();
+        Method parse = CompUtil.class.getDeclaredMethod("parse", List.class, Map.class, Map.class,
+                CompModule.class, int.class, String.class, String.class, int.class);
+        parse.setAccessible(true);
+        try {
+            return (CompModule) parse.invoke(null, new ArrayList<>(), null, Map.of(filename, source),
+                    null, 0, filename, "", 1);
+        } catch (InvocationTargetException error) {
+            if (error.getCause() instanceof Exception cause) throw cause;
+            throw error;
+        }
     }
 
     private static Map<String, String> bundledSources(Path path) throws Exception {
@@ -194,8 +232,11 @@ public final class LibraryCallableSelfTest {
         finally { WorkerSafety.end(); }
     }
     private static JSONArray callIdentities(CompModule module) {
+        return callIdentities(module, MASGVisitor.modelWithSourceMap(module));
+    }
+    private static JSONArray callIdentities(CompModule module, ModelUnit model) {
         MASGVisitor visitor = new MASGVisitor(new GlobalVariables(), Set.of("target"), module);
-        visitor.visit(MASGVisitor.modelWithSourceMap(module), null);
+        visitor.visit(model, null);
         var graph = visitor.getForest().get(visitor.getForestId("target"));
         JSONArray calls = new JSONArray();
         for (var node : graph.getVertices()) if (node.getSymbol() instanceof CallSymbol call
@@ -203,6 +244,36 @@ public final class LibraryCallableSelfTest {
             calls.put(new JSONObject().put("callee", call.getCallee()).put("arity", call.getDeclaredArity())
                     .put("kind", call.getKind().name()));
         return calls;
+    }
+    private static JSONArray windowsModuleMetadata() throws Exception {
+        // Exercise native-separator parser metadata even on Linux/macOS. Only
+        // parser module filenames are rewritten; aliases/member names stay exact.
+        String source = "module library_fixture\nopen util/graph[Node] as g\nsig Node {}\n"
+                + "pred target[r: Node -> Node, n: Int] { some g/rel/dom[r] and some signum[n] }\n";
+        JSONArray results = new JSONArray();
+        Field filename = CompModule.Open.class.getDeclaredField("filename");
+        filename.setAccessible(true);
+        for (boolean mapped : List.of(false, true)) {
+            begin();
+            try {
+                CompModule module = WorkerSafety.parse(source);
+                ModelUnit model = mapped ? MASGVisitor.modelWithSourceMap(module) : new ModelUnit(null, module);
+                JSONArray expected = callIdentities(module, model);
+                int rootChanged = 0, nestedChanged = 0;
+                for (CompModule reachable : module.getAllReachableModules()) {
+                    for (CompModule.Open opened : reachable.getOpens()) {
+                        filename.set(opened, opened.filename.replace('/', '\\'));
+                        if (reachable == module) rootChanged++; else nestedChanged++;
+                    }
+                }
+                for (var opened : model.getOpenDeclList())
+                    opened.setFileName(opened.getFileName().replace('/', '\\'));
+                results.put(new JSONObject().put("mapped", mapped).put("expected", expected)
+                        .put("actual", callIdentities(module, model)).put("rootChanged", rootChanged)
+                        .put("nestedChanged", nestedChanged));
+            } finally { WorkerSafety.end(); }
+        }
+        return results;
     }
     private static Call findCall(ModelUnit model, String name) {
         ArrayDeque<Node> pending = new ArrayDeque<>(); pending.add(model);
@@ -241,15 +312,19 @@ public final class LibraryCallableSelfTest {
                 throw new AssertionError("Wrong-arity nested call was admitted");
             } finally { WorkerSafety.end(); }
         }
-        // natural's ordering import is private. A synthetic wrapper must not
-        // manufacture access merely because its library name is allowlisted.
+        // A real local helper privately imports ordering. A synthetic wrapper
+        // must not manufacture access merely because its target is allowlisted.
+        // This avoids natural's separate upstream Windows parser defect.
         for (boolean mapped : List.of(false, true)) {
             begin();
             try {
-                CompModule module = WorkerSafety.parse(environment("natural")
-                        + "pred target[n: lib/Natural] { some lib/inc[n] }\n");
+                Files.writeString(scratch.resolve("library-job-" + jobs).resolve("private_fixture.als"),
+                        "module private_fixture\nprivate open util/ordering[Node] as ord\n"
+                        + "sig Node {}\nfun visible[n: Node]: Node { n }\n", StandardCharsets.UTF_8);
+                CompModule module = WorkerSafety.parse("module library_fixture\nopen private_fixture as lib\n"
+                        + "pred target[n: lib/Node] { some lib/visible[n] }\n");
                 ModelUnit model = mapped ? MASGVisitor.modelWithSourceMap(module) : new ModelUnit(null, module);
-                Call call = findCall(model, "lib/inc");
+                Call call = findCall(model, "lib/visible");
                 call.setName("lib/ord/first"); call.setArguments(List.of());
                 try { new MASGVisitor(new GlobalVariables(), Set.of("target"), module).visit(model, null); }
                 catch (IllegalStateException expected) { rejected++; continue; }

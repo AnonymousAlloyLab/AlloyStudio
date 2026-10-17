@@ -13,7 +13,11 @@ import java.util.Objects;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.ExprCall;
 import edu.mit.csail.sdg.ast.ExprUnary;
+import edu.mit.csail.sdg.ast.Func;
+import edu.mit.csail.sdg.ast.VisitQuery;
+import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Type;
 import edu.mit.csail.sdg.parser.CompModule;
 import is.fivefivefive.ACGN.asg.AugmentedNode;
@@ -131,6 +135,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
     private final Map<CallableKey, Integer> forestIdsByDescriptor = new HashMap<>();
     private final Map<CallableKey, Symbol> callableTargets = new HashMap<>();
     private final Map<String, ImportedModuleDescriptor> importedModules = new HashMap<>();
+    private final Map<String, Set<Func>> parserImportedTargets = new HashMap<>();
     private String moduleIdentity = "this";
     private CompModule parserModule;
     private long nextCallOccurrenceId;
@@ -1439,6 +1444,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
         forestIdsByDescriptor.clear();
         callableTargets.clear();
         importedModules.clear();
+        parserImportedTargets.clear();
         String declaredModule = model.getModuleDecl() == null
                 ? null
                 : model.getModuleDecl().getModelName();
@@ -1467,11 +1473,58 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
                 alias = slash < 0 ? fileName : fileName.substring(slash + 1);
             }
             ImportedModuleDescriptor module =
-                    new ImportedModuleDescriptor(fileName, open.getArguments());
+                    new ImportedModuleDescriptor(fileName, open.getArguments(), null,
+                            parsedImport(parserModule, alias, fileName, open.getArguments()));
             registerImportedAlias(alias, module);
             if (!hasDeclaredAlias) {
                 registerImportedAlias(fileName, module);
             }
+        }
+        indexParserImportedTargets();
+    }
+
+    private static CompModule parsedImport(CompModule owner, String alias,
+            String fileName, List<String> arguments) {
+        for (CompModule.Open open : owner.getOpens()) {
+            if (open.alias.equals(alias) && open.filename.equals(fileName)
+                    && open.args.equals(arguments)) {
+                return open.getRealModule();
+            }
+        }
+        return null;
+    }
+
+    /** Only references in the client's own parsed source authorize imports.
+     * Do not walk callee bodies or resolved command formulas: those may contain
+     * private library references unavailable to the client. This also supports
+     * older ModelUnit callers that do not retain a source NodeMap. */
+    private void indexParserImportedTargets() {
+        VisitQuery<Void> references = new VisitQuery<Void>() {
+            @Override public Void visit(ExprCall call) throws Err {
+                parserImportedTargets.computeIfAbsent(stripThisQualifier(call.fun.label),
+                        ignored -> Collections.newSetFromMap(new java.util.IdentityHashMap<>()))
+                        .add(call.fun);
+                return super.visit(call);
+            }
+        };
+        try {
+            for (Func callable : parserModule.getAllFunc()) {
+                callable.getBody().accept(references);
+                callable.returnDecl.accept(references);
+                for (edu.mit.csail.sdg.ast.Decl declaration : callable.decls) {
+                    declaration.expr.accept(references);
+                }
+            }
+            for (Sig signature : parserModule.getAllSigs()) {
+                for (edu.mit.csail.sdg.ast.Decl declaration : signature.getFieldDecls()) {
+                    declaration.expr.accept(references);
+                }
+                for (Expr fact : signature.getFacts()) fact.accept(references);
+            }
+            for (var fact : parserModule.getAllFacts()) fact.b.accept(references);
+            for (var assertion : parserModule.getAllAssertions()) assertion.b.accept(references);
+        } catch (Err error) {
+            throw new IllegalStateException("Cannot authenticate imported call references", error);
         }
     }
 
@@ -1573,6 +1626,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
                             importedCall.member,
                             kind,
                             observedArity);
+            requireParserImportedTarget(call, importedCall, kind, signature.arity());
             return new CallableDescriptor(
                     sourceName,
                     importedCall.identity(),
@@ -1643,10 +1697,52 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
         }
         ImportedModuleDescriptor module = importedModules.get(matchedPrefix);
         String member = sourceName.substring(matchedPrefix.length() + 1);
-        if (member.isEmpty() || member.indexOf('/') >= 0) {
-            return null;
+        // Nested qualification is resolved through actual parsed opens, never
+        // by stripping prefixes until a familiar library basename is found.
+        while (member.indexOf('/') >= 0) {
+            if (module.parserAuthority == null) return null;
+            int slash = member.indexOf('/');
+            String alias = member.substring(0, slash);
+            CompModule.Open nested = null;
+            for (CompModule.Open open : module.parserAuthority.getOpens()) {
+                if (open.alias.equals(alias)) {
+                    if (nested != null) {
+                        throw new IllegalStateException("Ambiguous imported module alias " + sourceName);
+                    }
+                    nested = open;
+                }
+            }
+            if (nested == null || nested.getRealModule() == null) return null;
+            module = new ImportedModuleDescriptor(nested.filename, nested.args,
+                    module.identityPrefix(), nested.getRealModule());
+            member = member.substring(slash + 1);
         }
+        if (member.isEmpty()) return null;
         return new ImportedCall(module, member);
+    }
+
+    private void requireParserImportedTarget(Call call, ImportedCall imported,
+            CallSymbol.Kind kind, int arity) {
+        Set<Func> references = parserImportedTargets.get(call.getName());
+        Func matched = null;
+        if (references != null && imported.module.parserAuthority != null) {
+            for (Func declaration : imported.module.parserAuthority.getAllFunc()) {
+                if (references.contains(declaration) && declaration.isPrivate == null
+                        && declaration.count() == arity
+                        && declaration.isPred == (kind == CallSymbol.Kind.FORMULA)) {
+                    if (matched != null && matched != declaration) {
+                        throw new IllegalStateException("Ambiguous parser imported call " + call.getName());
+                    }
+                    matched = declaration;
+                }
+            }
+        }
+        Object original = call.getNodeMap() == null ? null : call.getNodeMap().findSrc(call);
+        if (matched == null || (call.getNodeMap() != null
+                && (!(original instanceof ExprCall) || ((ExprCall) original).fun != matched))) {
+            throw new IllegalStateException(
+                    "Imported call lacks a parser-authenticated public declaration: " + call.getName());
+        }
     }
 
     private static String stripThisQualifier(String name) {
@@ -1687,19 +1783,23 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
     private static final class ImportedModuleDescriptor {
         private final String fileName;
         private final List<String> arguments;
+        private final String parentIdentity;
+        private final CompModule parserAuthority;
 
-        private ImportedModuleDescriptor(String fileName, List<String> arguments) {
+        private ImportedModuleDescriptor(String fileName, List<String> arguments,
+                String parentIdentity, CompModule parserAuthority) {
             this.fileName = fileName;
             this.arguments = arguments == null
                     ? Collections.emptyList()
                     : Collections.unmodifiableList(new java.util.ArrayList<>(arguments));
+            this.parentIdentity = parentIdentity;
+            this.parserAuthority = parserAuthority;
         }
 
         private String identityPrefix() {
-            if (arguments.isEmpty()) {
-                return fileName;
-            }
-            return fileName + "<" + String.join(",", arguments) + ">";
+            String instance = arguments.isEmpty() ? fileName
+                    : fileName + "<" + String.join(",", arguments) + ">";
+            return parentIdentity == null ? instance : parentIdentity + "/" + instance;
         }
 
         @Override
@@ -1709,12 +1809,13 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
             }
             ImportedModuleDescriptor descriptor = (ImportedModuleDescriptor) other;
             return fileName.equals(descriptor.fileName)
-                    && arguments.equals(descriptor.arguments);
+                    && arguments.equals(descriptor.arguments)
+                    && Objects.equals(parentIdentity, descriptor.parentIdentity);
         }
 
         @Override
         public int hashCode() {
-            return java.util.Objects.hash(fileName, arguments);
+            return java.util.Objects.hash(fileName, arguments, parentIdentity);
         }
     }
 

@@ -34,7 +34,16 @@ class RepositoryTests(unittest.TestCase):
         patches = snapshot['localPatches']
         self.assertEqual([patch['id'] for patch in patches],
                          ['parser-source-origins', 'canonical-residual-quantifier-rendering',
-                          'request-work-budget'])
+                          'request-work-budget', 'bundled-library-call-signatures'])
+        libraries = patches[3]['files']
+        self.assertEqual({entry['path'] for entry in libraries}, {
+            'src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java',
+            'src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java',
+            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+        })
+        for entry in libraries:
+            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
         budget = patches[2]['files']
         self.assertEqual({entry['path'] for entry in budget}, {
             'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',

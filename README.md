@@ -4,12 +4,17 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.7-alpha.4](docs/releases/v0.0.7-alpha.4.md).**
-Guidance, upload suggestions and private candidate-review advice can each use
-OpenAI, Claude, Gemini, DeepSeek or an OpenAI-compatible service. Configure the
-model and key in private `ai.local.json`; there is no browser credential input.
-The release also incorporates the reviewed reward/binding audit regressions and
-the HiGenA naming corrections in evaluation documentation.
+**Current release: [v0.0.7-alpha.5](docs/releases/v0.0.7-alpha.5.md).**
+Canonical feedback now recognizes the bundled Alloy utility libraries, including
+integer arithmetic used by parameterized Sending Ether practices. It preserves
+ordered call arguments and declaration identity, with support for aliased and
+public nested imports. See the [library coverage and boundaries](docs/alloy-library-callables.md).
+
+**Maintenance alpha [v0.0.7-alpha.4](docs/releases/v0.0.7-alpha.4.md)** added
+OpenAI, Claude, Gemini, DeepSeek and OpenAI-compatible providers for guidance,
+upload suggestions and private candidate review. Model choices and keys stay in
+private `ai.local.json`; there is no browser credential input. It also includes
+the reward/binding audit regressions and HiGenA naming corrections.
 
 Feedback uses the closest member of each bundled correct-predicate pool,
 including the oracle, following the pool-ranking approach in `Alloy4FunAugmenter`.
@@ -46,6 +51,10 @@ nonzero distances on corpus-labelled correct predicates, and TAR output failures
 The corrected rerun preserves the source corpus, records two legacy label fixes,
 and stores Java scratch files in owned directories under `build/` with cleanup
 after each worker exits.
+
+The [Sending Ether diagnostic and fix](docs/smart-contract-canonical-feedback.md)
+records support for the built-in integer `plus` and `minus` calls used by
+parameterized SmartContract practices, with real API and Alloy regression checks.
 
 **Maintenance alpha `v0.0.7-alpha.3`** supports dependent practices: solve and
 verify prerequisites before opening their downstream questions. The environment

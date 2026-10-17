@@ -381,18 +381,16 @@ class PracticeDependencyIntegrationTests(unittest.TestCase):
         self.publish(prepared)
         observed = {}
         for metric in ('canonical', 'ast'):
+            sending = self.feedback(first, {}, first['oracleSolutions'][0], metric=metric)
+            self.assertEqual((sending.get('status'), sending.get('distance')), ('ok', 0),
+                             str(dict(metric=metric, diagnostics=sending.get('diagnostics'))))
             result = self.feedback(dependent, {first['id']: first['oracleSolutions'][0]},
                                    dependent['oracleSolutions'][0], metric=metric)
             observed[metric] = dict(status=result.get('status'), distance=result.get('distance'),
                                     codes=[item.get('code') for item in result.get('diagnostics', [])])
-            if metric == 'canonical' and result.get('status') == 'unsupported':
-                # Existing ACGN arithmetic normalization is a documented finite
-                # boundary, not a successful zero-distance result or unlock.
-                self.assertEqual(observed[metric]['codes'], ['UNSUPPORTED_FORM'])
-                self.assertNotIn('distance', result)
-            else:
-                self.assertEqual((result.get('status'), result.get('distance')), ('ok', 0),
-                                 str(dict(metric=metric, diagnostics=result.get('diagnostics'))))
+            self.assertEqual((result.get('status'), result.get('distance')), ('ok', 0),
+                             str(dict(metric=metric, diagnostics=result.get('diagnostics'))))
+            observed[metric]['sendEther'] = dict(status=sending.get('status'), distance=sending.get('distance'))
         receipt = SCRATCH / ('smart-contract-' + str(time.time_ns()) + '.json')
         receipt.write_text(json.dumps(dict(fixture='supplied-private' if SMART_CONTRACT.is_file() else 'portable-representative',
                                           preparation='PASS', publication='PASS', metrics=observed), indent=2) + '\n')

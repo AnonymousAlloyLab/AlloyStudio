@@ -44,7 +44,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java",
-      "sha256": "4238cb04cab230dbd0e1c96d173e7943101e0f3c2c50a84b40ca0294acd23037"
+      "sha256": "79601ed41b303b9d50da309bdaf9b8d9419cae43f77ddeab0cbd420857265c12"
     },
     {
       "path": "src/is/fivefivefive/ACGN/alloy/AssertSymbol.java",
@@ -232,7 +232,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-      "sha256": "028be384f3468adda8002abd00560afe0ebab905256bf0f7816d84e8773cf5a6"
+      "sha256": "d5b8d6a9b5f70e608c67115236a8a7b7c224f11e3c8226368e042cb2fe0668b9"
     },
     {
       "path": "src/is/fivefivefive/AlloyDataProcessor/ASGOutputer.java",
@@ -284,7 +284,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java",
-      "sha256": "fcb0ab6ebbc091afaeeaa8f2442d86b1e76c3cfe5aea5273c9a85914ce7ee21e"
+      "sha256": "d199ee5ed0250a4d0a063f97d13355b8a6b9edfafd84eaae28b6d8fc1b99322e"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CallExtractionRegressionTest.java",
@@ -1499,6 +1499,24 @@
         {
           "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
           "baseSha256": "983b41317f78575dc39b3b0a47cde94af395a33d54c23cd55de61fb9ae369c90"
+        }
+      ]
+    },
+    {
+      "id": "bundled-library-call-signatures",
+      "description": "Pin all 175 public signatures in the bundled Alloy utility sources, preserve opaque ordered CALLs, and resolve public nested imports using parser-authenticated declarations and full instantiation paths. Keep parser-invalid legacy sequence source unchanged; update signature census.",
+      "files": [
+        {
+          "path": "src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java",
+          "baseSha256": "4238cb04cab230dbd0e1c96d173e7943101e0f3c2c50a84b40ca0294acd23037"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java",
+          "baseSha256": "fcb0ab6ebbc091afaeeaa8f2442d86b1e76c3cfe5aea5273c9a85914ce7ee21e"
+        },
+        {
+          "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
+          "baseSha256": "028be384f3468adda8002abd00560afe0ebab905256bf0f7816d84e8773cf5a6"
         }
       ]
     }

@@ -418,7 +418,7 @@ public final class CallAuthorityTransitionsRegressionTest {
     }
 
     private static void ledgerControls() throws Exception {
-        check(ledger().size() == 20, "independent pinned library signature census");
+        check(ledger().size() == 175, "independent pinned library signature census");
         check(AlloyLibraryCallableLedger.require("util/integer", "max", CallSymbol.Kind.EXPRESSION, 0).arity() == 0
                 && AlloyLibraryCallableLedger.require("util/integer", "max", CallSymbol.Kind.EXPRESSION, 1).arity() == 1,
                 "independent overload entries, not observed-arity synthesis");

@@ -96,9 +96,9 @@ those stronger properties.
 From the repository root:
 
 ```sh
-mkdir -p build/repair-language-lean-20261023
-lean -j 1 -M 1024 -o build/repair-language-lean-20261023/RepairLanguage.olean formal/repair_language/RepairLanguage.lean
-LEAN_PATH="$PWD/build/repair-language-lean-20261023" lean -j 1 -M 2048 formal/repair_language/Audit.lean > build/repair-language-lean-20261023/audit.log
+mkdir -p build/repair-language-lean
+python3 scripts/lean_offline.py --cwd . -- -j 1 -M 1024 -o build/repair-language-lean/RepairLanguage.olean formal/repair_language/RepairLanguage.lean
+python3 scripts/lean_offline.py --cwd . --lean-path build/repair-language-lean -- -j 1 -M 2048 formal/repair_language/Audit.lean > build/repair-language-lean/audit.log
 ```
 
 `Audit.lean` prints representative theorem axiom sets and enumerates **all** model
@@ -118,3 +118,6 @@ dependencies; `Classical.choice` was not used. The model compiler was capped at
 1024 MiB and the audit compiler at 2048 MiB, each with one Lean worker. The first
 audit attempts with lower memory caps failed for resource limits; they were not
 accepted as proof evidence.
+
+Linux CI checks this model and its exhaustive audit in the network-isolated
+runner, separately from historical proof replays and current production tests.

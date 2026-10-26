@@ -54,6 +54,12 @@ jobs:
         run: python scripts/ci_check.py runtime
       - name: Python regressions
         run: python scripts/ci_check.py python
+      - name: Check positional repair-language model offline
+        # Isolated model checks, not a production refinement/closure claim.
+        run: |
+          mkdir -p build/repair-language-lean
+          python scripts/lean_offline.py --cwd . -- -j 1 -M 1024 -o build/repair-language-lean/RepairLanguage.olean formal/repair_language/RepairLanguage.lean
+          python scripts/lean_offline.py --cwd . --lean-path build/repair-language-lean -- -j 1 -M 2048 formal/repair_language/Audit.lean > build/repair-language-lean/audit.log
       - name: Replay historical charged-work proof (production binding stale)
         # Replay immutable reviewed inputs, never renew their production freshness.
         # LP05-WORK's current EngineWorker.java binding is stale after LFU changes.

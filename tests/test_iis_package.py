@@ -466,7 +466,9 @@ class IisPackageTests(unittest.TestCase):
                      'openai.example.json', 'exercise_store.py', 'exercise_sql.py', 'sql/compiled-queries.json',
                      'repair_language.py', 'canonical_retrieval.py',
                      'scripts/import_correct_pools.py', 'scripts/import_exercises.py',
-                     'build/engine/classes/live/LiveFeedback.class'):
+                     'build/engine/classes/live/LiveFeedback.class',
+                     'build/engine/classes/is/fivefivefive/CanDis/LearnerStructure.class',
+                     'build/engine/classes/is/fivefivefive/CanDis/LearnerStructure$Pinned.class'):
             with self.subTest(name=name):
                 path = self.root / name
                 payload = path.read_bytes()

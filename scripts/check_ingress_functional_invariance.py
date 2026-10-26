@@ -46,7 +46,7 @@ run under
 SOURCES = ('server.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits.py',
            'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'engine_workers.py',
            'traffic_scheduler.py', 'runtime_dependencies.py', 'execution_profile.py',
-           'luna.py', 'ai_provider.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
+           'luna.py', 'ai_provider.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'admin_luna.py',
            'practice_dependencies.py', 'practice_progress.py', 'exercise_store.py', 'exercise_sql.py', 'scripts/import_exercises.py',
            'scripts/import_correct_pools.py', 'scripts/traffic_observation.py',
            'closure/traffic-refinement/observation-spec.json',

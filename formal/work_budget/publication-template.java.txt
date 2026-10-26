@@ -1,19 +1,34 @@
-private static JSONObject evaluateBudgeted ( JSONObject request , long fuel , long workMillis ) {
- String metric = request . opt ( "metric" ) instanceof String selected && selected . equals ( "ast" ) ? AstFeedback . METRIC : METRIC ;
- if ( workMillis == 0 ) WorkBudget . begin ( fuel , ALLOCATION_LIMIT ) ;
- else WorkBudget . begin ( fuel , ALLOCATION_LIMIT , workMillis ) ;
- try {
- JSONObject response = compare ( request ) ;
- if ( WorkBudget . exhausted ( ) || ! responseFits ( response ) ) return workLimit ( metric ) ;
- WorkBudget . checkpoint ( ) ;
- return response ;
- }
- catch ( WorkBudget . Exhausted exhausted ) {
- return workLimit ( metric ) ;
- }
- finally {
- LAST_ALLOCATED . set ( WorkBudget . allocated ( ) ) ;
- LAST_WORK_UNITS . set ( WorkBudget . end ( ) ) ;
- }
- }
-
+private static JSONObject evaluateBudgeted(JSONObject request, long fuel, long workMillis) {
+    String metric = request.opt("metric") instanceof String selected && selected.equals("ast")
+            ? AstFeedback.METRIC : METRIC;
+    if (workMillis == 0) WorkBudget.begin(fuel, ALLOCATION_LIMIT);
+    else WorkBudget.begin(fuel, ALLOCATION_LIMIT, workMillis);
+    Canonical.Prepared[] learner = new Canonical.Prepared[1];
+    JSONObject response;
+    try {
+        response = compare(request, learner);
+        if (WorkBudget.exhausted() || !responseFits(response)) return workLimit(metric);
+        WorkBudget.checkpoint();
+    } catch (WorkBudget.Exhausted exhausted) {
+        return workLimit(metric);
+    } finally {
+        LAST_ALLOCATED.set(WorkBudget.allocated());
+        LAST_WORK_UNITS.set(WorkBudget.end());
+    }
+    // Guidance retrieval is optional and has its own small byte/node/depth/
+    // time limits. It cannot exhaust the completed metric's sticky budget or
+    // change a valid distance into WORK_LIMIT when the response is near 1 MiB.
+    if (learner[0] != null && response.optString("status").equals("ok")) {
+        try {
+            response.put("canonicalStructure", LearnerStructure.export(learner[0]));
+        } catch (Throwable error) {
+            WorkerSafety.rethrowFatal(error);
+            response.put("canonicalStructure", LearnerStructure.unavailable("unavailable"));
+        }
+        if (!responseFits(response)) {
+            response.put("canonicalStructure", LearnerStructure.unavailable("byte_limit"));
+            if (!responseFits(response)) response.remove("canonicalStructure");
+        }
+    }
+    return response;
+}

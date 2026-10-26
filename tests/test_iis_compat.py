@@ -204,10 +204,13 @@ class IISCompatibilityTests(unittest.TestCase):
             with patch('server.subprocess.run', return_value=subprocess.CompletedProcess(
                     [], 0, json.dumps(raw, ensure_ascii=False), '')) as run:
                 answer = app.evaluate(app.exercises['graphs-inv1'], body)
-            # A worker without locator metadata remains usable. The public
-            # projection adds unavailable locations without altering its UTF-8
-            # action text or claiming positions that the worker did not supply.
+            # A worker without locator/structural metadata remains usable. The
+            # public projection explicitly marks that enrichment unavailable,
+            # preserving UTF-8 text without inventing worker-supplied positions.
             legacy = {**answer, 'operations': [dict(operation) for operation in answer['operations']]}
+            self.assertEqual(legacy.pop('canonicalStructure'), {
+                'version': 1, 'status': 'unavailable',
+                'representation': 'learner-canonical-occurrences', 'reason': 'unavailable'})
             self.assertEqual(legacy.pop('repairGrammar')['status'], 'unavailable')
             self.assertEqual(legacy.pop('repairSequence'), [])
             for operation in legacy['operations']:

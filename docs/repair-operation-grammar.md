@@ -1,5 +1,10 @@
 # Compact repair-operation grammar
 
+For the canonical-only CRUD notation with addresses
+`[temporal, quantifier, [inside...]]`, see the separate
+[canonical repair language specification](canonical-repair-language.md).
+That reference language does not change this deployed version-1 encoding.
+
 This specification is written before the implementation. The HTTP adapter adds
 `repairGrammar` and `repairSequence` to successful compiled-predicate feedback.
 Canonical form remains the default distance; the same representation supports raw

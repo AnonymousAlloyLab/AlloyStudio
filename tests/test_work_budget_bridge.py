@@ -51,10 +51,34 @@ class WorkBudgetBridgeTests(unittest.TestCase):
     def test_missing_or_early_publication_checkpoint_is_refused(self):
         source = (ROOT / bridge.FEEDBACK).read_text()
         template = (ROOT / bridge.PUBLICATION).read_text()
-        for changed in (source.replace('            WorkBudget.checkpoint();\n', ''),
-                        source.replace('            WorkBudget.checkpoint();\n            return response;',
-                                       '            return response;\n            WorkBudget.checkpoint();')):
-            with self.assertRaisesRegex(bridge.BridgeRejected, 'Publication checkpoint'):
+        checkpoint = '            WorkBudget.checkpoint();\n'
+        self.assertEqual(source.count(checkpoint), 1)
+        for replacement in ('', '            return response;\n' + checkpoint):
+            changed = source.replace(checkpoint, replacement)
+            with self.subTest(replacement=replacement), self.assertRaisesRegex(
+                    bridge.BridgeRejected, 'Publication checkpoint'):
+                bridge.check_publication(changed, template)
+
+    def test_optional_structure_cannot_bypass_budget_or_byte_guards(self):
+        source = (ROOT / bridge.FEEDBACK).read_text()
+        template = (ROOT / bridge.PUBLICATION).read_text()
+        start = source.index('    private static JSONObject evaluateBudgeted(')
+        end = source.index('\n    private static final ThreadLocal<Long> LAST_WORK_UNITS', start)
+        wrapper = source[start:end]
+        for old, new in (
+                ('WorkBudget.exhausted() || !responseFits(response)', 'false'),
+                ('LAST_WORK_UNITS.set(WorkBudget.end());', ''),
+                ('LAST_WORK_UNITS.set(WorkBudget.end());',
+                 'LearnerStructure.export(learner[0]); LAST_WORK_UNITS.set(WorkBudget.end());'),
+                ('if (learner[0] != null && response.optString("status").equals("ok"))',
+                 'if (learner[0] != null)'),
+                ('response.put("canonicalStructure", LearnerStructure.unavailable("byte_limit"));', ''),
+                ('if (!responseFits(response)) response.remove("canonicalStructure");', ''),
+                ('WorkerSafety.rethrowFatal(error);', '')):
+            self.assertEqual(wrapper.count(old), 1)
+            changed = source[:start] + wrapper.replace(old, new) + source[end:]
+            with self.subTest(mutation=old), self.assertRaisesRegex(
+                    bridge.BridgeRejected, 'Publication checkpoint'):
                 bridge.check_publication(changed, template)
 
     def test_unbounded_calibration_entry_is_not_the_default_public_entry(self):

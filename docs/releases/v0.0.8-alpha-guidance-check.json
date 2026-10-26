@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-26",
+  "scope": "Five illustrative live requests; not a statistical quality benchmark",
+  "status": "PASS",
+  "model": "gpt-6-luna",
+  "cases": [
+    {
+      "case": "multiplicity",
+      "status": "ok",
+      "distance": 1,
+      "operations": 1,
+      "instances": 4,
+      "structure": "ok",
+      "retrieval": "ok",
+      "positionedCost": 1,
+      "residualCost": 0,
+      "seconds": 5.802
+    },
+    {
+      "case": "binding",
+      "status": "ok",
+      "distance": 1,
+      "operations": 1,
+      "instances": 0,
+      "structure": "ok",
+      "retrieval": "ok",
+      "positionedCost": 1,
+      "residualCost": 0,
+      "seconds": 3.283
+    },
+    {
+      "case": "temporal",
+      "status": "ok",
+      "distance": 1,
+      "operations": 1,
+      "instances": 0,
+      "structure": "ok",
+      "retrieval": "ok",
+      "positionedCost": 1,
+      "residualCost": 0,
+      "seconds": 3.133
+    },
+    {
+      "case": "matching",
+      "status": "ok",
+      "distance": 0,
+      "operations": 0,
+      "instances": 0,
+      "structure": "ok",
+      "retrieval": "ok",
+      "positionedCost": 0,
+      "residualCost": 0,
+      "seconds": 1.991
+    },
+    {
+      "case": "graphs-inv7",
+      "status": "ok",
+      "distance": 6,
+      "operations": 6,
+      "instances": 0,
+      "structure": "ok",
+      "retrieval": "ok",
+      "positionedCost": 6,
+      "residualCost": 0,
+      "seconds": 5.097
+    }
+  ]
+}

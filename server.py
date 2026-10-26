@@ -688,6 +688,11 @@ class Portal(BoundedHTTPServer):
             allowed = ('status', 'metric', 'distance', 'breakdown', 'canonicalForm',
                        'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison', 'astSize')
             result = {k: raw[k] for k in allowed if k in raw}
+            if result.get('status') == 'ok' and metric == 'canonical':
+                # Rebuild the learner-only allowlist before caching/pinning it.
+                # Never accept a structural graph or DSL supplied by a client.
+                from canonical_retrieval import sanitize_structure
+                result['canonicalStructure'] = sanitize_structure(raw.get('canonicalStructure'))
             project_canonical_locations(result)
             project_source_locations(result.get('operations'), record, body)
             repair_grammar.attach(result)

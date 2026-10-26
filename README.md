@@ -4,7 +4,17 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.7-alpha.5](docs/releases/v0.0.7-alpha.5.md).**
+**Current release: [v0.0.8-alpha](docs/releases/v0.0.8-alpha.md).**
+
+This release grounds each AI edit explanation in the
+[canonical CRUD language and structural retrieval](docs/structural-guidance-rag.md).
+The tutor receives the exact learner occurrence and bounded surrounding structure
+for each step, tied to the current question and learner revision. The backend
+reuses pinned feedback without another JVM or embedding service. Hidden target
+expressions remain excluded; zero-distance guidance gets a READ-only overview
+for exploring alternatives. Existing provider choices and progressive hints remain.
+
+**Previous release: [v0.0.7-alpha.5](docs/releases/v0.0.7-alpha.5.md).**
 Canonical feedback now recognizes the bundled Alloy utility libraries, including
 integer arithmetic used by parameterized Sending Ether practices. It preserves
 ordered call arguments and declaration identity, with support for aliased and
@@ -108,6 +118,9 @@ Version `v0.0.7-alpha` also encodes repairs as an ordered, name-free sequence in
 a [finite repair dictionary](docs/repair-operation-grammar.md). The editor shows
 the first hint by default; **Show next hint** reveals one more, with its Luna
 explanation. See the [progressive-hint contract](docs/progressive-hints-spec.md).
+The [canonical repair language](docs/canonical-repair-language.md) specifies a
+small CRUD notation over `[temporal, quantifier, [inside...]]` addresses, with a
+reference parser/resolver, production guidance retrieval and an isolated Lean model.
 The [Alloy editor](docs/alloy-editor-spec.md) adds keyword coloring, automatic
 indentation, and one model-environment view with a TODO body. Numeric instance
 values have [typed labels and clickable relation context](docs/instance-labels-spec.md).

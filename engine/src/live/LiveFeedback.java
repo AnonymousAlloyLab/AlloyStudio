@@ -11,6 +11,7 @@ import is.fivefivefive.ACGN.util.GlobalVariables;
 import is.fivefivefive.ACGN.visitor.MASGVisitor;
 import is.fivefivefive.CanDis.Canonical;
 import is.fivefivefive.CanDis.LiveTrace;
+import is.fivefivefive.CanDis.LearnerStructure;
 import is.fivefivefive.CanDis.WorkBudget;
 import is.fivefivefive.CanDis.core.CanonicalDistance;
 import org.json.JSONArray;
@@ -97,17 +98,34 @@ public final class LiveFeedback {
                 ? AstFeedback.METRIC : METRIC;
         if (workMillis == 0) WorkBudget.begin(fuel, ALLOCATION_LIMIT);
         else WorkBudget.begin(fuel, ALLOCATION_LIMIT, workMillis);
+        Canonical.Prepared[] learner = new Canonical.Prepared[1];
+        JSONObject response;
         try {
-            JSONObject response = compare(request);
+            response = compare(request, learner);
             if (WorkBudget.exhausted() || !responseFits(response)) return workLimit(metric);
             WorkBudget.checkpoint();
-            return response;
         } catch (WorkBudget.Exhausted exhausted) {
             return workLimit(metric);
         } finally {
             LAST_ALLOCATED.set(WorkBudget.allocated());
             LAST_WORK_UNITS.set(WorkBudget.end());
         }
+        // Guidance retrieval is optional and has its own small byte/node/depth/
+        // time limits. It cannot exhaust the completed metric's sticky budget or
+        // change a valid distance into WORK_LIMIT when the response is near 1 MiB.
+        if (learner[0] != null && response.optString("status").equals("ok")) {
+            try {
+                response.put("canonicalStructure", LearnerStructure.export(learner[0]));
+            } catch (Throwable error) {
+                WorkerSafety.rethrowFatal(error);
+                response.put("canonicalStructure", LearnerStructure.unavailable("unavailable"));
+            }
+            if (!responseFits(response)) {
+                response.put("canonicalStructure", LearnerStructure.unavailable("byte_limit"));
+                if (!responseFits(response)) response.remove("canonicalStructure");
+            }
+        }
+        return response;
     }
 
     private static final ThreadLocal<Long> LAST_WORK_UNITS = ThreadLocal.withInitial(() -> -1L);
@@ -134,7 +152,7 @@ public final class LiveFeedback {
                 .put("metric", metric);
     }
 
-    private static JSONObject compare(JSONObject request) {
+    private static JSONObject compare(JSONObject request, Canonical.Prepared[] preparedLearner) {
         if (request.has("metric")) {
             Object selected = request.get("metric");
             if (!(selected instanceof String) || !(selected.equals("canonical") || selected.equals("ast")))
@@ -178,6 +196,7 @@ public final class LiveFeedback {
             learnerModule = WorkerSafety.parse(studentSource);
             PracticeDependencyGuard.check(learnerModule, predicate, blockedPredicates);
             student = prepare(learnerModule, predicate);
+            preparedLearner[0] = student;
         } catch (PracticeDependencyGuard.InvalidSelection error) {
             return failure("invalid_request", "INVALID_REQUEST", "The practice dependency policy could not be applied.");
         } catch (PracticeDependencyGuard.UnsolvedCall error) {

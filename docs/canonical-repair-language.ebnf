@@ -1,0 +1,25 @@
+(* ASRL/1: canonical positional guidance. Case-sensitive keywords. *)
+program       = "ON", digest, "{", { statement }, "}" ;
+statement     = read | create | update | delete ;
+read          = "READ", address, ";" ;
+create        = "CREATE", category, ("NEAR" | "AT"), address, ";" ;
+update        = "UPDATE", category, address, "TO", (operator | "?"), ";" ;
+delete        = "DELETE", category, address, ";" ;
+address       = "[", uint, ",", "M", ",", inside, "]"
+              | "[", uint, ",", uint, ",", "[", "]", "]"
+              | "[", "T", ",", "_", ",", inside, "]" ;
+inside        = "[", [ uint, { ",", uint } ], "]" ;
+category      = "CONTROL" | "COMPARISON" | "RELATION" | "MULTIPLICITY"
+              | "ARITHMETIC" | "TEMPORAL" | "BINDING" | "VARIABLE_USE"
+              | "REFERENCE" | "CONSTANT" | "CALL" | "OPERATOR" | "STRUCTURE" ;
+uint          = digit, { digit } ; (* 1..8 digits; zero-based, no sign *)
+digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digest        = json-string ; (* exactly 64 lowercase hexadecimal characters *)
+operator      = json-string ; (* exactly one token in repair_grammar.OPERATOR_NAMES *)
+json-string   = ? JSON string lexical syntax, without literal line breaks ? ;
+(* ASCII whitespace separates tokens; comments are not language tokens.
+   Whole input <=1 MiB UTF-8; <=4096 statements; <=64 inside indexes.
+   Semantic rules: CREATE AT only BINDING gap; CREATE NEAR matrix/temporal
+   anchor. READ/UPDATE/DELETE require existing occurrence. Every statement is
+   bound to the same immutable snapshot. C/U/D describe edits; they do not
+   execute source changes. Aggregate accounting remains outside this grammar. *)

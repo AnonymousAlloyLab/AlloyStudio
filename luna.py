@@ -53,6 +53,12 @@ relationship. Support that explanation with the supplied learner code and questi
 it as a possibility or a useful question when the evidence is insufficient. Do not assume
 every source operator is wrong, especially when its role is only an insertion anchor. If no
 question or operator is supplied, explain the available context without inventing one.
+Check the FULL learner condition before suggesting a missing case: a guard, domain restriction,
+exclusion or another branch may already handle it. For example, excluding the current node
+from a reachability obligation can already handle the zero-edge self case. Do not suggest
+that non-reflexive closure alone proves a defect there. A metric edit need not be a separate
+semantic error: explain supporting leaf/deletion steps by their role in the surrounding change,
+without inventing an independent requirement violation or assuming the edited operator is bad.
 Then suggest what to inspect or ask a useful question. Approved replacement
 operator names are allowed hints. Do not tell the learner the expression to write. Do not
 output a repaired predicate, replacement expression, inserted operand, complete correction,
@@ -97,7 +103,28 @@ If the comparison is unavailable or the learner is already as short or shorter, 
 another approach without claiming a simpler known solution exists. Never provide that
 alternative, a target fragment, or a sequence of operators that would construct it.
 Do not combine hints
-into a solution route or fill the summary with repeated caveats.'''
+into a solution route or fill the summary with repeated caveats.
+
+Use the structuralContext retrieval evidence for the matching operation ID when available.
+Its ASRL/1 CRUD command describes that one hint, not executable source code:
+READ [t,M,[i,...]] inspects a matrix occurrence; UPDATE changes its operator or concealed
+identity; DELETE removes the selected occurrence; CREATE ... NEAR identifies an existing
+anchor, while CREATE BINDING AT [t,q,[]] identifies a binding-list gap. In an address,
+t selects a learner normal form, M its matrix, q a prefix binding, and the inside sequence
+follows ordered child edges. [T,_,[i,...]] instead follows the separate temporal skeleton.
+TO ? means the target is withheld. Never fill it in. Binding names are masked.
+For each step, use its retrieved focus, enclosing operators, child positions and binding
+context to distinguish this occurrence from identical text elsewhere. Relate that context
+to the question: briefly explain what the learner's choice does, why that choice may conflict
+with the requirement here, and one thing to inspect. A nearby CREATE anchor is not itself
+evidence of a defect. Do not criticize it as if it were a selected replacement.
+All retrieved steps describe the SAME original learner snapshot, not successive repaired
+states. Never simulate hidden edits or assume earlier hints have already been applied.
+Missing, partial or unavailable retrieval is not evidence of a missing expression. Use the
+remaining learner evidence without guessing a location or completing an omitted path.
+Keep addresses, node IDs and CRUD syntax in your reasoning context; write ordinary tutoring
+prose for the learner, not a DSL transcript. At distance zero, use any available structural
+overview only to encourage reflection and alternatives, without inventing edit steps.'''
 REPLACEMENT_OPERATORS = frozenset(('and', 'or', 'not', 'implies', 'iff', '=', '!=', '>', '>=',
     'in', '<', '<=', '!>', '!>=', '!in', '!<', '!<=', 'some', 'no', 'one', 'lone', 'all', '->',
     '.', '<:', ':>', '&', '++', '+', '-', '*', '/', '%', '<<', '>>', '>>>', 'set', 'exactly',
@@ -452,7 +479,8 @@ def _solution_comparison(raw, student_body, distance):
             'mostConciseKnownTokens': minimum, 'longerThanMostConciseKnown': longer}
 
 
-def prompt_education(feedback, student_body='', behavior=None, *, question='', solution_comparison=None):
+def prompt_education(feedback, student_body='', behavior=None, *, question='', solution_comparison=None,
+                     context_identity=None):
     """Complete, bounded learner evidence; no oracle/environment fields accepted."""
     _require(isinstance(feedback, dict))
     student_body = _text(student_body, 8192, empty=True)
@@ -473,9 +501,19 @@ def prompt_education(feedback, student_body='', behavior=None, *, question='', s
         _require(operation['aggregate'] or raw['kind'] != 'component-edit')
         operation['sourceLocation'] = _location(raw.get('sourceLocation'), [student_body], canonical=False)
         operation['canonicalLocation'] = _location(raw.get('canonicalLocation'), forms, canonical=True)
-    result = {'schemaVersion': 'alloy-education-v2', 'question': question, 'studentBody': student_body,
+    result = {'schemaVersion': 'alloy-education-v3', 'question': question, 'studentBody': student_body,
               'canonicalForm': forms, 'trace': trace, 'behavior': _behavior_evidence(behavior),
               'solutionComparison': _solution_comparison(solution_comparison, student_body, trace['distance'])}
+    size = len(json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    _require(size <= MAX_EDUCATION_INPUT_BYTES)
+    # Optional retrieval consumes the remaining prompt allowance. It never
+    # replaces required evidence or starts another JVM/provider request. Lazy
+    # import keeps private credential setup independently relocatable.
+    from canonical_retrieval import build_context
+    budget = min(32768, MAX_EDUCATION_INPUT_BYTES - size - 32)
+    if budget >= 128:
+        result['structuralContext'] = build_context(feedback, student_body, question=question,
+            context_identity=context_identity, max_bytes=budget)
     _require(len(json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
              <= MAX_EDUCATION_INPUT_BYTES)
     return result
@@ -605,7 +643,8 @@ class Explainer:
             if dependency_context is not None:
                 _require(type(dependency_context) is str and re.fullmatch(r'[0-9a-f]{64}', dependency_context) is not None)
             trace = prompt_education(feedback, student_body, behavior, question=question,
-                                     solution_comparison=solution_comparison)
+                                     solution_comparison=solution_comparison,
+                                     context_identity=dependency_context)
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
             return dict(base, status='unavailable', message='The complete learner evidence cannot be explained within the supported limits.')
         encoded = json.dumps(trace, sort_keys=True, ensure_ascii=False, separators=(',', ':'))

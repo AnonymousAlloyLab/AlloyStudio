@@ -108,7 +108,7 @@ class IisPackageTests(unittest.TestCase):
         self.write('LICENSE', 'Portal licence')
         self.write('server.py', '"""Private backend."""\n')
         self.write('luna.py', '"""Private explanation client."""\n')
-        for module in ('repair_grammar.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
+        for module in ('repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_profile.py', 'traffic_limits.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
             self.write(module, (ROOT / module).read_bytes())
         self.write('runtime_dependencies.py', (ROOT / 'runtime_dependencies.py').read_bytes())
         self.write('openai.example.json', json.dumps({'api_key': ''}))
@@ -183,6 +183,9 @@ class IisPackageTests(unittest.TestCase):
         self.assertIn('backend/server.py', entries)
         self.assertIn('backend/execution_profile.py', entries)
         self.assertIn('backend/runtime_dependencies.py', entries)
+        for module in ('repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py'):
+            self.assertEqual(entries['backend/' + module], (ROOT / module).read_bytes())
+            self.assertNotIn('wwwroot/' + module, entries)
         self.assertEqual(json.loads(entries['backend/openai.example.json']), {'api_key': ''})
         self.assertNotIn('backend/openai.local.json', entries)
         self.assertNotIn('backend/ai.local.json', entries)
@@ -461,6 +464,7 @@ class IisPackageTests(unittest.TestCase):
         original = self.output.read_bytes()
         for name in ('web/app.js', 'web/instance-graph.js', 'deploy/iis/web.config', 'deploy/iis/Start-AlloyStudio.ps1',
                      'openai.example.json', 'exercise_store.py', 'exercise_sql.py', 'sql/compiled-queries.json',
+                     'repair_language.py', 'canonical_retrieval.py',
                      'scripts/import_correct_pools.py', 'scripts/import_exercises.py',
                      'build/engine/classes/live/LiveFeedback.class'):
             with self.subTest(name=name):

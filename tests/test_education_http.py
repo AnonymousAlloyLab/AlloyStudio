@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 import server
 from luna import Explainer
+from test_structural_guidance import structure
 
 
 PRIVATE = 'PRIVATE_ORACLE_EDUCATION_CANARY'
@@ -280,12 +281,45 @@ class EducationHTTPTests(unittest.TestCase):
                     self.assertEqual(self.request('/api/explain', dict(self.base, behaviorToken=token))[0], 400)
             for field in ('feedback', 'operations', 'behavior', 'instances', 'categories', 'canonicalForm',
                           'oracleBody', 'studentSource', 'apiKey', 'model', 'question', 'solutionComparison',
-                          'solution_comparison', 'complexity'):
+                          'solution_comparison', 'complexity', 'canonicalStructure', 'structuralContext', 'dsl'):
                 with self.subTest(field=field):
                     self.assertEqual(self.request('/api/explain', dict(self.base, **{field: PRIVATE}))[0], 400)
             for origin in ('https://attacker.invalid', 'https://as.555.is.attacker.invalid'):
                 self.assertEqual(self.request('/api/explain', dict(self.base, behaviorToken='a' * 64),
                     {'Origin': origin, 'X-Forwarded-Host': 'as.555.is'})[0], 403)
+
+    def test_structural_retrieval_uses_pinned_graph_without_new_jvm_or_client_context(self):
+        raw = self.canonical()
+        raw['canonicalStructure'] = structure()
+        raw['canonicalStructure']['oracleSource'] = PRIVATE
+        raw['canonicalStructure']['nodes'][1]['target'] = PRIVATE
+        raw['operations'][0].update(path='normalForm[0].matrix', sourceNodeKind='formula', sourceRole='affected')
+        with patch.object(self.app, '_engine', return_value=raw) as engine:
+            code, _, checked = self.request('/api/feedback')
+        self.assertEqual(code, 200)
+        self.assertEqual(engine.call_count, 1)
+        self.assertEqual(checked['canonicalStructure']['status'], 'ok')
+        self.assertNotIn(PRIVATE, json.dumps(checked))
+        self.app.cache.clear()
+        seen = []
+        def transport(request, timeout):
+            evidence = json.loads(json.loads(request.data)['input'])
+            seen.append(evidence)
+            from test_education import response, expected
+            return response(expected(evidence))
+        client = Explainer(transport=transport, key_reader=lambda: 'SYNTHETIC_RAG_KEY')
+        with patch.object(self.app, 'evaluate', side_effect=AssertionError('Must reuse pinned graph')), \
+             patch.object(self.app, '_engine', side_effect=AssertionError('No analysis for retrieval')), \
+             patch.object(self.app, 'explainer', client):
+            code, _, result = self.request('/api/explain', dict(self.base, evidenceToken=checked['evidenceToken']))
+            _, _, stale = self.request('/api/explain', dict(self.base, body='no Node', evidenceToken=checked['evidenceToken']))
+        self.assertEqual(code, 200)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(stale['status'], 'unavailable')
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(seen[0]['structuralContext']['steps'][0]['dsl'],
+                         'UPDATE MULTIPLICITY [0,M,[]] TO "no";')
+        self.assertNotIn(PRIVATE, json.dumps(seen))
 
 
 if __name__ == '__main__':

@@ -102,7 +102,7 @@ def inputs(root=ROOT):
         'scripts/benchmark_constrained_runtime.py', 'engine_workers.py', 'execution_profile.py',
         'runtime_dependencies.py', 'server.py', 'portal_routes.py', 'traffic_limits.py',
         'traffic_scheduler.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_identity.py',
-        'practice_dependencies.py', 'practice_progress.py', 'exercise_store.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'luna.py', 'ai_provider.py',
+        'practice_dependencies.py', 'practice_progress.py', 'exercise_store.py', 'admin_auth.py', 'admin_service.py', 'admin_upload.py', 'luna.py', 'ai_provider.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py',
         'exercises/exercises.sqlite3', 'vendor/acgn/snapshot.json')]
     for directory, pattern in (('engine/src', '*.java'), ('vendor/acgn/src', '*.java'),
                                ('vendor/acgn/lib', '*.jar'), ('web', '*')):

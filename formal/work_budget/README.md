@@ -8,6 +8,12 @@ The parser and lowering are explicit trusted machinery, not a verified Java
 compiler. Source publication guards are checked structurally, not proved as a
 whole-program refinement. A hash match alone is not the claimed semantics bridge.
 
+The current publication template includes v0.0.8-alpha's optional learner
+structure export after the metric budget ends, and its final response byte guards.
+Regression tests reject removal or reordering of the checkpoint, budget cleanup,
+success gate and byte fallback. This updates a structural check only: it does
+not renew the frozen `block.json` or its historical source/proof bindings.
+
 No result is established by this file: the machine-readable verifier report for
 the exact frozen `block.json` is authoritative. `--prepare` creates only a review
 candidate; `--verify` requires six fresh hierarchical reviews, two isolated offline

@@ -73,7 +73,7 @@ class NavigationEvidenceTests(unittest.TestCase):
             shutil.copyfile(ROOT / 'tests/browser-suite.mjs', root / 'tests/browser-suite.mjs')
             names = ('browser.mjs', 'navigation.mjs', 'progress.mjs', 'progress-save.mjs', 'traffic-browser.mjs',
                      'persistent-browser.mjs', 'admin-library.mjs', 'progressive-hints.mjs',
-                     'alloy-editor.mjs', 'instance-labels.mjs')
+                     'alloy-editor.mjs', 'instance-labels.mjs', 'tutor-chat.mjs')
             for name, report in zip(names, (*reports, *(reports[0] for _ in range(len(names)-2)))):
                 # Literal declarations are the frozen scenario inventory. The
                 # child is constructed to emit a controlled report instead.
@@ -99,7 +99,7 @@ class NavigationEvidenceTests(unittest.TestCase):
         result = self.run_fixture((good, good))
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertEqual(report['checks'], 20)
+        self.assertEqual(report['checks'], 22)
         self.assertEqual(report['passed'], ['tests/browser.mjs:one', 'tests/browser.mjs:two',
                                             'tests/navigation.mjs:one', 'tests/navigation.mjs:two',
                                             'tests/progress.mjs:one', 'tests/progress.mjs:two',
@@ -109,7 +109,8 @@ class NavigationEvidenceTests(unittest.TestCase):
                                             'tests/admin-library.mjs:one', 'tests/admin-library.mjs:two',
                                             'tests/progressive-hints.mjs:one', 'tests/progressive-hints.mjs:two',
                                             'tests/alloy-editor.mjs:one', 'tests/alloy-editor.mjs:two',
-                                            'tests/instance-labels.mjs:one', 'tests/instance-labels.mjs:two'])
+                                            'tests/instance-labels.mjs:one', 'tests/instance-labels.mjs:two',
+                                            'tests/tutor-chat.mjs:one', 'tests/tutor-chat.mjs:two'])
 
 
 if __name__ == '__main__':

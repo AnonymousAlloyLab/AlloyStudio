@@ -89,7 +89,8 @@ if ($Action -eq 'Install') {
         Assert-PrivatePath -Path $private -PublicRoots $publicRoots
     }
     foreach ($file in @($PythonExe, $JavaExe, (Join-Path $BackendRoot 'server.py'),
-        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'ai_provider.py'), (Join-Path $BackendRoot 'exercises\exercises.sqlite3'),
+        (Join-Path $BackendRoot 'luna.py'), (Join-Path $BackendRoot 'ai_provider.py'),
+        (Join-Path $BackendRoot 'tutor_chat.py'), (Join-Path $BackendRoot 'tutor_models.py'), (Join-Path $BackendRoot 'exercises\exercises.sqlite3'),
         (Join-Path $BackendRoot 'exercise_store.py'), (Join-Path $BackendRoot 'exercise_sql.py'),
         (Join-Path $BackendRoot 'admin_auth.py'), (Join-Path $BackendRoot 'admin_upload.py'),
         (Join-Path $BackendRoot 'admin_luna.py'), (Join-Path $BackendRoot 'admin_service.py'),

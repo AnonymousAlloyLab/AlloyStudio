@@ -86,6 +86,18 @@
         <footer class="workspace-footer"><span>Small edits. Clearer models.</span><span>Alloy + ACGN<span aria-hidden="true"> ↗</span></span></footer>
       </main>
     </div>
+    <button id="tutor-toggle" class="tutor-toggle" type="button" aria-controls="tutor-panel" aria-expanded="false"><span aria-hidden="true">✧</span> Ask a tutor</button>
+    <aside id="tutor-panel" class="tutor-panel" aria-labelledby="tutor-heading" hidden>
+      <header class="tutor-header"><div><span class="tutor-eyebrow">LEARN ONE STEP AT A TIME</span><h2 id="tutor-heading">Alloy tutor</h2></div><div class="tutor-header-actions"><button id="tutor-new" class="tutor-new" type="button">New chat</button><button id="tutor-close" class="tutor-icon-button" type="button" aria-label="Close Alloy tutor">×</button></div></header>
+      <p class="tutor-intro">Ask about your approach, a hint, or an example. The tutor guides your reasoning while the saved answers stay private.</p>
+      <div class="tutor-settings"><label for="tutor-model">Model</label><select id="tutor-model" disabled><option>Loading available models…</option></select><label for="tutor-effort">Reasoning</label><select id="tutor-effort" disabled><option>—</option></select></div>
+      <p id="tutor-availability" class="tutor-availability" role="status"></p>
+      <div class="tutor-context"><strong id="tutor-exercise">Choose an exercise</strong><ul id="tutor-context-badges" aria-label="Context available to the tutor"></ul><p id="tutor-context-note">Your current draft is shared only when you ask for guidance.</p></div>
+      <p id="tutor-history-note" class="tutor-history-note" role="status" hidden></p>
+      <div id="tutor-messages" class="tutor-messages" role="log" aria-label="Tutor conversation" aria-live="polite" aria-relevant="additions text"><p class="tutor-empty">What would you like to understand?</p></div>
+      <div class="tutor-suggestion-area"><div class="tutor-suggestion-heading"><span>Try a question</span><button id="tutor-suggest" type="button" disabled>Suggest questions</button></div><div id="tutor-suggestions" class="tutor-suggestions" aria-label="Recommended questions"></div><p id="tutor-suggestion-note" class="tutor-small">Suggestions use the lowest-cost configured model in this provider's stack.</p></div>
+      <form id="tutor-form" class="tutor-composer"><label class="sr-only" for="tutor-message">Message to Alloy tutor</label><textarea id="tutor-message" rows="3" maxlength="2048" placeholder="Ask a question about your predicate…" aria-describedby="tutor-keyboard-help tutor-message-limit" disabled></textarea><div class="tutor-composer-actions"><span id="tutor-keyboard-help">Enter to send · Shift+Enter for a new line</span><button id="tutor-send" class="button primary" type="submit" disabled>Send</button></div><p id="tutor-message-limit" class="tutor-message-limit" role="status" hidden></p><p id="tutor-status" role="status" aria-live="polite"></p></form>
+    </aside>
     <div id="toast" class="toast" role="status" hidden></div>
   </body>
 </html>

@@ -4,8 +4,19 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.8-alpha](docs/releases/v0.0.8-alpha.md).**
+**Current release: [v0.0.9-alpha](docs/releases/v0.0.9-alpha.md).**
 
+The new **Ask a tutor** side panel provides a continuing conversation about the
+current question, learner code, positional CRUD hints and displayed behavioral
+instances. It supports privately configured OpenAI, Claude and Gemini model
+choices, with at most three suggested questions from the selected provider's
+inexpensive model. Editing code or changing model, provider or reasoning effort
+keeps the conversation and unsent message; each new turn retrieves the current
+learner context. The tutor reuses existing feedback without starting a JVM.
+See the [chat contract and limits](docs/tutor-chat-spec.md) and
+[private provider configuration](docs/ai-providers.md#learner-chatbot-model-selection).
+
+**Previous release: [v0.0.8-alpha](docs/releases/v0.0.8-alpha.md).**
 This release grounds each AI edit explanation in the
 [canonical CRUD language and structural retrieval](docs/structural-guidance-rag.md).
 The tutor receives the exact learner occurrence and bounded surrounding structure
@@ -14,7 +25,7 @@ reuses pinned feedback without another JVM or embedding service. Hidden target
 expressions remain excluded; zero-distance guidance gets a READ-only overview
 for exploring alternatives. Existing provider choices and progressive hints remain.
 
-**Previous release: [v0.0.7-alpha.5](docs/releases/v0.0.7-alpha.5.md).**
+**Maintenance alpha [v0.0.7-alpha.5](docs/releases/v0.0.7-alpha.5.md).**
 Canonical feedback now recognizes the bundled Alloy utility libraries, including
 integer arithmetic used by parameterized Sending Ether practices. It preserves
 ordered call arguments and declaration identity, with support for aliased and
@@ -562,6 +573,19 @@ stay in private `ai.local.json`, with a separate selected model for each role.
 See the [provider setup guide](docs/ai-providers.md) and
 [acceptance contract](docs/ai-providers-spec.md). Legacy OpenAI setup below remains
 supported when the new configuration is absent.
+
+The **Ask a tutor** side panel opens or folds beside the exercise. It reads the
+current question, learner draft, checked CRUD hints and displayed bounded
+examples, without receiving hidden solution bodies or launching another analysis.
+Choose GPT-6 Luna (all supported reasoning tiers), GPT-6.1 Terra/Sol, Claude
+Haiku/Sonnet/Opus 5.5, or Gemini 3.8 Flash/4 Argon when that provider is enabled.
+Up to three clickable suggested questions use the cheapest model in the selected
+provider's stack. Keys stay in private deployment configuration. Conversations
+survive edits: each turn retrieves the current draft's evidence, and earlier
+replies are marked as belonging to an older draft. Switching models or reasoning
+levels also keeps the discussion and your unsent message. See the
+[chat contract and limits](docs/tutor-chat-spec.md) and
+[private model configuration](docs/ai-providers.md#learner-chatbot-model-selection).
 
 ### Default OpenAI guidance
 

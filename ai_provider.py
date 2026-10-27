@@ -31,6 +31,7 @@ EFFORTS = {
     'deepseek': {'none', 'low', 'high', 'max'},
     'openai-compatible': {'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'},
 }
+CHAT_PROVIDERS = frozenset({'openai', 'anthropic', 'gemini'})
 
 
 @dataclass(frozen=True)
@@ -139,7 +140,9 @@ def _profile(spec, directory):
 
 
 def _configured_profiles(config, directory):
-    if (not isinstance(config, dict) or set(config) != {'version', 'profiles', 'roles'}
+    if (not isinstance(config, dict)
+            or not {'version', 'profiles', 'roles'} <= set(config)
+            or set(config) - {'version', 'profiles', 'roles', 'chat'}
             or type(config['version']) is not int or config['version'] != 1
             or not isinstance(config['profiles'], dict)
             or not 1 <= len(config['profiles']) <= 32
@@ -154,7 +157,26 @@ def _configured_profiles(config, directory):
     for selected in config['roles'].values():
         if selected is not None and (not isinstance(selected, str) or selected not in profiles):
             raise _invalid()
+    if 'chat' in config and config['chat'] is not None:
+        chat = config['chat']
+        if not isinstance(chat, dict) or set(chat) - CHAT_PROVIDERS:
+            raise _invalid()
+        for protocol, selected in chat.items():
+            if selected is not None and (not isinstance(selected, str)
+                    or selected not in profiles or profiles[selected].protocol != protocol):
+                raise _invalid()
     return profiles
+
+
+def _load_configuration():
+    """Read once per selection; None means the legacy configuration applies."""
+    explicit = os.environ.get('ALLOY_AI_CONFIG_FILE')
+    path = _path(explicit, BACKEND_ROOT) if explicit is not None else BACKEND_ROOT / 'ai.local.json'
+    if explicit is None and not path.exists():
+        return None
+    config = json.loads(_private_text(path, MAX_CONFIG_BYTES), object_pairs_hook=_unique,
+                        parse_constant=lambda _: (_ for _ in ()).throw(_invalid()))
+    return config, _configured_profiles(config, path.parent)
 
 
 def validate_template(config):
@@ -186,6 +208,7 @@ def select_profile(role, legacy_key_reader, default_model, default_effort):
             raise _invalid()
         if os.environ.get('ALLOY_AI_DISABLED') == '1':
             return None
+        # Preserve the old global-disable behavior even for malformed config.
         explicit = os.environ.get('ALLOY_AI_CONFIG_FILE')
         path = _path(explicit, BACKEND_ROOT) if explicit is not None else BACKEND_ROOT / 'ai.local.json'
         if explicit is None and not path.exists():
@@ -200,14 +223,42 @@ def select_profile(role, legacy_key_reader, default_model, default_effort):
             return _profile(spec, BACKEND_ROOT)
         if os.environ.get('OPENAI_DISABLED') == '1':
             return None
-        config = json.loads(_private_text(path, MAX_CONFIG_BYTES), object_pairs_hook=_unique,
-                            parse_constant=lambda _: (_ for _ in ()).throw(_invalid()))
-        profiles = _configured_profiles(config, path.parent)
+        config, profiles = _load_configuration()
         selected = config['roles'].get(role)
         if role == 'upload' and role not in config['roles']:
             selected = config['roles'].get('guidance')
         result = profiles.get(selected)
         return result if result and result.key else None
+    except (OSError, UnicodeError, ValueError, TypeError, RecursionError, OverflowError):
+        raise _invalid() from None
+
+
+def chat_profiles(legacy_key_reader):
+    """Private credential sources explicitly authorized for learner chat.
+
+    With no chat member, only the guidance profile can enable its provider.
+    Upload/review credentials never become learner-chat credentials implicitly.
+    An explicit provider map enables only its named entries; null disables chat.
+    The returned profiles are server-only and must never be serialized publicly.
+    """
+    try:
+        if (os.environ.get('ALLOY_AI_DISABLED') == '1'
+                or os.environ.get('OPENAI_DISABLED') == '1'):
+            return {}
+        loaded = _load_configuration()
+        if loaded is None:
+            key = legacy_key_reader()
+            if not key:
+                return {}
+            return {'openai': _profile({'provider': 'openai', 'model': 'gpt-6-luna',
+                                       'api_key': key, 'reasoning_effort': 'low'}, BACKEND_ROOT)}
+        config, profiles = loaded
+        if 'chat' not in config:
+            profile = profiles.get(config['roles'].get('guidance'))
+            return {profile.protocol: profile} if (profile and profile.key
+                    and profile.protocol in CHAT_PROVIDERS) else {}
+        return {protocol: profiles[name] for protocol, name in (config['chat'] or {}).items()
+                if name is not None and profiles[name].key}
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError, OverflowError):
         raise _invalid() from None
 

@@ -2,9 +2,11 @@
 
 Alloy Studio supports OpenAI Responses, Anthropic Claude Messages, Google Gemini
 `generateContent`, DeepSeek chat completions, and an explicitly configured
-OpenAI-compatible chat endpoint. Provider keys **and model choices belong to the
-private deployment configuration**, never the learner portal. Each request uses
-one model. There is no automatic fallback, ensemble or provider retry.
+OpenAI-compatible chat endpoint. Provider keys and role configuration belong to
+the **private deployment configuration**, never the learner portal. The optional
+learner chatbot offers a fixed model selector for privately enabled providers;
+it exposes display metadata only. Each provider request uses one model. There
+is no automatic fallback, ensemble or provider retry.
 
 ## Configure once per deployment
 
@@ -58,25 +60,77 @@ Set the role's profile name to switch models. Missing roles are disabled, except
 that upload inherits guidance when omitted. Set a role to `null` to explicitly
 disable it, including upload. An empty selected credential disables
 that role. Malformed explicit configuration fails closed. `ALLOY_AI_DISABLED=1`
-or the legacy `OPENAI_DISABLED=1` disables AI in production. No configuration or
-model selector is exposed in the browser.
+or the legacy `OPENAI_DISABLED=1` disables AI in production. The browser cannot
+read or edit credentials, profile names, endpoints or role configuration.
 
 Without `ai.local.json` or an explicit new config path, legacy OpenAI configuration
 continues to work: GPT-6 Luna with low effort for guidance/uploads, GPT-6.1 Sol
 with high effort for candidate review. An explicit new config takes precedence;
 it never silently borrows the legacy OpenAI credential.
 
+## Learner chatbot model selection
+
+The side-panel tutor offers GPT-6 Luna, GPT-6.1 Terra and GPT-6.1 Sol for an enabled
+OpenAI credential; Claude Haiku, Sonnet and Opus 5.5 for Anthropic; and Gemini 3.8
+Flash and Gemini 4 Argon for Gemini. The public catalogue lists these exact model
+IDs, labels, providers and supported selections. It does not make a paid model
+probe or promise access on a particular provider account. A provider rejection
+does not switch to another model or account.
+
+Without a `chat` member, only the existing **guidance** profile's provider stack
+is enabled. With legacy OpenAI configuration, its existing credential enables
+the OpenAI stack. Upload-only and review-only credentials never enable learner
+chat implicitly. To authorize multiple providers or a separate billing account,
+bind each provider to an existing private profile:
+
+```json
+"chat": {
+  "openai": "luna",
+  "anthropic": "haiku",
+  "gemini": "flash"
+}
+```
+
+This is an optional top-level member of `ai.local.json`; the profile names must
+exist and match the provider. It authorizes the listed provider's full fixed chat
+stack using that profile's credential, independently of the profile's normal
+role model. Missing providers are disabled when this map is present. Set
+`"chat": null` or `"chat": {}` to disable the tutor; a provider value of `null`
+disables that provider. Empty keys disable their entries. Unknown providers,
+missing profiles and provider/profile mismatches fail closed. Existing guidance,
+upload and review role selections retain their configuration.
+
+For Luna and Terra, the chat selector supports `none`, `low`, `medium`, `high`,
+`xhigh` and `max`; Sol supports `low`, `medium`, `high`, `xhigh` and `max`. The
+default is `low`. Anthropic and Gemini use one fixed setting per model: Haiku and
+Sonnet `low`, Opus `high`, Flash `minimal`, and Argon `low`.
+
+Each suggestion request uses the least-expensive model in the selected requested
+provider stack: Luna at `none`, Haiku at `low`, or Flash at `minimal`. It retains
+the **same account credential and provider** as the selected tutor, even if the
+deployment configuration changes during that pass. It is a separate bounded
+request for up to three suggested questions; it is not a fallback for the main
+answer. Credentials stay server-side throughout selection and transport.
+
+Chat model, provider and reasoning changes preserve the conversation and unsent
+message. The next send shares that retained discussion and the current learner
+context with the newly selected configured provider. Each reply identifies its
+model and effort. Changing a selection makes no API call; suggestions are refreshed
+on request using the new provider's inexpensive model. Use **New chat** to clear
+the discussion before switching if you prefer not to carry it to another provider.
+
 ## Model identifiers
 
 The example template lists these exact API identifiers, verified against official
-documentation on 2026-10-13. They are configurable strings, not a promise of
+documentation (chat selections updated on 2026-10-27). They are configurable strings, not a promise of
 account access:
 
-- OpenAI: `gpt-6-luna`, `gpt-6.1-sol`, `gpt-6-astra`. Use high effort for Sol/Astra
+- OpenAI: `gpt-6-luna`, `gpt-6.1-terra`, `gpt-6.1-sol`, `gpt-6-astra`. Use high effort for Sol/Astra
   reviews. [OpenAI Luna](https://developers.openai.com/api/docs/models/gpt-6-luna),
+  [Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra),
   [Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
   [Astra](https://developers.openai.com/api/docs/models/gpt-6-astra).
-- Anthropic: `claude-haiku-5-5`, `claude-opus-5-5`.
+- Anthropic: `claude-haiku-5-5`, `claude-sonnet-5-5`, `claude-opus-5-5`.
   [Claude model catalog](https://platform.claude.com/docs/en/models/overview).
 - Google: `gemini-3.8-flash`, `gemini-4-argon`. Argon is documented as a paid API
   model, without a free tier.

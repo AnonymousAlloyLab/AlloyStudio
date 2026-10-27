@@ -1,3 +1,4 @@
+import { createTutorChat } from './tutor-chat.js';
 import { renderInstanceGraph } from './instance-graph.js';
 import { renderAlloyCode, enterIndent, closingIndent, indentAlloy } from './alloy-language.js';
 
@@ -37,7 +38,7 @@ const state = {
   completedBodies: new Map(), savedRecords: new Map(), validCompletionTokens: new Set(),
   memoryDrafts: new Map(),
   progressRestore: null, progressEpoch: 0,
-  progressSavedAt: 0,
+  progressSavedAt: 0, chatEvidence: null,
   channel: null, channelPromise: null, checkFlight: null,
 };
 const STORAGE_PREFIX = 'alloy-studio:v1:';
@@ -52,6 +53,28 @@ const METRICS = {
   canonical: { id: 'acgn-fast-rewrite-canonical-distance', basis: 'nearest-known-correct-v1', label: 'Canonical' },
   ast: { id: 'acgn-raw-ast-zhang-shasha-distance', basis: 'nearest-known-correct-raw-ast-v1', label: 'AST' },
 };
+
+const tutorChat = createTutorChat({
+  baseURL: APP_BASE,
+  ensureChannel,
+  clearChannel(channel) {
+    if (state.channel === channel) { state.channel = null; state.chatEvidence = null; }
+  },
+  getContext() {
+    if (!state.exercise || state.loadingExercise || elements.editor.disabled) return null;
+    const tokens = prerequisiteTokens(state.exercise);
+    if (tokens === null) return null;
+    const context = { exerciseId: state.exercise.id, revision: state.revision,
+      body: elements.editor.value, metric: state.metric, prerequisiteTokens: tokens };
+    const evidence = state.chatEvidence;
+    const matched = evidence && sourceContextCurrent(evidence.context);
+    if (matched && evidence.evidenceToken) context.evidenceToken = evidence.evidenceToken;
+    if (matched && evidence.behaviorToken) context.behaviorToken = evidence.behaviorToken;
+    return { payload: context, title: state.exercise.title,
+      contentVersion: exerciseVersion(state.exercise), selection: state.selection,
+      hasHints: !!context.evidenceToken, hasExamples: !!context.behaviorToken };
+  },
+});
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -616,6 +639,7 @@ function selectMetric() {
   if (!Object.hasOwn(METRICS, metric) || metric === state.metric) return;
   cancelProgressRestore(); invalidateFeedback();
   state.metric = metric;
+  tutorChat.refresh();
   writeStorage('metric', metric);
   renderMetric();
   loadHistory();
@@ -644,12 +668,14 @@ function setStatus(status, text) {
 }
 
 function invalidateFeedback() {
+  state.chatEvidence = null;
   state.progressiveHints = null;
   state.structuralCompletionEvidence = null;
   clearOperationHighlight();
   resetBehavior();
   const pending = state.checkFlight || state.feedbackAbort || state.behaviorAbort || state.explainAbort;
   state.revision += 1;
+  tutorChat.refresh();
   if (pending) cancelChannel(state.revision);
   state.checkFlight = null;
   clearTimeout(state.timer);
@@ -1204,6 +1230,7 @@ async function selectExercise(id, { restoring = false } = {}) {
   const controller = new AbortController();
   state.detailAbort = controller;
   state.loadingExercise = true;
+  tutorChat.refresh();
   elements.editor.disabled = true;
   elements.check.disabled = true;
   elements.reset.disabled = true;
@@ -1260,6 +1287,7 @@ async function selectExercise(id, { restoring = false } = {}) {
     renderHistory();
     showWaiting();
     applyPracticeLock(); renderExercises();
+    tutorChat.refresh();
     if (elements.live.checked && !elements.editor.disabled && !restoring) scheduleFeedback(200);
   } catch (error) {
     if (error.name === 'AbortError' || selection !== state.selection) return;
@@ -1301,6 +1329,7 @@ function checkPredicate() {
 }
 
 async function runPredicateCheck() {
+  state.chatEvidence = null;
   state.progressiveHints = null;
   state.structuralCompletionEvidence = null;
   clearOperationHighlight();
@@ -1312,6 +1341,7 @@ async function runPredicateCheck() {
   state.feedbackAbort = controller;
   const exerciseId = state.exercise.id;
   const revision = ++state.revision;
+  tutorChat.refresh();
   const selection = state.selection;
   const body = elements.editor.value;
   const metric = state.metric;
@@ -1379,6 +1409,8 @@ async function runPredicateCheck() {
     if (result.status === 'ok' && typeof result.distance === 'number' && Number.isFinite(result.distance) && result.distance >= 0) {
       const evidenceToken = typeof result.evidenceToken === 'string' && /^[a-f0-9]{64}$/.test(result.evidenceToken)
         ? result.evidenceToken : null;
+      state.chatEvidence = { context: { exerciseId, revision, selection, body, metric }, evidenceToken, behaviorToken: null };
+      tutorChat.refresh();
       await requestBehavior({ exerciseId, body, revision, metric, ...channelField, ...(evidenceToken ? { evidenceToken } : {}) }, selection, true, metric);
     } else if (result.status === 'unsupported' && !(Array.isArray(result.diagnostics)
       && result.diagnostics.some((diagnostic) => diagnostic?.code === 'WORK_LIMIT'))) {
@@ -1908,6 +1940,9 @@ async function requestBehavior(payload, selection, explain = false, metric = sta
     if (recordSolvedExercise(result, payload, selection, metric)) recordVerifiedImplementation(result, payload, metric);
     state.behaviorEvidence = { token: typeof result.behaviorToken === 'string' && /^[a-f0-9]{64}$/.test(result.behaviorToken) ? result.behaviorToken : null,
       instanceIds: result.categories.flatMap(category => category.instances.map((_, index) => `${category.id}-${index + 1}`)) };
+    state.chatEvidence = { context: { exerciseId: payload.exerciseId, revision: payload.revision, selection, body: payload.body, metric },
+      evidenceToken: payload.evidenceToken || null, behaviorToken: state.behaviorEvidence.token };
+    tutorChat.refresh();
     renderBehavior(result);
   } catch (error) {
     if (error.name === 'AbortError' || !current()) return;

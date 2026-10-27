@@ -16,6 +16,7 @@ import threading
 import time
 from urllib.parse import unquote, urlsplit
 from luna import Explainer, project_parameter_bindings
+from tutor_chat import TutorChat
 from runtime_dependencies import (check_runtime, runtime_classpath, run_engine,
                                   open_engine_admission, close_engine_admission, wait_for_oneshots)
 from engine_workers import EnginePool, EngineUnavailable, EngineTimeout, EngineAcquisitionTimeout
@@ -58,6 +59,7 @@ class RouteServices:
     admin: object
     evidence: object
     explainer: object
+    chat: object
     cache_lock: object
     behavior_cache: object
     capture: object
@@ -78,7 +80,7 @@ def route_services(app):
         root=app.root, traffic_profile=app.traffic_profile, snapshot=snapshot,
         exercises=snapshot.exercises, scheduler=app.scheduler,
         admin_auth=app.admin_auth, admin=app.admin, evidence=app.evidence,
-        explainer=app.explainer, cache_lock=app.cache_lock,
+        explainer=app.explainer, chat=app.chat, cache_lock=app.cache_lock,
         behavior_cache=app.behavior_cache, capture=app.capture,
         diagnostics=app.diagnostics, evaluate=app.evaluate,
         evaluate_behavior=app.evaluate_behavior, evidence_identity=app.evidence_identity,
@@ -456,6 +458,7 @@ class Portal(BoundedHTTPServer):
         self.admin_auth = AuthManager(self.root)
         open_engine_admission(self.root, java_processors=execution.java_processors)
         self.explainer = Explainer()
+        self.chat = TutorChat(slots=self.explainer.slots)
         self.scheduler = Scheduler({'feedback': execution.workers, 'behavior': 1})
         self.cache_lock = self.scheduler.lock
         self.cache = self.scheduler.caches['feedback']
@@ -646,6 +649,7 @@ class Portal(BoundedHTTPServer):
 
     def server_close(self):
         self.stopping = True
+        self.chat.close()
         deadline = time.monotonic() + 65
         close_engine_admission(self.root)
         self.scheduler.close()

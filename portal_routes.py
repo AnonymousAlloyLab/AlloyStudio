@@ -18,6 +18,7 @@ from exercise_store import content_version
 from practice_dependencies import public_slots, validate_plan
 from practice_progress import ProgressError, token_list
 from luna import solution_length_comparison
+from tutor_chat import context_projection
 from traffic_scheduler import CapacityError, Superseded, ChannelExpired
 
 PUBLIC_FIELDS = ('id', 'title', 'group', 'predicate', 'description', 'environmentBefore',
@@ -29,6 +30,7 @@ METRICS = {'canonical': 'acgn-fast-rewrite-canonical-distance',
 STATIC = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/index.html': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
+          '/tutor-chat.js': ('tutor-chat.js', 'text/javascript; charset=utf-8'),
           '/instance-graph.js': ('instance-graph.js', 'text/javascript; charset=utf-8'),
           '/alloy-language.js': ('alloy-language.js', 'text/javascript; charset=utf-8'),
           '/styles.css': ('styles.css', 'text/css; charset=utf-8')}
@@ -40,7 +42,8 @@ STATIC.update({'/admin/' + name: ('admin/' + name, mime) for name, mime in (
     ('index.html', 'text/html; charset=utf-8'), ('app.js', 'text/javascript; charset=utf-8'),
     ('styles.css', 'text/css; charset=utf-8'))})
 STATIC['/admin/'] = STATIC['/admin/index.html']
-PUBLIC_POST_ROUTES = frozenset(('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel', '/api/progress'))
+PUBLIC_POST_ROUTES = frozenset(('/api/feedback', '/api/explain', '/api/behavior', '/api/channel', '/api/cancel', '/api/progress',
+                              '/api/chat', '/api/chat/suggestions'))
 # Only these request fields cross the boundary; X-Forwarded-For is consumed by ingress.
 HEADER_ALLOWLIST = frozenset(('origin', 'host', 'cookie', 'x-csrf-token', 'sec-fetch-site',
                               'content-length', 'transfer-encoding'))
@@ -194,6 +197,8 @@ def control_get(app, request):
 
 def public_get(app, request):
     path = request.path
+    if path == '/api/chat/models':
+        return Reply.json(200, app.chat.catalogue())
     if path in ('/dashboard', '/admin'):
         return Reply.redirect(path[1:] + '/')
     if path == '/api/health':
@@ -228,6 +233,8 @@ def public_get(app, request):
 
 def public_post(app, request):
     path, data = request.path, request.body
+    if path in ('/api/chat', '/api/chat/suggestions'):
+        return chat_post(app, request)
     if path == '/api/progress':
         try:
             if type(data) is not dict or set(data) != {'completionTokens'}:
@@ -374,6 +381,85 @@ def public_post(app, request):
     if path != '/api/behavior':
         delivery['requestedMetric'] = metric
     return Reply.json(status, dict(result, **delivery))
+
+
+def chat_post(app, request):
+    data = request.body
+    suggestions = request.path == '/api/chat/suggestions'
+    required = {'exerciseId', 'body', 'revision', 'metric', 'channel', 'model', 'effort'}
+    if not suggestions:
+        required.add('message')
+    optional = {'prerequisiteTokens', 'evidenceToken', 'behaviorToken', 'conversationToken'}
+    def text(value, maximum, *, empty=False):
+        return (isinstance(value, str) and (empty or bool(value.strip())) and '\x00' not in value
+                and len(value.encode('utf-8')) <= maximum)
+    try:
+        valid = (type(data) is dict and required <= set(data) <= required | optional
+            and text(data['exerciseId'], 256) and text(data['body'], MAX_BODY_BYTES, empty=True)
+            and type(data['revision']) is int and 0 <= data['revision'] <= 2**53 - 1
+            and isinstance(data['metric'], str) and data['metric'] in METRICS
+            and text(data['channel'], 43) and re.fullmatch(r'[A-Za-z0-9_-]{43}', data['channel'])
+            and text(data['model'], 128) and text(data['effort'], 16)
+            and (suggestions or text(data['message'], 2048))
+            and all(text(data[name], 64) and re.fullmatch(r'[0-9a-f]{64}', data[name])
+                    for name in ('evidenceToken', 'behaviorToken') if name in data)
+            and ('conversationToken' not in data or (text(data['conversationToken'], 43)
+                 and re.fullmatch(r'[A-Za-z0-9_-]{43}', data['conversationToken']))))
+        if not valid:
+            raise ValueError('Invalid chat fields')
+        tokens = token_list(data.get('prerequisiteTokens', []))
+    except (ValueError, TypeError, KeyError, UnicodeError, ProgressError):
+        return Reply.json(400, {'error': 'Supply the current draft, channel, model and a message of at most 2 KiB.'})
+    snapshot, generation = app.capture()
+    base = snapshot.exercises.get(data['exerciseId'])
+    if base is None:
+        return Reply.json(404, {'error': 'Exercise not found.'})
+    delivery = dict(exerciseId=base['id'], revision=data['revision'], metric=data['metric'],
+                    contentVersion=content_version(base))
+    def reply(result):
+        return Reply.json(200, dict(result, **delivery))
+    try:
+        record, dependency = app.resolve_practice(base, tokens, snapshot)
+    except (ProgressError, ValueError, TypeError, KeyError, UnicodeError):
+        return Reply.json(423, dict(status='locked', message='Complete the prerequisites before chatting about this practice.',
+                                   **delivery))
+    body, metric, channel, revision = (data[name] for name in ('body', 'metric', 'channel', 'revision'))
+    try:
+        app.scheduler.observe(channel, revision, (generation, record['id'], body, metric, dependency.version))
+    except ChannelExpired:
+        return Reply.json(410, dict(status='expired', code='channel_expired', **delivery))
+    except Superseded:
+        return reply({'status': 'superseded'})
+    identity = app.evidence_identity(record, body, metric, generation, channel)
+    feedback = app.evidence.get(data['evidenceToken'], identity) if 'evidenceToken' in data else None
+    behavior = None
+    if 'behaviorToken' in data:
+        behavior_identity = app.evidence_identity(record, body, metric, generation, channel, 'behavior')
+        behavior = app.evidence.find(behavior_identity,
+            lambda value: behavior_token(record['id'], body, value) == data['behaviorToken'])
+    if ('evidenceToken' in data and feedback is None) or ('behaviorToken' in data and behavior is None):
+        return reply({'status': 'expired', 'message': 'These hints or examples expired. Check this draft again before using them in chat.'})
+    try:
+        context = context_projection(record['description'], body, metric, feedback, behavior,
+                                     context_identity=dependency.version)
+        context['predicateHeader'] = record['predicateHeader']
+        context['revision'] = revision
+    except (ValueError, TypeError, KeyError, UnicodeError, RecursionError, OverflowError):
+        return reply({'status': 'unavailable', 'message': 'The displayed evidence cannot be used for chat. Refresh the predicate check.'})
+    # A conversation belongs to this exercise, not one frozen draft. Each call
+    # still resolves exact current evidence above and checks current revision.
+    owner = (identity[0], generation, delivery['exerciseId'], channel,
+             delivery['contentVersion'], dependency.version)
+    # No pool selection, engine dispatch, or environment copy enters this path.
+    snapshot = base = record = feedback = behavior = None
+    def current():
+        current_generation = app.capture()[1]
+        with app.scheduler.lock:
+            return app.scheduler.current(channel, revision) and current_generation == generation
+    result = app.chat.respond(context=context, owner=owner, channel=channel,
+        model=data['model'], effort=data['effort'], message=data.get('message'),
+        conversation_token=data.get('conversationToken'), suggestions=suggestions, current=current)
+    return reply(result if current() else {'status': 'superseded'})
 
 
 def admin_body_limit(path):

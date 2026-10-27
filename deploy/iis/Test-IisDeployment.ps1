@@ -131,7 +131,7 @@ try {
         Assert-PrivateAcl -Path $localOpenAIConfig
     }
     foreach ($name in @('server.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py',
-        'candidate_store.py', 'candidate_review.py', 'ai_provider.py')) {
+        'candidate_store.py', 'candidate_review.py', 'ai_provider.py', 'tutor_chat.py', 'tutor_models.py')) {
         Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)
     }
     Assert-BackendWriteScope -Path $config.backend_root
@@ -162,7 +162,7 @@ try {
     Import-Module WebAdministration
     $proxy = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy'
     Assert-Check ([bool]$proxy.enabled -and ([TimeSpan]$proxy.timeout).TotalSeconds -ge 120) 'ARR proxy is enabled with a timeout of at least 120 seconds'
-    foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
+    foreach ($asset in @('', 'index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'tutor-chat.js', 'styles.css', 'dashboard/', 'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
         'dashboard/index.html')) {
         $response = Invoke-PortalRequest $asset
         Assert-Check ($response.Status -eq 200 -and $response.Body.Length -gt 0) "public asset loads: $asset"
@@ -306,6 +306,7 @@ try {
         'admin.local.json', 'backend/admin.local.json', 'admin/admin.local.json',
         'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'scripts/configure_admin.py',
         'candidate_store.py', 'candidate_review.py', 'backend/candidate_store.py', 'backend/candidate_review.py',
+        'tutor_chat.py', 'tutor_models.py', 'backend/tutor_chat.py', 'backend/tutor_models.py',
         'admin/upload.als', 'admin/source.als', 'admin/.admin-config-fixture.tmp',
         'vendor/acgn/lib/alloy.jar', 'openai.key', 'openai.local.json', 'backend/openai.local.json', 'ai.local.json', 'backend/ai.local.json', 'ai_provider.py', 'backend/ai_provider.py', '.env',
         'deploy/iis/run_backend.py', 'backend-task.json', 'api/exercises/../../catalogue.json')) {

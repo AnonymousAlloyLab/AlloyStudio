@@ -2,13 +2,16 @@
   "version": 1,
   "profiles": {
     "luna": {"provider": "openai", "model": "gpt-6-luna", "api_key": "", "reasoning_effort": "low"},
+    "terra": {"provider": "openai", "model": "gpt-6.1-terra", "api_key": "", "reasoning_effort": "low"},
     "sol": {"provider": "openai", "model": "gpt-6.1-sol", "api_key": "", "reasoning_effort": "high"},
     "astra": {"provider": "openai", "model": "gpt-6-astra", "api_key": "", "reasoning_effort": "high"},
     "haiku": {"provider": "anthropic", "model": "claude-haiku-5-5", "api_key": "", "reasoning_effort": "low"},
+    "sonnet": {"provider": "anthropic", "model": "claude-sonnet-5-5", "api_key": "", "reasoning_effort": "low"},
     "opus": {"provider": "anthropic", "model": "claude-opus-5-5", "api_key": "", "reasoning_effort": "high"},
     "flash": {"provider": "gemini", "model": "gemini-3.8-flash", "api_key": "", "reasoning_effort": "low"},
     "argon": {"provider": "gemini", "model": "gemini-4-argon", "api_key": "", "reasoning_effort": "high"},
     "deepseek": {"provider": "deepseek", "model": "deepseek-flash", "api_key": "", "reasoning_effort": "high"}
   },
-  "roles": {"guidance": "luna", "upload": "luna", "review": "sol"}
+  "roles": {"guidance": "luna", "upload": "luna", "review": "sol"},
+  "chat": {"openai": "luna", "anthropic": "haiku", "gemini": "flash"}
 }

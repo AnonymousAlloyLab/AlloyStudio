@@ -51,3 +51,32 @@ and failure paths, cache separation, unchanged guidance/advice validators,
 browser labels, and portable package inclusion/exclusion. These are executable
 regressions; this extension does not assert a new Lean proof or rebind historical
 formal evidence.
+
+## Learner-chat credential extension
+
+The original role rules above remain in force for `guidance`, `upload` and
+`review`. The side-panel chatbot additionally allows a learner to choose among
+fixed model/effort entries authorized by a deployment credential binding. This
+is the sole browser model-selection exception; clients still cannot supply a
+key, endpoint, private profile name or arbitrary model ID.
+
+- Optional top-level `chat` maps `openai`, `anthropic` and/or `gemini` to existing
+  profiles with the matching protocol. `null`, an empty map, a null entry or an
+  empty selected key disables the corresponding chat capability. Unknown keys,
+  absent profiles and provider mismatches fail closed under the same config
+  validator used for existing roles and distributable templates.
+- If `chat` is absent, only the guidance credential's native provider is enabled.
+  Upload-only and review-only credentials never become learner-chat credentials
+  implicitly. An explicitly missing config never falls back to legacy keys.
+- The public model catalogue contains exactly `id`, `label`, `provider`,
+  `efforts` and `defaultEffort`. Catalogue generation makes no provider request
+  and asserts no account-level availability.
+- A selected chat model and effort must match that catalogue's fixed allowlist.
+  The companion suggested-question request uses Luna/Haiku/Flash at the lowest
+  selected reasoning setting for that provider family and preserves the exact
+  selected credential. It does not reread configuration mid-pass, change
+  account, or substitute a failed answer model. This explicit companion request
+  is bounded separately from the unchanged existing role requests.
+- `test_tutor_models.py` covers authorization, account isolation, exact model
+  choices, response-safe metadata and malformed configuration. These tests use
+  synthetic credentials and perform no live network requests.

@@ -1765,7 +1765,7 @@ try {
       'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("wwwroot/" + sys.argv[2]))',
       process.env.ALLOY_IIS_TEST_ARCHIVE || path.join(root, 'build/iis/alloy-studio-iis.zip'), name]);
     const packagedIndex = packagedAsset('index.html');
-    const packagedAssets = new Map(['app.js', 'styles.css', 'instance-graph.js', 'alloy-language.js'].map(name => [name, packagedAsset(name)]));
+    const packagedAssets = new Map(['app.js', 'styles.css', 'instance-graph.js', 'alloy-language.js', 'tutor-chat.js'].map(name => [name, packagedAsset(name)]));
     const assetVersions = new Map([...packagedAssets].map(([name, content]) =>
       [name, createHash('sha256').update(content).digest('hex')]));
     for (const name of ['app.js', 'styles.css']) {
@@ -1774,6 +1774,7 @@ try {
     }
     assert(packagedAssets.get('app.js').includes(Buffer.from(`./instance-graph.js?v=${assetVersions.get('instance-graph.js')}`)));
     assert(packagedAssets.get('app.js').includes(Buffer.from(`./alloy-language.js?v=${assetVersions.get('alloy-language.js')}`)));
+    assert(packagedAssets.get('app.js').includes(Buffer.from(`./tutor-chat.js?v=${assetVersions.get('tutor-chat.js')}`)));
     let backendURL;
     let backend;
     let proxyContext;
@@ -1843,10 +1844,12 @@ try {
       assert(proxyRequests.includes(`/alloy/styles.css?v=${assetVersions.get('styles.css')}`));
       assert(proxyRequests.includes(`/alloy/instance-graph.js?v=${assetVersions.get('instance-graph.js')}`));
       assert(proxyRequests.includes(`/alloy/alloy-language.js?v=${assetVersions.get('alloy-language.js')}`));
+      assert(proxyRequests.includes(`/alloy/tutor-chat.js?v=${assetVersions.get('tutor-chat.js')}`));
       assert(!proxyRequests.includes('/alloy/app.js'));
       assert(!proxyRequests.includes('/alloy/styles.css'));
       assert(!proxyRequests.includes('/alloy/instance-graph.js'));
       assert(!proxyRequests.includes('/alloy/alloy-language.js'));
+      assert(!proxyRequests.includes('/alloy/tutor-chat.js'));
       assert(proxyRequests.includes('/alloy/api/exercises'));
       assert(proxyRequests.includes('/alloy/api/feedback'));
       const proxyEditor = proxyPage.locator('#predicate-editor');

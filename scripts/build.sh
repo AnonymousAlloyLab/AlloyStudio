@@ -11,6 +11,7 @@ python3 -c 'import ast; from pathlib import Path; ast.parse(Path("server.py").re
 node --check web/app.js
 node --check web/instance-graph.js
 node --check web/alloy-language.js
+node --check web/tutor-chat.js
 node --check web/admin/app.js
 # Packaging compiles the vendored engine into a clean directory first. A failed
 # validation or compilation stops instead of reusing an older IIS archive.

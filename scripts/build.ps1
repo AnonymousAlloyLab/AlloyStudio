@@ -77,7 +77,7 @@ from pathlib import Path
 if sys.version_info < (3, 10):
     raise SystemExit('Python 3.10 or newer is required')
 root = Path(sys.argv[1])
-for name in ('server.py', 'luna.py', 'ai_provider.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py', 'scripts/configure_admin.py', 'scripts/manage_exercises.py', 'scripts/build_engine.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
+for name in ('server.py', 'luna.py', 'ai_provider.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'tutor_chat.py', 'tutor_models.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py', 'scripts/configure_admin.py', 'scripts/manage_exercises.py', 'scripts/build_engine.py', 'scripts/package_iis.py', 'scripts/prepare_private_data.py', 'deploy/iis/run_backend.py'):
     ast.parse((root / name).read_text(encoding='utf-8'), filename=name)
 '@
 & $Python '-c' $pythonCheck $projectRoot
@@ -89,6 +89,8 @@ if ($nodeCommand) {
     if ($LASTEXITCODE -ne 0) { throw 'Instance renderer syntax validation failed.' }
     & $Node '--check' (Join-Path $projectRoot 'web\alloy-language.js')
     if ($LASTEXITCODE -ne 0) { throw "Alloy language JavaScript validation failed with exit code $LASTEXITCODE." }
+    & $Node '--check' (Join-Path $projectRoot 'web\tutor-chat.js')
+    if ($LASTEXITCODE -ne 0) { throw "Tutor chat JavaScript validation failed with exit code $LASTEXITCODE." }
     & $Node '--check' (Join-Path $projectRoot 'web\admin\app.js')
     if ($LASTEXITCODE -ne 0) { throw "Admin JavaScript validation failed with exit code $LASTEXITCODE." }
 } else {

@@ -45,6 +45,21 @@ class IISAdminModuleInventoryTests(unittest.TestCase):
                 self.assertIn("'" + name + "'", private)
                 self.assertIn("'backend/" + name + "'", private)
 
+    def test_chat_runtime_modules_are_required_readonly_and_not_public_routes(self):
+        installer = (ROOT / 'deploy/iis/Manage-AlloyStudio.ps1').read_text(encoding='utf-8')
+        deployment = (ROOT / 'deploy/iis/Test-IisDeployment.ps1').read_text(encoding='utf-8')
+        checks = installer.split('foreach ($file in @(', 1)[1].split('Get-NetTCPConnection', 1)[0]
+        readonly = deployment.split("$stage = 'task identity, configuration, and isolation'", 1)[1]
+        readonly = readonly.split('Assert-BackendWriteScope -Path $config.backend_root', 1)[0]
+        private = deployment.split('foreach ($privateRoute in @(', 1)[1].split(')) {', 1)[0]
+        for name in ('tutor_chat.py', 'tutor_models.py'):
+            with self.subTest(module=name):
+                self.assertIn("(Join-Path $BackendRoot '" + name + "')", checks)
+                self.assertIn("'" + name + "'", readonly)
+                self.assertIn('Assert-BackendWriteScope -Path (Join-Path $config.backend_root $name)', readonly)
+                self.assertIn("'" + name + "'", private)
+                self.assertIn("'backend/" + name + "'", private)
+
     def test_native_catalogue_probe_preserves_exact_projection_and_bound_versions(self):
         deployment = (ROOT / 'deploy/iis/Test-IisDeployment.ps1').read_text(encoding='utf-8')
         catalogue = deployment.split("$stage = 'entire catalogue public projection'", 1)[1]
@@ -123,7 +138,7 @@ class IISCompatibilityTests(unittest.TestCase):
     def test_versioned_frontend_urls_serve_current_bytes_without_cache_revalidation(self):
         # Version queries must preserve the strict asset allowlist. Old IIS
         # validators must not turn changed local frontend content into a 304.
-        for name in ('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css'):
+        for name in ('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'tutor-chat.js', 'styles.css'):
             with self.subTest(asset=name):
                 request = Request(self.url + '/' + name + '?v=content-hash', headers={
                     'If-None-Match': 'W/"old-release-timestamp"',

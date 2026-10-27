@@ -100,6 +100,12 @@ class IngressBoundaryBridgeTests(unittest.TestCase):
             'portal_routes.public_post(self.server, self.validated(path, data))')
         self.rejects('boundary control flow or capabilities', server_source=changed)
 
+    def test_chat_capability_cannot_be_replaced_with_raw_application_or_socket(self):
+        for value in ('app', 'app.socket'):
+            with self.subTest(value=value):
+                changed = self.replaced(self.server, 'chat=app.chat,', 'chat=' + value + ',')
+                self.rejects('boundary control flow or capabilities: route_services', server_source=changed)
+
     def test_dynamic_ingress_access_is_rejected(self):
         self.rejects('dynamic ingress', routes_source=self.routes +
                      "\ndef leak(app):\n    return getattr(app, 'socket')\n")

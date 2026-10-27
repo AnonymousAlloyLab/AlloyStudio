@@ -26,7 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from runtime_dependencies import JAR_FILES, REQUIRED_CLASSES
 
-WEB_FILES = ('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'styles.css', 'dashboard/index.html',
+WEB_FILES = ('index.html', 'app.js', 'instance-graph.js', 'alloy-language.js', 'tutor-chat.js', 'styles.css', 'dashboard/index.html',
              'dashboard/app.js', 'dashboard/styles.css', 'dashboard/data.json',
              'admin/index.html', 'admin/app.js', 'admin/styles.css')
 DEPLOY_FILES = (
@@ -44,7 +44,7 @@ ADMIN_FILES = ('docs/private-exercises.md', 'docs/sqlite-security-spec.md',
                'docs/admin-security-spec.md', 'docs/admin-setup.md',
                'docs/practice-dependencies-progress-spec.md', 'docs/progress-save.md',
                'docs/admin-library-candidates-spec.md', 'examples/private-exercise.json',
-               'docs/ai-providers.md', 'docs/ai-providers-spec.md')
+               'docs/ai-providers.md', 'docs/ai-providers-spec.md', 'docs/tutor-chat-spec.md')
 TOKEN_PATTERN = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
@@ -111,7 +111,7 @@ def version_portal_module(entries: dict[str, bytes]) -> dict[str, str]:
     """
     application = entries['wwwroot/app.js']
     versions = {}
-    for name in ('instance-graph.js', 'alloy-language.js'):
+    for name in ('instance-graph.js', 'alloy-language.js', 'tutor-chat.js'):
         version = digest(entries['wwwroot/' + name])
         pattern = re.compile(rb'(\bfrom\s+)([\'\"])(\./' + re.escape(name.encode()) + rb')\2')
         if len(pattern.findall(application)) != 1:
@@ -162,7 +162,7 @@ def collect_files(root: Path, *, classes_root: Path | None = None) -> dict[str, 
         entries[f'deploy/iis/{name}'] = read_source(root, f'deploy/iis/{name}')
     entries['wwwroot/web.config'] = entries['deploy/iis/web.config']
     entries['LICENSE'] = read_source(root, 'LICENSE')
-    for name in ('server.py', 'luna.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'runtime_dependencies.py', 'engine_workers.py',
+    for name in ('server.py', 'luna.py', 'repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'tutor_chat.py', 'tutor_models.py', 'runtime_dependencies.py', 'engine_workers.py',
                  'traffic_scheduler.py', 'traffic_http.py', 'traffic_profile.py', 'traffic_limits.py',
                  'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'execution_profile.py'):
         entries[f'backend/{name}'] = read_source(root, name)

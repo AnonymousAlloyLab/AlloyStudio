@@ -123,6 +123,7 @@ class PortalLifecycleTests(unittest.TestCase):
     def test_unreaped_process_prevents_successful_shutdown_acknowledgement(self):
         app = object.__new__(server.Portal)
         app.root = server.ROOT
+        app.chat = Mock()
         app.scheduler = Mock()
         app.engine_pool = Mock()
         app.engine_pool.close.return_value = {'unreaped': 1, 'starting': 0}
@@ -134,6 +135,7 @@ class PortalLifecycleTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'could not drain'):
                 app.server_close()
             admission.assert_called_once_with(server.ROOT)
+            app.chat.close.assert_called_once_with()
             app.scheduler.close.assert_called_once_with()
             app.engine_pool.close.assert_called_once()
             self.assertGreater(app.engine_pool.close.call_args.kwargs['timeout'], 0)
@@ -145,6 +147,7 @@ class PortalLifecycleTests(unittest.TestCase):
     def test_successful_shutdown_uses_one_absolute_drain_deadline(self):
         app = object.__new__(server.Portal)
         app.root = server.ROOT
+        app.chat = Mock()
         app.scheduler = Mock()
         app.engine_pool = Mock()
         app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 0}
@@ -172,6 +175,7 @@ class PortalLifecycleTests(unittest.TestCase):
             with self.subTest(scenario=name):
                 app = object.__new__(server.Portal)
                 app.root = server.ROOT
+                app.chat = Mock()
                 app.scheduler = Mock()
                 app.engine_pool = Mock()
                 app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 0}
@@ -189,6 +193,7 @@ class PortalLifecycleTests(unittest.TestCase):
     def test_starting_worker_prevents_successful_shutdown_acknowledgement(self):
         app = object.__new__(server.Portal)
         app.root = server.ROOT
+        app.chat = Mock()
         app.scheduler = Mock()
         app.engine_pool = Mock()
         app.engine_pool.close.return_value = {'unreaped': 0, 'starting': 1}

@@ -34,7 +34,7 @@ class IisPackageBuildChainTests(unittest.TestCase):
         for directory in ('web', 'deploy/iis', 'engine/src', 'vendor/acgn', 'vendor/sqlean', 'sql', 'scripts', 'exercises', 'docs', 'examples'):
             shutil.copytree(ROOT / directory, self.root / directory,
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        for name in ('repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'execution_profile.py', 'traffic_profile.py', 'traffic_limits.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'luna.py', 'ai_provider.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'practice_dependencies.py', 'practice_progress.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py', 'LICENSE', 'openai.example.json', 'ai.example.json'):
+        for name in ('repair_grammar.py', 'repair_language.py', 'canonical_retrieval.py', 'tutor_chat.py', 'tutor_models.py', 'execution_profile.py', 'traffic_profile.py', 'traffic_limits.py', 'engine_workers.py', 'traffic_scheduler.py', 'traffic_http.py', 'traffic_decode.py', 'traffic_identity.py', 'portal_routes.py', 'server.py', 'luna.py', 'ai_provider.py', 'runtime_dependencies.py', 'exercise_store.py', 'exercise_sql.py', 'practice_dependencies.py', 'practice_progress.py', 'admin_auth.py', 'admin_upload.py', 'admin_luna.py', 'admin_service.py', 'candidate_store.py', 'candidate_review.py', 'LICENSE', 'openai.example.json', 'ai.example.json'):
             shutil.copy2(ROOT / name, self.root / name)
         self.classes = self.root / 'build/engine/classes'
         shutil.copytree(ROOT / 'build/engine/classes', self.classes)
@@ -65,16 +65,13 @@ class IisPackageBuildChainTests(unittest.TestCase):
         self.assertNotIn(MARKER.encode(), (self.classes / 'live/LiveFeedback.class').read_bytes())
 
     def assert_current_frontend(self, archive):
-        module = (self.root / 'web/instance-graph.js').read_bytes()
-        self.assertEqual(archive.read('wwwroot/instance-graph.js'), module)
-        version = hashlib.sha256(module).hexdigest()
-        application = (self.root / 'web/app.js').read_bytes().replace(
-            b"'./instance-graph.js'", ("'./instance-graph.js?v=" + version + "'").encode())
-        language = (self.root / 'web/alloy-language.js').read_bytes()
-        language_version = hashlib.sha256(language).hexdigest()
-        self.assertEqual(archive.read('wwwroot/alloy-language.js'), language)
-        application = application.replace(b"'./alloy-language.js'",
-            ("'./alloy-language.js?v=" + language_version + "'").encode())
+        application = (self.root / 'web/app.js').read_bytes()
+        for name in ('instance-graph.js', 'alloy-language.js', 'tutor-chat.js'):
+            module = (self.root / 'web' / name).read_bytes()
+            self.assertEqual(archive.read('wwwroot/' + name), module)
+            version = hashlib.sha256(module).hexdigest()
+            application = application.replace(("'./" + name + "'").encode(),
+                ("'./" + name + "?v=" + version + "'").encode())
         self.assertEqual(archive.read('wwwroot/app.js'), application)
         application_version = hashlib.sha256(application).hexdigest()
         self.assertIn(('./app.js?v=' + application_version).encode(), archive.read('wwwroot/index.html'))

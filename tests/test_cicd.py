@@ -1,9 +1,11 @@
 """Dashboard disclosure, revision binding, release gating, and real browser witnesses."""
+import errno
 import json
 import os
 import re
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -235,6 +237,79 @@ class DashboardTests(unittest.TestCase):
                    'failureDetails': {identifier: {'line': line, 'kind': 'error'}}}
             self.assertEqual(ci_check.python_outcome_summary(raw, frozenset(sources), sources)
                              ['failureDetails'], [{'test': identifier, 'line': line, 'kind': 'error'}])
+
+    def test_os_failure_categories_never_export_exception_identity_or_values(self):
+        path = self.root / 'tests/test_registered.py'
+        path.parent.mkdir(parents=True)
+        source = ('class Registered:\n'
+                  '    def test_failure(self):\n'
+                  '        try:\n'
+                  '            raise injected\n'
+                  '        except Exception:\n'
+                  '            return sys.exc_info()\n')
+        path.write_text(source)
+        identifier = 'test_registered.Registered.test_failure'
+        sources = verify_closure.discover_test_sources(self.root)
+        # Even custom exception names and formatting must remain private.
+        def forbidden_string(self):
+            raise AssertionError('Exception formatting must not be used.')
+        private_error = type('PRIVATE_SENTINEL', (OSError,), {'__str__': forbidden_string})
+        cases = (
+            (FileNotFoundError('PRIVATE_SENTINEL'), 'file_not_found'),
+            (PermissionError('PRIVATE_SENTINEL'), 'permission_denied'),
+            (OSError(errno.ENOENT, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'file_not_found'),
+            (OSError(errno.EACCES, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'permission_denied'),
+            (OSError(errno.EPERM, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'permission_denied'),
+            (OSError(errno.ENOTEMPTY, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'directory_not_empty'),
+            (OSError(errno.EIO, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'io_error'),
+            (OSError(errno.ENOSPC, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'no_space'),
+            (private_error(errno.ENOTEMPTY, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), 'directory_not_empty'),
+            (private_error('PRIVATE_SENTINEL'), None),
+            (OSError(987654321, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), None),
+            (private_error(True, 'PRIVATE_SENTINEL', '/PRIVATE_SENTINEL'), None),
+            (OSError('PRIVATE_SENTINEL', 'PRIVATE_SENTINEL'), None),
+            (ValueError('PRIVATE_SENTINEL'), None),
+        )
+        for index, (error, expected) in enumerate(cases):
+            with self.subTest(case=index):
+                namespace = {'sys': sys, 'injected': error}
+                exec(compile(source, str(path), 'exec'), namespace)
+                detail = verify_closure.failure_location(
+                    identifier, namespace['Registered']().test_failure(), sources)
+                wanted = {'line': 4, 'kind': 'error'}
+                if expected is not None:
+                    wanted['osError'] = expected
+                self.assertEqual(detail, wanted)
+                raw = {'tests_run': 1, 'outcomes': {identifier: 'BLOCK'},
+                       'failureDetails': {identifier: detail}}
+                summary = ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+                self.assertEqual(summary['failureDetails'], [{'test': identifier, **wanted}])
+                self.assertNotIn('PRIVATE_SENTINEL', json.dumps(summary))
+                self.assertNotIn('987654321', json.dumps(summary))
+                self.assertNotIn(str(self.root), json.dumps(summary))
+
+    def test_os_failure_projection_accepts_only_fixed_string_categories(self):
+        prefix = self.register_python_fixture()
+        identifier = prefix + 'test_failure'
+        sources = verify_closure.discover_test_sources(self.root)
+        codes = ('file_not_found', 'permission_denied', 'directory_not_empty',
+                 'io_error', 'no_space')
+        self.assertEqual(verify_closure.OS_ERROR_CODES, frozenset(codes))
+        for value in (*codes, None, True, errno.ENOENT, [], {},
+                      ['file_not_found'], {'code': 'file_not_found'}, 'PRIVATE_SENTINEL',
+                      'file_not_found/PRIVATE_SENTINEL'):
+            with self.subTest(value=value):
+                raw = {'tests_run': 1, 'outcomes': {identifier: 'BLOCK'},
+                       'failureDetails': {identifier: {'line': 3, 'kind': 'error',
+                           'osError': value, 'exceptionType': 'PRIVATE_SENTINEL',
+                           'errno': 987654321, 'path': '/PRIVATE_SENTINEL'}}}
+                summary = ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+                expected = {'test': identifier, 'line': 3, 'kind': 'error'}
+                if type(value) is str and value in codes:
+                    expected['osError'] = value
+                self.assertEqual(summary['failureDetails'], [expected])
+                self.assertNotIn('PRIVATE_SENTINEL', json.dumps(summary))
+                self.assertNotIn('987654321', json.dumps(summary))
 
     def test_python_exit_and_report_must_both_pass_and_runtime_values_never_escape(self):
         from contextlib import redirect_stdout

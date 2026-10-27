@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.ci_dashboard import CHECKS, count, revision
 from scripts.package_iis import build_package
-from scripts.verify_closure import discover_test_sources
+from scripts.verify_closure import OS_ERROR_CODES, discover_test_sources
 
 
 def python_outcome_summary(raw, registered, sources=None):
@@ -36,7 +36,11 @@ def python_outcome_summary(raw, registered, sources=None):
             line = detail.get('line')
             if line is not None and (type(line) is not int or not 1 <= line <= sources[identifier][1]):
                 continue
-            details.append({'test': identifier, 'line': line, 'kind': detail['kind']})
+            projected = {'test': identifier, 'line': line, 'kind': detail['kind']}
+            code = detail.get('osError')
+            if type(code) is str and code in OS_ERROR_CODES:
+                projected['osError'] = code
+            details.append(projected)
     return {'count': count(raw.get('tests_run')), 'failedRegisteredTests': failed,
             'failureDetails': details}
 

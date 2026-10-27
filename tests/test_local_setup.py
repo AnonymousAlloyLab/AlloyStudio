@@ -5,6 +5,7 @@ or contact OpenAI. macOS discovery is mocked explicitly; these tests do not
 claim native macOS execution.
 """
 import contextlib
+import errno
 import hashlib
 import io
 import json
@@ -97,6 +98,87 @@ def runtime_environment(base):
                        JDK_JAVA_OPTIONS='--definitely-not-an-alloy-option',
                        JDK_JAVAC_OPTIONS='--definitely-not-an-alloy-option')
     return environment
+
+
+def remove_fixture_source(source):
+    """Remove the disposable source, tolerating only vanished descendants.
+
+    Python 3.13's rmtree already ignores this race. Older supported Python
+    versions raise when a child disappears between enumeration and deletion.
+    A missing root or any other filesystem error must still fail the witness.
+    """
+    source = Path(os.path.abspath(source))
+
+    def onerror(function, path, error_info):
+        error = error_info[1]
+        if isinstance(error, FileNotFoundError) and source in Path(os.path.abspath(path)).parents:
+            return
+        raise error
+
+    shutil.rmtree(source, onerror=onerror)
+    if os.path.lexists(source):
+        raise AssertionError('The temporary source repository was not removed.')
+
+
+class FixtureCleanupTests(unittest.TestCase):
+    def test_disappearing_descendant_is_removed_without_hiding_a_missing_root(self):
+        with tempfile.TemporaryDirectory(prefix='alloy-cleanup-race-') as directory:
+            source = Path(directory) / 'source'
+            (source / 'nested').mkdir(parents=True)
+            (source / 'nested/vanishing').write_text('fixture')
+            unlink = os.unlink
+            raced = []
+
+            def disappear(path, *args, **kwargs):
+                if Path(path).name == 'vanishing' and not raced:
+                    raced.append(True)
+                    unlink(path, *args, **kwargs)
+                return unlink(path, *args, **kwargs)
+
+            # Inject deletion after rmtree enumerates the real directory.
+            with patch.object(shutil.os, 'unlink', side_effect=disappear):
+                remove_fixture_source(source)
+            self.assertEqual(raced, [True])
+            self.assertFalse(source.exists())
+            with self.assertRaises(FileNotFoundError):
+                remove_fixture_source(source)
+
+    def test_permission_io_and_nonempty_directory_errors_are_not_suppressed(self):
+        for code in (errno.EACCES, errno.EIO, errno.ENOTEMPTY, errno.ENOSPC):
+            with self.subTest(errno=code), tempfile.TemporaryDirectory(prefix='alloy-cleanup-error-') as directory:
+                source = Path(directory) / 'source'
+                source.mkdir()
+                (source / 'retained').write_text('fixture')
+                error = OSError(code, 'synthetic filesystem failure')
+                with patch.object(shutil.os, 'unlink', side_effect=error):
+                    with self.assertRaises(OSError) as raised:
+                        remove_fixture_source(source)
+                self.assertIs(raised.exception, error)
+                self.assertTrue((source / 'retained').exists())
+
+    def test_missing_paths_outside_source_are_not_suppressed(self):
+        with tempfile.TemporaryDirectory(prefix='alloy-cleanup-boundary-') as directory:
+            source = Path(directory) / 'source'
+            source.mkdir()
+            error = FileNotFoundError(errno.ENOENT, 'synthetic missing path')
+
+            def outside(path, *, onerror):
+                onerror(os.unlink, str(source.parent / 'elsewhere'),
+                        (FileNotFoundError, error, None))
+
+            with patch.object(shutil, 'rmtree', side_effect=outside):
+                with self.assertRaises(FileNotFoundError) as raised:
+                    remove_fixture_source(source)
+            self.assertIs(raised.exception, error)
+            self.assertTrue(source.exists())
+
+    def test_incomplete_removal_cannot_pass_the_clone_witness(self):
+        with tempfile.TemporaryDirectory(prefix='alloy-cleanup-incomplete-') as directory:
+            source = Path(directory) / 'source'
+            source.mkdir()
+            with patch.object(shutil, 'rmtree', return_value=None):
+                with self.assertRaisesRegex(AssertionError, 'source repository was not removed'):
+                    remove_fixture_source(source)
 
 
 class JdkResolutionTests(unittest.TestCase):
@@ -492,13 +574,18 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             self.assertIsNotNone(git_executable, 'The source-distribution witness requires Git.')
 
             def git(*arguments, cwd=source):
-                result = subprocess.run([git_executable, *arguments], cwd=cwd, env=git_environment,
+                # This disposable repository must not start detached maintenance
+                # that can still be touching its files when the witness removes it.
+                result = subprocess.run([git_executable, '-c', 'maintenance.auto=false',
+                                         '-c', 'gc.auto=0', *arguments], cwd=cwd, env=git_environment,
                                         capture_output=True, text=True, encoding='utf-8',
                                         timeout=budget(30), check=False)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
 
             git('init', '--quiet', '--template=')
+            self.assertEqual(git('config', '--get', 'maintenance.auto').strip(), 'false')
+            self.assertEqual(git('config', '--get', 'gc.auto').strip(), '0')
             # A normal add must admit the bundled data and reject local keys.
             git('add', '--', '.')
             git('-c', 'user.name=Source distribution witness',
@@ -513,7 +600,8 @@ class RelocatedLocalSetupTests(unittest.TestCase):
             self.assertTrue(set(credentials).isdisjoint(tracked))
             for name in credentials:
                 self.assertFalse((checkout / name).exists(), 'A local credential entered the clone.')
-            shutil.rmtree(source)
+            remove_fixture_source(source)
+            self.assertFalse(source.exists())
             self.assertFalse((checkout / 'build').exists())
             self.assertFalse((base / 'ACGN').exists())
             self.assertFalse(Path(environment['ACGN_ROOT']).exists())

@@ -6,6 +6,7 @@ import argparse
 import ast
 from copy import deepcopy
 from datetime import datetime, timezone
+import errno
 import hashlib
 import json
 import os
@@ -33,6 +34,9 @@ BLOCKING_CODES = {
     "WITNESS_INVALID", "CLEAN_BUILD_FAILURE", "NONDETERMINISM", "ORPHAN_CLAIM",
     "UNDEFINED_BEHAVIOR_DEPENDENCY", "SCOPE_LEAK",
 }
+OS_ERROR_CODES = frozenset({
+    "file_not_found", "permission_denied", "directory_not_empty", "io_error", "no_space",
+})
 
 
 def canonical(value):
@@ -179,7 +183,7 @@ def failure_location(identifier, error, sources):
     if identifier not in sources:
         return None
     source, maximum_line = sources[identifier]
-    exception_type, _, traceback = error
+    exception_type, exception, traceback = error
     kind = ('timeout' if issubclass(exception_type, (TimeoutError, subprocess.TimeoutExpired))
             else 'assertion' if issubclass(exception_type, AssertionError) else 'error')
     line = None
@@ -188,7 +192,21 @@ def failure_location(identifier, error, sources):
                 and 1 <= traceback.tb_lineno <= maximum_line):
             line = traceback.tb_lineno
         traceback = traceback.tb_next
-    return {'line': line, 'kind': kind}
+    detail = {'line': line, 'kind': kind}
+    if isinstance(exception, OSError):
+        # Publish fixed categories only: filenames, exception messages, custom
+        # class names and arbitrary numeric errno values can contain private data.
+        code = {FileNotFoundError: 'file_not_found',
+                PermissionError: 'permission_denied'}.get(type(exception))
+        number = exception.errno
+        if code is None and type(number) is int:
+            code = {errno.ENOENT: 'file_not_found',
+                    errno.EACCES: 'permission_denied', errno.EPERM: 'permission_denied',
+                    errno.ENOTEMPTY: 'directory_not_empty', errno.EIO: 'io_error',
+                    errno.ENOSPC: 'no_space'}.get(number)
+        if code is not None:
+            detail['osError'] = code
+    return detail
 
 
 def python_tests(report_path):

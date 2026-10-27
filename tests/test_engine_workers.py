@@ -10,8 +10,9 @@ import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from engine_workers import (EnginePool, EngineTimeout, EngineAcquisitionTimeout,
                             EngineUnavailable, RESPONSE_BYTES)
@@ -149,13 +150,47 @@ class WorkerProtocolTests(unittest.TestCase):
         self.assertNotIsInstance(error.exception, EngineAcquisitionTimeout)
 
     def test_cold_start_keeps_the_full_warm_analysis_allowance(self):
-        pool = self.pool(mode='cold_delay', feedback_workers=1, startup_timeout=1)
-        # Startup .18s + work .12s exceeds the .25s execution allowance; cold
-        # startup has its own bounded phase instead of shortening valid work.
-        for value in ('cold', 'warm'):
-            self.assertEqual(pool.evaluate('feedback', {'value': value}, .25)['value'], value)
-        self.assertEqual(pool.stats()['launches'], 1)
+        pool = self.pool(feedback_workers=1, startup_timeout=1)
+        now = [100.0]
+        acquisition = []
+        analysis = []
+
+        def acquire(lane, deadline):
+            acquisition.append((lane, now[0], deadline))
+            # Exact simulated startup exceeds the entire analysis allowance.
+            # Neither host scheduling nor subprocess sleep precision is part
+            # of this deadline-allocation contract.
+            if len(acquisition) == 1:
+                now[0] += .75
+            return worker
+
+        def evaluate(request, deadline):
+            analysis.append((now[0], deadline))
+            now[0] += .125
+            return {'status': 'ok', 'value': request['value']}
+
+        worker = Mock(evaluate=Mock(side_effect=evaluate))
+        # Replace this module's clock namespace only. Patching time.monotonic
+        # itself would also change clocks used by other test/runtime threads.
+        with patch('engine_workers.time', SimpleNamespace(monotonic=lambda: now[0])), \
+                patch.object(pool, '_acquire', side_effect=acquire):
+            for value in ('cold', 'warm'):
+                self.assertEqual(pool.evaluate('feedback', {'value': value}, .25)['value'], value)
+        self.assertEqual(acquisition, [('feedback', 100.0, 101.0),
+                                       ('feedback', 100.875, 101.875)])
+        self.assertEqual(analysis, [(100.75, 101.0), (100.875, 101.125)])
+        self.assertEqual(pool.stats()['completed'], 2)
         self.assertEqual(pool.evaluation_allowance(.25), 1.5)
+
+    def test_cold_and_warm_requests_reuse_one_framed_worker(self):
+        pool = self.pool(mode='cold_delay', feedback_workers=1, startup_timeout=5)
+        # This checks actual startup/framing/reuse, with room for scheduler
+        # delays. The exact deadline arithmetic is checked above without sleeps.
+        for value in ('cold', 'warm'):
+            self.assertEqual(pool.evaluate('feedback', {'value': value}, 5)['value'], value)
+        self.assertEqual(pool.stats()['launches'], 1)
+        self.assertEqual(pool.stats()['completed'], 2)
+        self.assertEqual(pool.close()['processBudget']['reserved'], 0)
 
     def test_cooperative_deadline_is_private_feedback_only_transport_policy(self):
         pool = self.pool(mode='frame_policy')

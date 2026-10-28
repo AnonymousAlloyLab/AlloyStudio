@@ -36,7 +36,7 @@ const state = {
   sourceHighlight: null, canonical: null, education: null, behaviorEvidence: null, progressiveHints: null,
   solved: new Map(), structuralCompletionEvidence: null,
   completedBodies: new Map(), savedRecords: new Map(), validCompletionTokens: new Set(),
-  memoryDrafts: new Map(),
+  memoryDrafts: new Map(), resetRecovery: null,
   progressRestore: null, progressEpoch: 0,
   progressSavedAt: 0, chatEvidence: null,
   channel: null, channelPromise: null, checkFlight: null,
@@ -340,7 +340,7 @@ function persistProgress() {
   try {
     const snapshot = buildProgress();
     if (!writeStorage('progress', snapshot)) {
-      progressStatus('Browser storage is full or unavailable. Your progress is still in memory; use Save progress to keep a file.'); return false;
+      progressStatus('Browser storage is full or unavailable. Your progress is still in memory; use Export progress to keep a file.'); return false;
     }
     state.savedRecords = new Map(snapshot.records.map(record => [record.id, record]));
     state.progressSavedAt = snapshot.savedAt;
@@ -1198,8 +1198,22 @@ function saveDraft() {
   else {
     progressStatus('Browser storage is unavailable and the in-memory draft limit is full. Your code stays in this editor; download the model before leaving.'); return false;
   }
-  elements.draft.textContent = state.storageAvailable ? 'Draft saved' : 'Draft in memory';
+  elements.draft.textContent = written ? 'Saved in this browser' : 'In this tab only · export a backup';
   return true;
+}
+
+function clearResetRecovery() {
+  state.resetRecovery = null;
+  $('#reset-recovery').hidden = true;
+}
+
+function keepSelectedExerciseVisible() {
+  // Scroll only the compact horizontal strip, never the page or user's editor.
+  const selected = elements.list.querySelector('.exercise-item.active');
+  if (!selected || getComputedStyle(elements.list).display !== 'flex') return;
+  const listBox = elements.list.getBoundingClientRect(), itemBox = selected.getBoundingClientRect();
+  if (itemBox.left < listBox.left) elements.list.scrollLeft += itemBox.left - listBox.left;
+  else if (itemBox.right > listBox.right) elements.list.scrollLeft += itemBox.right - listBox.right;
 }
 
 function renderContext() {
@@ -1224,6 +1238,7 @@ async function selectExercise(id, { restoring = false } = {}) {
   if (!restoring) cancelProgressRestore();
   if (state.exercise?.id === id && !elements.editor.disabled) return;
   if (state.exercise && !elements.editor.disabled && !saveDraft()) return;
+  clearResetRecovery();
   invalidateFeedback();
   const selection = ++state.selection;
   state.detailAbort?.abort();
@@ -1268,7 +1283,7 @@ async function selectExercise(id, { restoring = false } = {}) {
     elements.check.disabled = false;
     elements.reset.disabled = false;
     elements.download.disabled = false;
-    elements.draft.textContent = draft && elements.editor.value === draft.body ? 'Draft restored' : 'Starter predicate';
+    elements.draft.textContent = draft && elements.editor.value === draft.body ? 'Your draft restored' : 'Starter predicate';
     $('#exercise-title').textContent = exercise.title;
     $('#exercise-group').textContent = exercise.group || 'Predicate exercises';
     $('#exercise-description').textContent = exercise.description || `Complete the ${exercise.predicate} predicate within its original Alloy model.`;
@@ -1287,6 +1302,7 @@ async function selectExercise(id, { restoring = false } = {}) {
     renderHistory();
     showWaiting();
     applyPracticeLock(); renderExercises();
+    keepSelectedExerciseVisible();
     tutorChat.refresh();
     if (elements.live.checked && !elements.editor.disabled && !restoring) scheduleFeedback(200);
   } catch (error) {
@@ -1304,6 +1320,7 @@ function scheduleFeedback(delay = 650) {
 }
 
 function onEdit() {
+  clearResetRecovery();
   cancelProgressRestore();
   invalidateFeedback();
   updateEditor();
@@ -2159,6 +2176,7 @@ async function initialize() {
   elements.editor.addEventListener('input', onEdit);
   elements.editor.addEventListener('scroll', syncEditorOverlay);
   new ResizeObserver(syncEditorOverlay).observe(elements.editor);
+  new ResizeObserver(keepSelectedExerciseVisible).observe(elements.list);
   $('#clear-source-highlight').addEventListener('click', clearOperationHighlight);
   ['click', 'keyup', 'select'].forEach((event) => elements.editor.addEventListener(event, updateCursor));
   elements.editor.addEventListener('keydown', (event) => {
@@ -2189,12 +2207,27 @@ async function initialize() {
   });
   elements.check.addEventListener('click', checkPredicate);
   elements.reset.addEventListener('click', () => {
-    if (!state.exercise) return;
+    if (!state.exercise || elements.editor.disabled) return;
     const previous = elements.editor.value;
+    // Reset also clears feedback when the body already equals the starter.
+    // A repeated reset must retain the earlier recoverable learner draft.
+    const recovery = previous === state.exercise.starter ? state.resetRecovery
+      : { body: previous, exerciseId: state.exercise.id, version: exerciseVersion(state.exercise) };
     elements.editor.value = state.exercise.starter;
     onEdit();
+    state.resetRecovery = recovery;
+    $('#reset-recovery').hidden = !recovery;
     elements.editor.focus();
-    if (previous !== elements.editor.value) showToast('Restored the starter predicate.');
+    if (recovery) showToast('Starter restored. Use Undo reset to recover your draft.');
+  });
+  $('#undo-reset').addEventListener('click', () => {
+    const saved = state.resetRecovery;
+    if (!saved || !state.exercise || elements.editor.disabled || saved.exerciseId !== state.exercise.id
+      || saved.version !== exerciseVersion(state.exercise) || elements.editor.value !== state.exercise.starter) return;
+    elements.editor.value = saved.body;
+    onEdit();
+    elements.editor.focus();
+    showToast('Your previous draft is restored.');
   });
   elements.live.addEventListener('change', () => {
     cancelProgressRestore();

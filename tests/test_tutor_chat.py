@@ -152,6 +152,133 @@ class TutorChatTests(unittest.TestCase):
         self.assertEqual(len(history['turns']), 12)
         self.assertEqual(history['turns'][0]['content'], 'Question 2?')
 
+    def test_resume_abridges_server_history_without_mutating_retained_turns_or_current_context(self):
+        self.output = {'reply': 'Consider ' + '💡' * 3900}
+        token = None
+        for revision in range(6):
+            old_context = dict(self.context, revision=revision)
+            token = self.ask(conversation_token=token, context=old_context,
+                             message=f'Question {revision}: ' + '学' * 500)['conversationToken']
+        stored = deepcopy(self.client.histories.get(token))
+        latest_context = dict(self.context, revision=99, studentBody='none')
+        result = self.ask(conversation_token=token, resume_conversation=True,
+                          context=latest_context, message='How does this apply to the current draft?')
+        self.assertEqual(result['status'], 'ok')
+        self.assertTrue(result['historyCompressed'])
+        document = self.document()
+        self.assertEqual(document['context'], latest_context)
+        self.assertEqual(document['conversationNotice'], tutor_chat.RESUMED_HISTORY_NOTICE)
+        history = document['conversation']
+        self.assertEqual(len(history), 12)
+        self.assertLessEqual(tutor_chat._json_bytes(history), tutor_chat.RESUMED_HISTORY_BYTES)
+        for original, excerpt in zip(stored['turns'], history):
+            self.assertEqual(excerpt['role'], original['role'])
+            self.assertEqual(excerpt['contextRevision'], original['contextRevision'])
+            first, last = excerpt['content'].split(tutor_chat.EXCERPT_MARKER)
+            self.assertTrue(original['content'].startswith(first))
+            self.assertTrue(original['content'].endswith(last))
+        self.assertEqual(self.client.histories.get(token), stored)
+        continued = self.client.histories.get(result['conversationToken'])
+        self.assertEqual(continued['turns'][:-2], stored['turns'][2:])
+        self.assertEqual(continued['turns'][-2]['contextRevision'], 99)
+        self.assertNotIn(tutor_chat.EXCERPT_MARKER, continued['turns'][-1]['content'])
+        self.assertEqual(len(self.calls), 7)  # Compression makes no additional model call.
+
+    def test_resume_history_budget_counts_json_escaping_and_unicode_deterministically(self):
+        turns = [{'role': 'user' if index % 2 == 0 else 'assistant',
+                  'content': '\n\t\\"💡' * 1000, 'contextRevision': 2**53 - 1}
+                 for index in range(12)]
+        original = deepcopy(turns)
+        compressed = tutor_chat.abridge_history(turns)
+        self.assertEqual(compressed, tutor_chat.abridge_history(turns))
+        self.assertEqual(turns, original)
+        self.assertLessEqual(tutor_chat._json_bytes(compressed), tutor_chat.RESUMED_HISTORY_BYTES)
+        self.assertEqual(json.loads(json.dumps(compressed, ensure_ascii=False).encode('utf-8')), compressed)
+        for turn in compressed:
+            self.assertIn(tutor_chat.EXCERPT_MARKER, turn['content'])
+            self.assertNotIn('\ufffd', turn['content'])
+        self.assertEqual(tutor_chat.abridge_history([]), [])
+
+    def test_resumed_lineage_keeps_suggestions_and_followups_abridged_without_changing_original_branch(self):
+        long_reply = {'reply': 'Consider ' + '💡' * 3900}
+        self.output = long_reply
+        token = None
+        for revision in range(6):
+            token = self.ask(conversation_token=token, context=dict(self.context, revision=revision),
+                             message=f'Question {revision}: ' + '学' * 500)['conversationToken']
+        original = deepcopy(self.client.histories.get(token))
+        self.assertGreater(tutor_chat._json_bytes(original['turns']), 100000)
+        self.assertNotIn('abridged', original)
+        # A valid large current question plus unabridged historical turns would
+        # exceed the complete request's 192 KiB boundary on the next turn.
+        latest = tutor_chat.context_projection('q' * 130000, 'some A', 'canonical')
+        latest['revision'] = 99
+        self.assertGreater(tutor_chat._json_bytes(latest) + tutor_chat._json_bytes(original['turns']), 192000)
+
+        def assert_abridged(result):
+            self.assertEqual(result['status'], 'ok')
+            self.assertTrue(result['historyCompressed'])
+            self.assertLessEqual(tutor_chat._json_bytes(self.document()['conversation']), tutor_chat.RESUMED_HISTORY_BYTES)
+            self.assertEqual(self.document()['conversationNotice'], tutor_chat.RESUMED_HISTORY_NOTICE)
+            self.assertEqual(self.document()['context'], latest)
+            self.assertEqual(self.client.histories.get(token), original)
+
+        resumed = self.ask(conversation_token=token, resume_conversation=True, context=latest,
+                           message='Resume this discussion.')
+        assert_abridged(resumed)
+        descendant = resumed['conversationToken']
+        self.assertTrue(self.client.histories.get(descendant)['abridged'])
+        self.output = {'suggestions': ['Which example should I inspect?']}
+        assert_abridged(self.ask(conversation_token=descendant, context=latest, suggestions=True, message=None))
+        self.output = long_reply
+        following = self.ask(conversation_token=descendant, context=latest,
+                             message='How does that guide my next edit?')
+        assert_abridged(following)
+        self.assertTrue(self.client.histories.get(following['conversationToken'])['abridged'])
+        self.output = {'suggestions': ['What should I test next?']}
+        assert_abridged(self.ask(conversation_token=following['conversationToken'], context=latest,
+                                suggestions=True, message=None))
+
+        # Branching normally from the immutable original archive capability still
+        # has the full-history behavior of a conversation never resumed.
+        self.output = long_reply
+        normal = self.ask(conversation_token=token, message='Continue the original live branch.')
+        self.assertEqual(normal['status'], 'ok')
+        self.assertNotIn('historyCompressed', normal)
+        self.assertNotIn('conversationNotice', self.document())
+        self.assertEqual(self.document()['conversation'], original['turns'])
+        self.assertNotIn('abridged', self.client.histories.get(normal['conversationToken']))
+        self.assertEqual(len(self.calls), 11)
+
+    def test_resume_small_history_discloses_mode_and_has_a_separate_idempotent_cache(self):
+        token = self.ask()['conversationToken']
+        normal = self.ask(conversation_token=token, message='Follow up?')
+        self.assertNotIn('historyCompressed', normal)
+        self.assertNotIn('conversationNotice', self.document())
+        normal_turns = deepcopy(self.document()['conversation'])
+        resumed = self.ask(conversation_token=token, message='Follow up?', resume_conversation=True)
+        self.assertTrue(resumed['historyCompressed'])
+        self.assertEqual(self.document()['conversation'], normal_turns)
+        self.assertEqual(self.document()['conversationNotice'], tutor_chat.RESUMED_HISTORY_NOTICE)
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual(self.ask(conversation_token=token, message='Follow up?', resume_conversation=True), resumed)
+        self.assertEqual(len(self.calls), 3)
+
+    def test_invalid_or_expired_resume_never_calls_provider(self):
+        token = self.ask()['conversationToken']
+        for flag in (None, 0, 1, 'true', [], {}):
+            with self.subTest(flag=flag):
+                self.assertEqual(self.ask(resume_conversation=flag, conversation_token=token)['status'], 'unavailable')
+        for options in ({}, {'conversation_token': 'bad'},
+                        {'conversation_token': token, 'suggestions': True}):
+            self.assertEqual(self.ask(resume_conversation=True, **options)['status'], 'unavailable')
+        for options in ({'conversation_token': 'x' * 43},
+                        {'conversation_token': token, 'owner': ('different-session',)}):
+            self.assertEqual(self.ask(resume_conversation=True, **options)['status'], 'expired')
+        self.client.histories.clear()
+        self.assertEqual(self.ask(resume_conversation=True, conversation_token=token)['status'], 'expired')
+        self.assertEqual(len(self.calls), 1)
+
     def test_wrong_owner_or_unknown_conversation_does_not_call_provider(self):
         token = self.ask()['conversationToken']
         count = len(self.calls)

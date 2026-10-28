@@ -32,7 +32,7 @@
           <div class="breadcrumbs"><span>Workspace</span><span aria-hidden="true">/</span><span id="exercise-group">Predicate exercises</span></div>
           <div class="title-row"><div><div class="eyebrow">WRITE · COMPARE · REFINE</div><h1 id="exercise-title">Your next idea starts here.</h1></div><button id="download-button" class="button secondary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"></path></svg>Download .als</button></div>
           <p id="exercise-description" class="exercise-description">Choose a predicate, write your answer, and use the feedback to improve it.</p>
-          <div class="progress-actions" role="group" aria-label="Saved progress"><button id="save-progress" class="button secondary" type="button">Save progress</button><button id="load-progress" class="button secondary" type="button">Load progress</button><button id="restore-progress" class="button secondary" type="button" hidden>Restore checks</button><button id="cancel-restore-progress" class="button secondary" type="button" hidden>Cancel restore</button><input id="progress-file" type="file" accept="application/json,.json" hidden><span id="progress-status" role="status" aria-live="polite">Drafts stay in this browser. Save a file to move your progress.</span></div>
+          <div class="progress-actions" role="group" aria-label="Saved progress"><button id="save-progress" class="button secondary" type="button">Export progress</button><button id="load-progress" class="button secondary" type="button">Import progress</button><button id="restore-progress" class="button secondary" type="button" hidden>Restore checks</button><button id="cancel-restore-progress" class="button secondary" type="button" hidden>Cancel restore</button><input id="progress-file" type="file" accept="application/json,.json" hidden><span id="progress-status" role="status" aria-live="polite">Code saves automatically in this browser. Export a backup to keep or move it.</span></div>
           <div id="practice-lock" class="practice-lock" role="status" hidden></div>
           <nav class="exercise-pagination" aria-label="Previous and next exercise">
             <button id="previous-exercise" class="button secondary" type="button" aria-label="Previous exercise" aria-describedby="exercise-position" disabled><span aria-hidden="true">←</span> Previous</button>
@@ -52,6 +52,7 @@
               <div id="source-location-bar" class="source-location-bar" hidden><span id="source-location-status" role="status" aria-live="polite"></span><button id="clear-source-highlight" type="button" aria-label="Clear source highlight">Clear</button></div>
               <div class="editor-status"><span id="cursor-position">Ln 1, Col 1</span><span>UTF-8<span class="small-divider">·</span>Predicate body only</span></div>
               <div class="editor-actions"><label class="live-label"><input id="live-feedback" type="checkbox" checked><span class="switch" aria-hidden="true"></span>Live feedback</label><div class="editor-action-end"><button id="indent-button" class="button text-button" type="button" disabled title="Adjust leading indentation without changing Alloy tokens">Indent code</button><button id="reset-button" class="button text-button" type="button" disabled>Reset</button><button id="check-button" class="button primary" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"></path></svg>Check predicate<span class="keyboard-hint" aria-hidden="true">⌘ ↵</span></button></div></div>
+              <div id="reset-recovery" class="reset-recovery" role="status" hidden><span>Starter restored. Your previous draft is available until you edit or change exercises.</span><button id="undo-reset" class="button secondary" type="button">Undo reset</button></div>
             </section>
             <details id="canonical-panel" class="canonical-details canonical-editor" open>
               <summary>Your canonical form<span class="chevron" aria-hidden="true">⌄</span></summary>
@@ -88,15 +89,30 @@
     </div>
     <button id="tutor-toggle" class="tutor-toggle" type="button" aria-controls="tutor-panel" aria-expanded="false"><span aria-hidden="true">✧</span> Ask a tutor</button>
     <aside id="tutor-panel" class="tutor-panel" aria-labelledby="tutor-heading" hidden>
-      <header class="tutor-header"><div><span class="tutor-eyebrow">LEARN ONE STEP AT A TIME</span><h2 id="tutor-heading">Alloy tutor</h2></div><div class="tutor-header-actions"><button id="tutor-new" class="tutor-new" type="button">New chat</button><button id="tutor-close" class="tutor-icon-button" type="button" aria-label="Close Alloy tutor">×</button></div></header>
+      <header class="tutor-header"><div><span class="tutor-eyebrow">LEARN ONE STEP AT A TIME</span><h2 id="tutor-heading">Alloy tutor</h2></div><div class="tutor-header-actions"><button id="tutor-history" class="tutor-new" type="button" aria-controls="tutor-history-panel" aria-expanded="false" hidden>History</button><button id="tutor-new" class="tutor-new" type="button">New chat</button><button id="tutor-close" class="tutor-icon-button" type="button" aria-label="Close Alloy tutor">×</button></div></header>
       <p class="tutor-intro">Ask about your approach, a hint, or an example. The tutor guides your reasoning while the saved answers stay private.</p>
-      <div class="tutor-settings"><label for="tutor-model">Model</label><select id="tutor-model" disabled><option>Loading available models…</option></select><label for="tutor-effort">Reasoning</label><select id="tutor-effort" disabled><option>—</option></select></div>
-      <p id="tutor-availability" class="tutor-availability" role="status"></p>
       <div class="tutor-context"><strong id="tutor-exercise">Choose an exercise</strong><ul id="tutor-context-badges" aria-label="Context available to the tutor"></ul><p id="tutor-context-note">Your current draft is shared only when you ask for guidance.</p></div>
       <p id="tutor-history-note" class="tutor-history-note" role="status" hidden></p>
       <div id="tutor-messages" class="tutor-messages" role="log" aria-label="Tutor conversation" aria-live="polite" aria-relevant="additions text"><p class="tutor-empty">What would you like to understand?</p></div>
+      <section id="tutor-history-panel" class="tutor-history-panel" aria-label="Previous conversations" hidden>
+        <div class="tutor-history-controls"><button id="tutor-history-close" class="tutor-new" type="button">← Current chat</button><label for="tutor-history-select">Previous conversation</label><select id="tutor-history-select"></select><button id="tutor-history-resume" class="button secondary" type="button">Continue this chat</button></div>
+        <p id="tutor-archive-note" class="tutor-small">Recent conversations stay in this tab for this exercise. Select text to copy it.</p>
+        <div id="tutor-history-content" class="tutor-history-content"></div>
+      </section>
       <div class="tutor-suggestion-area"><div class="tutor-suggestion-heading"><span>Try a question</span><button id="tutor-suggest" type="button" disabled>Suggest questions</button></div><div id="tutor-suggestions" class="tutor-suggestions" aria-label="Recommended questions"></div><p id="tutor-suggestion-note" class="tutor-small">Suggestions use the lowest-cost configured model in this provider's stack.</p></div>
-      <form id="tutor-form" class="tutor-composer"><label class="sr-only" for="tutor-message">Message to Alloy tutor</label><textarea id="tutor-message" rows="3" maxlength="2048" placeholder="Ask a question about your predicate…" aria-describedby="tutor-keyboard-help tutor-message-limit" disabled></textarea><div class="tutor-composer-actions"><span id="tutor-keyboard-help">Enter to send · Shift+Enter for a new line</span><button id="tutor-send" class="button primary" type="submit" disabled>Send</button></div><p id="tutor-message-limit" class="tutor-message-limit" role="status" hidden></p><p id="tutor-status" role="status" aria-live="polite"></p></form>
+      <form id="tutor-form" class="tutor-composer">
+        <div class="tutor-input-frame">
+          <label class="sr-only" for="tutor-message">Message to Alloy tutor</label>
+          <textarea id="tutor-message" rows="3" maxlength="2048" placeholder="Ask a question about your predicate…" aria-describedby="tutor-keyboard-help tutor-message-limit" disabled></textarea>
+          <div class="tutor-settings">
+            <div class="tutor-choice"><label for="tutor-model">Model</label><select id="tutor-model" disabled><option>Loading available models…</option></select></div>
+            <div class="tutor-choice"><label for="tutor-effort">Reasoning</label><select id="tutor-effort" disabled><option>—</option></select></div>
+          </div>
+          <div class="tutor-composer-actions"><span id="tutor-keyboard-help">Enter to send · Shift+Enter for a new line</span><button id="tutor-send" class="button primary" type="submit" disabled>Send</button></div>
+        </div>
+        <p id="tutor-availability" class="tutor-availability" role="status"></p>
+        <p id="tutor-message-limit" class="tutor-message-limit" role="status" hidden></p><p id="tutor-status" role="status" aria-live="polite"></p>
+      </form>
     </aside>
     <div id="toast" class="toast" role="status" hidden></div>
   </body>

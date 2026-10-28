@@ -14,6 +14,8 @@ model in the selected provider's supported stack. Switching provider is explicit
 reasoning settings. `POST /api/chat` accepts the current exercise ID, body,
 revision, metric, issued channel, prerequisite tokens, optional evidence pins,
 selected model/effort, a message and an optional opaque conversation token.
+An explicit follow-up to a selected archived conversation may also supply
+`resumeConversation: true`, only with that token and only on `/api/chat`.
 `POST /api/chat/suggestions` accepts the same fields except the message.
 Unknown fields, browser histories, arbitrary models, URLs and keys are rejected.
 The existing same-origin, request-byte and HTTP admission boundaries apply.
@@ -74,6 +76,50 @@ Selectors wait for an active chat reply to finish. Changing exercise, editing
 session or prerequisite context, or selecting New chat, clears the conversation.
 Public assets and private modules must be included in the Unix,
 Windows and IIS packaging inventories.
+
+The composer remains editable while a reply is pending. If a reply fails or
+cannot be matched to the draft, preserve any newly typed text exactly (including
+whitespace); restore the unanswered question only if the composer is empty.
+Channel expiration discards expired history and evidence, but keeps that question
+visible for manual recovery. Recovery never retries or submits a queued message
+automatically.
+
+Model and reasoning controls live inside the message input frame, with visible
+labels and native keyboard-accessible menus. On desktop, opening the tutor keeps
+the editor and repair-trace column side by side. Smaller non-modal layouts reserve
+space for the tutor and stack the workspace so feedback remains reachable without
+closing chat. Phones retain the existing modal panel and focus handling.
+
+Explicit model/effort choices may be remembered in browser storage, then validated
+against the next configured catalogue. Credentials, conversation tokens and chat
+text are never stored with this preference. Storage failure leaves selection
+usable for the current page. Short reasoning guidance describes possible extra
+latency without promising model quality or an exact price.
+
+Immediate learning starters share the three-question slot with generated
+suggestions. They fill an empty composer, never overwrite an existing draft, and
+never submit or generate provider work themselves. Selecting a generated
+suggestion retains any separate unsent question. New chat also preserves that
+question while resetting the active backend history capability.
+
+New chat saves a local transcript for the History view: at most five archived
+conversations and 64 KiB of UTF-8 message text, with oldest content evicted first.
+The archive stays in tab memory for this exercise/version/prerequisite context;
+reload or a context change clears it. It is excluded from progress exports.
+Reading, selecting or copying text and selecting Continue this chat make no
+provider request. Reusing an archived user question only fills an empty composer.
+
+Only an explicit subsequent Send may attach the selected archive's opaque token
+with `resumeConversation: true`. The backend checks ownership and expiry as usual,
+then produces bounded, role- and revision-preserving excerpts of its own retained
+history before the provider call. It labels the excerpts incomplete and keeps the
+fresh learner context authoritative. Compression is deterministic and makes no
+additional model call; it is not an AI-generated semantic summary. It does not
+overwrite the stored original turns. The resumed token's descendants retain this
+abridged mode for later replies and recommendations, so follow-up work cannot
+silently resend the full older discussion. Suggestions cannot initiate resume mode.
+An expired token cannot be reconstructed from browser transcript text. The local
+transcript remains readable; the learner can start a fresh discussion instead.
 
 ## Acceptance checks
 

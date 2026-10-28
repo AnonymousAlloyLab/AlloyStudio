@@ -44,6 +44,53 @@ Prefer understanding the prompt, one operator/CRUD position, or one bounded
 counterexample. Never recommend requesting the answer or the entire repair route.
 Return no answer text inside the questions. Returning fewer than three is fine.
 """
+RESUMED_HISTORY_BYTES = 6000
+EXCERPT_MARKER = '\n[… excerpt omitted …]\n'
+RESUMED_HISTORY_NOTICE = (
+    'The learner explicitly resumed an older conversation. The retained messages '
+    'below are bounded first/last excerpts, not a semantic summary; intervening '
+    'text may be omitted. Do not infer missing details. Current context and '
+    'evidence are authoritative over earlier observations.'
+)
+
+
+def _json_bytes(value):
+    return len(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+
+
+def _history_excerpt(content, budget):
+    """Fit the JSON string's UTF-8 bytes without splitting Unicode characters."""
+    if _json_bytes(content) <= budget:
+        return content
+    if _json_bytes(EXCERPT_MARKER) > budget:
+        raise ValueError('History metadata exceeds the resumed-history budget')
+    def candidate(length):
+        first, last = (length + 1) // 2, length // 2
+        return content[:first] + EXCERPT_MARKER + (content[-last:] if last else '')
+    low, high = 0, len(content)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if _json_bytes(candidate(middle)) <= budget:
+            low = middle
+        else:
+            high = middle - 1
+    return candidate(low)
+
+
+def abridge_history(turns):
+    """Copy server-owned turns into a bounded request; never mutate stored history."""
+    copy = [{'role': turn['role'], 'content': '', 'contextRevision': turn['contextRevision']}
+            for turn in turns]
+    remaining = RESUMED_HISTORY_BYTES - _json_bytes(copy)
+    if remaining < 0:
+        raise ValueError('History metadata exceeds the resumed-history budget')
+    # The empty JSON string already contributes two bytes to the skeleton.
+    budget = remaining // len(copy) + 2 if copy else 0
+    for original, projected in zip(turns, copy):
+        projected['content'] = _history_excerpt(original['content'], budget)
+    if _json_bytes(copy) > RESUMED_HISTORY_BYTES:
+        raise ValueError('Resumed history too large')
+    return copy
 
 
 def context_projection(question, body, metric, feedback=None, behavior=None, *, context_identity=None):
@@ -101,9 +148,14 @@ class TutorChat:
             self.cache.clear()
 
     def respond(self, *, context, owner, channel, model, effort, message=None,
-                conversation_token=None, suggestions=False, current=lambda: True):
+                conversation_token=None, suggestions=False, resume_conversation=False,
+                current=lambda: True):
         """owner binds immutable history; public context bytes also bind each cache entry."""
         try:
+            if (type(resume_conversation) is not bool or resume_conversation
+                    and (suggestions or not isinstance(conversation_token, str)
+                         or not re.fullmatch(r'[A-Za-z0-9_-]{43}', conversation_token))):
+                raise ValueError('Invalid conversation resume')
             profile = tutor_models.resolve(model, effort, self.key_reader)
             if suggestions:
                 profile = tutor_models.suggestions_profile(profile)
@@ -118,14 +170,18 @@ class TutorChat:
                     return {'status': 'expired', 'message': 'This conversation expired. Start a new chat for this draft.'}
                 turns = history['turns'] if history else []
                 truncated = history['truncated'] if history else False
-            document = {'context': context, 'conversation': turns}
+                abridged = resume_conversation or bool(history and history.get('abridged', False))
+            document = {'context': context,
+                        'conversation': abridge_history(turns) if abridged else turns}
+            if abridged:
+                document['conversationNotice'] = RESUMED_HISTORY_NOTICE
             if not suggestions:
                 document['message'] = message
             encoded = json.dumps(document, ensure_ascii=False, separators=(',', ':'))
             if len(encoded.encode('utf-8')) > 192000:
                 raise ValueError('Context too large')
             cache_key = hashlib.sha256(json.dumps([profile.cache_identity, owner_hash,
-                suggestions, conversation_token, encoded], sort_keys=True).encode()).hexdigest()
+                suggestions, abridged, conversation_token, encoded], sort_keys=True).encode()).hexdigest()
         except (OSError, ValueError, TypeError, UnicodeError, OverflowError):
             return {'status': 'unavailable', 'message': 'This model or chat context is unavailable. Check the selected model and draft.'}
         if not current():
@@ -156,8 +212,10 @@ class TutorChat:
                         token = secrets.token_urlsafe(32)
                         truncated = truncated or len(new_turns) > 12
                         self.histories[token] = {'owner': owner_hash, 'turns': new_turns[-12:],
-                                                'truncated': truncated}
+                                                'truncated': truncated, **({'abridged': True} if abridged else {})}
                         result.update(conversationToken=token, historyTruncated=truncated)
+                    if abridged:
+                        result['historyCompressed'] = True
                     self.cache[cache_key] = result
                 return result
         finally:

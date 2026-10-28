@@ -140,7 +140,7 @@ try {
     await editor.fill('{\nsome Node\n}'); await page.locator('#indent-button').click();
     assert.equal(await editor.inputValue(), '{\n  some Node\n}');
     assert.equal(await page.locator('#source-highlight').textContent(), '{\n  some Node\n}\n');
-    assert.equal(await page.locator('#draft-status').textContent(), 'Draft saved');
+    assert.equal(await page.locator('#draft-status').textContent(), 'Saved in this browser');
     await editor.fill('some Node'); await editor.press('End'); await editor.press('Tab');
     assert.equal(await editor.inputValue(), 'some Node  ');
     await editor.press('Escape'); await editor.press('Tab');

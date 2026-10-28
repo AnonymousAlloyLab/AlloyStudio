@@ -17,7 +17,10 @@ from test_structural_guidance import feedback
 class TutorHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot')
+        # Schema matrices intentionally issue many immediate requests; admission
+        # token-bucket behavior has its own traffic tests.
+        cls.app = server.Portal(('127.0.0.1', 0), engine_mode='oneshot',
+                               traffic_profile=server.TrafficProfile(public_burst=10000, peer_burst=10000))
         cls.thread = threading.Thread(target=lambda: cls.app.serve_forever(poll_interval=.01), daemon=True)
         cls.thread.start()
         cls.url = f'http://127.0.0.1:{cls.app.server_port}'
@@ -151,6 +154,52 @@ class TutorHTTPTests(unittest.TestCase):
         self.assertEqual(document['conversation'][0]['contextRevision'], 1)
         self.assertEqual(self.post(data=dict(changed, exerciseId='graphs-inv6', revision=3))[2]['status'], 'expired')
         self.assertEqual(len(self.calls), 3)
+
+    def test_explicit_resume_uses_retained_history_and_fresh_context(self):
+        original = self.post()[2]
+        token = original['conversationToken']
+        saved = self.app.chat.histories.get(token)
+        current = dict(self.base, conversationToken=token, resumeConversation=True,
+                       revision=2, body='no A', message='Explain this next step with my updated draft.')
+        code, _, result = self.post(data=current)
+        self.assertEqual((code, result['status']), (200, 'ok'))
+        self.assertTrue(result['historyCompressed'])
+        document = json.loads(self.calls[-1]['input'])
+        self.assertEqual(document['context']['studentBody'], 'no A')
+        self.assertEqual(document['context']['revision'], 2)
+        self.assertEqual(document['conversation'], saved['turns'])
+        self.assertIn('not a semantic summary', document['conversationNotice'])
+        self.assertEqual(self.app.chat.histories.get(token), saved)
+        self.assertEqual(len(self.calls), 2)
+
+    def test_resume_field_is_strict_true_chat_only_and_needs_an_opaque_token(self):
+        token = self.post()[2]['conversationToken']
+        for value in (False, None, 0, 1, 'true', {}, []):
+            with self.subTest(value=value):
+                code, _, _ = self.post(data=dict(self.base, conversationToken=token, resumeConversation=value))
+                self.assertEqual(code, 400)
+        self.assertEqual(self.post(data=dict(self.base, resumeConversation=True))[0], 400)
+        self.assertEqual(self.post(data=dict(self.base, resumeConversation=True, conversationToken='bad'))[0], 400)
+        suggested = dict(self.base, conversationToken=token, resumeConversation=True)
+        del suggested['message']
+        self.assertEqual(self.post('/api/chat/suggestions', suggested)[0], 400)
+        for field in ('history', 'conversation', 'conversationNotice', 'compressedHistory'):
+            self.assertEqual(self.post(data=dict(self.base, conversationToken=token,
+                resumeConversation=True, **{field: 'browser supplied text'}))[0], 400)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_resuming_unknown_or_cross_owner_history_fails_without_provider_work(self):
+        token = self.post()[2]['conversationToken']
+        new_channel = self.post('/api/channel', {})[2]['channel']
+        for revision, change in enumerate(({'conversationToken': 'x' * 43}, {'channel': new_channel},
+                                          {'exerciseId': 'graphs-inv6'}), 2):
+            data = dict(self.base, conversationToken=token, resumeConversation=True, revision=revision)
+            data.update(change)
+            self.assertEqual(self.post(data=data)[2]['status'], 'expired')
+        self.app.chat.histories.clear()
+        self.assertEqual(self.post(data=dict(self.base, conversationToken=token, resumeConversation=True,
+                                            revision=5))[2]['status'], 'expired')
+        self.assertEqual(len(self.calls), 1)
 
     def test_same_conversation_retrieves_new_checked_evidence_after_an_edit(self):
         first = self.post(data=self.pins())[2]

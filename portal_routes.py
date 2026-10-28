@@ -390,6 +390,8 @@ def chat_post(app, request):
     if not suggestions:
         required.add('message')
     optional = {'prerequisiteTokens', 'evidenceToken', 'behaviorToken', 'conversationToken'}
+    if not suggestions:
+        optional.add('resumeConversation')
     def text(value, maximum, *, empty=False):
         return (isinstance(value, str) and (empty or bool(value.strip())) and '\x00' not in value
                 and len(value.encode('utf-8')) <= maximum)
@@ -404,7 +406,9 @@ def chat_post(app, request):
             and all(text(data[name], 64) and re.fullmatch(r'[0-9a-f]{64}', data[name])
                     for name in ('evidenceToken', 'behaviorToken') if name in data)
             and ('conversationToken' not in data or (text(data['conversationToken'], 43)
-                 and re.fullmatch(r'[A-Za-z0-9_-]{43}', data['conversationToken']))))
+                 and re.fullmatch(r'[A-Za-z0-9_-]{43}', data['conversationToken'])))
+            and ('resumeConversation' not in data or
+                 data['resumeConversation'] is True and 'conversationToken' in data))
         if not valid:
             raise ValueError('Invalid chat fields')
         tokens = token_list(data.get('prerequisiteTokens', []))
@@ -458,7 +462,8 @@ def chat_post(app, request):
             return app.scheduler.current(channel, revision) and current_generation == generation
     result = app.chat.respond(context=context, owner=owner, channel=channel,
         model=data['model'], effort=data['effort'], message=data.get('message'),
-        conversation_token=data.get('conversationToken'), suggestions=suggestions, current=current)
+        conversation_token=data.get('conversationToken'), suggestions=suggestions,
+        resume_conversation=data.get('resumeConversation', False), current=current)
     return reply(result if current() else {'status': 'superseded'})
 
 

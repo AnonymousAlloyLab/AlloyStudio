@@ -132,6 +132,61 @@ try {
       assert.equal(await editor.inputValue(), 'one Node // middle draft');
     } finally { await context.close(); }
   });
+  await check('reset-offers-undo-for-exact-learner-body-and-persists-restoration', async () => {
+    const { context, page, editor } = await session();
+    try {
+      await selected(page, 'first');
+      const body = '  some Node\n\t// learner notes: λ, café, 学习\n\n';
+      await editor.fill(body);
+      assert.equal(await page.locator('#draft-status').textContent(), 'Saved in this browser');
+      await page.locator('#reset-button').click();
+      assert.equal(await editor.inputValue(), records[0].starter);
+      assert.equal(await page.locator('#reset-recovery').isVisible(), true);
+      // Clicking Restore starter again must not replace the saved learner body
+      // with the starter. Disabling that no-op button is also acceptable.
+      if (await page.locator('#reset-button').isEnabled()) await page.locator('#reset-button').click();
+      assert.equal(await page.locator('#reset-recovery').isVisible(), true);
+      await page.locator('#undo-reset').click();
+      assert.equal(await editor.inputValue(), body);
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+      assert.equal(await page.locator('#draft-status').textContent(), 'Saved in this browser');
+      await page.reload(); await selected(page, 'first');
+      assert.equal(await editor.inputValue(), body);
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+    } finally { await context.close(); }
+  });
+  await check('editing-after-reset-clears-undo-without-overwriting-new-work', async () => {
+    const { context, page, editor } = await session();
+    try {
+      await selected(page, 'first');
+      await editor.fill('no Node // previous attempt');
+      await page.locator('#reset-button').click();
+      assert.equal(await page.locator('#reset-recovery').isVisible(), true);
+      await editor.fill('one Node // new attempt');
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+      await page.reload(); await selected(page, 'first');
+      assert.equal(await editor.inputValue(), 'one Node // new attempt');
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+    } finally { await context.close(); }
+  });
+  await check('navigation-clears-reset-recovery-and-never-crosses-exercises', async () => {
+    const { context, page, editor, next, previous } = await session();
+    try {
+      await selected(page, 'first');
+      await editor.fill('no Node // first attempt');
+      await page.locator('#reset-button').click();
+      assert.equal(await page.locator('#reset-recovery').isVisible(), true);
+      await next.click(); await selected(page, 'middle');
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+      assert.equal(await editor.inputValue(), records[1].starter);
+      await editor.fill('one Node // different exercise');
+      await previous.click(); await selected(page, 'first');
+      assert.equal(await page.locator('#reset-recovery').isVisible(), false);
+      assert.equal(await editor.inputValue(), records[0].starter);
+      await next.click(); await selected(page, 'middle');
+      assert.equal(await editor.inputValue(), 'one Node // different exercise');
+    } finally { await context.close(); }
+  });
   await check('pending-navigation-disables-buttons-and-newer-sidebar-selection-wins', async () => {
     const waiting = deferred(), requested = deferred(), finished = deferred();
     const { context, page, editor, previous, next, position } = await session({ detail: async (route, id, record) => {
@@ -201,6 +256,28 @@ try {
       await next.focus(); await page.keyboard.press('Enter'); await selected(page, 'middle');
       await previous.focus(); await page.keyboard.press('Space'); await selected(page, 'first');
       assert.equal(await position.textContent(), '1 of 3 exercises');
+    } finally { await context.close(); }
+  });
+  await check('resizing-to-mobile-keeps-active-exercise-in-view-without-page-jump', async () => {
+    const { context, page } = await session();
+    try {
+      await selected(page, 'first');
+      await page.locator('[data-exercise-id="last"]').click(); await selected(page, 'last');
+      await page.evaluate(() => scrollTo(0, 0));
+      assert.equal(await page.evaluate(() => scrollY), 0);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => {
+        const item = document.querySelector('.exercise-item.active').getBoundingClientRect();
+        const list = document.querySelector('#exercise-list').getBoundingClientRect();
+        return item.left >= list.left - 1 && item.right <= list.right + 1;
+      });
+      assert(await page.locator('#exercise-list').evaluate(element => element.scrollLeft > 0));
+      assert.equal(await page.evaluate(() => scrollY), 0);
+      assert.equal(await page.locator('.exercise-item.active').getAttribute('data-exercise-id'), 'last');
+      // Returning to the vertical list must not scroll the document either.
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('#exercise-list')).display !== 'flex');
+      assert.equal(await page.evaluate(() => scrollY), 0);
     } finally { await context.close(); }
   });
   await check('no-browser-errors-or-external-requests', async () => {

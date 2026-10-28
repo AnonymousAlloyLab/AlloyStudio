@@ -4,7 +4,20 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.9-alpha](docs/releases/v0.0.9-alpha.md).**
+**Current release: [v0.0.9-alpha.1](docs/releases/v0.0.9-alpha.1.md).**
+
+This maintenance release makes the learner workspace easier to recover and
+navigate: **Undo reset** restores an accidentally reset predicate, chat actions
+preserve unsent questions, and **History** opens recent conversations after
+**New chat**. **Continue this chat** resumes available backend history as bounded
+excerpts on the next explicit send. Model and reasoning controls sit inside the
+composer and remember valid choices. Immediate learning prompts help learners begin without a model
+call. The repair trace remains beside the editor on desktop, and the selected
+exercise stays visible when the navigation changes to its mobile layout.
+See the [visual review and UX findings](docs/ux-v0.0.9-alpha.1.md) and
+[progress guide](docs/progress-save.md) for recovery and storage limits.
+
+**Previous release: [v0.0.9-alpha](docs/releases/v0.0.9-alpha.md).**
 
 The new **Ask a tutor** side panel provides a continuing conversation about the
 current question, learner code, positional CRUD hints and displayed behavioral
@@ -16,7 +29,7 @@ learner context. The tutor reuses existing feedback without starting a JVM.
 See the [chat contract and limits](docs/tutor-chat-spec.md) and
 [private provider configuration](docs/ai-providers.md#learner-chatbot-model-selection).
 
-**Previous release: [v0.0.8-alpha](docs/releases/v0.0.8-alpha.md).**
+**Earlier release: [v0.0.8-alpha](docs/releases/v0.0.8-alpha.md).**
 This release grounds each AI edit explanation in the
 [canonical CRUD language and structural retrieval](docs/structural-guidance-rag.md).
 The tutor receives the exact learner occurrence and bounded surrounding structure

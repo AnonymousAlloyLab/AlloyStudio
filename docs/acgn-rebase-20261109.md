@@ -98,6 +98,14 @@ before/after runtime comparison must report that difference explicitly.
 ## Current verification/execution record
 
 The rebased engine builds successfully and its 500-check engine self-test passes.
+A constructed persistent-worker counterexample found that Alloy 6.2's
+`SATFactory.get("sat4j")` probes unrelated native solvers, leaving a plingeling CNF
+and native-library directory outside request scratch. The behavior/validation
+adapters now select `SATFactory.DEFAULT` directly: the pinned JAR initializes
+that field to exactly `SAT4JRef.INSTANCE`. This preserves SAT4J selection while
+avoiding discovery. The cleanup assertion and 77 behavior/validation regressions
+pass after this fix. Only those solver-setup methods changed after the distance
+run was frozen; no Canonical/AST computation, locator or benchmark path changed.
 The wrapper-erased paper example was exported from production, with a successful
 private node-edit replay. Broader regression checks and the new corpus run are
 in progress; final observations will be linked after their completion.

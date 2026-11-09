@@ -282,7 +282,8 @@ public final class ExerciseValidator {
 
     static A4Solution solve(CompModule world, Expr expression, int scope) throws Err {
         A4Options options = new A4Options();
-        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
+        // The pinned default is SAT4J; avoid discovery/probing of native solvers.
+        options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
         // The installed Alloy constructor's final integer is "expects", not
         // a string scope. Explicit trace bounds avoid relying on defaults.
         Command unboundedTrace = new Command(false, scope, 5, scope, null, expression);

@@ -269,7 +269,10 @@ public final class BehaviorFeedback {
 
     private static A4Solution solve(CompModule world, Expr expression, int exactTrace) throws Err {
         A4Options options = new A4Options();
-        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
+        // DEFAULT is SAT4JRef.INSTANCE in the pinned Alloy 6.2 runtime. Looking
+        // it up by name probes every installed solver, extracting native files
+        // and a plingeling CNF outside the request-owned parser directory.
+        options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
         Command command = exactTrace < 0 ? new Command(true, SCOPE, SCOPE, SCOPE, null, expression)
                 : new Command(null, null, "", true, SCOPE, SCOPE, SCOPE,
                         exactTrace, exactTrace, -1, null, null, null, expression, null);

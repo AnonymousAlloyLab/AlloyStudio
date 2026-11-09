@@ -6,7 +6,7 @@ operations, the learner's canonical form, saved drafts, and configurable AI guid
 
 **Current release: [v0.0.9-alpha.1.r](docs/releases/v0.0.9-alpha.1.r.md).**
 
-This backend update pins ACGN `8c9bd4b`, uses its replay-checked canonical
+This backend update pins ACGN `f955150d`, uses its replay-checked canonical
 repair programs, and removes decorative `Body`/`NOOP` nodes before AST counting
 and Zhang–Shasha distance. Canonical remains the default. See the
 [rebase contract, updated paper figure and corpus rerun](docs/acgn-rebase-20261109.md).
@@ -933,7 +933,7 @@ and execution time. For shared hosting, use a separately configured authenticate
 HTTPS reverse proxy; access control and multi-tenant deployment are outside this
 local portal's verification surface.
 
-ACGN base snapshot: `8c9bd4b922ecee99d496be2515fa78cb09f3e12b`.
+ACGN base snapshot: `f955150dec4fc92e35b4ee543a7d71b82381c686`.
 The vendored copy includes a local presentation metadata patch that carries parser
 origins through canonicalization for the locators. `vendor/acgn/snapshot.json`
 records the delivered file hashes; this copy is not byte-identical to the base

@@ -1,0 +1,19 @@
+{
+  "acgnCommit": "f955150dec4fc92e35b4ee543a7d71b82381c686",
+  "allSubtreeDistanceCellsMatch": true,
+  "distance": 8,
+  "figureUnchanged": true,
+  "nativeReplayVerified": true,
+  "noopAndBodyAbsent": true,
+  "priorEvidenceSha256": "65c90d85eafc6dfd423bef733883a73d149a07f3209337bf2ae529a3625b1117",
+  "publicEditSequenceMatches": true,
+  "referenceNodes": 13,
+  "rootForestMatrixMatches": true,
+  "sourceHashes": {
+    "engine/src/is/fivefivefive/CanDis/RawAstTrace.java": "ac655514f3e5224d05c7649e505cc4932acb260cb035d737638f7a90bcf4b9fe",
+    "engine/src/live/WorkerSafety.java": "f4f6c467dc48db48b24939e42ac27ea5a3ed3f82710755a9dad1e16784c953c6",
+    "vendor/acgn/src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java": "a54123323249c019dd72ca8eece4fa9a093c648ba3bc2ecac2e921030329f4f6"
+  },
+  "sourceNodes": 17,
+  "status": "PASS"
+}

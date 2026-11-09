@@ -4,6 +4,7 @@ Each worker is sequential. The JVM remains warm between requests; there is no
 result/reference cache inside it. Corpus/train-pool construction is offline.
 """
 from __future__ import annotations
+from concurrent.futures import FIRST_COMPLETED, wait
 import json
 import math
 import os
@@ -19,6 +20,37 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from runtime_dependencies import clean_java_environment
+
+
+def bounded_results(executor, function, items, *, max_pending):
+    """Yield completed results with a bounded submission/response window.
+
+    A case is submitted exactly once. Exceptions propagate without retrying it;
+    queued work is cancelled if iteration fails or the consumer stops early.
+    """
+    if type(max_pending) is not int or max_pending < 1:
+        raise ValueError('max_pending must be a positive integer')
+    source = iter(items)
+    pending = set()
+    try:
+        while True:
+            while len(pending) < max_pending:
+                try:
+                    item = next(source)
+                except StopIteration:
+                    break
+                pending.add(executor.submit(function, item))
+            if not pending:
+                return
+            # Do not retain completed Futures (and their full responses) for the
+            # entire corpus. The window includes both running and finished work.
+            future = next(iter(wait(pending, return_when=FIRST_COMPLETED)[0]))
+            pending.remove(future)
+            yield future.result()
+            del future
+    finally:
+        for future in pending:
+            future.cancel()
 
 
 def scratch_root():

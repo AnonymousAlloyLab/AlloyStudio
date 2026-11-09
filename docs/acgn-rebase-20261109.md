@@ -2,7 +2,8 @@
 
 This development update rebases AlloyStudio's vendored backend from ACGN
 `1e2667351532b0c632166fa21ae5fbc7308a8fe7` to
-`8c9bd4b922ecee99d496be2515fa78cb09f3e12b`, including its transparent AST view.
+`f955150dec4fc92e35b4ee543a7d71b82381c686`, including its transparent AST view
+and the subsequent request-local label/subtree performance patch.
 NOOP and Body nodes are removed before AST counting, postorder indexing, tree
 matching and edit replay. This changes the measured metric inputs, rather than
 only hiding markers in a drawing. The public AST response identifies its input
@@ -94,10 +95,12 @@ unsupported/error outcomes remain in the denominator. Incomplete runs cannot
 be reported as complete or silently resumed from mismatched response evidence.
 Resource profiles differ from the earlier 16-worker Canonical/AST runs, so a
 before/after runtime comparison must report that difference explicitly.
-This workstation also places the new parser scratch on an external exFAT volume,
-whereas the historical run used local ext4 storage. Warm benchmark JVMs recycle
-after 256 requests; parser temporary files are removed when each JVM is reaped.
-The recorded times include parsing, temporary-file I/O, transport and recycling.
+This workstation places run-owned scratch on an external exFAT volume, whereas
+the historical run used local ext4 storage. The fresh performance rerun uses the
+file-free parser for benchmark requests; the portal retains its owned request
+files. Warm benchmark JVMs recycle after 256 requests. At most eight cases are
+submitted at once, so completed response objects do not accumulate across the
+corpus. Recorded times include parsing, transport and recycling.
 They do not isolate the effect of the ACGN algorithm update or establish an
 equal-resource speed ranking against the preserved baselines.
 
@@ -119,20 +122,44 @@ pass. The wrapper-erased paper example was exported from production, with a succ
 private node-edit replay. Broader regression checks and the new corpus run are
 in progress; final observations will be linked after their completion.
 
-The machine-local run root is
-`/media/augustus/8618-0ED0/AlloyStudio/acgn-rebase-20261109/`. It contains the
-previous vendor snapshot, merge provenance, private diagnostics and new
-experiment artifacts. This workstation path is not a portable installation
+The fresh performance rerun root is
+`/media/augustus/8618-0ED0/AlloyStudio/acgn-performance-20261109T220337Z/`.
+It contains the prior vendor snapshot, merge provenance, validation and new
+experiment artifacts. The earlier run remains paused and untouched under
+`/media/augustus/8618-0ED0/AlloyStudio/acgn-rebase-20261109/`; its rows are not
+reused by the fresh run, and its evidence files are additionally hash-sealed. This workstation path is not a portable installation
 requirement and its private corpus outputs must not be committed publicly.
 
 The first AST timeout and its separate six-run investigation are documented in
 [the timeout investigation](acgn-ast-timeout-20261109.md). The original timeout
-is retained. Concurrent validation export I/O on the same external volume is an
-explicit timing-isolation limitation; subsequent bulk validation waits until
-measurement finishes or uses separate storage.
+is retained. Concurrent validation export I/O on the same external volume was an
+explicit timing-isolation limitation of that paused run. The fresh run does not
+reuse those measurements. Bulk validation finishes before measurement or uses
+separate storage.
 
 The source-origin harness also compiles the sealed equality-certificate source
 explicitly. Class setup/teardown failures now mark the affected source-registered
 test methods as blocked with a fixed phase label; exception text remains private.
 The regression controls include real setup/teardown exceptions carrying private
 sentinels, unknown phase fields and the rebased source-origin harness.
+
+## Performance patch and fresh rerun
+
+The new upstream pin supersedes `8c9bd4b922ecee99d496be2515fa78cb09f3e12b`.
+`OrderedTreeEditDistance` snapshots each node label once per comparison instead
+of allocating labels in every dynamic-programming cell. Its selected alignment
+and unit costs are unchanged. `CanonicalBatchTest` also snapshots labels,
+children and subtree sizes per legacy batch comparison; this legacy recurrence
+is not the portal's Zhang–Shasha implementation. Neither optimization persists
+results across requests.
+
+The imported upstream regression passes 19,760 checks: the pre-optimization
+distance/selected-tie/key-order digest, numeric and aligned costs, child promotion,
+null controls, mutable input across successive calls and collision-safe equality.
+The frozen digest is
+`0af040ac2f4a4686b17fed81bfeb514357e641871074e28c7ccabaf0c4dd35f2`.
+The file-free parser has separate valid/invalid/import/source-coordinate controls.
+The scheduler tests cover a 10,000-case lazy input, exact-once submission,
+response correspondence, error propagation and cancellation. Preservation tests
+seal interrupted archives as bytes without rewriting or reusing their contents.
+All measurements use the new frozen source and retain unsuccessful outcomes.

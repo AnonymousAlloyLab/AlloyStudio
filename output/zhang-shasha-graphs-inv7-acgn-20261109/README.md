@@ -7,3 +7,5 @@ The same published pair is retained: student `all n:Node | Node in n.^adj+n.^~ad
 The production replay deletes S7, S8, S9, S10 and S12; relabels S14 (join) to T10 (union) and S15 (union) to T11 (join); inserts T9 (iden). It retains S13 (closure) as T8. Thus 5 deletions+2 relabels+1 insertion=8. All 10 student RHS nodes and all 6 reference RHS nodes are drawn; only unchanged surrounding context is omitted. Deletion promotes children, so intermediate ordered trees need not be well-typed Alloy code. Another minimum-cost alignment may exist.
 
 Use `figure.tex` with the PDF in `../pdf/graphs-inv7-zhang-shasha-acgn-20261109.pdf`. The Graphviz source can be rendered with `neato -n2 -Tpdf figure.dot -o figure.pdf`.
+
+Revalidated against performance pin `f955150dec4fc92e35b4ee543a7d71b82381c686`: both production distances, every AST subtree-distance cell, the root forest matrix and the selected public edit sequence are unchanged. The [revalidation record](performance-revalidation.json) binds the current sources to the original evidence; the existing figure and original evidence remain intact.

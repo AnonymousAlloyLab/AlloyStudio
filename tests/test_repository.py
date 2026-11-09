@@ -30,7 +30,7 @@ class RepositoryTests(unittest.TestCase):
         actual = {p.relative_to(vendor).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in vendor.rglob('*') if p.is_file() and p.name != 'snapshot.json'}
         self.assertEqual(actual, expected)
-        self.assertEqual(snapshot['commit'], '8c9bd4b922ecee99d496be2515fa78cb09f3e12b')
+        self.assertEqual(snapshot['commit'], 'f955150dec4fc92e35b4ee543a7d71b82381c686')
         patches = snapshot['localPatches']
         self.assertEqual([patch['id'] for patch in patches],
                          ['parser-source-origins', 'canonical-residual-quantifier-rendering',

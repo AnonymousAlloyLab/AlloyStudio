@@ -667,36 +667,64 @@ public class CanonicalBatchTest {
     }
 
     private static int rawAstTreeDistance(Node left, Node right) {
-        if (left == null) {
-            return rawAstSize(right);
-        }
-        if (right == null) {
-            return rawAstSize(left);
-        }
-        int distance = rawAstLabel(left).equals(rawAstLabel(right)) ? 0 : 1;
-        distance += rawAstForestDistance(
-                DatasetConventions.rawAstChildren(left),
-                DatasetConventions.rawAstChildren(right));
-        return distance;
+        return new RawAstDistanceContext().distance(left, right);
     }
 
-    private static int rawAstForestDistance(List<Node> left, List<Node> right) {
-        int[][] dp = new int[left.size() + 1][right.size() + 1];
-        for (int i = 1; i <= left.size(); i++) {
-            dp[i][0] = dp[i - 1][0] + rawAstSize(left.get(i - 1));
-        }
-        for (int j = 1; j <= right.size(); j++) {
-            dp[0][j] = dp[0][j - 1] + rawAstSize(right.get(j - 1));
-        }
-        for (int i = 1; i <= left.size(); i++) {
-            for (int j = 1; j <= right.size(); j++) {
-                int delete = dp[i - 1][j] + rawAstSize(left.get(i - 1));
-                int insert = dp[i][j - 1] + rawAstSize(right.get(j - 1));
-                int update = dp[i - 1][j - 1] + rawAstTreeDistance(left.get(i - 1), right.get(j - 1));
-                dp[i][j] = Math.min(update, Math.min(delete, insert));
+    // These snapshots live only for one comparison; parser nodes can be mutable.
+    private static final class RawAstDistanceContext {
+        private record Tree(String label, List<Tree> children, int size) { }
+        private final java.util.IdentityHashMap<Node, Tree> trees = new java.util.IdentityHashMap<>();
+
+        private Tree snapshot(Node node) {
+            if (node == null) return null;
+            Tree cached = trees.get(node);
+            if (cached != null) return cached;
+            List<Tree> children = new ArrayList<>();
+            int size = 1;
+            for (Node child : DatasetConventions.rawAstChildren(node)) {
+                Tree tree = snapshot(child);
+                children.add(tree);
+                size += tree.size();
             }
+            Tree result = new Tree(rawAstLabel(node), List.copyOf(children), size);
+            trees.put(node, result);
+            return result;
         }
-        return dp[left.size()][right.size()];
+
+        private int distance(Node left, Node right) {
+            return distance(snapshot(left), snapshot(right));
+        }
+
+        private int distance(Tree left, Tree right) {
+            if (left == null) {
+                return right == null ? 0 : right.size();
+            }
+            if (right == null) {
+                return left.size();
+            }
+            int distance = left.label().equals(right.label()) ? 0 : 1;
+            distance += forestDistance(left.children(), right.children());
+            return distance;
+        }
+
+        private int forestDistance(List<Tree> left, List<Tree> right) {
+            int[][] dp = new int[left.size() + 1][right.size() + 1];
+            for (int i = 1; i <= left.size(); i++) {
+                dp[i][0] = dp[i - 1][0] + left.get(i - 1).size();
+            }
+            for (int j = 1; j <= right.size(); j++) {
+                dp[0][j] = dp[0][j - 1] + right.get(j - 1).size();
+            }
+            for (int i = 1; i <= left.size(); i++) {
+                for (int j = 1; j <= right.size(); j++) {
+                    int delete = dp[i - 1][j] + left.get(i - 1).size();
+                    int insert = dp[i][j - 1] + right.get(j - 1).size();
+                    int update = dp[i - 1][j - 1] + distance(left.get(i - 1), right.get(j - 1));
+                    dp[i][j] = Math.min(update, Math.min(delete, insert));
+                }
+            }
+            return dp[left.size()][right.size()];
+        }
     }
 
     private static int rawAstSize(Node node) {

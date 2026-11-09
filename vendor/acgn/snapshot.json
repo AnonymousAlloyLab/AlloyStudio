@@ -1,6 +1,6 @@
 {
   "source": "/home/augustus/ACGN",
-  "commit": "8c9bd4b922ecee99d496be2515fa78cb09f3e12b",
+  "commit": "f955150dec4fc92e35b4ee543a7d71b82381c686",
   "files": [
     {
       "path": "LICENSE",
@@ -480,7 +480,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/CanonicalBatchTest.java",
-      "sha256": "6fdddb7bee62d5ed84e6a09aa12b20cd418ba7326944c7b4a001d49d30b58789"
+      "sha256": "f36c3889aae3b84d2dd8461abeb0f5aa4772725ef895d57de5da12781888b1de"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CanonicalMemoryAttribution.java",
@@ -753,6 +753,10 @@
     {
       "path": "src/is/fivefivefive/CanDis/PartialJoinCompositionTest.java",
       "sha256": "e754e15fa5c1500863a11d376eaaafb3d660245943607dde3107e87bcbcefde6"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PerformanceRegressionTest.java",
+      "sha256": "7dc62bc0d7dd2c4204d64393b1469b0ac0a0cf604725c6746c94487f9b10b5ed"
     },
     {
       "path": "src/is/fivefivefive/CanDis/ProductShorterReplayTest.java",
@@ -1076,7 +1080,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
-      "sha256": "737c333c0dad87f9789ab77e3d68c8bf553fffa8f2881ac5026b810938efb42d"
+      "sha256": "a54123323249c019dd72ca8eece4fa9a093c648ba3bc2ecac2e921030329f4f6"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
@@ -2174,7 +2178,7 @@
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
-          "baseSha256": "3bf655eb7c961bd862e2d0fb5d91ab20960b816681206e0321993ba8384e6df7"
+          "baseSha256": "1f77f618e8dde7a8de9aca4aea86c72dbe0fd62bd350aebdc85d683a25132b23"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java",
@@ -2217,6 +2221,6 @@
       ]
     }
   ],
-  "previousUpstreamCommit": "1e2667351532b0c632166fa21ae5fbc7308a8fe7",
+  "previousUpstreamCommit": "8c9bd4b922ecee99d496be2515fa78cb09f3e12b",
   "astViewVersion": "acgn-semantic-ast-noop-body-erasure-v1"
 }

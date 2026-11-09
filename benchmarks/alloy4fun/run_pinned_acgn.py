@@ -66,7 +66,18 @@ def check_snapshot(experiment, manifest):
             raise RuntimeError('A frozen source/input changed; refuse measurement')
 
 
-def prepare(experiment, data):
+def preserved_run_artifacts(prior_run, experiment):
+    prior_run, experiment = Path(prior_run).resolve(), Path(experiment).resolve()
+    if (not (prior_run / 'manifest.json').is_file()
+            or prior_run.is_relative_to(experiment) or experiment.is_relative_to(prior_run)):
+        raise ValueError('A preserved run must be an existing separate experiment')
+    names = {'manifest.json', 'run.json', 'state.json', 'resource-guard.json',
+             'results.jsonl', 'responses.jsonl.gz'}
+    return {str(path): sha(path) for path in sorted(prior_run.rglob('*'))
+            if path.is_file() and path.name in names}
+
+
+def prepare(experiment, data, preserve_runs=()):
     experiment = experiment.resolve()
     data = data.resolve()
     if experiment.exists():
@@ -108,11 +119,16 @@ def prepare(experiment, data):
         for name in ('manifest.json', 'run.json', 'results.jsonl', 'responses.jsonl.gz'):
             path = data / arm / name
             preserved[str(path)] = sha(path)
+    for prior_run in preserve_runs:
+        # Hash immutable evidence from an explicitly paused/completed run. Do
+        # not rewrite or repair its possibly interrupted gzip stream.
+        preserved.update(preserved_run_artifacts(prior_run, experiment))
     manifest = {'schema': 'alloystudio-pinned-acgn-rerun-v1', 'prepared_at': now(),
                 'acgn_commit': json.loads((source / 'vendor/acgn/snapshot.json').read_text())['commit'],
                 'ast_view_version': 'acgn-semantic-ast-noop-body-erasure-v1',
                 'arms': [name for name, _ in ARMS], 'policy': POLICY,
                 'cases': 61598, 'data_source': str(data),
+                'preserved_runs': [str(Path(p).resolve()) for p in preserve_runs],
                 'preserved_previous_results': preserved,
                 'snapshot': {str(p.relative_to(experiment)): sha(p)
                              for folder in (source, inputs) for p in sorted(folder.rglob('*')) if p.is_file()}}
@@ -244,6 +260,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--experiment', type=Path, required=True)
     parser.add_argument('--data', type=Path)
+    parser.add_argument('--preserve-run', type=Path, action='append', default=[],
+                        help='Hash prior paused/completed evidence without reusing observations')
     parser.add_argument('--prepare', action='store_true')
     parser.add_argument('--launch', action='store_true')
     parser.add_argument('--supervise', action='store_true')
@@ -256,7 +274,7 @@ def main():
     if args.prepare:
         if args.data is None:
             parser.error('--prepare requires --data')
-        manifest = prepare(experiment, args.data)
+        manifest = prepare(experiment, args.data, args.preserve_run)
         print(json.dumps({'status': 'PREPARED', 'cases': manifest['cases'], 'experiment': str(experiment)}))
     elif args.launch:
         frozen = experiment / 'source/benchmarks/alloy4fun/run_pinned_acgn.py'

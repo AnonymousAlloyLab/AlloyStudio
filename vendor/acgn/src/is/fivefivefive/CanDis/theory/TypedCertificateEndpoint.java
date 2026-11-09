@@ -16,6 +16,7 @@ public final class TypedCertificateEndpoint {
         ONE_TERM,
         FLAT_APPLICATION,
         DEPENDENT_CHAIN_APPLICATION,
+        GUARDED_JOIN,
         CONTAINER_APPLICATION,
         CONTAINER_PATTERN,
         BINDER_PATTERN,
@@ -199,6 +200,14 @@ public final class TypedCertificateEndpoint {
                                 semanticProfile.structuralKey(),
                                 application.structuralKey(),
                                 sourceOccurrenceCommitment)));
+    }
+
+    static TypedCertificateEndpoint guardedJoin(GuardedJoinTree tree, SemanticProfile profile,
+            StructuralKey commitment) {
+        return new TypedCertificateEndpoint(Kind.GUARDED_JOIN, tree.context(),
+                CertificateSort.term(tree.type().relationType()), tree,
+                StructuralKey.branch("guarded-join-endpoint-v1", List.of(
+                        profile.structuralKey(), tree.structuralKey(), commitment)));
     }
 
     public static TypedCertificateEndpoint restrictedWitness(

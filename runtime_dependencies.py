@@ -29,9 +29,14 @@ JAVA_ENVIRONMENT_OPTIONS = frozenset((
 ))
 JAR_FILES = (
     'AlloyASG-Release.jar', 'AlloyASG.jar', 'AlloyParser.jar', 'alloy.jar',
-    'commons-cli-1.4.jar', 'json-java.jar', 'slf4j-simple-1.7.36.jar',
+    'commons-cli-1.11.0.jar', 'json-java.jar', 'slf4j-api-2.0.20.jar', 'slf4j-simple-2.0.20.jar',
 )
 REQUIRED_CLASSES = (
+    'parser/ast/nodes/ModelUnit.class', 'parser/util/AlloyUtil.class',
+    'is/fivefivefive/CanDis/theory/DerivedEqualityCertificate.class',
+    'is/fivefivefive/CanDis/metric/NativeRepairTrace.class',
+    'is/fivefivefive/CanDis/metric/TraceResources.class',
+    'is/fivefivefive/CanDis/core/FastChainGeometry.class',
     'live/EngineWorker.class', 'live/WorkerJson.class', 'live/WorkerSafety.class', 'live/WorkerSafety$PoisonedWorker.class',
     'live/UploadInspector.class', 'live/UploadInspector$Declaration.class',
     'live/ExerciseValidator.class', 'live/ExerciseValidator$Rejected.class',

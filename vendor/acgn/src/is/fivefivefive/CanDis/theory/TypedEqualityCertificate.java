@@ -19,6 +19,8 @@ public abstract sealed class TypedEqualityCertificate permits
         FlatConstructionCertificate,
         ContainerConstructionCertificate,
         DependentChainCertificate,
+        GuardedJoinCertificate,
+        GuardedJoinNodeCertificate,
         KernelReplayCertificate,
         CanonicalOrbitCertificate,
         StructuralAlphaCertificate,

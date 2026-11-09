@@ -36,8 +36,8 @@ public final class EngineSelfTest {
         check(compare("all x: A | some x.r", "some A")
                 .getJSONObject("operationSummary").getInt("delete") > 0, "delete operations");
         JSONObject temporalFallback = compare("always eventually some A", "eventually some A");
-        check(temporalFallback.getJSONObject("trace").getBoolean("hasAggregates"),
-                "temporal trace discrepancy is explicit");
+        check(!temporalFallback.getJSONObject("trace").getBoolean("hasAggregates"),
+                "native temporal replay provides complete atomic edits");
         String callEnvironment = ENV + "pred p { some A }\npred q { no A }\n";
         JSONObject callFallback = evaluate(callEnvironment + "pred target { p }\n",
                 callEnvironment + "pred target { q }\n");

@@ -296,7 +296,7 @@ class CanonicalStructureTests(unittest.TestCase):
         self.assertGreaterEqual(len(repeated), 3)
         self.assertEqual(len({paths[op['path']]['start'] for op in repeated}), len(repeated))
 
-    def test_one_branch_swap_equal_display_retains_binding_cost_and_occurrence_locations(self):
+    def test_one_branch_swap_is_free_and_preserves_binding_occurrence_metadata(self):
         environment = 'sig A {}\n'
         branches = ('(one a:A | some a)', '(all b:A | some b)')
         bodies = [' and '.join(branches), ' and '.join(reversed(branches))]
@@ -319,39 +319,13 @@ class CanonicalStructureTests(unittest.TestCase):
                                  f'root/predicate[0]/and[{1-i}]/local-decl[0]')
                 feedback = result['feedback']
                 self.assertEqual(feedback['status'], 'ok')
-                self.assertEqual(feedback['distance'], 2)
-                self.assertEqual(feedback['breakdown'], {'temporal': 0, 'quantifier': 0, 'matrix': 2})
+                self.assertEqual(feedback['distance'], 0)
+                self.assertEqual(feedback['breakdown'], {'temporal': 0, 'quantifier': 0, 'matrix': 0})
                 self.assertTrue(feedback['trace']['matrixReplayVerified'])
-                # Diagnostic correspondence is not an authorized production mapping.
                 self.assertEqual(result['explicitMappingMatrixCost'], 0)
-                operations = feedback['operations']
-                self.assertEqual(len(operations), 2)
-                paths = {op['path']: op for op in result['operations']}
-                canonical_starts, raw_precisions = set(), set()
-                for operation in operations:
-                    self.assertEqual((operation['kind'], operation['sourceTerm'], operation['cost']),
-                                     ('replace', 'a', 1))
-                    span = self.span(result, operation)
-                    self.assertEqual(utf16_slice(result['forms'][span['formIndex']],
-                                                span['start'], span['end']), 'a')
-                    self.assertEqual(span, self.span(result, paths[operation['path']]))
-                    canonical_starts.add(span['start'])
-                    raw = operation['sourceLocation']
-                    self.assertEqual(raw['status'], 'located')
-                    self.assertEqual(len(raw['ranges']), 1)
-                    raw_precisions.add(raw['precision'])
-                    raw_span = raw['ranges'][0]
-                    selected = utf16_slice(sources[i], raw_span['start'], raw_span['end'])
-                    if operation['path'].endswith('.child[1].child[1].child[0]'):
-                        self.assertEqual(raw['precision'], 'node')
-                        self.assertEqual(selected, 'a')
-                        self.assertEqual(raw_span['start'], sources[i].index('some a') + len('some '))
-                    else:
-                        # Declaration provenance is enclosing context, not an exact token.
-                        self.assertEqual(raw['precision'], 'related')
-                        self.assertEqual(selected, 'one a:A | some a')
-                self.assertEqual(len(canonical_starts), 2)
-                self.assertEqual(raw_precisions, {'node', 'related'})
+                self.assertEqual(feedback['operations'], [])
+                # The updated owner correspondence admits this commutative
+                # permutation while retaining both distinct source bindings.
                 identity = self.locate(bodies[i], environment, reference=sources[i])['feedback']
                 self.assertEqual(identity['distance'], 0)
                 self.assertEqual(identity['operations'], [])

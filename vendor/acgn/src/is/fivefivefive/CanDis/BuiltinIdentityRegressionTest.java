@@ -141,7 +141,7 @@ public final class BuiltinIdentityRegressionTest {
         }
 
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         boolean witnessedDifference = false;
         check(module.getAllCommands().size() == SCOPES.size(), "one source command per scope");
         for (int scope = 0; scope < SCOPES.size(); scope++) {

@@ -62,6 +62,9 @@ public final class EGraphNode {
     private String sourceType;
     private ExactAlloyType exactAlloyType;
     private String alphaName;
+    /* Issued only by the existing detached local-binder comparison projection. */
+    private boolean comparisonLocalCoordinate;
+    private boolean comparisonRegisteredBinding;
     private String semanticIdentity;
     private BuiltinConstantKind builtinConstantKind;
     private SigSymbol parserSignatureEvidence;
@@ -82,6 +85,7 @@ public final class EGraphNode {
     /* Internal derivation evidence; generic Bool metadata alone is not authority. */
     private Opcode derivedBooleanRewriteOpcode;
     /* Owner-issued temporal REF provenance; excluded from semantic keys. */
+    private String comparisonTemporalReferenceName;
     private long temporalReferenceAuthorityId = -1L;
     private final SemanticProfile semanticProfile;
     private enum BuiltinConstantKind {
@@ -7028,10 +7032,301 @@ public final class EGraphNode {
         return key.toString();
     }
 
-    private EGraphNode snapshot() {
-        EGraphNode copy = new EGraphNode(
-                id, opcode, Collections.emptyList(), isCommutative, maxArity, flexibleArity,
-                metatype, semanticProfile, false, arena);
+    /** Detached, metric-only projection. Never replaces a certification source. */
+    static EGraphNode fastComparisonMatrix(EGraphNode source) {
+        return fastComparisonMatrix(source, Collections.emptyMap());
+    }
+
+    static EGraphNode fastComparisonMatrix(EGraphNode source, Map<Long, String> closedPhaseKeys) {
+        return fastComparisonMatrix(source, closedPhaseKeys, Collections.emptyMap());
+    }
+
+    static EGraphNode fastComparisonMatrix(EGraphNode source, Map<Long, String> closedPhaseKeys,
+            Map<Long, String> referenceCoordinates) {
+        return fastComparisonMatrix(source, closedPhaseKeys, referenceCoordinates, Collections.emptySet());
+    }
+
+    static EGraphNode fastComparisonMatrix(EGraphNode source, Map<Long, String> closedPhaseKeys,
+            Map<Long, String> referenceCoordinates, Set<String> registeredBindings) {
+        if (source == null) {
+            return null;
+        }
+        EGraphNode result = new FastComparison(closedPhaseKeys, referenceCoordinates, registeredBindings).copy(
+                source, Collections.emptyMap(), Collections.emptyMap(), 0, true);
+        result.freezeForCertification();
+        return result;
+    }
+
+    public boolean hasComparisonLocalCoordinate() { return comparisonLocalCoordinate; }
+    boolean hasComparisonRegisteredBinding() { return comparisonRegisteredBinding; }
+
+    private static final class FastComparison {
+        private final EGraphArena target = new EGraphArena();
+        private final Map<Long, String> closedPhaseKeys;
+        private final Map<Long, String> referenceCoordinates;
+        private final Set<String> registeredBindings;
+
+        private FastComparison(Map<Long, String> closedPhaseKeys, Map<Long, String> referenceCoordinates,
+                Set<String> registeredBindings) {
+            this.closedPhaseKeys = Map.copyOf(closedPhaseKeys);
+            this.referenceCoordinates = Map.copyOf(referenceCoordinates);
+            this.registeredBindings = Set.copyOf(registeredBindings);
+        }
+
+        private EGraphNode head(EGraphNode source, List<EGraphNode> children) {
+            EGraphNode copy = new EGraphNode(source.id, source.opcode, children,
+                    source.isCommutative, source.maxArity, source.flexibleArity,
+                    source.metatype, source.semanticProfile, true, target);
+            source.copyPayloadTo(copy);
+            if (copy.opcode == Opcode.REF && referenceCoordinates.containsKey(copy.temporalReferenceAuthorityId))
+                copy.comparisonTemporalReferenceName = referenceCoordinates.get(copy.temporalReferenceAuthorityId);
+            return copy;
+        }
+
+        private EGraphNode child(EClassRef ref, Map<String, String> ambient,
+                Map<String, String> scope, int depth, boolean rename) {
+            Map<String, String> slots = new LinkedHashMap<>();
+            ref.getSlotMap().forEach((key, value) ->
+                    slots.put(key, ambient.getOrDefault(value, value)));
+            return copy(ref.getEClass().getRepresentative(), slots, scope, depth, rename);
+        }
+
+        private static String name(EGraphNode variable, Map<String, String> ambient) {
+            String key = variable.alphaName == null ? variable.sourceName : variable.alphaName;
+            return ambient.getOrDefault(key, key);
+        }
+
+        private static boolean declaration(EGraphNode node) {
+            return node.opcode == Opcode.GENERICRELDECL || node.opcode == Opcode.DISJ
+                    || node.opcode == Opcode.VAR || node.opcode == Opcode.DISJVAR;
+        }
+
+        private static boolean localBinder(EGraphNode node) {
+            switch (node.opcode) {
+                case COMPREHENSION: case SUM: case FORALL: case EXISTS:
+                case NO: case ONE: case LONE:
+                    return node.getChildren().stream().anyMatch(FastComparison::declaration);
+                default:
+                    return false;
+            }
+        }
+
+        private static boolean containsTemporalReference(EGraphNode node) {
+            if (node.temporalReferenceAuthorityId >= 0) {
+                return true;
+            }
+            for (EGraphNode child : node.getChildren()) {
+                if (containsTemporalReference(child)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private EGraphNode copy(EGraphNode source, Map<String, String> ambient,
+                Map<String, String> scope, int depth, boolean rename) {
+            if (source.opcode == Opcode.VARIABLE) {
+                EGraphNode variable = head(source, Collections.emptyList());
+                String key = name(source, ambient);
+                variable.alphaName = scope.getOrDefault(key, key);
+                variable.comparisonLocalCoordinate = scope.containsKey(key);
+                variable.comparisonRegisteredBinding = registeredBindings.contains(key);
+                return variable;
+            }
+            List<EGraphNode> children = new ArrayList<>();
+            if (rename && localBinder(source) && !containsTemporalReference(source)) {
+                Map<String, String> bodyScope = new LinkedHashMap<>(scope);
+                int coordinate = 0;
+                for (EClassRef ref : source.childClasses) {
+                    EGraphNode decl = ref.getEClass().getRepresentative();
+                    if (!declaration(decl)) {
+                        children.add(child(ref, ambient, bodyScope, depth + 1, true));
+                        continue;
+                    }
+                    Map<String, String> declAmbient = new LinkedHashMap<>();
+                    ref.getSlotMap().forEach((key, value) ->
+                            declAmbient.put(key, ambient.getOrDefault(value, value)));
+                    List<EGraphNode> parts = new ArrayList<>();
+                    // All variables in one declaration see the same outer domain.
+                    parts.add(child(decl.childClasses.get(0), declAmbient,
+                            bodyScope, depth + 1, true));
+                    for (int i = 1; i < decl.childClasses.size(); i++) {
+                        EGraphNode variable = child(decl.childClasses.get(i), declAmbient,
+                                Collections.emptyMap(), depth + 1, false);
+                        if (variable.opcode != Opcode.VARIABLE) {
+                            throw new IllegalStateException("A local declaration contains a non-variable");
+                        }
+                        String local = "@fast-local:" + depth + ":" + coordinate++;
+                        bodyScope.put(variable.alphaName, local);
+                        variable.alphaName = local;
+                        variable.comparisonLocalCoordinate = true;
+                        parts.add(variable);
+                    }
+                    if (source.opcode == Opcode.COMPREHENSION
+                            && decl.opcode == Opcode.GENERICRELDECL) {
+                        for (int i = 1; i < parts.size(); i++) {
+                            children.add(head(decl, List.of(parts.get(0), parts.get(i))));
+                        }
+                    } else {
+                        children.add(head(decl, parts));
+                    }
+                }
+            } else {
+                boolean childRename = rename && !localBinder(source);
+                for (EClassRef ref : source.childClasses) {
+                    children.add(child(ref, ambient, scope, depth, childRename));
+                }
+            }
+            if (rename && source.opcode == Opcode.FORALL && !containsTemporalReference(source)) {
+                List<EGraphNode> grouped = new ArrayList<>();
+                for (EGraphNode next : children) {
+                    EGraphNode previous = grouped.isEmpty() ? null : grouped.get(grouped.size() - 1);
+                    if (previous != null && previous.opcode == Opcode.GENERICRELDECL
+                            && next.opcode == Opcode.GENERICRELDECL
+                            && !previous.childClasses.isEmpty() && !next.childClasses.isEmpty()
+                            && certifiedContainerInvocationKey(previous.childClasses.get(0))
+                                    .equals(certifiedContainerInvocationKey(next.childClasses.get(0)))) {
+                        List<EGraphNode> parts = new ArrayList<>(previous.getChildren());
+                        parts.addAll(next.getChildren().subList(1, next.getChildren().size()));
+                        grouped.set(grouped.size() - 1, head(previous, parts));
+                    } else {
+                        grouped.add(next);
+                    }
+                }
+                children = grouped;
+            }
+            EGraphNode result = head(source, children);
+            if ((result.opcode == Opcode.IN || result.opcode == Opcode.NOT_IN
+                    || result.opcode == Opcode.EQUALS || result.opcode == Opcode.NOT_EQUALS)
+                    && hasBooleanFormulaType(result) && children.size() == 2
+                    && children.get(0).exactAlloyType != null
+                    && children.get(1).exactAlloyType != null) {
+                result.sourceName = null;
+            }
+            if ((result.opcode == Opcode.NO || result.opcode == Opcode.SOME
+                    || result.opcode == Opcode.ONE || result.opcode == Opcode.LONE)
+                    && hasBooleanFormulaType(result) && children.size() == 1
+                    && !declaration(children.get(0))
+                    && children.get(0).exactAlloyType != null
+                    && children.get(0).exactAlloyType.kind() != ExactAlloyType.Kind.BOOL) {
+                result.maxArity = 1;
+                result.flexibleArity = false;
+                result.isCommutative = false;
+                result.sourceName = null;
+            }
+            if ((result.opcode == Opcode.AND || result.opcode == Opcode.OR)
+                    && hasBooleanRewriteAuthority(result) && hasBooleanOperands(result)) {
+                result.derivedBooleanRewriteOpcode = result.opcode;
+                result.sourceName = null;
+                List<EClassRef> flat = new ArrayList<>();
+                for (EClassRef ref : result.childClasses) {
+                    EGraphNode operand = ref.getEClass().getRepresentative();
+                    if (result.sameFlatOperatorInstance(operand)) {
+                        flat.addAll(operand.childClasses);
+                    } else {
+                        flat.add(ref);
+                    }
+                }
+                Map<String, EClassRef> unique = new LinkedHashMap<>();
+                for (EClassRef ref : flat) {
+                    EGraphNode operand = ref.getEClass().getRepresentative();
+                    String phaseKey = operand.opcode == Opcode.REF && operand.childClasses.isEmpty()
+                            && ref.getSlotMap().isEmpty()
+                            ? closedPhaseKeys.get(operand.temporalReferenceAuthorityId) : null;
+                    String key = phaseKey == null ? certifiedContainerInvocationKey(ref)
+                            : "closed-temporal-phase/" + phaseKey;
+                    unique.putIfAbsent(key, ref);
+                }
+                result.childClasses = new ArrayList<>(unique.values());
+                if (result.childClasses.size() == 1) {
+                    return result.childClasses.get(0).getEClass().getRepresentative();
+                }
+            }
+            return leftAssociateJoin(result);
+        }
+
+        private EGraphNode leftAssociateJoin(EGraphNode outer) {
+            if (outer.opcode != Opcode.JOIN || outer.childClasses.size() != 2) {
+                return outer;
+            }
+            EGraphNode a = outer.getChildren().get(0);
+            EGraphNode inner = outer.getChildren().get(1);
+            if (inner.opcode != Opcode.JOIN || inner.childClasses.size() != 2) {
+                return outer;
+            }
+            EGraphNode b = inner.getChildren().get(0);
+            EGraphNode c = inner.getChildren().get(1);
+            if (a.exactAlloyType == null || b.exactAlloyType == null
+                    || c.exactAlloyType == null || b.exactAlloyType.relationArity() < 2) {
+                return outer;
+            }
+            ExactAlloyType ab;
+            try {
+                ExactAlloyType bc = ExactAlloyType.parserCertifiedRelationalJoin(
+                        b.exactAlloyType, c.exactAlloyType);
+                ab = ExactAlloyType.parserCertifiedRelationalJoin(a.exactAlloyType, b.exactAlloyType);
+                ExactAlloyType original = ExactAlloyType.parserCertifiedRelationalJoin(a.exactAlloyType, bc);
+                ExactAlloyType rotated = ExactAlloyType.parserCertifiedRelationalJoin(ab, c.exactAlloyType);
+                if (!bc.equals(inner.exactAlloyType) || !original.equals(outer.exactAlloyType)
+                        || !original.equals(rotated)) {
+                    return outer;
+                }
+            } catch (IllegalArgumentException unsupported) {
+                return outer;
+            }
+            EGraphNode left = head(inner, List.of(a, b));
+            left.exactAlloyType = ab;
+            left = leftAssociateJoin(left);
+            return leftAssociateJoin(head(outer, List.of(left, c)));
+        }
+    }
+
+    /** Conservative equality key for a closed leaf phase, not a binder alpha key.
+     * Ordered syntax and every exact type/head are retained. Expanded DAG visits
+     * and emitted text are bounded before recursive serialization can grow. */
+    static String closedFastMatrixKey(EGraphNode root) {
+        if (root == null || root.opcode != Opcode.TEMPORALROOT) return null;
+        StringBuilder key = new StringBuilder();
+        return appendClosedFastKey(root, key, new int[]{1024}, 0) ? key.toString() : null;
+    }
+
+    private static boolean appendClosedFastKey(EGraphNode node, StringBuilder key, int[] visits, int depth) {
+        if (--visits[0] < 0 || depth > 64) return false;
+        if (node.opcode != Opcode.TEMPORALROOT && node.exactAlloyType == null) return false;
+        switch (node.opcode) {
+            case TEMPORALROOT:
+                if (depth != 0 || node.metatype != Metatype.BOOLEAN || node.childClasses.size() != 1
+                        || node.sourceName != null || node.semanticIdentity != null || node.alphaName != null
+                        || !node.eClass.getSlots().isEmpty()
+                        || (node.exactAlloyType != null && node.exactAlloyType.kind() != ExactAlloyType.Kind.BOOL)) return false;
+                EGraphNode body = node.childClasses.get(0).getEClass().getRepresentative();
+                if (body.exactAlloyType == null || body.exactAlloyType.kind() != ExactAlloyType.Kind.BOOL) return false;
+                break;
+            case GLOBALBINDING:
+                if (node.semanticIdentity == null || !node.childClasses.isEmpty()) return false;
+                break;
+            case CONSTANT: case NOT: case NO: case SOME: case ONE: case LONE:
+            case AND: case OR: case IN: case NOT_IN: case EQUALS: case NOT_EQUALS:
+            case INTERSECT: case PLUS: case MINUS: case JOIN: case ARROW:
+            case TRANSPOSE: case DOMAIN: case RANGE: case CLOSURE: case RCLOSURE:
+                break;
+            default:
+                return false;
+        }
+        StringBuilder head = new StringBuilder(); appendSemanticHead(node, head);
+        if (head.length() > 8192 || key.length() + head.length() + 32 > 131072) return false;
+        appendLengthEncoded(key, head.toString());
+        key.append('[').append(node.childClasses.size()).append(':');
+        for (EClassRef child : node.childClasses) {
+            if (!child.getSlotMap().isEmpty()
+                    || !appendClosedFastKey(child.getEClass().getRepresentative(), key, visits, depth+1)) return false;
+        }
+        key.append(']');
+        return key.length() <= 131072;
+    }
+
+    private void copyPayloadTo(EGraphNode copy) {
+        copy.comparisonTemporalReferenceName = comparisonTemporalReferenceName;
         copy.sourceName = sourceName;
         copy.sourceOrigin = getSourceOrigin();
         copy.sourceType = sourceType;
@@ -7048,6 +7343,21 @@ public final class EGraphNode {
         copy.derivedBooleanRewriteOpcode = derivedBooleanRewriteOpcode;
         copy.temporalReferenceAuthorityId = temporalReferenceAuthorityId;
         copy.temporalSnapshotBinding = temporalSnapshotBinding;
+    }
+
+    String comparisonTemporalReferenceName() {
+        return comparisonTemporalReferenceName == null ? sourceName : comparisonTemporalReferenceName;
+    }
+
+    boolean hasComparisonTemporalReferenceName() {
+        return comparisonTemporalReferenceName != null;
+    }
+
+    private EGraphNode snapshot() {
+        EGraphNode copy = new EGraphNode(
+                id, opcode, Collections.emptyList(), isCommutative, maxArity, flexibleArity,
+                metatype, semanticProfile, false, arena);
+        copyPayloadTo(copy);
         copy.childClasses = new ArrayList<>(childClasses);
         copy.eClass = eClass;
         return copy;

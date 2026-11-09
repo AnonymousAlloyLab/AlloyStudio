@@ -630,6 +630,16 @@ public final class TypedSlottedPortEGraph {
                 construction.node(), family, construction.certificate());
     }
 
+    public synchronized CertifiedInsertionResult insertNodeConstructed(
+            GuardedJoinCertificate construction, CoherentWitnessFamily family) {
+        return insertNodeWithConstruction(construction.realization().node(), family, construction);
+    }
+
+    public synchronized CertifiedInsertionResult insertNodeConstructed(
+            GuardedJoinNodeCertificate construction, CoherentWitnessFamily family) {
+        return insertNodeWithConstruction(construction.node(), family, construction);
+    }
+
     private CertifiedInsertionResult insertNodeWithConstruction(
             TypedENode node,
             CoherentWitnessFamily family,
@@ -782,6 +792,10 @@ public final class TypedSlottedPortEGraph {
             }
             return;
         }
+        if (construction instanceof GuardedJoinCertificate guarded
+                && semanticProfile.equals(guarded.semanticProfile())) return;
+        if (construction instanceof GuardedJoinNodeCertificate guarded
+                && semanticProfile.equals(guarded.semanticProfile())) return;
         throw new IllegalArgumentException(
                 "A production law-bearing node requires an admitted concrete construction");
     }
@@ -802,6 +816,8 @@ public final class TypedSlottedPortEGraph {
         if (construction instanceof DependentChainCertificate) {
             return ((DependentChainCertificate) construction).target();
         }
+        if (construction instanceof GuardedJoinCertificate guarded) return guarded.realization().node();
+        if (construction instanceof GuardedJoinNodeCertificate guarded) return guarded.node();
         throw new IllegalArgumentException(
                 "Fixed-batch construction evidence has the wrong certificate family");
     }

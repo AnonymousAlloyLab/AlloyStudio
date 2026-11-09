@@ -1138,13 +1138,9 @@ public class Alloy4FunAugmenter {
             Files.createDirectories(correctRoot.resolve(group.questionSet));
             Path file = correctRoot.resolve(group.questionSet).resolve(group.invariantId + ".als");
             try (Writer writer = outputWriter(file)) {
-                writer.write("module alloy4fun_augmented_" + sanitize(group.questionSet) + "_" + sanitize(group.invariantId) + "\n");
-                String prelude = group.prelude();
-                int line = prelude.indexOf('\n');
-                if (line >= 0) {
-                    writer.write(prelude.substring(line + 1).trim());
-                    writer.write("\n\n");
-                }
+                writer.write(AugmentedPrelude.withModuleName(group.prelude(),
+                        "alloy4fun_augmented_" + sanitize(group.questionSet) + "_" + sanitize(group.invariantId)));
+                writer.write("\n\n");
                 for (Reference reference : group.references) {
                     writer.write("pred " + reference.augmentedName + "[] {\n");
                     writer.write(reference.body.trim());

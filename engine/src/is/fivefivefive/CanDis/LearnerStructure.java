@@ -55,7 +55,7 @@ public final class LearnerStructure {
             throw new IllegalArgumentException("Invalid structure limits");
         Index index = new Index(nodes, depth, bytes, millis);
         try {
-            List<NormalForm> forms = learner.normalizedForms();
+            List<NormalForm> forms = LiveTrace.comparisonForms(learner);
             for (int phase = 0; phase < forms.size(); phase++) {
                 index.guard();
                 if (phase >= Math.min(nodes, MAX_PHASES)) throw new Limit("node_limit");

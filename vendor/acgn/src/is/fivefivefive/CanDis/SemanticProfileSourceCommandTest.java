@@ -239,7 +239,7 @@ public final class SemanticProfileSourceCommandTest {
         A4Options options = new A4Options();
         options.noOverflow = noOverflow;
         options.unrolls = unrolls;
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         return options;
     }
 

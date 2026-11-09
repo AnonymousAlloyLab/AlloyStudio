@@ -137,15 +137,18 @@ public class Rewarder {
                 Hyperparams.SCOPE,
                 Hyperparams.SCOPE,
                 Hyperparams.SCOPE,
+                null,
                 positiveExpression);
         Command commandNegative = new Command(
                 true,
                 Hyperparams.SCOPE,
                 Hyperparams.SCOPE,
                 Hyperparams.SCOPE,
+                null,
                 negativeExpression);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        // Alloy 6.2 DEFAULT is SAT4J; name lookup probes unrelated native solvers.
+        options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
         A4Solution posInstance = TranslateAlloyToKodkod.execute_command(rep, cm.getAllReachableSigs(), commandPositive, options);
         A4Solution negInstance = TranslateAlloyToKodkod.execute_command(rep, cm.getAllReachableSigs(), commandNegative, options);
         if (posInstance == null || negInstance == null) {
@@ -264,12 +267,12 @@ public class Rewarder {
             };
 
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
             Expr satCommand1 = CompUtil.parseOneExpression_fromString(cm, satCommandText1);
             Expr satCommand2 = CompUtil.parseOneExpression_fromString(cm, satCommandText2);
             // cm.addGlobal("l", CompUtil.parseOneExpression_fromString(cm, "List"));
-            Command cmd1 = new Command(true, Hyperparams.SCOPE, Hyperparams.SCOPE, Hyperparams.SCOPE, satCommand1);
-            Command cmd2 = new Command(true, Hyperparams.SCOPE, Hyperparams.SCOPE, Hyperparams.SCOPE, satCommand2);
+            Command cmd1 = new Command(true, Hyperparams.SCOPE, Hyperparams.SCOPE, Hyperparams.SCOPE, null, satCommand1);
+            Command cmd2 = new Command(true, Hyperparams.SCOPE, Hyperparams.SCOPE, Hyperparams.SCOPE, null, satCommand2);
             A4Solution satSolution1 = TranslateAlloyToKodkod.execute_command(rep, cm.getAllReachableSigs(), cmd1, options);
             A4Solution satSolution2 = TranslateAlloyToKodkod.execute_command(rep, cm.getAllReachableSigs(), cmd2, options);
             boolean noOvercoverage = satSolution1 == null || !satSolution1.satisfiable();

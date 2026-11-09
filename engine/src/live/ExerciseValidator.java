@@ -282,17 +282,17 @@ public final class ExerciseValidator {
 
     static A4Solution solve(CompModule world, Expr expression, int scope) throws Err {
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         // The installed Alloy constructor's final integer is "expects", not
         // a string scope. Explicit trace bounds avoid relying on defaults.
-        Command unboundedTrace = new Command(false, scope, 5, scope, expression);
+        Command unboundedTrace = new Command(false, scope, 5, scope, null, expression);
         boolean temporal = CompUtil.isTemporalModel(world.getAllReachableSigs(), unboundedTrace);
         // Alloy rejects a steps scope on a static model, whose single state is
         // already inside the declared 1..10 profile. Temporal queries receive
         // explicit bounds rather than translator defaults.
         Command command = new Command(null, null, "private-import-validation", false,
                 scope, 5, scope, temporal ? 1 : -1, temporal ? 10 : -1, -1,
-                null, null, expression, null);
+                null, null, null, expression, null);
         if (command.overall != scope || command.bitwidth != 5 || command.maxseq != scope
                 || command.minprefix != (temporal ? 1 : -1) || command.maxprefix != (temporal ? 10 : -1))
             throw new IllegalStateException();

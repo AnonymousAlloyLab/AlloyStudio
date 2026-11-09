@@ -28,10 +28,11 @@ import is.fivefivefive.CanDis.metric.RepairView.TemporalNode;
  * authority.
  */
 public final class QuotientRepairDistance {
-    public static final String VERSION = "certified-fast-rewrite-repair-distance-v12";
+    public static final String VERSION = "certified-fast-rewrite-repair-distance-v25-retained-phase-representation";
     private static final long DEFAULT_MAX_QUANTIFIER_ALIGNMENTS = 1_000_000L;
     private static final long DEFAULT_MAX_SCOPE_ALIGNMENTS = 1_000_000L;
     private static final long DEFAULT_MAX_ALPHA_ALIGNMENTS = 10_000_000L;
+    private static final ThreadLocal<MutableStats> DECISIONS=new ThreadLocal<>();
 
     private QuotientRepairDistance() {
     }
@@ -51,6 +52,483 @@ public final class QuotientRepairDistance {
 
     public static int distance(RepairView left, RepairView right) {
         return evaluate(left, right).distance();
+    }
+
+    /** Diagnostic only: native selected matrix edits, with no complete-plan authority. */
+    public static org.json.JSONObject matrixReplay(RepairView left, RepairView right) {
+        return captureDecisions(left,right).matrix;
+    }
+    private record Captured(org.json.JSONObject matrix,MutableStats decisions) { }
+    private static Captured captureDecisions(RepairView left,RepairView right) {
+        if(DECISIONS.get()!=null)throw new IllegalStateException("Reentrant native decision capture");
+        MutableStats stats=new MutableStats();stats.capture=true;DECISIONS.set(stats);
+        Result nativeResult;
+        try { nativeResult=evaluate(left,right); } finally { DECISIONS.remove(); }
+        int aligned = Math.min(left.phases().size(),right.phases().size());
+        int phaseCount = Math.max(left.phases().size(),right.phases().size());
+        int cost = 0;
+        org.json.JSONArray phases = new org.json.JSONArray();
+        for (int i = 0; i < phaseCount; i++) {
+            if (i < aligned && stats.selectedMapping == null)
+                throw new IllegalStateException("MATRIX_REPLAY_MISSING_CHOICE");
+            int[] mapping = i < aligned
+                    ? phaseMapping(stats.selectedLeft, stats.selectedRight, stats.selectedMapping, i) : new int[0];
+            MatrixReplay<Node> replay=matrixReplayEngine(mapping,mapping,false,stats.temporalPayments,i);
+            Node a = i < left.phases().size() ? left.phases().get(i).matrix() : null;
+            Node b = i < right.phases().size() ? right.phases().get(i).matrix() : null;
+            MatrixDecision<Node> chosen;
+            if(i<aligned)chosen=stats.selectedPhases.get(i);
+            else chosen=stats.unaligned.get(i);
+            org.json.JSONObject receipt = replay.capture(chosen);
+            cost = Math.addExact(cost, replay.verify(a, b, receipt));
+            phases.put(new org.json.JSONObject().put("phase", i)
+                    .put("alphaMapping", new org.json.JSONArray(mapping)).put("receipt", receipt));
+        }
+        if (cost != nativeResult.matrixDistance())
+            throw new IllegalStateException("MATRIX_REPLAY_NATIVE_COST_MISMATCH");
+        var result=new org.json.JSONObject().put("arm", "certified").put("distance", nativeResult.distance())
+                .put("metricVersion",VERSION).put("exactForStoredOrbits",nativeResult.exactForStoredOrbits())
+                .put("binderAlignments",nativeResult.binderAlignments()).put("kernelAuthority",nativeResult.kernelAuthority())
+                .put("temporalDistance", nativeResult.temporalDistance())
+                .put("quantifierDistance", nativeResult.quantifierDistance())
+                .put("matrixDistance", nativeResult.matrixDistance()).put("replayedMatrixCost", cost)
+                .put("matrixReplayChecked", true).put("complete", false).put("phases", phases)
+                .put("selectedTemporalReferencePayments",stats.temporalPayments.json())
+                .put("selectedGlobalMapping", new org.json.JSONArray(stats.selectedMapping == null ? new int[0] : stats.selectedMapping))
+                .put("selectedQuantifierCorrespondence", stats.selectedCorrespondence == null
+                        ? new org.json.JSONObject() : new org.json.JSONObject(stats.selectedCorrespondence))
+                .put("selectedDeclarationPermutation",new org.json.JSONObject()
+                        .put("left",new org.json.JSONArray(stats.selectedDeclarationLeft == null ? new int[0] : stats.selectedDeclarationLeft))
+                        .put("right",new org.json.JSONArray(stats.selectedDeclarationRight == null ? new int[0] : stats.selectedDeclarationRight)));
+        return new Captured(result,stats);
+    }
+
+    /** Fixed-choice diagnostic verifier; neither chooses a mapping nor grants admission. */
+    public static int[] projectFixedMatrixMapping(RepairView left,RepairView right,int[] global) {
+        if(left.phases().size()!=1 || right.phases().size()!=1)
+            throw new IllegalArgumentException("Single-phase fixed replay required");
+        var a=GlobalBindingIndex.create(left.phases(),1);
+        var b=GlobalBindingIndex.create(right.phases(),1);
+        if(global.length!=a.bindings.size())throw new IllegalArgumentException("Global map coverage");
+        var used=new HashSet<Integer>();
+        for(int j:global)if(j < -1 || j >= b.bindings.size() || j>=0 && !used.add(j))
+            throw new IllegalArgumentException("Foreign or noninjective global mapping");
+        return phaseMapping(a,b,global,0);
+    }
+
+    /** Fixed-choice diagnostic verifier; neither chooses a mapping nor grants admission. */
+    public static int verifyFixedMatrixReplay(RepairView left,RepairView right,int[] labels,int[] completed,
+            org.json.JSONObject receipt) {
+        if(left.phases().size()!=1 || right.phases().size()!=1)
+            throw new IllegalArgumentException("Single-phase fixed replay required");
+        return matrixReplayEngine(labels,completed,false).verify(left.phases().get(0).matrix(),right.phases().get(0).matrix(),receipt);
+    }
+
+    private static MatrixReplay<Node> matrixReplayEngine(int[] labels,int[] costs,boolean search) {
+        return matrixReplayEngine(labels,costs,search,SelectedTemporalPayments.NONE,-1);
+    }
+    private static MatrixReplay<Node> matrixReplayEngine(int[] labels,int[] costs,boolean search,
+            SelectedTemporalPayments payments,int phase) {
+        var context=new MatrixDistanceContext(costs,false,payments,phase);
+        return new MatrixReplay<>(new MatrixReplay.NativeCost<Node>() {
+            public String label(Node n) {
+                return new org.json.JSONArray().put(n.operator()).put(n.semanticPayload()).put(n.bindingIndex())
+                        .put(String.valueOf(n.lexicalVariable())).put(n.containerKind().toString())
+                        .put(n.orderInsensitive()).put(Arrays.toString(labels)).toString();
+            }
+            public String evidence(Node n) {
+                return new org.json.JSONObject().put("observationType",String.valueOf(n.observationType()))
+                        .put("observationPhases",new org.json.JSONArray(n.observationPhases()))
+                        .put("observationTemporalOperator",String.valueOf(n.observationTemporalOperator()))
+                        .put("bindingIndex",n.bindingIndex()).put("lexicalVariable",String.valueOf(n.lexicalVariable()))
+                        .put("payload",String.valueOf(n.payload())).put("semanticPayload",String.valueOf(n.semanticPayload())).toString();
+            }
+            public Object sourceObjectEvidence(Node n) { return payments.referenceEvidence(phase,n); }
+            public List<Node> children(Node n) { return n.children(); }
+            public List<Node> alternatives(Node n) { return n.certifiedAlternatives(); }
+            public boolean unordered(Node a,Node b) { return a.operator().equals(b.operator()) && a.orderInsensitive() && b.orderInsensitive(); }
+            public int size(Node n) { return n.size(); }
+            public int update(Node a,Node b) { return context.updateCost(a,b); }
+            public int distance(Node a,Node b) {
+                if(!search) throw new IllegalStateException("Completion replay cannot search");
+                return context.distance(a,b);
+            }
+        });
+    }
+
+    /** Keeps native matrix choices and backtraces compatible minimum declaration paths. */
+    public static org.json.JSONObject replayWithSlices(RepairView left, RepairView right) {
+        return evaluateWithTrace(left,right).json();
+    }
+
+    /** Executes the selected native metric representation, independently of cross-arm bridges. */
+    public static NativeRepairTrace evaluateWithTrace(RepairView left,RepairView right) {
+        var captured=captureDecisions(left,right);var out=captured.matrix;var stats=captured.decisions;
+        try {
+        var as=new ArrayList<List<DeclarationReplay.Atom>>();var bs=new ArrayList<List<DeclarationReplay.Atom>>();
+        var declarations=new org.json.JSONArray();
+        int aligned=Math.min(left.phases().size(),right.phases().size());
+        int count=Math.max(left.phases().size(),right.phases().size());
+        for(int index=0;index<stats.quantification.components.size();index++) {
+            var component=stats.quantification.components.get(index);
+            var a=component.left;var b=component.right;
+            if(stats.selectedLeft!=null){
+                a=permuteDeclarations(a,stats.selectedLeft,stats.selectedDeclarationLeft);
+                b=permuteDeclarations(b,stats.selectedRight,stats.selectedDeclarationRight);
+            }
+            as.add(List.copyOf(declarationAtoms(a)));bs.add(List.copyOf(declarationAtoms(b)));
+            var moves=stats.selectedDeclarationPaths==null
+                    ?DeclarationReplay.selectedMoves(component.distance,(i,j)->QuantifierEditComponent.tupleUpdateCost(component.left.get(i),component.right.get(j)))
+                    :stats.selectedDeclarationPaths.get(index);
+            declarations.put(DeclarationReplay.captureSelected(as.get(index),bs.get(index),moves,component.cost()));
+        }
+        for(int phase=aligned;phase<count;phase++) {
+            var a=phase<left.phases().size()?QuantificationAlignmentSpace.quantifiedDeclarations(left.phases().get(phase),phase):List.<IndexedDeclaration>of();
+            var b=phase<right.phases().size()?QuantificationAlignmentSpace.quantifiedDeclarations(right.phases().get(phase),phase):List.<IndexedDeclaration>of();
+            as.add(List.copyOf(declarationAtoms(a)));bs.add(List.copyOf(declarationAtoms(b)));
+            var moves=new ArrayList<DeclarationReplay.Move>();
+            for(int i=0;i<a.size();i++)moves.add(new DeclarationReplay.Move(i,-1));
+            for(int j=0;j<b.size();j++)moves.add(new DeclarationReplay.Move(-1,j));
+            declarations.put(DeclarationReplay.captureSelected(as.get(as.size()-1),bs.get(bs.size()-1),moves,Math.addExact(a.size(),b.size())));
+        }
+        for(int phase=0;phase<count;phase++) {
+            int[] mapping=phase<aligned?phaseMapping(stats.selectedLeft,stats.selectedRight,stats.selectedMapping,phase):new int[0];
+            var choice=phase<aligned?stats.selectedPhases.get(phase):stats.unaligned.get(phase);
+            var payload=out.getJSONArray("phases").getJSONObject(phase);
+            payload.put("program",matrixReplayEngine(mapping,mapping,false,stats.temporalPayments,phase).executable(choice.source(),choice.target(),payload.getJSONObject("receipt")));
+        }
+        out.put("nativeDeclarationPrograms",declarations).put("nativeTemporalProgram",TemporalReplay.capture(
+                left.temporalRoot(),right.temporalRoot(),out.getInt("temporalDistance"),TemporalNode::label,TemporalNode::children,stats.temporal))
+                .put("sourceProducerObservationDigest",left.producerObservationDigest())
+                .put("targetProducerObservationDigest",right.producerObservationDigest())
+                .put("executionRepresentation","Certified projected temporal tree, ordered declaration tuples and selected matrix representatives")
+                .put("jointBindingCorrespondenceChecked",false)
+                .put("sourceBindingContexts",traceBindingContexts(left)).put("targetBindingContexts",traceBindingContexts(right))
+                .put("constructionLink","Retained sealed RepairViews and producer-observation digests; construction evidence is not an edit");
+        PhaseReplay.attach(out,()->declarationReplay(left,right,out,stats),
+                ()->new org.json.JSONObject(out.getJSONObject("nativeTemporalProgram").toString()));
+        var phaseSteps=new org.json.JSONArray();
+        var sourceOrder=left.phaseRepresentation("source");var targetOrder=right.phaseRepresentation("target");
+        if(sourceOrder!=null)phaseSteps.put(sourceOrder);if(targetOrder!=null)phaseSteps.put(targetOrder);
+        if(!phaseSteps.isEmpty())out.put("nativePhaseRepresentationSteps",phaseSteps);
+        return NativeRepairTrace.checked(out,program->{
+            if(!phaseSteps.isEmpty()&&!phaseSteps.similar(program.getJSONArray("nativePhaseRepresentationSteps")))
+                throw new IllegalArgumentException("Changed certified original/projection phase correspondence");
+            int temporal=TemporalReplay.verify(left.temporalRoot(),right.temporalRoot(),TemporalNode::label,TemporalNode::children,
+                    program.getJSONObject("nativeTemporalProgram"));
+            stats.temporalPayments.requireReceipt(program.getJSONObject("nativeTemporalProgram"),
+                    program.getJSONObject("selectedTemporalReferencePayments"));
+            if(program.getJSONArray("nativeDeclarationPrograms").length()!=as.size()||program.getJSONArray("phases").length()!=count)
+                throw new IllegalArgumentException("Native trace phase coverage");
+            int quantifiers=0,matrix=0;
+            for(int index=0;index<as.size();index++)quantifiers=Math.addExact(quantifiers,DeclarationReplay.execute(
+                    as.get(index),bs.get(index),program.getJSONArray("nativeDeclarationPrograms").getJSONObject(index)));
+            for(int phase=0;phase<count;phase++) {
+                int[] mapping=phase<aligned?phaseMapping(stats.selectedLeft,stats.selectedRight,stats.selectedMapping,phase):new int[0];
+                var choice=phase<aligned?stats.selectedPhases.get(phase):stats.unaligned.get(phase);
+                var payload=program.getJSONArray("phases").getJSONObject(phase);
+                matrix=Math.addExact(matrix,matrixReplayEngine(mapping,mapping,false,stats.temporalPayments,phase).verifyExecutable(choice.source(),choice.target(),
+                        payload.getJSONObject("receipt"),payload.getJSONObject("program")));
+            }
+            if(temporal!=program.getInt("temporalDistance")||quantifiers!=program.getInt("quantifierDistance")||matrix!=program.getInt("matrixDistance"))
+                throw new IllegalArgumentException("Native trace component costs");
+            return Math.addExact(temporal,Math.addExact(quantifiers,matrix));
+        });
+        } catch(RuntimeException failure) {
+            throw NativeRepairTrace.captureFailure(out,failure);
+        }
+    }
+
+    private static org.json.JSONArray traceBindingContexts(RepairView view) {
+        var phases=new org.json.JSONArray();
+        for(int phase=0;phase<view.phases().size();phase++) {
+            var rows=new org.json.JSONArray();int index=0;
+            for(var b:view.phases().get(phase).bindings()) {
+                var d=b.declaration();rows.put(new org.json.JSONObject().put("vectorIndex",index++).put("coordinate",b.coordinate())
+                        .put("role",b.role()).put("ordinal",b.ordinal()).put("ownerPhase",b.ownerPhase()).put("ownerContext",b.ownerContext())
+                        .put("bindingPath",b.bindingPath()).put("certifiedOrbit",new org.json.JSONArray(b.certifiedOrbit()))
+                        .put("quantifier",d.quantifier()).put("type",String.valueOf(d.observationType()))
+                        .put("certifiedDomain",d.certifiedDomain()).put("dependencies",new org.json.JSONArray(d.dependencies()))
+                        .put("cardinality",d.cardinality()).put("disjointnessClass",d.disjointnessClass()));
+            }
+            phases.put(new org.json.JSONObject().put("phase",phase).put("bindings",rows));
+        }
+        return phases;
+    }
+
+    private static org.json.JSONObject declarationReplay(RepairView left,RepairView right,
+            org.json.JSONObject matrix,MutableStats decisions) {
+        DeclarationReplay.requireBounded(QuantificationAlignmentSpace.parameterDeclarations(left.phases()).size(),
+                QuantificationAlignmentSpace.parameterDeclarations(right.phases()).size());
+        int aligned = Math.min(left.phases().size(),right.phases().size());
+        for (int i = 0; i < Math.max(left.phases().size(),right.phases().size()); i++) DeclarationReplay.requireBounded(
+                i < left.phases().size() ? left.phases().get(i).quantifiers().size() : 0,
+                i < right.phases().size() ? right.phases().get(i).quantifiers().size() : 0);
+        QuantificationAlignmentSpace space = decisions.quantification;
+        GlobalBindingIndex a = GlobalBindingIndex.create(left.phases(),aligned);
+        GlobalBindingIndex b = GlobalBindingIndex.create(right.phases(),aligned);
+        org.json.JSONObject permutation = matrix.getJSONObject("selectedDeclarationPermutation");
+        int[] leftPermutation = declarationPermutation(a,permutation.getJSONArray("left"));
+        int[] rightPermutation = declarationPermutation(b,permutation.getJSONArray("right"));
+        int[] effectiveLeft = leftPermutation.clone();
+        int[] effectiveRight = rightPermutation.clone();
+        Map<Integer,Integer> selected = new LinkedHashMap<>(), actual = new LinkedHashMap<>();
+        org.json.JSONObject chosen = matrix.getJSONObject("selectedQuantifierCorrespondence");
+        for (String key : chosen.keySet()) addInjectiveCorrespondence(selected,Integer.parseInt(key),
+                DeclarationReplay.integer(chosen,key));
+        Map<String,String> full = new LinkedHashMap<>();
+        org.json.JSONArray global = matrix.getJSONArray("selectedGlobalMapping");
+        DeclarationReplay.require(global.length() == a.bindings.size(),"Selected matrix mapping size");
+        int[] mapping = new int[global.length()];
+        for (int i = 0; i < mapping.length; i++) {
+            int j = DeclarationReplay.integer(new org.json.JSONObject().put("index",global.get(i)),"index");
+            DeclarationReplay.require(j >= -1 && j < b.bindings.size(),"Selected matrix coordinate");
+            mapping[i] = j;
+            if (j >= 0) full.put(Integer.toString(i),Integer.toString(j));
+        }
+        for (var e : selected.entrySet()) DeclarationReplay.require(
+                Objects.equals(full.get(e.getKey().toString()),e.getValue().toString()),"Paid/matrix link conflict");
+        for (int phase = 0; phase < aligned; phase++) DeclarationReplay.require(
+                new org.json.JSONArray(phaseMapping(a,b,mapping,phase)).similar(matrix.getJSONArray("phases")
+                        .getJSONObject(phase).getJSONArray("alphaMapping")),"Phase/global matrix mapping conflict");
+        Set<String> observedLeft = a.used.stream().map(Object::toString).collect(java.util.stream.Collectors.toSet());
+        Set<String> observedRight = b.used.stream().map(Object::toString).collect(java.util.stream.Collectors.toSet());
+        boolean completeAbsent=closedPrefix(left) && closedPrefix(right);
+        org.json.JSONArray components = new org.json.JSONArray();
+        int cost = 0;
+        for (int index = 0; index < space.components.size(); index++) {
+            QuantifierEditComponent original = space.components.get(index);
+            QuantifierEditComponent component = new QuantifierEditComponent(
+                    permuteDeclarations(original.left,a,leftPermutation),
+                    permuteDeclarations(original.right,b,rightPermutation),original.distance);
+            org.json.JSONObject receipt, connecting=null;
+            try {
+                receipt=captureDeclarations(component,a,b,selected,full,observedLeft,observedRight,completeAbsent);
+            } catch(DeclarationReplay.NoMatchingPath missing) {
+                if(a.phases.size()!=1 || b.phases.size()!=1) throw missing;
+                var source=component.left;
+                var joint=declarationLink(component,a,b,full,observedLeft,observedRight,false);
+                int[] order=joint.connectingPermutation(declarationAtoms(source),(i,j)->
+                        CertifiedDeclarationOrbit.exchangeable(a.binding(a.indices.get(source.get(i).identity)).binding,
+                                a.binding(a.indices.get(source.get(j).identity)).binding));
+                var reordered=DeclarationMatrixLink.permute(source,order);
+                for(int i=0;i<original.left.size();i++) effectiveLeft[a.indices.get(original.left.get(i).identity)]=
+                        a.indices.get(reordered.get(i).identity);
+                CertifiedDeclarationOrbit.requirePermutation(orbitBindings(a),effectiveLeft);
+                component=new QuantifierEditComponent(reordered,component.right,component.distance);
+                try {
+                    receipt=captureDeclarations(component,a,b,selected,full,observedLeft,observedRight,completeAbsent);
+                    connecting=new org.json.JSONObject().put("source",new org.json.JSONArray(order))
+                            .put("target",new org.json.JSONArray(CertifiedDeclarationOrbit.identity(component.right.size())))
+                            .put("admission","SOURCE_CERTIFIED_FULL_SYMMETRIC_ORBIT").put("cost",0);
+                } catch(DeclarationReplay.NoMatchingPath stillMissing) {
+                    var presentation=prefixPresentation(component,a,b,selected,full,observedLeft,observedRight,completeAbsent);
+                    if(presentation==null) throw stillMissing;
+                    component=presentation.component(); receipt=presentation.receipt(); connecting=presentation.evidence();
+                    for(int i=0;i<original.left.size();i++) effectiveLeft[a.indices.get(original.left.get(i).identity)]=
+                            a.indices.get(component.left.get(i).identity);
+                    for(int i=0;i<original.right.size();i++) effectiveRight[b.indices.get(original.right.get(i).identity)]=
+                            b.indices.get(component.right.get(i).identity);
+                }
+            }
+            if(receipt.has("matrixCorrespondenceCompletion")) {
+                var completion=receipt.getJSONObject("matrixCorrespondenceCompletion");
+                var raw=completion.getJSONObject("completedMapping"); int[] completed=mapping.clone();
+                for(String key:raw.keySet()) completed[Integer.parseInt(key)]=Integer.parseInt(raw.getString(key));
+                var originalReceipt=matrix.getJSONArray("phases").getJSONObject(0).getJSONObject("receipt");
+                int replayed=matrixReplayEngine(phaseMapping(a,b,mapping,0),phaseMapping(a,b,completed,0),false,decisions.temporalPayments,0)
+                        .verify(left.phases().get(0).matrix(),right.phases().get(0).matrix(),originalReceipt);
+                DeclarationReplay.require(replayed==originalReceipt.getInt("cost"),"Completion matrix cost changed");
+                completion.put("matrixActionsUnchanged",true).put("replayedMatrixCost",replayed);
+            }
+            cost = Math.addExact(cost,receipt.getInt("replayedCost"));
+            org.json.JSONArray ops = receipt.getJSONArray("operations");
+            for (int k = 0; k < ops.length(); k++) {
+                org.json.JSONObject op = ops.getJSONObject(k);
+                int i = op.getInt("leftIndex"), j = op.getInt("rightIndex");
+                if (i >= 0 && j >= 0 && (op.getInt("cost") != 0 || component.left.get(i).identity.parameter))
+                    addInjectiveCorrespondence(actual,Objects.requireNonNull(a.indices.get(component.left.get(i).identity)),
+                            Objects.requireNonNull(b.indices.get(component.right.get(j).identity)));
+            }
+            var emitted=new org.json.JSONObject().put("phase",index-1)
+                    .put("component",index == 0 ? "parameters" : "quantifiers").put("receipt",receipt);
+            int[] sourceOrder=declarationOrder(original.left,component.left);
+            int[] targetOrder=declarationOrder(original.right,component.right);
+            if((connecting==null || !connecting.has("sourcePresentation"))
+                    && (!Arrays.equals(sourceOrder,CertifiedDeclarationOrbit.identity(sourceOrder.length))
+                    || !Arrays.equals(targetOrder,CertifiedDeclarationOrbit.identity(targetOrder.length))))
+                connecting=new org.json.JSONObject().put("source",new org.json.JSONArray(sourceOrder))
+                        .put("target",new org.json.JSONArray(targetOrder))
+                        .put("admission","SOURCE_CERTIFIED_FULL_SYMMETRIC_ORBIT").put("cost",0);
+            if(connecting!=null) emitted.put("connectingPermutation",connecting);
+            components.put(emitted);
+        }
+        for (int phase = aligned; phase < Math.max(left.phases().size(),right.phases().size()); phase++) {
+            List<IndexedDeclaration> ls = phase < left.phases().size()
+                    ? QuantificationAlignmentSpace.quantifiedDeclarations(left.phases().get(phase),phase) : List.of();
+            List<IndexedDeclaration> rs = phase < right.phases().size()
+                    ? QuantificationAlignmentSpace.quantifiedDeclarations(right.phases().get(phase),phase) : List.of();
+            QuantifierEditComponent component = QuantifierEditComponent.create(ls,rs,true);
+            var as = declarationAtoms(component.left);
+            var bs = declarationAtoms(component.right);
+            org.json.JSONObject receipt = DeclarationReplay.capture(as,bs,component.distance,(i,j) -> true);
+            cost = Math.addExact(cost,DeclarationReplay.verify(as,bs,receipt));
+            components.put(new org.json.JSONObject().put("phase",phase).put("component","quantifiers")
+                    .put("receipt",receipt));
+        }
+        DeclarationReplay.require(selected.equals(actual),"Selected paid/parameter correspondence mismatch");
+        DeclarationReplay.require(cost == space.cost && cost == matrix.getInt("quantifierDistance"),"Native declaration cost");
+        return new org.json.JSONObject().put("components",components).put("cost",cost).put("replayedCost",cost)
+                .put("sliceReplayChecked",true).put("complete",false).put("selectedPaidCorrespondenceChecked",true)
+                .put("selectedPaidCorrespondence",new org.json.JSONObject(actual))
+                .put("selectedMatrixDeclarationLinksChecked",true)
+                .put("jointLinkScope","Original declaration coordinates under selected map plus explicit absence completion; local binders excluded")
+                .put("selectedDeclarationPermutation",new org.json.JSONObject()
+                        .put("left",new org.json.JSONArray(effectiveLeft)).put("right",new org.json.JSONArray(effectiveRight)))
+                .put("orderingAdmissionChecked",false).put("matrixChoiceAdmissionChecked",false);
+    }
+
+    private static DeclarationMatrixLink declarationLink(QuantifierEditComponent component,GlobalBindingIndex a,
+            GlobalBindingIndex b,Map<String,String> full,Set<String> observedLeft,Set<String> observedRight,boolean completeAbsent) {
+        return new DeclarationMatrixLink(
+                component.left.stream().map(d -> Objects.requireNonNull(a.indices.get(d.identity)).toString()).toList(),
+                component.right.stream().map(d -> Objects.requireNonNull(b.indices.get(d.identity)).toString()).toList(),
+                full,observedLeft,observedRight,completeAbsent);
+    }
+
+    private record PresentationReplay(QuantifierEditComponent component,org.json.JSONObject receipt,
+            org.json.JSONObject evidence) { }
+
+    private static PresentationReplay prefixPresentation(QuantifierEditComponent original,GlobalBindingIndex a,
+            GlobalBindingIndex b,Map<Integer,Integer> selected,Map<String,String> full,
+            Set<String> observedLeft,Set<String> observedRight,boolean completeAbsent) {
+        var ab=original.left.stream().map(d->a.binding(a.indices.get(d.identity)).binding).toList();
+        var bb=original.right.stream().map(d->b.binding(b.indices.get(d.identity)).binding).toList();
+        var ai=original.left.stream().map(d->a.indices.get(d.identity).toString()).toList();
+        var bi=original.right.stream().map(d->b.indices.get(d.identity).toString()).toList();
+        int[] ap=DeclarationPresentation.order(ab,ai,bi,full);
+        int[] bp=DeclarationPresentation.order(bb,bi,ai,DeclarationPresentation.inverse(full));
+        for(boolean sourceSide:new boolean[]{true,false}) {
+            int[] p=sourceSide?ap:CertifiedDeclarationOrbit.identity(ai.size());
+            int[] q=sourceSide?CertifiedDeclarationOrbit.identity(bi.size()):bp;
+            var x=DeclarationMatrixLink.permute(original.left,p); var y=DeclarationMatrixLink.permute(original.right,q);
+            var component=QuantifierEditComponent.create(x,y,false);
+            if(component.cost()!=original.cost()) continue;
+            try {
+                var receipt=captureDeclarations(component,a,b,selected,full,observedLeft,observedRight,completeAbsent);
+                var evidence=new org.json.JSONObject().put("source",new org.json.JSONArray(p)).put("target",new org.json.JSONArray(q))
+                        .put("sourcePresentation",DeclarationPresentation.evidence(ab,ai,p))
+                        .put("targetPresentation",DeclarationPresentation.evidence(bb,bi,q))
+                        .put("admission","INDEPENDENT_TYPED_PREFIX_PRESENTATION").put("cost",0);
+                return new PresentationReplay(component,receipt,evidence);
+            } catch(DeclarationReplay.NoMatchingPath missing) {
+                // The fixed selected map and paid path remain mandatory.
+            }
+        }
+        return null;
+    }
+
+    private static int[] declarationOrder(List<IndexedDeclaration> original,List<IndexedDeclaration> ordered) {
+        int[] result=new int[ordered.size()];
+        for(int i=0;i<result.length;i++) {
+            result[i]=-1;
+            for(int j=0;j<original.size();j++) if(original.get(j).identity.equals(ordered.get(i).identity)) {
+                result[i]=j; break;
+            }
+            DeclarationReplay.require(result[i]>=0,"Declaration escaped original component");
+        }
+        return result;
+    }
+
+    private static org.json.JSONObject captureDeclarations(QuantifierEditComponent component,GlobalBindingIndex a,
+            GlobalBindingIndex b,Map<Integer,Integer> selected,Map<String,String> full,
+            Set<String> observedLeft,Set<String> observedRight,boolean completeAbsent) {
+        var as=declarationAtoms(component.left); var bs=declarationAtoms(component.right);
+        var joint=declarationLink(component,a,b,full,observedLeft,observedRight,completeAbsent);
+        var receipt=DeclarationReplay.capture(as,bs,component.distance,(i,j)->{
+            if(!joint.allows(i,j,i>=0 && j>=0?QuantifierEditComponent.tupleUpdateCost(component.left.get(i),component.right.get(j)):-1)) return false;
+            Integer ai=i<0?null:a.indices.get(component.left.get(i).identity);
+            Integer bj=j<0?null:b.indices.get(component.right.get(j).identity);
+            if(i<0) return !selected.containsValue(bj);
+            if(j<0) return !selected.containsKey(ai);
+            if(completeAbsent && !full.containsKey(ai.toString())) {
+                var x=component.left.get(i).declaration; var y=component.right.get(j).declaration;
+                if(!x.sameCertifiedPayload(y) || x.observationType()==null || x.observationDomain()==null
+                        || !x.observationType().equals(y.observationType()) || !x.observationDomain().equals(y.observationDomain())) return false;
+            }
+            boolean carries=QuantifierEditComponent.tupleUpdateCost(component.left.get(i),component.right.get(j))!=0
+                    || component.left.get(i).identity.parameter;
+            return carries ? bj!=null && bj.equals(selected.get(ai))
+                    : !selected.containsKey(ai) && !selected.containsValue(bj);
+        });
+        if(completeAbsent) {
+            var completion=joint.completeAndVerify(as,bs,receipt);
+            if(!completion.getJSONArray("absencePremises").isEmpty()) receipt.put("matrixCorrespondenceCompletion",completion);
+        } else joint.verify(as,bs,receipt);
+        return receipt;
+    }
+
+    private static boolean closedPrefix(RepairView view) {
+        if(view.phases().size()!=1 || !view.temporalRoot().label().equals("NONE")
+                || !view.temporalRoot().children().isEmpty()) return false;
+        var phase=view.phases().get(0);
+        if(phase.bindings().size()!=phase.quantifiers().size() || phase.bindings().stream().anyMatch(
+                b->b.role()!=BindingRole.MATRIX || b.ownerPhase()!=0 || !b.ownerContext().isEmpty()
+                        || b.declaration().observationType()==null || b.declaration().observationDomain()==null
+                        || !b.declaration().dependencies().isEmpty())) return false;
+        Set<Node> seen=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        var pending=new java.util.ArrayDeque<Node>(); if(phase.matrix()!=null) pending.add(phase.matrix());
+        while(!pending.isEmpty()) {
+            var n=pending.removeFirst(); if(!seen.add(n)) continue;
+            if(seen.size()>4096) throw new IllegalStateException("COMPLETION_OCCURRENCE_BUDGET");
+            if(n.operator().equals("CALL") || n.operator().equals("REF") || n.isVariable() && n.bindingIndex()<0) return false;
+            pending.addAll(n.children()); pending.addAll(n.certifiedAlternatives());
+        }
+        return true;
+    }
+
+    private static List<Binding> orbitBindings(GlobalBindingIndex index) {
+        return index.bindings.stream().map(value -> value.binding).toList();
+    }
+
+    private static int[] declarationPermutation(GlobalBindingIndex index,org.json.JSONArray wire) {
+        if(wire.length()==0) return CertifiedDeclarationOrbit.identity(index.bindings.size());
+        int[] permutation=new int[wire.length()];
+        for(int i=0;i<permutation.length;i++) permutation[i]=DeclarationReplay.integer(
+                new org.json.JSONObject().put("coordinate",wire.get(i)),"coordinate");
+        CertifiedDeclarationOrbit.requirePermutation(orbitBindings(index),permutation);
+        if(index.phases.size()!=1)
+            for(int i=0;i<permutation.length;i++) DeclarationReplay.require(permutation[i]==i,"Multiphase declaration orbit unsupported");
+        return permutation;
+    }
+
+    private static List<IndexedDeclaration> permuteDeclarations(List<IndexedDeclaration> source,
+            GlobalBindingIndex bindings,int[] permutation) {
+        var result=new ArrayList<IndexedDeclaration>();
+        for(var value:source) {
+            Integer index=bindings.indices.get(value.identity);
+            if(index==null || permutation[index]==index) { result.add(value); continue; }
+            var target=bindings.binding(permutation[index]);
+            DeclarationReplay.require(value.declaration.sameRepairTuple(target.binding.declaration()),"Changed orbit tuple");
+            result.add(new IndexedDeclaration(target.binding.declaration(),target.identity,target.binding.ordinal()));
+        }
+        return result;
+    }
+
+    private static List<DeclarationReplay.Atom> declarationAtoms(List<IndexedDeclaration> declarations) {
+        List<DeclarationReplay.Atom> result = new ArrayList<>();
+        for (IndexedDeclaration indexed : declarations) {
+            Declaration d = indexed.declaration;
+            GlobalBindingIdentity id = indexed.identity;
+            String occurrence = new org.json.JSONArray().put(id.parameter).put(id.ownerPhase)
+                    .put(id.ownerContext).put(id.coordinate).put(indexed.ordinal).toString();
+            String admission = new org.json.JSONArray().put(d.certifiedDomain()).put(d.exchangeClass())
+                    .put(new org.json.JSONArray(d.dependencies())).put(String.valueOf(d.observationType()))
+                    .put(String.valueOf(d.observationDomain())).toString();
+            result.add(new DeclarationReplay.Atom(occurrence,List.of(d.quantifier(),d.type(),d.cardinality(),
+                    Integer.toString(d.disjointnessClass())),admission));
+        }
+        return result;
     }
 
     public static Result evaluate(RepairView left, RepairView right) {
@@ -115,10 +593,18 @@ public final class QuotientRepairDistance {
             KernelAuthority authority) {
         Objects.requireNonNull(left, "left");
         Objects.requireNonNull(right, "right");
-        MutableStats stats = new MutableStats();
-        int temporal = temporalDistance(left.temporalRoot(), right.temporalRoot());
+        MutableStats stats = DECISIONS.get()==null?new MutableStats():DECISIONS.get();
+        // Matrix reference discounts depend on this exact temporal choice, even
+        // for scalar callers. Retain typed decisions, not serialized receipts.
+        stats.temporal=OrderedTreeEditDistance.alignment(left.temporalRoot(),right.temporalRoot(),TEMPORAL_ADAPTER);
+        stats.temporalPayments=SelectedTemporalPayments.from(left,right,stats.temporal);
+        int temporal=stats.temporal.cost();
         QuantificationAlignmentSpace quantification =
                 QuantificationAlignmentSpace.create(left.phases(), right.phases());
+        if (stats.capture) {
+            stats.quantification = quantification;
+            stats.activeDeclarationPaths = new ArrayList<>(java.util.Collections.nCopies(quantification.components.size(),List.of()));
+        }
         int quantifiers = quantification.cost;
         int matrix = matrixDistance(
                 left.phases(), right.phases(), quantification, stats);
@@ -347,7 +833,7 @@ public final class QuotientRepairDistance {
                                 "Quantifier correspondence backtracking lost identity");
                     }
                 }
-            });
+            }, stats.capture ? path -> stats.activeDeclarationPaths.set(componentIndex,path) : null);
         }
 
         private static List<IndexedDeclaration> parameterDeclarations(
@@ -477,22 +963,24 @@ public final class QuotientRepairDistance {
         }
 
         private void forEachMinimumAlignment(
-                Consumer<List<EditCorrespondence>> consumer) {
+                Consumer<List<EditCorrespondence>> consumer, Consumer<List<DeclarationReplay.Move>> pathConsumer) {
             enumerateMinimumAlignments(
                     left.size(),
                     right.size(),
                     new ArrayList<>(),
-                    consumer);
+                    consumer,pathConsumer,pathConsumer==null?null:new ArrayList<>());
         }
 
         private void enumerateMinimumAlignments(
                 int row,
                 int column,
                 List<EditCorrespondence> reversed,
-                Consumer<List<EditCorrespondence>> consumer) {
+                Consumer<List<EditCorrespondence>> consumer,Consumer<List<DeclarationReplay.Move>> pathConsumer,
+                List<DeclarationReplay.Move> path) {
             if (row == 0 && column == 0) {
                 List<EditCorrespondence> result = new ArrayList<>(reversed);
                 java.util.Collections.reverse(result);
+                if(path!=null){var ordered=new ArrayList<>(path);java.util.Collections.reverse(ordered);pathConsumer.accept(List.copyOf(ordered));}
                 consumer.accept(List.copyOf(result));
                 return;
             }
@@ -508,8 +996,10 @@ public final class QuotientRepairDistance {
                         reversed.add(new EditCorrespondence(
                                 leftValue, rightValue));
                     }
+                    if(path!=null)path.add(new DeclarationReplay.Move(row-1,column-1));
                     enumerateMinimumAlignments(
-                            row - 1, column - 1, reversed, consumer);
+                            row - 1, column - 1, reversed, consumer,pathConsumer,path);
+                    if(path!=null)path.remove(path.size()-1);
                     if (carriesBinding) {
                         reversed.remove(reversed.size() - 1);
                     }
@@ -518,14 +1008,18 @@ public final class QuotientRepairDistance {
             if (row > 0
                     && distance[row][column]
                             == Math.addExact(distance[row - 1][column], 1)) {
+                if(path!=null)path.add(new DeclarationReplay.Move(row-1,-1));
                 enumerateMinimumAlignments(
-                        row - 1, column, reversed, consumer);
+                        row - 1, column, reversed, consumer,pathConsumer,path);
+                if(path!=null)path.remove(path.size()-1);
             }
             if (column > 0
                     && distance[row][column]
                             == Math.addExact(distance[row][column - 1], 1)) {
+                if(path!=null)path.add(new DeclarationReplay.Move(-1,column-1));
                 enumerateMinimumAlignments(
-                        row, column - 1, reversed, consumer);
+                        row, column - 1, reversed, consumer,pathConsumer,path);
+                if(path!=null)path.remove(path.size()-1);
             }
         }
 
@@ -572,10 +1066,12 @@ public final class QuotientRepairDistance {
         int aligned = Math.min(left.size(), right.size());
         int result = 0;
         for (int index = aligned; index < left.size(); index++) {
-            result = Math.addExact(result, nodeSize(left.get(index).matrix()));
+            if(stats.capture){var context=new MatrixDistanceContext(new int[0],true);result=Math.addExact(result,context.distance(left.get(index).matrix(),null));stats.unaligned.put(index,context.decision(left.get(index).matrix(),null));}
+            else result = Math.addExact(result, nodeSize(left.get(index).matrix()));
         }
         for (int index = aligned; index < right.size(); index++) {
-            result = Math.addExact(result, nodeSize(right.get(index).matrix()));
+            if(stats.capture){var context=new MatrixDistanceContext(new int[0],true);result=Math.addExact(result,context.distance(null,right.get(index).matrix()));stats.unaligned.put(index,context.decision(null,right.get(index).matrix()));}
+            else result = Math.addExact(result, nodeSize(right.get(index).matrix()));
         }
         GlobalBindingIndex leftBindings = GlobalBindingIndex.create(left, aligned);
         GlobalBindingIndex rightBindings = GlobalBindingIndex.create(right, aligned);
@@ -585,11 +1081,36 @@ public final class QuotientRepairDistance {
 
         int fixedUnalignedCost = result;
         int[] best = {Integer.MAX_VALUE};
+        boolean[] bestCanonical = {false};
         quantification.forEachEditAlignment(
                 leftBindings, rightBindings, correspondence -> {
-            int candidate = matrixDistanceForAlignment(
-                    leftBindings, rightBindings, correspondence, stats);
-            best[0] = Math.min(best[0], candidate);
+            Consumer<CertifiedDeclarationOrbit.Choice> evaluate = choice -> {
+                int candidate = matrixDistanceForAlignment(
+                        leftBindings, rightBindings, choice.correspondence(), stats);
+                boolean canonical = CertifiedDeclarationOrbit.isIdentity(choice);
+                // An orbit from an early DP path can tie a later canonical path.
+                // Apply witness priority globally, without changing the minimum.
+                if (CertifiedDeclarationOrbit.prefer(candidate,best[0],canonical,bestCanonical[0])) {
+                    if (stats.capture) {
+                        stats.selectedMapping = stats.candidateMapping.clone();
+                        stats.selectedPhases=stats.candidatePhases;
+                        stats.selectedLeft = leftBindings;
+                        stats.selectedRight = rightBindings;
+                        stats.selectedCorrespondence = new java.util.TreeMap<>(choice.correspondence());
+                        stats.selectedDeclarationLeft = choice.left().clone();
+                        stats.selectedDeclarationRight = choice.right().clone();
+                        stats.selectedDeclarationPaths=List.copyOf(stats.activeDeclarationPaths);
+                    }
+                    best[0] = candidate;
+                    bestCanonical[0] = canonical;
+                }
+            };
+            if(left.size()==1 && right.size()==1)
+                CertifiedDeclarationOrbit.forEach(orbitBindings(leftBindings),orbitBindings(rightBindings),correspondence,evaluate,
+                        stats.declarationOrbitBudget);
+            else evaluate.accept(new CertifiedDeclarationOrbit.Choice(correspondence,
+                    CertifiedDeclarationOrbit.identity(leftBindings.bindings.size()),
+                    CertifiedDeclarationOrbit.identity(rightBindings.bindings.size())));
         }, stats);
         if (best[0] == Integer.MAX_VALUE) {
             throw new IllegalStateException(
@@ -622,6 +1143,7 @@ public final class QuotientRepairDistance {
 
         int[] maximum = {-1};
         int[] minimum = {Integer.MAX_VALUE};
+        if (stats.capture) stats.candidateMapping = null;
         forEachGlobalScopeAlignment(leftBindings, rightBindings, scope -> {
             stats.consumeScopeAlignment();
             List<Integer> leftOrder = new ArrayList<>(leftBindings.used);
@@ -639,6 +1161,7 @@ public final class QuotientRepairDistance {
             if (requiredMatches > maximum[0]) {
                 maximum[0] = requiredMatches;
                 minimum[0] = Integer.MAX_VALUE;
+                if (stats.capture) stats.candidateMapping = null;
             }
             minimum[0] = searchGlobalMappings(
                     leftBindings,
@@ -681,7 +1204,9 @@ public final class QuotientRepairDistance {
                 return best;
             }
             stats.consumeAlphaAlignment();
-            return Math.min(best, globallyMappedMatrixDistance(left, right, mapping));
+            int candidate = globallyMappedMatrixDistance(left, right, mapping,stats);
+            if (stats.capture && candidate < best) {stats.candidateMapping = mapping.clone();stats.candidatePhases=stats.lastPhases;}
+            return Math.min(best, candidate);
         }
         int leftIndex = leftOrder.get(index);
         GlobalBinding leftBinding = left.binding(leftIndex);
@@ -781,29 +1306,32 @@ public final class QuotientRepairDistance {
     private static int globallyMappedMatrixDistance(
             GlobalBindingIndex left,
             GlobalBindingIndex right,
-            int[] globalMapping) {
+            int[] globalMapping,MutableStats stats) {
         int result = 0;
+        var phases=stats.capture?new ArrayList<MatrixDecision<Node>>():null;
         for (int phaseIndex = 0; phaseIndex < left.phaseCount; phaseIndex++) {
             Phase leftPhase = left.phases.get(phaseIndex);
             Phase rightPhase = right.phases.get(phaseIndex);
-            int[] localMapping = new int[leftPhase.bindings().size()];
-            Arrays.fill(localMapping, -1);
-            int[] localToGlobal = left.localToGlobal.get(phaseIndex);
-            for (int local = 0; local < localToGlobal.length; local++) {
-                int leftGlobal = localToGlobal[local];
-                int rightGlobal = globalMapping[leftGlobal];
-                if (rightGlobal >= 0) {
-                    Integer rightLocal = right.usedLocalByGlobal
-                            .get(phaseIndex).get(rightGlobal);
-                    if (rightLocal != null) {
-                        localMapping[local] = rightLocal;
-                    }
-                }
+            int[] localMapping = phaseMapping(left, right, globalMapping, phaseIndex);
+            var context=new MatrixDistanceContext(localMapping,stats.capture,stats.temporalPayments,phaseIndex);
+            result = Math.addExact(result,context.distance(leftPhase.matrix(),rightPhase.matrix()));
+            if(stats.capture)phases.add(context.decision(leftPhase.matrix(),rightPhase.matrix()));
+        }
+        if(stats.capture)stats.lastPhases=List.copyOf(phases);
+        return result;
+    }
+
+    private static int[] phaseMapping(GlobalBindingIndex left, GlobalBindingIndex right,
+            int[] globalMapping, int phaseIndex) {
+        int[] result = new int[left.phases.get(phaseIndex).bindings().size()];
+        Arrays.fill(result, -1);
+        int[] localToGlobal = left.localToGlobal.get(phaseIndex);
+        for (int local = 0; local < localToGlobal.length; local++) {
+            int rightGlobal = globalMapping[localToGlobal[local]];
+            if (rightGlobal >= 0) {
+                Integer rightLocal = right.usedLocalByGlobal.get(phaseIndex).get(rightGlobal);
+                if (rightLocal != null) result[local] = rightLocal;
             }
-            result = Math.addExact(
-                    result,
-                    new MatrixDistanceContext(localMapping).distance(
-                            leftPhase.matrix(), rightPhase.matrix()));
         }
         return result;
     }
@@ -1038,17 +1566,10 @@ public final class QuotientRepairDistance {
             return;
         }
         int leftClass = leftClasses.get(leftPosition);
-        enumerateGlobalBlockMappings(
-                left,
-                right,
-                leftBlocks,
-                rightBlocks,
-                leftClasses,
-                rightClasses,
-                leftPosition + 1,
-                minimumRightPosition,
-                current,
-                consumer);
+        // Match-before-skip agrees with native alpha traversal on exact ties.
+        // ScopeBlockTieOrder proves branch rotation preserves the admitted
+        // candidate set and maximum-match/minimum-cost objective. No block
+        // exchange is added; compatibility and monotone target order stay intact.
         for (int rightPosition = minimumRightPosition;
                 rightPosition < rightClasses.size(); rightPosition++) {
             int rightClass = rightClasses.get(rightPosition);
@@ -1073,6 +1594,17 @@ public final class QuotientRepairDistance {
                     consumer);
             current.remove(leftClass);
         }
+        enumerateGlobalBlockMappings(
+                left,
+                right,
+                leftBlocks,
+                rightBlocks,
+                leftClasses,
+                rightClasses,
+                leftPosition + 1,
+                minimumRightPosition,
+                current,
+                consumer);
     }
 
     private static boolean globalBlocksCompatible(
@@ -1119,17 +1651,44 @@ public final class QuotientRepairDistance {
     private static final class MatrixDistanceContext {
         private final int[] mapping;
         private final Map<NodePair, Integer> memo = new HashMap<>();
+        private final Map<NodePair,MatrixDecision<Node>> decisions;
+        private final SelectedTemporalPayments temporalPayments;
+        private final int phase;
+        private List<MatrixDecision.Edge<Node>> edges;
 
         private MatrixDistanceContext(int[] mapping) {
+            this(mapping,false);
+        }
+        private MatrixDistanceContext(int[] mapping,boolean capture) {
+            this(mapping,capture,SelectedTemporalPayments.NONE,-1);
+        }
+        private MatrixDistanceContext(int[] mapping,boolean capture,SelectedTemporalPayments payments,int phase) {
             this.mapping = mapping.clone();
+            decisions=capture?new HashMap<>():null;
+            this.temporalPayments=Objects.requireNonNull(payments);
+            this.phase=phase;
+        }
+        private MatrixDecision<Node> decision(Node a,Node b) {return Objects.requireNonNull(decisions.get(new NodePair(a,b)),"Missing evaluated node decision");}
+        private MatrixDecision.Edge<Node> edge(List<Node> a,List<Node> b,int i,int j) {
+            Node l=i<0?null:a.get(i),r=j<0?null:b.get(j);
+            return new MatrixDecision.Edge<>(i,j,i<0||j<0?MatrixDecision.whole(l,r,(l==null?r:l).size()):decision(l,r));
         }
 
         private int distance(Node left, Node right) {
-            if (left == null) {
-                return nodeSize(right);
-            }
-            if (right == null) {
-                return nodeSize(left);
+            if (left == null || right == null) {
+                Node present=left==null?right:left;int cost=nodeSize(present);
+                if(decisions!=null){
+                    MatrixDecision<Node> chosen=MatrixDecision.whole(left,right,cost);
+                    if(present!=null&&!present.certifiedAlternatives().isEmpty()){
+                        var alternatives=present.certifiedAlternatives();
+                        for(int i=0;i<alternatives.size();i++)if(nodeSize(alternatives.get(i))==cost){
+                            Node a=left==null?null:alternatives.get(i),b=right==null?null:alternatives.get(i);distance(a,b);
+                            chosen=MatrixDecision.select(left,right,left==null?-1:i,right==null?-1:i,decision(a,b));break;
+                        }
+                    }
+                    decisions.put(new NodePair(left,right),chosen);
+                }
+                return cost;
             }
             NodePair key = new NodePair(left, right);
             Integer remembered = memo.get(key);
@@ -1145,10 +1704,14 @@ public final class QuotientRepairDistance {
                         ? List.of(right)
                         : right.certifiedAlternatives();
                 int best = Integer.MAX_VALUE;
-                for (Node leftAlternative : leftAlternatives) {
-                    for (Node rightAlternative : rightAlternatives) {
-                        best = Math.min(
-                                best, distance(leftAlternative, rightAlternative));
+                for (int i=0;i<leftAlternatives.size();i++) {
+                    Node leftAlternative=leftAlternatives.get(i);
+                    for (int j=0;j<rightAlternatives.size();j++) {
+                        Node rightAlternative=rightAlternatives.get(j);
+                        int candidate=distance(leftAlternative,rightAlternative);
+                        if(candidate<best && decisions!=null)decisions.put(key,MatrixDecision.select(left,right,
+                                left.certifiedAlternatives().isEmpty()?-1:i,right.certifiedAlternatives().isEmpty()?-1:j,decision(leftAlternative,rightAlternative)));
+                        best = Math.min(best,candidate);
                         if (best == 0) {
                             memo.put(key, 0);
                             return 0;
@@ -1163,7 +1726,9 @@ public final class QuotientRepairDistance {
                     && right.orderInsensitive()
                     ? unorderedDistance(left.children(), right.children())
                     : sequenceDistance(left.children(), right.children());
-            int result = Math.addExact(updateCost(left, right), children);
+            int head=updateCost(left,right),result=Math.addExact(head,children);
+            if(decisions!=null)decisions.put(key,MatrixDecision.node(left,right,result,head,
+                    left.operator().equals(right.operator())&&left.orderInsensitive()&&right.orderInsensitive(),edges));
             memo.put(key, result);
             return result;
         }
@@ -1185,20 +1750,35 @@ public final class QuotientRepairDistance {
                 return Objects.equals(
                         left.lexicalVariable(), right.lexicalVariable()) ? 0 : 1;
             }
+            // Full semantic identity remains in construction and replay payloads.
+            // A differing derived operator needs the selected temporal program
+            // and resolved original typed endpoints. This includes complete
+            // skeleton reconstruction at the same matrix slot, not just the
+            // temporal match/promotion pairing. Native replay executes that
+            // whole program before checking any zero-cost reconstruction.
+            if (left.isTemporalReference() && right.isTemporalReference()) {
+                if(!Objects.equals(left.observationType(), right.observationType()))return 1;
+                return (left.observationPhases().equals(right.observationPhases())
+                        &&Objects.equals(left.semanticPayload(),right.semanticPayload()))
+                        ||temporalPayments.pays(phase,left,right)?0:1;
+            }
             return Objects.equals(
                     left.semanticPayload(), right.semanticPayload()) ? 0 : 1;
         }
 
         private int sequenceDistance(List<Node> left, List<Node> right) {
             if (left.size() == 1 && right.size() == 1) {
-                return distance(left.get(0), right.get(0));
+                int cost=distance(left.get(0),right.get(0));if(decisions!=null)edges=List.of(edge(left,right,0,0));return cost;
             }
             int[] previous = new int[Math.addExact(right.size(), 1)];
             int[] current = new int[Math.addExact(right.size(), 1)];
+            if(decisions!=null)DECISIONS.get().resources.cells((long)left.size()+1,(long)right.size()+1);
+            int[][] retained=decisions==null?null:new int[left.size()+1][right.size()+1];
             for (int j = 1; j <= right.size(); j++) {
                 previous[j] = Math.addExact(
                         previous[j - 1], right.get(j - 1).size());
             }
+            if(retained!=null)System.arraycopy(previous,0,retained[0],0,previous.length);
             for (int i = 1; i <= left.size(); i++) {
                 current[0] = Math.addExact(
                         previous[0], left.get(i - 1).size());
@@ -1212,9 +1792,18 @@ public final class QuotientRepairDistance {
                             distance(left.get(i - 1), right.get(j - 1)));
                     current[j] = Math.min(update, Math.min(delete, insert));
                 }
+                if(retained!=null)System.arraycopy(current,0,retained[i],0,current.length);
                 int[] swap = previous;
                 previous = current;
                 current = swap;
+            }
+            if(retained!=null){var chosen=new ArrayList<MatrixDecision.Edge<Node>>();int i=left.size(),j=right.size();
+                while(i>0||j>0){
+                    if(i>0&&j>0&&retained[i][j]==retained[i-1][j-1]+decision(left.get(i-1),right.get(j-1)).cost())chosen.add(edge(left,right,--i,--j));
+                    else if(i>0&&retained[i][j]==retained[i-1][j]+left.get(i-1).size())chosen.add(edge(left,right,--i,-1));
+                    else chosen.add(edge(left,right,-1,--j));
+                }
+                java.util.Collections.reverse(chosen);edges=List.copyOf(chosen);
             }
             return previous[right.size()];
         }
@@ -1236,11 +1825,26 @@ public final class QuotientRepairDistance {
                     }
                 }
             }
-            return minimumAssignmentCost(costs);
+            int[] columns=decisions==null?null:new int[dimension];int cost=solveAssignment(costs,columns);
+            if(decisions!=null){var chosen=new ArrayList<MatrixDecision.Edge<Node>>();
+                for(int i=0;i<dimension;i++){int j=columns[i];if(i<left.size()||j<right.size())chosen.add(edge(left,right,i<left.size()?i:-1,j<right.size()?j:-1));}
+                edges=List.copyOf(chosen);}
+            return cost;
         }
     }
 
     static int minimumAssignmentCost(int[][] costs) {
+        return solveAssignment(costs,null);
+    }
+
+    /** Deterministic attaining columns from the same native Hungarian solve. */
+    static int[] minimumAssignmentColumns(int[][] costs) {
+        int[] columns = new int[costs.length];
+        solveAssignment(costs,columns);
+        return columns;
+    }
+
+    private static int solveAssignment(int[][] costs,int[] columns) {
         Objects.requireNonNull(costs, "costs");
         int size = costs.length;
         for (int row = 0; row < size; row++) {
@@ -1307,6 +1911,8 @@ public final class QuotientRepairDistance {
                 column = previous;
             } while (column != 0);
         }
+        if (columns != null) for (int column = 1; column <= size; column++)
+            columns[columnMatch[column]-1] = column-1;
         return Math.toIntExact(Math.negateExact(columnPotential[0]));
     }
 
@@ -1586,6 +2192,22 @@ public final class QuotientRepairDistance {
     }
 
     private static final class MutableStats {
+        private List<MatrixDecision<Node>> lastPhases,candidatePhases,selectedPhases;
+        private final Map<Integer,MatrixDecision<Node>> unaligned=new HashMap<>();
+        private QuantificationAlignmentSpace quantification;
+        private final TraceResources resources=new TraceResources();
+        private List<List<DeclarationReplay.Move>> activeDeclarationPaths,selectedDeclarationPaths;
+        private OrderedTreeEditDistance.Alignment temporal;
+        private SelectedTemporalPayments temporalPayments=SelectedTemporalPayments.NONE;
+        private boolean capture;
+        private int[] candidateMapping;
+        private int[] selectedMapping;
+        private GlobalBindingIndex selectedLeft;
+        private GlobalBindingIndex selectedRight;
+        private Map<Integer, Integer> selectedCorrespondence;
+        private int[] selectedDeclarationLeft;
+        private int[] selectedDeclarationRight;
+        private final CertifiedDeclarationOrbit.Budget declarationOrbitBudget = new CertifiedDeclarationOrbit.Budget();
         private long alphaAlignments;
         private long quantifierAlignments;
         private long scopeAlignments;

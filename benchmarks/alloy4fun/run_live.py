@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 import hashlib
 import json
+import math
 from pathlib import Path
 import sys
 import threading
@@ -101,7 +102,10 @@ def main():
                 'runtime_hashes': runtime_hashes(),
                 'scratch_policy': 'private per-JVM directories under ALLOY_BENCHMARK_TMP_ROOT or build/benchmarks/tmp; parent cleanup after exit/kill',
                 'recycle_after_requests': 256,
-                'profile': 'five_fold_student_branch_crossfit_warm_jvm_no_result_cache'}
+                'profile': 'five_fold_student_branch_crossfit_warm_jvm_no_result_cache',
+                'acgn_snapshot_commit': json.loads((ROOT / 'vendor/acgn/snapshot.json').read_text())['commit'],
+                'ast_view_version': 'acgn-semantic-ast-noop-body-erasure-v1',
+                'feedback_work_millis': min(60000, max(1, math.ceil(args.timeout * 1000)))}
     manifest_path = args.output / 'manifest.json'
     if manifest_path.exists():
         if not args.resume or json.loads(manifest_path.read_text()) != manifest:

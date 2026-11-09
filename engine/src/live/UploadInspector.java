@@ -134,7 +134,7 @@ public final class UploadInspector {
                     facts.addAll(ownCalls(BehaviorFeedback.calls(field.decl().expr), names));
             }
             for (var assertion : module.getAllAssertions())
-                assertions.addAll(ownCalls(BehaviorFeedback.calls(assertion.b), names));
+                assertions.addAll(ownCalls(BehaviorFeedback.calls(assertion.expr), names));
             for (Command command : module.getAllCommands()) {
                 commands.addAll(ownCalls(BehaviorFeedback.calls(command.formula), names));
                 if (command.nameExpr != null) {
@@ -148,7 +148,7 @@ public final class UploadInspector {
                 }
             }
             JSONObject result = new JSONObject().put("status", "ok").put("sourceSha256", digest(source))
-                    .put("moduleName", module.getModelName()).put("declarations", rows)
+                    .put("moduleName", module.getModuleName()).put("declarations", rows)
                     .put("factCalls", facts).put("assertionCalls", assertions).put("commandCalls", commands);
             if (verifyVariants) result.put("variantEquivalence", variantEquivalence);
             return result;

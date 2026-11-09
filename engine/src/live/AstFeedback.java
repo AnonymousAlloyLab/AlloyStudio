@@ -20,6 +20,7 @@ import java.util.Objects;
 
 /** Learner-only JSON presentation for unit-cost raw AST node edits. */
 final class AstFeedback {
+    static final String AST_VIEW = "acgn-semantic-ast-noop-body-erasure-v1";
     static final String METRIC = "acgn-raw-ast-zhang-shasha-distance";
     private record Candidate(RawAstTrace.Prepared prepared, int distance) { }
     private AstFeedback() { }
@@ -103,7 +104,8 @@ final class AstFeedback {
                 operations.put(operation); summary.merge(edit.kind(), 1, Integer::sum);
             }
             JSONObject result = new JSONObject().put("status", "ok").put("metric", METRIC)
-                    .put("metricLabel", "Raw AST Zhang–Shasha distance").put("distance", minimum)
+                    .put("metricLabel", "AST Zhang–Shasha distance").put("astViewVersion", AST_VIEW)
+                    .put("astOmittedNodeKinds", new JSONArray().put("UnaryExpr.NOOP").put("Body")).put("distance", minimum)
                     .put("breakdown", new JSONObject().put("ast", minimum)).put("astSize", learner.size())
                     .put("canonicalForm", new JSONArray()).put("operations", operations)
                     .put("operationSummary", new JSONObject(summary)).put("diagnostics", new JSONArray())

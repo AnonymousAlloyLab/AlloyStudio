@@ -78,7 +78,8 @@ final class EGraphEditDistance {
         }
 
         private static int nodeUpdateCost(AlloyTerm left, AlloyTerm right) {
-            return left.head().equals(right.head()) && left.atom().equals(right.atom()) ? 0 : 1;
+            return left.head().equals(right.head()) && left.atom().equals(right.atom())
+                    && left.slotType().equals(right.slotType()) ? 0 : 1;
         }
     }
 }

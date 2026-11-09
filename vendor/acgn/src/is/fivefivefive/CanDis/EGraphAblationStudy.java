@@ -240,9 +240,14 @@ public final class EGraphAblationStudy {
             } else if (options.engine == Engine.TYPED_SLOTTED_PORT) {
                 runTypedSlottedPort(module, model, pair, result);
             } else {
-                AlloyTerm left = AlloyAstTermAdapter.fromPredicate(pair.left);
-                AlloyTerm right = AlloyAstTermAdapter.fromPredicate(pair.right);
+                boolean typedSlots = options.engine == Engine.SLOTTED_TYPED;
+                long adapterCpuStarted = currentThreadCpuNanos();
+                AlloyTerm left = AlloyAstTermAdapter.fromPredicate(pair.left, typedSlots);
+                AlloyTerm right = AlloyAstTermAdapter.fromPredicate(pair.right, typedSlots);
+                result.adapterCpuNanos = elapsedThreadCpuNanos(adapterCpuStarted);
+                long comparisonCpuStarted = currentThreadCpuNanos();
                 AblationEngine.Result comparison = options.engine.newEngine().compare(left, right);
+                result.comparisonCpuNanos = elapsedThreadCpuNanos(comparisonCpuStarted);
                 result.distance = comparison.distance;
                 result.equivalent = comparison.equivalent;
                 result.stats = comparison.stats;
@@ -250,6 +255,11 @@ public final class EGraphAblationStudy {
             }
             result.engineNanos = System.nanoTime() - engineStarted;
             result.engineCpuNanos = elapsedThreadCpuNanos(engineCpuStarted);
+            if (options.engine == Engine.SLOTTED || options.engine == Engine.SLOTTED_TYPED) {
+                // Observe source bindings after engine timing, equally for both treatments.
+                result.leftSlots = is.fivefivefive.CanDis.ablation.SlotCensus.fromPredicate(pair.left);
+                result.rightSlots = is.fivefivefive.CanDis.ablation.SlotCensus.fromPredicate(pair.right);
+            }
         } catch (VirtualMachineError error) {
             throw error;
         } catch (Throwable throwable) {
@@ -433,6 +443,7 @@ public final class EGraphAblationStudy {
     }
 
     private static int astSize(Node node) {
+        node = AlloyUtil.unwrapAst(node);
         if (node == null) {
             return 0;
         }
@@ -474,7 +485,8 @@ public final class EGraphAblationStudy {
                     + "distance,parseNanos,engineNanos,totalNanos,parseCpuNanos,engineCpuNanos,totalCpuNanos,"
                     + "rawAstNodes,representationUnits,eclasses,enodes,"
                     + "unions,rebuilds,rewriteApplications,iterations,slots,slotMappings,redundantSlots,"
-                    + "estimatedBytes,error\n");
+                    + "estimatedBytes,error,leftSourceSlots,rightSourceSlots,leftSourceSlotsByType,rightSourceSlotsByType,"
+                    + "interfaceSlotsByType,adapterCpuNanos,comparisonCpuNanos\n");
             for (FileResult result : results) {
                 if (result.skipped) {
                     continue;
@@ -527,7 +539,14 @@ public final class EGraphAblationStudy {
                 writer.write(',');
                 writer.write(Long.toString(stats.estimatedBytes));
                 writer.write(',');
-                csvLast(writer, result.error);
+                csv(writer, result.error);
+                csv(writer, result.leftSlots == null ? "" : Long.toString(result.leftSlots.total()));
+                csv(writer, result.rightSlots == null ? "" : Long.toString(result.rightSlots.total()));
+                csv(writer, result.leftSlots == null ? "" : new JSONObject(result.leftSlots.byType()).toString());
+                csv(writer, result.rightSlots == null ? "" : new JSONObject(result.rightSlots.byType()).toString());
+                csv(writer, stats.slotsByType == null ? "" : new JSONObject(stats.slotsByType).toString());
+                csv(writer, Long.toString(result.adapterCpuNanos));
+                csvLast(writer, Long.toString(result.comparisonCpuNanos));
                 writer.write('\n');
             }
         }
@@ -665,6 +684,7 @@ public final class EGraphAblationStudy {
         EGGLOG_DEBRUIJN("java-egglog-debruijn",
                 "Java egglog core storing bound variables as De Bruijn indices"),
         SLOTTED("slotted-egraph", "Retained slotted e-graph with shared variadic rules, renamed IDs, and permutation groups"),
+        SLOTTED_TYPED("slotted-egraph-typed", "Matched slotted baseline with exact parser slot types and type-preserving mappings; not certificate-bearing"),
         CANONICAL("canonical",
                 "Fast Rewrite IR temporal/prenex/slotted method with bounded rewrite saturation"),
         TYPED_SLOTTED_PORT(
@@ -691,6 +711,8 @@ public final class EGraphAblationStudy {
                     return new JavaEgglogDeBruijn();
                 case SLOTTED:
                     return new SlottedEGraph();
+                case SLOTTED_TYPED:
+                    return new SlottedEGraph(true);
                 default:
                     throw new IllegalStateException("Canonical uses the production pipeline directly");
             }
@@ -701,6 +723,7 @@ public final class EGraphAblationStudy {
         }
 
         private String engineIdentifier() {
+            if (this == SLOTTED || this == SLOTTED_TYPED) return SlottedEGraph.VERSION + "/" + id;
             return usesExactEngine() ? "TypedSlottedPortEGraph" : "legacy-bounded/" + id;
         }
 
@@ -709,6 +732,7 @@ public final class EGraphAblationStudy {
         }
 
         private String canonicalizerVersion() {
+            if (this == SLOTTED || this == SLOTTED_TYPED) return SlottedEGraph.VERSION;
             return usesExactEngine() ? ProductionGraphCanonicalizer.VERSION : "legacy-bounded";
         }
 
@@ -822,6 +846,10 @@ public final class EGraphAblationStudy {
     }
 
     private static final class FileResult {
+        private is.fivefivefive.CanDis.ablation.SlotCensus leftSlots;
+        private is.fivefivefive.CanDis.ablation.SlotCensus rightSlots;
+        private long adapterCpuNanos;
+        private long comparisonCpuNanos;
         private final String relativePath;
         private final String problemClass;
         private final String status;
@@ -935,6 +963,13 @@ public final class EGraphAblationStudy {
     }
 
     private static final class Accumulator {
+        private long slotCensusPairs;
+        private long leftSourceSlots;
+        private long rightSourceSlots;
+        private long adapterCpuNanos;
+        private long comparisonCpuNanos;
+        private final Map<String, Long> sourceSlotsByType = new java.util.TreeMap<>();
+        private final Map<String, Long> interfaceSlotsByType = new java.util.TreeMap<>();
         private long count;
         private long equivalent;
         private long distance;
@@ -962,6 +997,18 @@ public final class EGraphAblationStudy {
 
         private void add(FileResult result) {
             EGraphStats stats = result.stats;
+            adapterCpuNanos += result.adapterCpuNanos;
+            comparisonCpuNanos += result.comparisonCpuNanos;
+            if (result.leftSlots != null && result.rightSlots != null) {
+                slotCensusPairs++;
+                leftSourceSlots += result.leftSlots.total();
+                rightSourceSlots += result.rightSlots.total();
+                result.leftSlots.byType().forEach((key, value) -> sourceSlotsByType.merge(key, value, Long::sum));
+                result.rightSlots.byType().forEach((key, value) -> sourceSlotsByType.merge(key, value, Long::sum));
+            }
+            if (stats.slotsByType != null) {
+                stats.slotsByType.forEach((key, value) -> interfaceSlotsByType.merge(key, value, Long::sum));
+            }
             count++;
             equivalent += result.equivalent ? 1 : 0;
             distance += result.distance;
@@ -991,6 +1038,15 @@ public final class EGraphAblationStudy {
         private JSONObject toJson(Summary summary) {
             JSONObject json = new JSONObject();
             json.put("count", count);
+            json.put("slotCensusPairs", slotCensusPairs);
+            json.put("leftSourceSlots", leftSourceSlots);
+            json.put("rightSourceSlots", rightSourceSlots);
+            json.put("totalSourceSlots", leftSourceSlots + rightSourceSlots);
+            json.put("sourceSlotsByType", new JSONObject(sourceSlotsByType));
+            json.put("totalInterfaceSlots", slots);
+            json.put("interfaceSlotsByType", new JSONObject(interfaceSlotsByType));
+            json.put("adapterCpuNanos", adapterCpuNanos);
+            json.put("comparisonCpuNanos", comparisonCpuNanos);
             json.put("equivalentPairs", equivalent);
             json.put("equivalentRate", ratio(equivalent, count));
             json.put("totalDistance", distance);

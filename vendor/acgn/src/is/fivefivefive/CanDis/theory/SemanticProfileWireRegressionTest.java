@@ -151,7 +151,8 @@ public final class SemanticProfileWireRegressionTest {
                 ? profile.isSourceCommandBound() && profile.isAuthorizedAlloyProfile() && !profile.isFixedCompatibilityProfile()
                 : profile.isFixedCompatibilityProfile() && !profile.isSourceCommandBound() && !profile.isAuthorizedAlloyProfile(),
                 "observed explicit profile authority");
-        Path certificate = output.resolve("profile-" + fixture + ".acgncert");
+        String fileFixture = fixture.replace(':', '-');
+        Path certificate = output.resolve("profile-" + fileFixture + ".acgncert");
         session(profile, provenance).write(certificate);
         Object limits = api(null, cls("Limits"), "defaults", new Class<?>[0]);
         Object root = api(null, cls("Codec"), "decode", new Class<?>[]{byte[].class, cls("Limits")},
@@ -220,7 +221,7 @@ public final class SemanticProfileWireRegressionTest {
         check(clone.equals(profile) && clone.fingerprint().equals(profile.fingerprint()), "equal spelling clone");
         check(!clone.isAdmissibleAlloyProfile() && !clone.isAuthorizedAlloyProfile()
                 && !clone.isSourceCommandBound() && !clone.isFixedCompatibilityProfile(), "clone has no authority");
-        Path rejected = output.resolve("rejected-" + fixture + ".acgncert");
+        Path rejected = output.resolve("rejected-" + fileFixture + ".acgncert");
         Files.writeString(rejected, "preserve-existing-output", StandardCharsets.UTF_8);
         try {
             session(clone, profile, provenance, new RecordingCertificateTraceSink()).write(rejected);

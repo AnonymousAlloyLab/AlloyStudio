@@ -787,7 +787,7 @@ public final class TheoryDependentChainTest {
                 "legal sequence field columns enter dependent chain evidence");
 
         PrimSig fakeInt = new PrimSig("Int");
-        PrimSig fakeSequenceIndex = new PrimSig("seq/Int", fakeInt);
+        PrimSig fakeSequenceIndex = new PrimSig(null, "seq/Int", edu.mit.csail.sdg.alloy4.Pos.UNKNOWN, fakeInt);
         ExactAlloyType synthetic = ExactAlloyType.fromParser(
                 fakeSequenceIndex.type(), module);
         check(!synthetic.hasParserAuthenticatedAncestry(),

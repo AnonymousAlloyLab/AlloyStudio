@@ -11,6 +11,7 @@ import is.fivefivefive.CanDis.core.EGraphNode.Metatype;
 import is.fivefivefive.CanDis.core.EGraphNode.Opcode;
 import is.fivefivefive.CanDis.theory.LeanVerifiedRewrite;
 import is.fivefivefive.CanDis.theory.SemanticProfile;
+import is.fivefivefive.CanDis.theory.StructuralKey;
 import is.fivefivefive.CanDis.ir.IRAgent;
 import is.fivefivefive.CanDis.core.QuantiVar.Cardinality;
 import is.fivefivefive.CanDis.core.QuantiVar.Quantifier;
@@ -42,8 +43,15 @@ public class NormalForm {
     private List<PhaseLocalBindingImport> phaseLocalBindingImports;
     private final Map<NormalForm, List<PhaseLocalBindingImport>> temporalChildBindingImports;
     private final Map<String, LocalBindingSeed> localBindingSeeds;
+    // Only prenexRelDecl can create these witnesses. Publicly assembled binding
+    // lists cannot manufacture a grouped ONE owner by relabelling SOME slots.
+    private final List<GroupedOneOrigin> groupedOneOrigins = new ArrayList<>();
+    private record GroupedOneOrigin(long declaration, List<QuantiVar> bindings,
+            List<String> keys, String owner) { }
     private String phasePath;
     private List<NormalForm> temporalChildren;
+    private List<NormalForm> comparisonTemporalChildren;
+    private NormalForm comparisonSource;
     private final Map<Long, TemporalReferenceAuthority> temporalReferenceAuthorities;
     private final Object lifecycleLock;
     private TemporalOp temporalOp; // the temporal operator of the formula, if any, e.g., "before", "historically", "once", "always", "eventually", "until", "releases", "since", "triggered". If none, then it is a non-temporal formula.
@@ -228,6 +236,226 @@ public class NormalForm {
         this.nextDisjointnessClass = 1;
     }
 
+    private java.util.Set<String> comparisonBindingNames() {
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (List<QuantiVar> bindings : List.of(params, matrixQuantiVars, inheritedQuantiVars, getLocalQuantiVars()))
+            for (QuantiVar binding : bindings) names.add(binding.getName());
+        return names;
+    }
+
+    /** Read-only metric projection; source/certificate ownership stays on this form. */
+    NormalForm fastComparisonView() {
+        synchronized (lifecycleLock) {
+            if (!frozenForCertification) {
+                throw new IllegalStateException("Fast comparison requires a frozen normal form");
+            }
+            NormalForm copy = new NormalForm();
+            copy.comparisonSource = this;
+            copy.matrixEGraphRoot = EGraphNode.fastComparisonMatrix(matrixEGraphRoot,
+                    Collections.emptyMap(), Collections.emptyMap(), comparisonBindingNames());
+            copy.certificationMatrixEGraphRoot = certificationMatrixEGraphRoot;
+            copy.params = params;
+            copy.matrixQuantiVars = matrixQuantiVars;
+            copy.inheritedQuantiVars = inheritedQuantiVars;
+            copy.phaseLocalBindingImports = phaseLocalBindingImports;
+            copy.temporalChildBindingImports.putAll(temporalChildBindingImports);
+            copy.localBindingSeeds.putAll(localBindingSeeds);
+            copy.groupedOneOrigins.addAll(groupedOneOrigins);
+            copy.phasePath = phasePath;
+            copy.temporalChildren = temporalChildren;
+            copy.temporalReferenceAuthorities.putAll(temporalReferenceAuthorities);
+            copy.temporalOp = temporalOp;
+            copy.frozenForCertification = true;
+            return copy;
+        }
+    }
+
+    /** Metric-only forest. Original temporal authorities and child indices are
+     * never rewritten; the pruned child list is used only for metric traversal. */
+    static List<NormalForm> fastComparisonViews(List<NormalForm> sources) {
+        Map<NormalForm, NormalForm> copies = new java.util.IdentityHashMap<>();
+        Map<NormalForm, Integer> incoming = new java.util.IdentityHashMap<>();
+        for (NormalForm source : sources) copies.put(source, source.fastComparisonView());
+        for (NormalForm source : sources) for (NormalForm child : source.temporalChildren) {
+            if (!copies.containsKey(child)) return sources.stream().map(NormalForm::fastComparisonView).toList();
+            incoming.merge(child, 1, Math::addExact);
+        }
+        java.util.Set<NormalForm> dropped = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        Map<NormalForm, Map<Long, String>> keysByOwner = new java.util.IdentityHashMap<>();
+        for (NormalForm source : sources) {
+            NormalForm copy = copies.get(source);
+            Map<Long, String> keys = new HashMap<>();
+            int keyBytes = 0;
+            java.util.Set<Long> before = comparisonReferenceIds(source.matrixEGraphRoot);
+            if (before == null) continue;
+            for (TemporalReferenceAuthority authority : source.temporalReferenceAuthorities.values()) {
+                if (authority.owner != source || authority.children.size() != 1
+                        || !before.contains(authority.authorityId)) continue;
+                NormalForm child = authority.children.get(0);
+                if (incoming.getOrDefault(child, 0) != 1 || !closedComparisonPhase(child)) continue;
+                String body = EGraphNode.closedFastMatrixKey(copies.get(child).matrixEGraphRoot);
+                if (body != null) {
+                    keyBytes = Math.addExact(keyBytes, body.length());
+                    if (keyBytes > 1_000_000) { keys.clear(); break; }
+                    keys.put(authority.authorityId, child.temporalOp.name()+":"+body);
+                }
+            }
+            if (keys.size() < 2) continue;
+            keysByOwner.put(source, keys);
+            copy.matrixEGraphRoot = EGraphNode.fastComparisonMatrix(source.matrixEGraphRoot, keys,
+                    Collections.emptyMap(), source.comparisonBindingNames());
+            java.util.Set<Long> after = comparisonReferenceIds(copy.matrixEGraphRoot);
+            if (after == null) throw new IllegalStateException("Fast phase projection increased reference traversal budget");
+            for (TemporalReferenceAuthority authority : source.temporalReferenceAuthorities.values()) {
+                if (keys.containsKey(authority.authorityId) && !after.contains(authority.authorityId))
+                    dropped.add(authority.children.get(0));
+            }
+        }
+        for (NormalForm source : sources) {
+            NormalForm copy = copies.get(source);
+            copy.comparisonTemporalChildren = source.temporalChildren.stream()
+                    .filter(child -> !dropped.contains(child)).map(copies::get).toList();
+            Map<Long, String> keys = keysByOwner.get(source);
+            if (keys == null) continue;
+            int[] positions = new int[source.temporalChildren.size()];
+            int next = 0;
+            for (int i=0; i<positions.length; i++)
+                positions[i] = dropped.contains(source.temporalChildren.get(i)) ? -1 : next++;
+            Map<Long, String> coordinates = new HashMap<>();
+            java.util.Set<Long> surviving = comparisonReferenceIds(copy.matrixEGraphRoot);
+            for (TemporalReferenceAuthority authority : source.temporalReferenceAuthorities.values()) {
+                if (!surviving.contains(authority.authorityId)) continue;
+                int start = positions[authority.childIndex];
+                if (start < 0) throw new IllegalStateException("Fast phase pruning removed a surviving reference");
+                for (int offset=0; offset<authority.children.size(); offset++)
+                    if (positions[authority.childIndex+offset] != start+offset)
+                        throw new IllegalStateException("Fast phase pruning split a temporal occurrence");
+                coordinates.put(authority.authorityId, temporalReferenceName(start, authority.children.size()));
+            }
+            copy.matrixEGraphRoot = EGraphNode.fastComparisonMatrix(source.matrixEGraphRoot, keys, coordinates,
+                    source.comparisonBindingNames());
+        }
+        return new ComparisonPhaseOrder(sources,copies,dropped,keysByOwner).ordered();
+    }
+
+    /** Original occurrence authority for a detached metric comparison view. */
+    public NormalForm comparisonSource() { return comparisonSource==null?this:comparisonSource; }
+
+    /** Reindex whole owner-issued reference groups, never their ordered roles. */
+    private static final class ComparisonPhaseOrder {
+        final List<NormalForm> sources;
+        final Map<NormalForm,NormalForm> copies;
+        final java.util.Set<NormalForm> dropped;
+        final Map<NormalForm,Map<Long,String>> closedKeys;
+        final Map<NormalForm,StructuralKey> phaseKeys=new java.util.IdentityHashMap<>();
+        final Map<NormalForm,Map<EGraphNode,StructuralKey>> nodeKeys=new java.util.IdentityHashMap<>();
+        final java.util.Set<NormalForm> active=Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        final java.util.Set<NormalForm> visited=Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        final List<NormalForm> result=new ArrayList<>();
+        final is.fivefivefive.CanDis.metric.TraceResources budget=new is.fivefivefive.CanDis.metric.TraceResources();
+        ComparisonPhaseOrder(List<NormalForm> sources,Map<NormalForm,NormalForm> copies,
+                java.util.Set<NormalForm> dropped,Map<NormalForm,Map<Long,String>> closedKeys) {
+            this.sources=sources;this.copies=copies;this.dropped=dropped;this.closedKeys=closedKeys;
+        }
+        List<NormalForm> ordered() {
+            for(var source:sources)if(!dropped.contains(source)&&!visited.contains(source)) {
+                reserve(source);visit(source);
+            }
+            return List.copyOf(result);
+        }
+        void reserve(NormalForm source) {if(visited.add(source))result.add(copies.get(source));}
+        void visit(NormalForm source) {
+            var references=new java.util.LinkedHashMap<Long,TemporalReferenceAuthority>();
+            collect(source,copies.get(source).matrixEGraphRoot,references);
+            var children=new ArrayList<NormalForm>();var coordinates=new HashMap<Long,String>();
+            for(var reference:references.values()) {
+                if(reference.children.stream().anyMatch(dropped::contains))throw new IllegalStateException("Reindex of removed temporal reference");
+                coordinates.put(reference.authorityId,temporalReferenceName(children.size(),reference.children.size()));
+                for(var child:reference.children){children.add(copies.get(child));reserve(child);}
+                for(var child:reference.children)visit(child);
+            }
+            var copy=copies.get(source);
+            copy.comparisonTemporalChildren=List.copyOf(children);
+            copy.matrixEGraphRoot=EGraphNode.fastComparisonMatrix(source.matrixEGraphRoot,
+                    closedKeys.getOrDefault(source,Collections.emptyMap()),coordinates,source.comparisonBindingNames());
+        }
+        TemporalReferenceAuthority reference(NormalForm owner,EGraphNode node) {
+            if(node.getOpcode()!=Opcode.REF||node.temporalReferenceAuthorityId()<=0)return null;
+            var authority=owner.temporalReferenceAuthorities.get(node.temporalReferenceAuthorityId());
+            if(authority==null||!authority.matches(node,authority.childIndex,authority.children.size()))
+                throw new IllegalStateException("Phase reindex lacks original temporal authority");
+            return authority;
+        }
+        void collect(NormalForm owner,EGraphNode node,Map<Long,TemporalReferenceAuthority> out) {
+            if(node==null)return;var reference=reference(owner,node);
+            if(reference!=null){out.putIfAbsent(reference.authorityId,reference);return;}
+            var children=new ArrayList<>(node.getChildren());
+            if(node.isOrderInsensitive())children.sort(Comparator.comparing(n->key(owner,n)));
+            for(var child:children)collect(owner,child,out);
+        }
+        StructuralKey phaseKey(NormalForm phase) {
+            var cached=phaseKeys.get(phase);if(cached!=null)return cached;
+            if(!active.add(phase))throw new IllegalStateException("Cyclic temporal source graph");
+            var children=new ArrayList<StructuralKey>();
+            for(var q:phase.matrixQuantiVars)children.add(StructuralKey.of("declaration",
+                    List.of(q.getQuantifier().name(),q.getCardinality().name(),String.valueOf(q.getExactAlloyType()),Integer.toString(q.getDisjointnessClass())),List.of()));
+            children.add(key(phase,copies.get(phase).matrixEGraphRoot));
+            var result=StructuralKey.branch("phase",children);active.remove(phase);phaseKeys.put(phase,result);return result;
+        }
+        StructuralKey key(NormalForm owner,EGraphNode node) {
+            if(node==null)return StructuralKey.leaf("null");
+            var cache=nodeKeys.computeIfAbsent(owner,k->new java.util.IdentityHashMap<>());
+            var remembered=cache.get(node);if(remembered!=null)return remembered;
+            budget.spend(128);var reference=reference(owner,node);StructuralKey result;
+            if(reference!=null) {
+                String operator=reference.children.get(0).temporalOp.name();
+                if(reference.children.size()==2)operator=operator.substring(0,operator.length()-1);
+                result=StructuralKey.of("temporal",List.of(operator),reference.children.stream().map(this::phaseKey).toList());
+            } else {
+                var children=new ArrayList<StructuralKey>();for(var child:node.getChildren())children.add(key(owner,child));
+                if(node.isOrderInsensitive())children.sort(StructuralKey::compareTo);
+                String identity=String.valueOf(node.getSemanticIdentity());
+                if(node.getOpcode()==Opcode.VARIABLE) {
+                    String name=node.getAlphaName()==null?node.getSourceName():node.getAlphaName();
+                    var names=new ArrayList<String>();for(var list:List.of(owner.params,owner.inheritedQuantiVars,owner.matrixQuantiVars,owner.getLocalQuantiVars()))
+                        for(var q:list)if(!names.contains(q.getName()))names.add(q.getName());
+                    int index=names.indexOf(name);identity=index<0?String.valueOf(name):Integer.toString(index);
+                } else if(node.getSemanticIdentity()==null)identity=String.valueOf(node.getSourceName());
+                result=StructuralKey.of("matrix",List.of(node.getOpcode().name(),String.valueOf(node.getExactAlloyType()),identity),children);
+            }
+            cache.put(node,result);return result;
+        }
+    }
+
+    List<NormalForm> comparisonTemporalChildren() {
+        return comparisonTemporalChildren == null ? getTemporalChildren() : comparisonTemporalChildren;
+    }
+
+    private static boolean closedComparisonPhase(NormalForm child) {
+        if (!child.params.isEmpty() || !child.matrixQuantiVars.isEmpty() || !child.inheritedQuantiVars.isEmpty()
+                || !child.phaseLocalBindingImports.isEmpty() || !child.localBindingSeeds.isEmpty()
+                || !child.temporalChildren.isEmpty()) return false;
+        return switch (child.temporalOp) {
+            case ALWAYS, EVENTUALLY, AFTER, BEFORE, HISTORICALLY, ONCE -> true;
+            default -> false;
+        };
+    }
+
+    private static java.util.Set<Long> comparisonReferenceIds(EGraphNode root) {
+        java.util.Set<Long> result = new java.util.HashSet<>();
+        java.util.Set<EGraphNode> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.ArrayDeque<EGraphNode> pending = new java.util.ArrayDeque<>();
+        if (root != null) pending.add(root);
+        while (!pending.isEmpty()) {
+            EGraphNode node = pending.removeFirst();
+            if (!seen.add(node)) continue;
+            if (seen.size() > 4096) return null;
+            if (node.getOpcode() == Opcode.REF) result.add(node.temporalReferenceAuthorityId());
+            pending.addAll(node.getChildren());
+        }
+        return result;
+    }
+
     public NormalForm(NormalForm parent, TemporalOp temporalOp, int egid) {
         this(parent, temporalOp, egid,
                 childSemanticProfile(parent));
@@ -305,6 +533,42 @@ public class NormalForm {
         synchronized (lifecycleLock) {
             return Collections.unmodifiableList(new ArrayList<>(this.matrixQuantiVars));
         }
+    }
+
+    /** Ordered original slots, not permission to exchange or split uniqueness. */
+    boolean hasOriginalGroupedOne(List<QuantiVar> group) {
+        if (!frozenForCertification || group.size() < 2 || group.size() > 64) return false;
+        for (var origin : groupedOneOrigins) {
+            if (origin.bindings().size() != group.size()) continue;
+            boolean matches = true;
+            for (int i = 0; i < group.size(); i++) {
+                var q = group.get(i);
+                matches &= q == origin.bindings().get(i)
+                        && q.getQuantifier() == Quantifier.ONE
+                        && q.getCardinality() == Cardinality.ONE && q.getDisjointnessClass() == 0
+                        && q.getBindingPath().equals(origin.owner())
+                        && q.getDeBruijnKey().equals(origin.keys().get(i));
+            }
+            if (matches) return true;
+        }
+        return false;
+    }
+
+    boolean originalGroupedOneOriginsIntact() {
+        if (groupedOneOrigins.isEmpty()) return true;
+        if (matrixQuantiVars.size() > 64 || groupedOneOrigins.size() > 32) return false;
+        var positions = new java.util.IdentityHashMap<QuantiVar, Integer>();
+        for (int i = 0; i < matrixQuantiVars.size(); i++)
+            if (positions.put(matrixQuantiVars.get(i), i) != null) return false;
+        for (var origin : groupedOneOrigins) {
+            var group = origin.bindings();
+            if (!hasOriginalGroupedOne(group)) return false;
+            Integer start = positions.get(group.get(0));
+            if (start == null) return false;
+            for (int i = 0; i < group.size(); i++)
+                if (!java.util.Objects.equals(positions.get(group.get(i)), start + i)) return false;
+        }
+        return true;
     }
     public List<QuantiVar> getInheritedQuantiVars() {
         synchronized (lifecycleLock) {
@@ -503,6 +767,36 @@ public class NormalForm {
         }
     }
 
+    /** Read-only provenance from the existing sealed parser authority. */
+    public static final class TemporalReferenceOrigin {
+        private final EGraphNode reference;
+        private final TemporalReferenceAuthority authority;
+        private TemporalReferenceOrigin(EGraphNode reference, TemporalReferenceAuthority authority) {
+            this.reference = reference;
+            this.authority = authority;
+        }
+        public EGraphNode reference() { return reference; }
+        public NormalForm owner() { return authority.owner; }
+        public List<NormalForm> branches() { return authority.children; }
+        public long authorityId() { return authority.authorityId; }
+        public long parserOccurrenceId() { return authority.parserOccurrenceId; }
+        public long sourceOccurrenceLineage() { return authority.sourceOccurrenceLineage; }
+        public int sourceSlot() { return authority.childIndex; }
+    }
+
+    public TemporalReferenceOrigin temporalReferenceOrigin(EGraphNode reference) {
+        synchronized (lifecycleLock) {
+            if (!frozenForCertification || reference == null)
+                throw new IllegalArgumentException("Temporal provenance requires a frozen source");
+            var authority = temporalReferenceAuthorities.get(reference.temporalReferenceAuthorityId());
+            int[] target = temporalReferenceTarget(reference);
+            if (authority == null || target == null
+                    || !authority.matches(reference, target[0], target[1]))
+                throw new IllegalArgumentException("Temporal provenance lost sealed source authority");
+            return new TemporalReferenceOrigin(reference, authority);
+        }
+    }
+
     /** Freezes the complete normalized source consumed by certification. */
     public void freezeForCertification() {
         synchronized (lifecycleLock) {
@@ -518,6 +812,9 @@ public class NormalForm {
         }
         for (QuantiVar variable : inheritedQuantiVars) {
             variable.freezeForCertification();
+        }
+        for (LocalBindingSeed seed : localBindingSeeds.values()) {
+            seed.variable.freezeForCertification();
         }
         for (PhaseLocalBindingImport imported : phaseLocalBindingImports) {
             imported.variable().freezeForCertification();
@@ -2399,6 +2696,34 @@ public class NormalForm {
                 env.put(key, representative);
             }
         }
+        // This is a source-observed ordered tuple. It does not assert that
+        // grouped ONE equals a sequence of nested unique quantifiers.
+        if (!parameterDecl && !negated && quantifierOpcode == Opcode.ONE && !disj
+                && relDecl.getOpcode() == Opcode.GENERICRELDECL
+                && quantiVars.size() >= 2 && quantiVars.size() <= 64
+                && children.size() == quantiVars.size() + 1
+                && domain.cardinality == Cardinality.ONE
+                && typeEGraph != null && typeEGraph.getOpcode() == Opcode.ONE
+                && typeEGraph.getChildren().size() == 1
+                && typeEGraph.getChildren().get(0).getOpcode() == Opcode.GLOBALBINDING) {
+            boolean originalSlots = true;
+            for (int i = 0; i < quantiVars.size(); i++) {
+                var q = quantiVars.get(i); var variable = children.get(i + 1);
+                var type = q.getExactAlloyType();
+                originalSlots &= variable.getOpcode() == Opcode.VARIABLE
+                        && q.getBindingPath().equals(deBruijnBase)
+                        && q.getDeBruijnKey().equals(deBruijnBase + "#" + i + ":ONE:" + normalizeType(q.getTypeName()))
+                        && q.getOriginalNames().contains(variable.getSemanticIdentity())
+                        && q.getOriginalNames().contains(variable.getSourceName())
+                        && type != null && type.hasParserAuthenticatedAncestry()
+                        && type.relationArity() == 1
+                        && type.sameOccurrenceEvidenceAs(variable.getExactAlloyType())
+                        && type.sameOccurrenceEvidenceAs(typeEGraph.getChildren().get(0).getExactAlloyType());
+            }
+            if (originalSlots) groupedOneOrigins.add(new GroupedOneOrigin(
+                    relDecl.getSourceOccurrenceLineage(), List.copyOf(quantiVars),
+                    quantiVars.stream().map(QuantiVar::getDeBruijnKey).toList(), deBruijnBase));
+        }
         return new RelDeclResult(quantiVars, null);
     }
 
@@ -3528,13 +3853,33 @@ public class NormalForm {
                 sourceVariable.getSemanticProfile());
         variable.setSourceName(sourceVariable.getSourceName());
         variable.setSourceType(qv.getTypeName());
+        boolean sourceBound = hasSourceBoundDomainEvidence(qv, sourceVariable);
         variable.setExactAlloyType(
-                is.fivefivefive.ACGN.alloy.ExactAlloyType.unaryRelation(
-                        qv.getTypeName()));
+                sourceBound || authenticatedEmptyBindingType(qv.getExactAlloyType())
+                        ? qv.getExactAlloyType()
+                        : is.fivefivefive.ACGN.alloy.ExactAlloyType.unaryRelation(
+                                qv.getTypeName()));
         variable.setAlphaName(qv.getName());
+        if (sourceBound) {
+            // This is a new occurrence of the same binding, not a clone of its
+            // source occurrence. Keep its fresh lineage and exact parser type.
+            variable.preserveSemanticIdentityFrom(sourceVariable);
+        }
         constraint.addNormalizedChild(variable);
         constraint.addNormalizedChild(cloneEGraph(domain));
         return constraint;
+    }
+
+    private static boolean hasSourceBoundDomainEvidence(QuantiVar binding, EGraphNode source) {
+        var exact = binding.getExactAlloyType();
+        return source.getOpcode() == Opcode.VARIABLE
+                && binding.getName().equals(source.getAlphaName())
+                && source.getSemanticIdentity() != null
+                && binding.getOriginalNames().contains(source.getSemanticIdentity())
+                && binding.getOriginalNames().contains(source.getSourceName())
+                && exact != null && exact.relationArity() == 1
+                && exact.hasParserAuthenticatedAncestry()
+                && exact.sameOccurrenceEvidenceAs(source.getExactAlloyType());
     }
 
     @LeanVerifiedRewrite({"R0-CORE-007", "R0-CORE-008", "R0-CORE-009"})
@@ -4401,10 +4746,24 @@ public class NormalForm {
                 == is.fivefivefive.ACGN.alloy.ExactAlloyType.Kind.INT) {
             return true;
         }
+        // The parser's unary empty type still authenticates the original slot.
+        // Dropping it loses paid declaration links; it does not erase the domain.
+        if (authenticatedEmptyBindingType(evidence)) {
+            return true;
+        }
         return evidence.kind()
                         == is.fivefivefive.ACGN.alloy.ExactAlloyType.Kind.RELATION
                 && evidence.relationArity() >= 1
                 && !evidence.alternatives().isEmpty();
+    }
+
+    private static boolean authenticatedEmptyBindingType(
+            is.fivefivefive.ACGN.alloy.ExactAlloyType evidence) {
+        return evidence != null
+                && evidence.kind()
+                        == is.fivefivefive.ACGN.alloy.ExactAlloyType.Kind.EMPTY_RELATION
+                && evidence.relationArity() == 1
+                && evidence.hasParserAuthenticatedAncestry();
     }
 
     private static void inheritBindingTypeEvidence(

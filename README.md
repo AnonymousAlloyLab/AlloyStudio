@@ -4,7 +4,15 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.9-alpha.1](docs/releases/v0.0.9-alpha.1.md).**
+**Current release: [v0.0.9-alpha.1.r](docs/releases/v0.0.9-alpha.1.r.md).**
+
+This backend update pins ACGN `8c9bd4b`, uses its replay-checked canonical
+repair programs, and removes decorative `Body`/`NOOP` nodes before AST counting
+and Zhang–Shasha distance. Canonical remains the default. See the
+[rebase contract, updated paper figure and corpus rerun](docs/acgn-rebase-20261109.md).
+TAR and HiGenA retain their previous measured results.
+
+**Previous maintenance release: [v0.0.9-alpha.1](docs/releases/v0.0.9-alpha.1.md).**
 
 This maintenance release makes the learner workspace easier to recover and
 navigate: **Undo reset** restores an accidentally reset predicate, chat actions
@@ -276,7 +284,7 @@ From a new clone, run:
 ```
 
 The repository includes the exercise catalogue, correct-predicate pools, engine
-sources, and seven dependency JARs. No IIS ZIP or original ACGN checkout is
+sources, and eight dependency JARs. No IIS ZIP or original ACGN checkout is
 required. To prepare and check the checkout without starting the server, use
 `./scripts/setup.sh` without flags.
 
@@ -499,8 +507,9 @@ Raw AST mode uses ACGN's ordered-tree Zhang–Shasha implementation with the
 framework's raw AST labels and child order. Each unit step inserts, deletes or
 relabels one node; deletion promotes children and insertion can wrap consecutive
 children. The engine independently backtracks and privately replays the script.
-It retains parser `Body`/`NOOP` wrappers and variable spellings, so these distances
-can differ from intuitive source-token counts and from the historical augmenter's
+It removes transparent parser `Body`/`NOOP` wrappers before node counting and
+matching, while retaining variable spellings and meaningful ordered children.
+Its unit-node recurrence still differs from the historical augmenter's
 subtree-based raw-AST recurrence. No canonical normalization runs in AST mode.
 Only original-code locations are shown for AST edits; the canonical panel stays
 hidden. Limits and the response contract are in [the engine guide](engine/README.md).
@@ -827,9 +836,10 @@ behind the proxy; it does not trust forwarded headers as authorization.
 
 ## Dependency and portability checks
 
-The complete source checkout and IIS archive include all seven pinned JARs:
+The complete source checkout and IIS archive include all eight pinned JARs:
 `AlloyASG-Release.jar`, `AlloyASG.jar`, `AlloyParser.jar`, `alloy.jar`,
-`commons-cli-1.4.jar`, `json-java.jar`, and `slf4j-simple-1.7.36.jar`.
+`commons-cli-1.11.0.jar`, `json-java.jar`, `slf4j-api-2.0.20.jar`, and
+`slf4j-simple-2.0.20.jar`.
 Their directory is `vendor/acgn/lib` in the source checkout, and
 `backend/vendor/acgn/lib` in the IIS archive. No Maven cache, upstream ACGN
 checkout, or separately installed AlloyASG library is required.
@@ -843,7 +853,7 @@ python .\runtime_dependencies.py --java java
 ```
 
 The build checks every JAR against its snapshot SHA-256 before invoking `javac`,
-then passes all seven absolute JAR paths as one classpath argument using the
+then passes all eight absolute JAR paths as one classpath argument using the
 operating system's separator. A missing or changed JAR stops the build with its
 filename. Errors such as `package edu.mit.csail.sdg.alloy4 does not exist`,
 `package org.json does not exist`, or `package is.fivefivefive.alloyasg.asg does
@@ -923,7 +933,7 @@ and execution time. For shared hosting, use a separately configured authenticate
 HTTPS reverse proxy; access control and multi-tenant deployment are outside this
 local portal's verification surface.
 
-ACGN base snapshot: `1e2667351532b0c632166fa21ae5fbc7308a8fe7`.
+ACGN base snapshot: `8c9bd4b922ecee99d496be2515fa78cb09f3e12b`.
 The vendored copy includes a local presentation metadata patch that carries parser
 origins through canonicalization for the locators. `vendor/acgn/snapshot.json`
 records the delivered file hashes; this copy is not byte-identical to the base

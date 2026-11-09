@@ -95,7 +95,7 @@ public final class BehaviorFeedback {
         Cursor(CompModule world, Expr expression, ParameterContext parameters) throws Err {
             this.world = world; this.expression = expression;
             fixedTrace = parameters.isParameterized() && CompUtil.isTemporalModel(
-                    world.getAllReachableSigs(), new Command(true, SCOPE, SCOPE, SCOPE, expression));
+                    world.getAllReachableSigs(), new Command(true, SCOPE, SCOPE, SCOPE, null, expression));
             solution = solve(world, expression, fixedTrace ? trace : -1);
             seek();
         }
@@ -269,10 +269,10 @@ public final class BehaviorFeedback {
 
     private static A4Solution solve(CompModule world, Expr expression, int exactTrace) throws Err {
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
-        Command command = exactTrace < 0 ? new Command(true, SCOPE, SCOPE, SCOPE, expression)
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
+        Command command = exactTrace < 0 ? new Command(true, SCOPE, SCOPE, SCOPE, null, expression)
                 : new Command(null, null, "", true, SCOPE, SCOPE, SCOPE,
-                        exactTrace, exactTrace, -1, null, null, expression, null);
+                        exactTrace, exactTrace, -1, null, null, null, expression, null);
         A4Solution solution = TranslateAlloyToKodkod.execute_command(A4Reporter.NOP, world.getAllReachableSigs(),
                 command, options);
         if (solution == null) throw new IllegalStateException();

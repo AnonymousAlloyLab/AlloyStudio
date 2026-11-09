@@ -14,6 +14,11 @@ import java.util.Set;
 
 /** Worker-only parser ownership and poison boundary; one-shot behavior is retained. */
 final class WorkerSafety {
+    static {
+        // SLF4J 2 can cache stderr before a solver starts. Keep private solver
+        // diagnostics out of all engine wire and captured CLI channels.
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "off");
+    }
     private static final ThreadLocal<Path> JOB = new ThreadLocal<>();
     private static int parses;
     private static long sourceBytes;

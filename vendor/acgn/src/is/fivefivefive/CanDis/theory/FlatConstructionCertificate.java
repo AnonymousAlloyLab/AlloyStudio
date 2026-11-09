@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 /** Concrete A/C/I replay from visible nested syntax to one flat typed e-node. */
 public final class FlatConstructionCertificate extends TypedEqualityCertificate {
@@ -59,6 +61,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
     }
 
     private final FlatApplication source;
+    private final Map<OnePort, FlatOperandExposure> exposures;
     private final TypedENode target;
     private final OnePort singletonTarget;
     private final SemanticProfile semanticProfile;
@@ -76,6 +79,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
                 build.premises,
                 build.details);
         this.source = build.source;
+        this.exposures = build.exposures;
         this.target = build.target;
         this.singletonTarget = build.singletonTarget;
         this.semanticProfile = build.semanticProfile;
@@ -111,6 +115,21 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
             TypedENode target,
             OnePort singletonTarget,
             SemanticProfile semanticProfile) {
+        return build(source, target, singletonTarget, semanticProfile, Map.of());
+    }
+
+    static FlatConstructionCertificate createWithExposures(FlatApplication source,
+            TypedENode target, OnePort singleton, SemanticProfile profile,
+            Map<OnePort, FlatOperandExposure> exposures) {
+        FlatConstructionCertificate certificate = new FlatConstructionCertificate(
+                build(source, target, singleton, profile, exposures));
+        CertificateVerifier.verify(certificate);
+        return certificate;
+    }
+
+    private static Build build(
+            FlatApplication source, TypedENode target, OnePort singletonTarget,
+            SemanticProfile semanticProfile, Map<OnePort, FlatOperandExposure> exposures) {
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(semanticProfile, "semanticProfile");
         if ((target == null) == (singletonTarget == null)) {
@@ -146,7 +165,9 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
 
         List<FlatLeaf> leaves = new ArrayList<>();
         List<Splice> splices = new ArrayList<>();
-        collect(source, operator, new ArrayList<>(), leaves, splices);
+        List<FlatOperandExposure> used = new ArrayList<>();
+        FlatApplication expanded = FlatOperandExposure.expand(source, exposures, semanticProfile, used);
+        collect(expanded, operator, new ArrayList<>(), leaves, splices);
         List<PortValue> occurrences = new ArrayList<>(leaves.size());
         for (FlatLeaf leaf : leaves) {
             occurrences.add(leaf.port());
@@ -179,6 +200,11 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
         }
 
         List<TypedEqualityCertificate> premises = new ArrayList<>();
+        Map<OnePort, FlatOperandExposure> retained = new LinkedHashMap<>();
+        for (FlatOperandExposure exposure : used) {
+            premises.add(exposure.insertion());
+            retained.put(exposure.leaf(), exposure);
+        }
         if (!splices.isEmpty()) {
             premises.add(requireLaw(
                     declaration, ContainerLawCertificate.Law.ASSOCIATIVITY));
@@ -197,6 +223,10 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
         details.add(operator.structuralKey());
         details.add(StructuralKey.leaf("port-path", path.toString()));
         details.add(source.structuralKey());
+        if (!used.isEmpty()) {
+            details.add(StructuralKey.branch("source-linked-flat-exposure-v1",
+                    List.of(expanded.structuralKey())));
+        }
         details.add(target == null
                 ? singletonTarget.structuralKey()
                 : target.structuralKey());
@@ -206,6 +236,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
         }
         return new Build(
                 source,
+                Collections.unmodifiableMap(retained),
                 target,
                 singletonTarget,
                 targetEndpoint,
@@ -266,6 +297,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
     }
 
     public FlatApplication source() { return source; }
+    public boolean hasExposures() { return !exposures.isEmpty(); }
     public boolean collapsedToSingleton() { return singletonTarget != null; }
     public TypedENode target() {
         if (target == null) {
@@ -288,7 +320,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
 
     @Override
     void verifyLocal() {
-        Build rebuilt = build(source, target, singletonTarget, semanticProfile);
+        Build rebuilt = build(source, target, singletonTarget, semanticProfile, exposures);
         if (!path.equals(rebuilt.path)
                 || !declaration.equals(rebuilt.declaration)
                 || !splices.equals(rebuilt.splices)
@@ -303,6 +335,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
 
     private static final class Build {
         private final FlatApplication source;
+        private final Map<OnePort, FlatOperandExposure> exposures;
         private final TypedENode target;
         private final OnePort singletonTarget;
         private final TypedCertificateEndpoint targetEndpoint;
@@ -316,6 +349,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
 
         private Build(
                 FlatApplication source,
+                Map<OnePort, FlatOperandExposure> exposures,
                 TypedENode target,
                 OnePort singletonTarget,
                 TypedCertificateEndpoint targetEndpoint,
@@ -327,6 +361,7 @@ public final class FlatConstructionCertificate extends TypedEqualityCertificate 
                 List<TypedEqualityCertificate> premises,
                 List<StructuralKey> details) {
             this.source = source;
+            this.exposures = exposures;
             this.target = target;
             this.singletonTarget = singletonTarget;
             this.targetEndpoint = targetEndpoint;

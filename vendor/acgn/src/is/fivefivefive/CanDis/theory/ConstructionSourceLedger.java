@@ -13,18 +13,21 @@ public final class ConstructionSourceLedger {
     private final Map<StructuralKey, Integer> containerSources;
     private final Map<StructuralKey, Integer> dependentChainSources;
     private final Map<StructuralKey, Integer> callSources;
+    private final Map<StructuralKey, Integer> guardedJoinSources;
 
     private ConstructionSourceLedger(
             SemanticProfile semanticProfile,
             Map<StructuralKey, Integer> flatSources,
             Map<StructuralKey, Integer> containerSources,
             Map<StructuralKey, Integer> dependentChainSources,
-            Map<StructuralKey, Integer> callSources) {
+            Map<StructuralKey, Integer> callSources,
+            Map<StructuralKey, Integer> guardedJoinSources) {
         this.semanticProfile = Objects.requireNonNull(semanticProfile, "semanticProfile");
         this.flatSources = immutableCounts(flatSources);
         this.containerSources = immutableCounts(containerSources);
         this.dependentChainSources = immutableCounts(dependentChainSources);
         this.callSources = immutableCounts(callSources);
+        this.guardedJoinSources = immutableCounts(guardedJoinSources);
     }
 
     static Builder builder(SemanticProfile semanticProfile) {
@@ -55,6 +58,8 @@ public final class ConstructionSourceLedger {
         return callSources;
     }
 
+    public Map<StructuralKey, Integer> guardedJoinSources() { return guardedJoinSources; }
+
     private static Map<StructuralKey, Integer> immutableCounts(
             Map<StructuralKey, Integer> source) {
         Map<StructuralKey, Integer> copied = new LinkedHashMap<>();
@@ -81,6 +86,7 @@ public final class ConstructionSourceLedger {
                 new LinkedHashMap<>();
         private final Map<StructuralKey, Integer> callSources =
                 new LinkedHashMap<>();
+        private final Map<StructuralKey, Integer> guardedJoinSources = new LinkedHashMap<>();
 
         private Builder(SemanticProfile semanticProfile) {
             this.semanticProfile = Objects.requireNonNull(
@@ -137,6 +143,11 @@ public final class ConstructionSourceLedger {
                             .structuralKey());
         }
 
+        void recordGuardedJoin(GuardedJoinTree source, StructuralKey commitment) {
+            increment(guardedJoinSources,
+                    TypedCertificateEndpoint.guardedJoin(source, semanticProfile, commitment).structuralKey());
+        }
+
         void recordCall(CallOccurrenceCertificate occurrence) {
             increment(
                     callSources,
@@ -150,7 +161,8 @@ public final class ConstructionSourceLedger {
                     flatSources,
                     containerSources,
                     dependentChainSources,
-                    callSources);
+                    callSources,
+                    guardedJoinSources);
         }
     }
 }

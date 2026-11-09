@@ -119,8 +119,10 @@ class CleanEngineBuildTests(unittest.TestCase):
         self.assertEqual(command[command.index('-sourcepath') + 1], os.pathsep.join(
             str(self.root / name) for name in ('engine/src', 'vendor/acgn/src')))
         self.assertNotIn('*', command[command.index('-cp') + 1])
-        self.assertEqual(command[-len(build_engine.ENTRY_POINTS):], [str(self.root / 'engine/src/live' / name)
-                                        for name in build_engine.ENTRY_POINTS])
+        expected_sources = [str(self.root / 'engine/src/live' / name)
+                            for name in build_engine.ENTRY_POINTS]
+        expected_sources.append(str(self.root / 'vendor/acgn/src/is/fivefivefive/CanDis/theory/EqualityCertificates.java'))
+        self.assertEqual(command[-len(expected_sources):], expected_sources)
         staging = Path(command[command.index('-d') + 1])
         self.assertEqual(staging.parent, self.output.parent)
         self.assertNotEqual(staging, self.output)

@@ -95,7 +95,7 @@ public final class TheoryDeterminismTest {
                 TheoryDeterminismTest.class.getName(),
                 PROBE_ARGUMENT,
                 reverse ? "1" : "0")
-                .redirectErrorStream(true)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start();
         StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(

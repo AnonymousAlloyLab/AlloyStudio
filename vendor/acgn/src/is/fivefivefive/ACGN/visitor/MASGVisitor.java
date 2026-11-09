@@ -1529,7 +1529,7 @@ public class MASGVisitor implements GenericVisitor<AugmentedNode, ScopeTreeNode>
                 for (Expr fact : signature.getFacts()) fact.accept(references);
             }
             for (var fact : parserModule.getAllFacts()) fact.b.accept(references);
-            for (var assertion : parserModule.getAllAssertions()) assertion.b.accept(references);
+            for (var assertion : parserModule.getAllAssertions()) assertion.expr.accept(references);
         } catch (Err error) {
             throw new IllegalStateException("Cannot authenticate imported call references", error);
         }

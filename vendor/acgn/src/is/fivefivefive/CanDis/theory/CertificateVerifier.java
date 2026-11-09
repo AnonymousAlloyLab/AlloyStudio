@@ -8,7 +8,7 @@ import java.util.Set;
 
 /** Recursive verifier and admission predicates for the closed certificate algebra. */
 public final class CertificateVerifier {
-    public static final String VERSION = "typed-certificate-algebra-v3";
+    public static final String VERSION = "typed-certificate-algebra-v4";
 
     private CertificateVerifier() {
     }

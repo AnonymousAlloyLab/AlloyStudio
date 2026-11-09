@@ -73,16 +73,19 @@ public final class LibraryCallableSelfTest {
             JSONObject parserBlocked = new JSONObject();
             boolean windows = java.io.File.separatorChar == '\\';
             for (String name : sources.keySet()) {
-                if (name.equals("sequence") || name.equals("time")) continue;
+                if (name.equals("time")) continue;
                 if (name.equals("natural") && windows) {
                     // The pinned Alloy parser itself rejects natural on Windows:
                     // implicit util\\integer and explicit util/integer share alias
                     // integer. Keep this visible; no source rewriting or silent skip.
                     JSONArray declarations = new JSONArray();
                     for (String key : census) if (key.startsWith("util/natural/")) declarations.put(key);
-                    parserBlocked.put(name, new JSONObject().put("declarations", declarations)
-                            .put("feedback", compare(environment(name), "pred target {\n", "some Node", "some Node")));
-                    continue;
+                    JSONObject boundary = compare(environment(name), "pred target {\n", "some Node", "some Node");
+                    if (boundary.getString("status").equals("invalid")) {
+                        parserBlocked.put(name, new JSONObject().put("declarations", declarations).put("feedback", boundary));
+                        continue;
+                    }
+                    if (!boundary.getString("status").equals("ok")) throw new AssertionError("Natural parser probe did not complete");
                 }
                 begin();
                 try {
@@ -90,7 +93,7 @@ public final class LibraryCallableSelfTest {
                     CompModule root = WorkerSafety.parse(environment + "pred target {}\n");
                     CompModule library = null;
                     for (CompModule module : root.getAllReachableModules())
-                        if (module.getModelName().equals("util/" + name)) library = module;
+                        if (module.getModuleName().equals("util/" + name)) library = module;
                     if (library == null) throw new AssertionError("Missing bundled module: " + name);
                     for (Func function : library.getAllFunc()) if (function.isPrivate == null) {
                         List<String> declarations = new ArrayList<>(), argumentsList = new ArrayList<>();
@@ -364,7 +367,7 @@ public final class LibraryCallableSelfTest {
                 "lib/lt[a,b]", "lib/lt[b,a]"));
         output.put("changed-boolean-callee", compare(environment("boolean"), "pred target[b: lib/Bool] {\n",
                 "lib/isTrue[b]", "lib/isFalse[b]"));
-        output.put("sequence-upstream-invalid", compare(environment("sequence"), "pred target {\n",
+        output.put("sequence-supported", compare(environment("sequence"), "pred target {\n",
                 "lib/noDuplicates[]", "lib/noDuplicates[]"));
         output.put("time-macro", compare("module library_fixture\nopen util/time as clock\nsig Node {}\n",
                 "pred target[r: Node -> clock/Time] {\n", "r in clock/dynamicSet[Node]", "r in clock/dynamicSet[Node]"));

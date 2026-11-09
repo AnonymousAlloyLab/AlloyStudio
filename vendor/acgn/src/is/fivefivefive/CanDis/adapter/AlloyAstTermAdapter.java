@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import is.fivefivefive.CanDis.core.egraph.AlloyTerm;
+import is.fivefivefive.ACGN.alloy.ExactAlloyType;
 import parser.ast.nodes.BinaryExpr;
 import parser.ast.nodes.BinaryFormula;
 import parser.ast.nodes.Call;
@@ -23,6 +24,7 @@ import parser.ast.nodes.SigExpr;
 import parser.ast.nodes.UnaryExpr;
 import parser.ast.nodes.UnaryFormula;
 import parser.ast.nodes.VarExpr;
+import parser.util.AlloyUtil;
 
 /** Converts parser AST nodes into the parser-independent e-graph term model. */
 public final class AlloyAstTermAdapter {
@@ -30,22 +32,31 @@ public final class AlloyAstTermAdapter {
     }
 
     public static AlloyTerm fromPredicate(Predicate predicate) {
+        return fromPredicate(predicate, false);
+    }
+
+    public static AlloyTerm fromPredicate(Predicate predicate, boolean typedSlots) {
         List<AlloyTerm> children = new ArrayList<>();
         if (predicate != null) {
             List<ParamDecl> parameters = predicate.getParamList();
             if (parameters != null) {
                 for (ParamDecl parameter : parameters) {
-                    children.add(fromAst(parameter));
+                    children.add(fromAst(parameter, typedSlots));
                 }
             }
             if (predicate.getBody() != null) {
-                children.add(fromAst(predicate.getBody()));
+                children.add(fromAst(predicate.getBody(), typedSlots));
             }
         }
         return AlloyTerm.node("PREDICATE", children);
     }
 
     public static AlloyTerm fromAst(Node node) {
+        return fromAst(node, false);
+    }
+
+    public static AlloyTerm fromAst(Node node, boolean typedSlots) {
+        node = AlloyUtil.unwrapAst(node);
         if (node == null) {
             return AlloyTerm.atom("NULL", "");
         }
@@ -54,11 +65,11 @@ public final class AlloyAstTermAdapter {
             List<AlloyTerm> children = new ArrayList<>();
             if (declaration.getVariables() != null) {
                 for (Node variable : declaration.getVariables()) {
-                    children.add(fromAst(variable));
+                    children.add(fromAst(variable, typedSlots));
                 }
             }
             if (declaration.getExpr() != null) {
-                children.add(fromAst(declaration.getExpr()));
+                children.add(fromAst(declaration.getExpr(), typedSlots));
             }
             return AlloyTerm.node("DECL/" + node.getClass().getSimpleName()
                     + "/disj=" + declaration.isDisjoint()
@@ -69,12 +80,20 @@ public final class AlloyAstTermAdapter {
         if (astChildren != null) {
             for (Node child : astChildren) {
                 if (child != null) {
-                    children.add(fromAst(child));
+                    children.add(fromAst(child, typedSlots));
                 }
             }
         }
         if (node instanceof VarExpr) {
-            return AlloyTerm.atom("VAR", ((VarExpr) node).getName());
+            VarExpr variable = (VarExpr) node;
+            if (typedSlots) {
+                ExactAlloyType type = ExactAlloyType.from(variable.getType());
+                if (type.kind() == ExactAlloyType.Kind.UNKNOWN) {
+                    throw new IllegalArgumentException("Missing exact slot type: " + variable.getName());
+                }
+                return AlloyTerm.typedVariable(variable.getName(), type.toString());
+            }
+            return AlloyTerm.atom("VAR", variable.getName());
         }
         if (node instanceof SigExpr) {
             String name = ((SigExpr) node).getName();

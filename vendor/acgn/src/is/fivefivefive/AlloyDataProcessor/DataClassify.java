@@ -55,7 +55,7 @@ public class DataClassify {
         Command command0 = world.getAllCommands().get(0);
         Command command1 = world.getAllCommands().get(1);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         A4Solution instance0 = TranslateAlloyToKodkod.execute_command(rep, world.getAllReachableSigs(), command0, options);
         A4Solution instance1 = TranslateAlloyToKodkod.execute_command(rep, world.getAllReachableSigs(), command1, options);
         if (instance0.satisfiable()) {

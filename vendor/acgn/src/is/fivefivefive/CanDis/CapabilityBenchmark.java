@@ -255,6 +255,7 @@ public final class CapabilityBenchmark {
     }
 
     private static int astSize(parser.ast.nodes.Node node) {
+        node = AlloyUtil.unwrapAst(node);
         if (node == null) {
             return 0;
         }

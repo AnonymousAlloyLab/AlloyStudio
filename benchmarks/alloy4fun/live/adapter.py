@@ -5,6 +5,7 @@ result/reference cache inside it. Corpus/train-pool construction is offline.
 """
 from __future__ import annotations
 import json
+import math
 import os
 from pathlib import Path
 import selectors
@@ -71,7 +72,9 @@ class Worker:
             classpath = os.pathsep.join(str(ROOT / p) for p in
                 ('build/benchmarks/alloy4fun/classes', 'build/engine/classes', 'vendor/acgn/lib/*'))
             command = self.command or ['java', '-Xmx' + self.heap,
-                '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC', '-cp', classpath,
+                '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC',
+                '-Dalloy.feedback.workMillis=' + str(min(60000, max(1, math.ceil(self.timeout * 1000)))),
+                '-cp', classpath,
                 'benchmark.LiveWorker']
             self.scratch = tempfile.TemporaryDirectory(prefix='worker-', dir=scratch_root())
             command = [command[0], '-Djava.io.tmpdir=' + self.scratch.name, *command[1:]]

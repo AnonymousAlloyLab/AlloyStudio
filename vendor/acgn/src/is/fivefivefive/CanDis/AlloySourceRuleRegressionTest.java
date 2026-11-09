@@ -55,7 +55,7 @@ public final class AlloySourceRuleRegressionTest {
             check(module != null, "source-rule fixture must parse");
 
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             // Translation support for relation-valued quantified variables is
             // command-specific. The first six commands have fixed direct checks;
             // the higher-order authority ledger below records every mixed result.
@@ -601,7 +601,7 @@ public final class AlloySourceRuleRegressionTest {
             CompModule comparisonModule = AlloyUtil.compileAlloyModule(
                     comparisonPath.toString());
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             for (int index = 0; index < comparisonModule.getAllCommands().size(); index++) {
                 A4Solution counterexample = TranslateAlloyToKodkod.execute_command(
                         A4Reporter.NOP,
@@ -912,7 +912,7 @@ public final class AlloySourceRuleRegressionTest {
                         label + " generated invalid Alloy at " + path + ":\n" + source);
             }
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             for (int index = 0; index < module.getAllCommands().size(); index++) {
                 A4Solution counterexample = TranslateAlloyToKodkod.execute_command(
                         A4Reporter.NOP,

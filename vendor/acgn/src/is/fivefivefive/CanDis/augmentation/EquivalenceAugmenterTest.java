@@ -245,7 +245,7 @@ public final class EquivalenceAugmenterTest {
                             equivalent(source, "e", "falsehood")),
                     "schema application evidence must reconstruct the compared endpoints");
             A4Options foreignContextOptions = new A4Options();
-            foreignContextOptions.solver = A4Options.SatSolver.SAT4J;
+            foreignContextOptions.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             AlloyEquivalenceValidator.Request foreignContextApplication =
                     new AlloyEquivalenceValidator.Request(
                             source,
@@ -786,7 +786,7 @@ public final class EquivalenceAugmenterTest {
         MASGVisitor visitor = new MASGVisitor(new GlobalVariables(), module);
         visitor.visit(new ModelUnit(null, module), null);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         SemanticProfile profile = AlloySemanticProfileFactory.fromExactlyOne(
                 module, List.of(module.getAllCommands().get(0)), options);
         CanonicalAlloyPipeline.Prepared left = CanonicalAlloyPipeline.prepareForVerification(
@@ -852,7 +852,7 @@ public final class EquivalenceAugmenterTest {
                         && module.getAllCommands().get(0).parent != null,
                 "follow-up regression source must retain its executable parent chain");
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         expectThrows(IllegalArgumentException.class, () ->
                 AlloySemanticProfileFactory.fromExactlyOne(
                         module, List.of(module.getAllCommands().get(0)), options),
@@ -922,7 +922,7 @@ public final class EquivalenceAugmenterTest {
                         && module.getAllCommands().get(0).parent == null,
                 label + " must select one independent command of the expected kind");
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         SemanticProfile profile = AlloySemanticProfileFactory.fromExactlyOne(
                 module, List.of(module.getAllCommands().get(0)), options);
         MASGVisitor visitor = new MASGVisitor(new GlobalVariables(), module);

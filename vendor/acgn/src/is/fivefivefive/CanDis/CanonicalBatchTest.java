@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -59,8 +60,16 @@ public class CanonicalBatchTest {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "error");
         Options options = Options.parse(args);
         Files.createDirectories(options.outputDir);
-        Path jsonPath = options.outputDir.resolve("distances.json");
-        Path markdownPath = options.outputDir.resolve("summary.md");
+        options.parityGate = new BatchParityGate(options.outputDir, options.diagnosticOperations
+                ? BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS : options.diagnosticComponents
+                    ? BatchParityGate.Mode.DIAGNOSTIC_COMPONENTS : BatchParityGate.Mode.STRICT_CERTIFIED);
+        String prefix = options.diagnosticOperations ? "diagnostic-operations-" : options.diagnosticComponents ? "diagnostic-" : "";
+        Path jsonPath = options.outputDir.resolve(prefix + "distances.json");
+        Path partialJsonPath = options.outputDir.resolve(prefix + "distances.partial.json");
+        Path markdownPath = options.outputDir.resolve(prefix + "summary.md");
+        if (Files.exists(jsonPath) || Files.exists(partialJsonPath) || Files.exists(markdownPath)) {
+            throw new IOException("Use a fresh output directory; completed and partial evidence must be preserved");
+        }
 
         List<Path> files = alloyFiles(options.inputDir);
         if (options.limit > 0 && options.limit < files.size()) {
@@ -68,24 +77,31 @@ public class CanonicalBatchTest {
         }
 
         Summary summary = new Summary(!options.skipRewards);
-        try (Writer json = Files.newBufferedWriter(jsonPath, StandardCharsets.UTF_8)) {
+        try (Writer json = Files.newBufferedWriter(partialJsonPath, StandardCharsets.UTF_8,
+                java.nio.file.StandardOpenOption.CREATE_NEW, java.nio.file.StandardOpenOption.WRITE)) {
             writeJsonHeader(json, options, files.size());
             int[] written = {0};
-            processFiles(files, options, result -> {
-                summary.add(result);
-                if (result.skipped) {
-                    return;
-                }
-                if (written[0]++ > 0) {
-                    json.write(",\n");
-                }
-                writeJsonResult(json, result);
-                if (options.verbose) {
-                    System.err.println(result.relativePath + " -> " + result.status());
-                }
-            });
-            writeJsonFooter(json, summary);
+            try {
+                processFiles(files, options, result -> {
+                    summary.add(result);
+                    if (result.skipped) {
+                        return;
+                    }
+                    if (written[0]++ > 0) {
+                        json.write(",\n");
+                    }
+                    writeJsonResult(json, result);
+                    if (options.verbose) {
+                        System.err.println(result.relativePath + " -> " + result.status());
+                    }
+                });
+            } catch (BatchParityGate.Violation failure) {
+                writeJsonFooter(json, summary, options);
+                throw failure;
+            }
+            writeJsonFooter(json, summary, options);
         }
+        Files.move(partialJsonPath, jsonPath);
         writeMarkdown(markdownPath, options, summary);
         System.out.println("Wrote " + jsonPath);
         System.out.println("Wrote " + markdownPath);
@@ -113,7 +129,12 @@ public class CanonicalBatchTest {
                 : workers * 4;
         int memoryIntensiveWorkers = ExperimentMemoryBudget.effectiveWorkers(workers);
         Semaphore memoryIntensivePermits = new Semaphore(memoryIntensiveWorkers, true);
-        ExecutorService executor = Executors.newFixedThreadPool(workers);
+        ExecutorService executor = Executors.newFixedThreadPool(workers, task -> {
+            Thread worker = new Thread(task, "canonical-batch-worker");
+            // The CLI must terminate even if an interrupted parser/solver ignores cancellation.
+            worker.setDaemon(true);
+            return worker;
+        });
         try {
             CompletionService<IndexedResult> completions =
                     new ExecutorCompletionService<>(executor);
@@ -132,6 +153,7 @@ public class CanonicalBatchTest {
                     + maximumInFlight + " tasks in flight; memory-intensive concurrency "
                     + memoryIntensiveWorkers + ".");
             while (submitted < files.size() && submitted - emitted < maximumInFlight) {
+                options.parityGate.checkRunning();
                 int index = submitted++;
                 Future<IndexedResult> future = completions.submit(
                         () -> processIndexedFile(
@@ -140,14 +162,19 @@ public class CanonicalBatchTest {
             }
 
             while (completed < files.size()) {
+                options.parityGate.checkRunning();
                 Future<IndexedResult> future;
                 try {
-                    future = completions.poll(30, TimeUnit.SECONDS);
+                    future = completions.poll(100, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new IOException("Canonical batch processing was interrupted", e);
                 }
                 if (future == null) {
+                    options.parityGate.checkRunning();
+                    if (System.nanoTime() - lastProgress < TimeUnit.SECONDS.toNanos(30)) {
+                        continue;
+                    }
                     String unresolved = emitted < files.size()
                             ? options.inputDir.relativize(files.get(emitted)).toString()
                             : "<none>";
@@ -167,6 +194,9 @@ public class CanonicalBatchTest {
                     }
                 } catch (ExecutionException e) {
                     Throwable cause = e.getCause() == null ? e : e.getCause();
+                    if (cause instanceof BatchParityGate.Violation) {
+                        throw (BatchParityGate.Violation) cause;
+                    }
                     if (cause instanceof VirtualMachineError) {
                         throw (VirtualMachineError) cause;
                     }
@@ -208,6 +238,7 @@ public class CanonicalBatchTest {
                 }
 
                 while (submitted < files.size() && submitted - emitted < maximumInFlight) {
+                    options.parityGate.checkRunning();
                     int index = submitted++;
                     Future<IndexedResult> next = completions.submit(
                             () -> processIndexedFile(
@@ -217,6 +248,11 @@ public class CanonicalBatchTest {
             }
         } finally {
             executor.shutdownNow();
+            try {
+                executor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+            }
             if (!options.verbose) {
                 System.setOut(originalOut);
                 System.setErr(originalErr);
@@ -230,10 +266,8 @@ public class CanonicalBatchTest {
             Path file,
             Options options,
             Semaphore memoryIntensivePermits) {
+        options.parityGate.checkRunning();
         FileResult result = processFile(options.inputDir, file, options, memoryIntensivePermits);
-        if (result.error != null) {
-            result = processFile(options.inputDir, file, options, memoryIntensivePermits);
-        }
         return new IndexedResult(index, result);
     }
 
@@ -318,7 +352,8 @@ public class CanonicalBatchTest {
             result.rightVertices = right.size();
             acquireMemoryIntensivePermit(memoryIntensivePermits);
             try {
-                computeDistanceMetrics(left, right, result);
+                options.parityGate.checkRunning();
+                computeDistanceMetrics(left, right, result, file, options.parityGate);
             } finally {
                 memoryIntensivePermits.release();
             }
@@ -333,6 +368,8 @@ public class CanonicalBatchTest {
                 }
             }
             return result;
+        } catch (BatchParityGate.Violation | CancellationException failure) {
+            throw failure;
         } catch (VirtualMachineError error) {
             throw error;
         } catch (Throwable t) {
@@ -340,6 +377,8 @@ public class CanonicalBatchTest {
                 t.printStackTrace(System.err);
             }
             result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            if(t instanceof is.fivefivefive.CanDis.metric.NativeRepairTrace.CaptureFailure failure)
+                result.failedNativeSelection=failure.selectedReceipt();
             return result;
         }
     }
@@ -347,7 +386,9 @@ public class CanonicalBatchTest {
     private static void computeDistanceMetrics(
             Multigraph left,
             Multigraph right,
-            FileResult result) {
+            FileResult result,
+            Path source,
+            BatchParityGate gate) {
         Canonical.Prepared leftCanonical = Canonical.prepare(left);
         Canonical.Prepared rightCanonical = Canonical.prepare(right);
         result.leftLegacyCanonicalFormSize = Canonical.canonicalFormSize(leftCanonical);
@@ -355,12 +396,14 @@ public class CanonicalBatchTest {
         result.legacyCanonicalFormSize = Math.max(
                 result.leftLegacyCanonicalFormSize,
                 result.rightLegacyCanonicalFormSize);
-        CanonicalDistance.DistanceBreakdown legacyBreakdown =
-                Canonical.distanceBreakdown(leftCanonical, rightCanonical);
-        result.legacyCanonicalDistance = legacyBreakdown.distance();
-        result.legacyTemporalDistance = legacyBreakdown.temporalDistance();
-        result.legacyQuantifierDistance = legacyBreakdown.quantifierDistance();
-        result.legacyMatrixDistance = legacyBreakdown.matrixDistance();
+        var nativeFast=gate.checksOperations()?gate.captureTrace(source,result.leftPredicate,result.rightPredicate,
+                ()->Canonical.evaluateWithTrace(leftCanonical,rightCanonical),null):null;
+        CanonicalDistance.DistanceBreakdown legacyBreakdown = nativeFast==null
+                ?Canonical.distanceBreakdown(leftCanonical, rightCanonical):null;
+        result.legacyCanonicalDistance = nativeFast==null?legacyBreakdown.distance():nativeFast.distance();
+        result.legacyTemporalDistance = nativeFast==null?legacyBreakdown.temporalDistance():nativeFast.temporalDistance();
+        result.legacyQuantifierDistance = nativeFast==null?legacyBreakdown.quantifierDistance():nativeFast.quantifierDistance();
+        result.legacyMatrixDistance = nativeFast==null?legacyBreakdown.matrixDistance():nativeFast.matrixDistance();
         result.normalizedLegacyCanonicalDistance = normalizedDistance(
                 result.legacyCanonicalDistance,
                 result.legacyCanonicalFormSize);
@@ -381,15 +424,40 @@ public class CanonicalBatchTest {
                 result.rightCanonicalRepresentativeTreeSize);
         result.representationSizesAvailable = true;
         exactStarted = System.nanoTime();
-        QuotientRepairDistance.Result quotient =
-                CanonicalAlloyPipeline.distanceEvaluation(leftExact, rightExact);
-        result.distance = quotient.distance();
-        result.quotientTemporalDistance = quotient.temporalDistance();
-        result.quotientQuantifierDistance = quotient.quantifierDistance();
-        result.quotientMatrixDistance = quotient.matrixDistance();
+        var nativeCertified=gate.checksOperations()?gate.captureTrace(source,result.leftPredicate,result.rightPredicate,
+                ()->CanonicalRepairTraces.certified(leftExact,rightExact),nativeFast::json):null;
+        QuotientRepairDistance.Result quotient = nativeCertified==null
+                ?CanonicalAlloyPipeline.distanceEvaluation(leftExact, rightExact):null;
+        result.distance = nativeCertified==null?quotient.distance():nativeCertified.distance();
+        result.quotientTemporalDistance = nativeCertified==null?quotient.temporalDistance():nativeCertified.temporalDistance();
+        result.quotientQuantifierDistance = nativeCertified==null?quotient.quantifierDistance():nativeCertified.quantifierDistance();
+        result.quotientMatrixDistance = nativeCertified==null?quotient.matrixDistance():nativeCertified.matrixDistance();
+        boolean exactForStoredOrbits=nativeCertified==null?quotient.exactForStoredOrbits():nativeCertified.exactForStoredOrbits();
+        java.util.function.Supplier<org.json.JSONObject> selectedDiagnostic=nativeFast==null
+                ?()->DistanceReplayDiagnostics.capture(leftCanonical,rightCanonical,leftExact,rightExact)
+                :()->DistanceReplayDiagnostics.captureTraces(nativeFast,nativeCertified);
+        gate.requireSoundObservation(source, result.leftPredicate, result.rightPredicate,
+                new int[]{result.legacyCanonicalDistance, result.legacyTemporalDistance,
+                    result.legacyQuantifierDistance, result.legacyMatrixDistance},
+                new int[]{result.distance, result.quotientTemporalDistance,
+                    result.quotientQuantifierDistance, result.quotientMatrixDistance},
+                !"CORRECT".equals(result.statusFolder), exactForStoredOrbits,selectedDiagnostic);
+        gate.requireParity(source, result.leftPredicate, result.rightPredicate,
+                new int[]{result.legacyCanonicalDistance, result.legacyTemporalDistance,
+                    result.legacyQuantifierDistance, result.legacyMatrixDistance},
+                new int[]{result.distance, result.quotientTemporalDistance,
+                    result.quotientQuantifierDistance, result.quotientMatrixDistance},
+                selectedDiagnostic);
+        if(gate.checksOperations()) {
+            var operations=gate.requireOperations(source,result.leftPredicate,result.rightPredicate,
+                    new int[]{result.legacyCanonicalDistance,result.legacyTemporalDistance,result.legacyQuantifierDistance,result.legacyMatrixDistance},
+                    new int[]{result.distance,result.quotientTemporalDistance,result.quotientQuantifierDistance,result.quotientMatrixDistance},
+                    () -> NativeOperationComparison.compare(leftCanonical,rightCanonical,nativeFast,nativeCertified),selectedDiagnostic);
+            result.nativeOperationStatus=operations.status().name();result.nativeOperationReason=operations.reason();
+        }
         result.exactDistanceNanos = System.nanoTime() - exactStarted;
-        result.quotientDistanceExactForStoredOrbits = quotient.exactForStoredOrbits();
-        result.quotientBinderAlignments = quotient.binderAlignments();
+        result.quotientDistanceExactForStoredOrbits = exactForStoredOrbits;
+        result.quotientBinderAlignments = nativeCertified==null?quotient.binderAlignments():nativeCertified.binderAlignments();
         result.normalizedCanonicalDistance = normalizedDistance(result.distance, result.canonicalFormSize);
         exactStarted = System.nanoTime();
         result.canonicalRepresentativeTreeDistance =
@@ -414,7 +482,7 @@ public class CanonicalBatchTest {
                 + rightExact.repairProjectionNanos();
         result.leftIRTemporalFOL = Canonical.irTemporalFol(leftCanonical);
         result.rightIRTemporalFOL = Canonical.irTemporalFol(rightCanonical);
-        result.edits = Canonical.edits(leftCanonical, rightCanonical);
+        result.edits = nativeFast==null?Canonical.edits(leftCanonical,rightCanonical):nativeFast.paidDescriptions();
     }
 
     private static MASGVisitor focusedVisitor(
@@ -678,6 +746,13 @@ public class CanonicalBatchTest {
         writer.write("  \"generatedAt\": \"" + escape(Instant.now().toString()) + "\",\n");
         writer.write("  \"inputRoot\": \"" + escape(options.inputDir.toString()) + "\",\n");
         writer.write("  \"fileCount\": " + fileCount + ",\n");
+        writer.write("  \"parityPolicy\": \"" + (options.diagnosticOperations ? "diagnostic-native-operations-v1" : options.diagnosticComponents
+                ? "diagnostic-stop-first-component-mismatch-v1" : "stop-on-first-distance-or-replay-incident-v1") + "\",\n");
+        writer.write("  \"diagnosticOnly\": " + (options.diagnosticComponents || options.diagnosticOperations) + ",\n");
+        if(options.diagnosticOperations) writer.write("  \"nativeOperationComparisonSchema\": \""+NativeOperationComparison.SCHEMA+"\",\n");
+        writer.write("  \"publicationAllowed\": false,\n");
+        writer.write("  \"certificationStatus\": \"BLOCKED\",\n");
+        writer.write("  \"replayWitnessStatus\": \"UNIMPLEMENTED\",\n");
         writer.write("  \"threadCount\": " + options.threadCount + ",\n");
         writer.write("  \"memoryIntensiveWorkerLimit\": "
                 + ExperimentMemoryBudget.effectiveWorkers(options.threadCount) + ",\n");
@@ -685,6 +760,7 @@ public class CanonicalBatchTest {
         writer.write("  \"canonicalEngine\": \"CanonicalAlloyPipeline\",\n");
         writer.write("  \"certificateIntegratedEngine\": \"CanonicalAlloyPipeline\",\n");
         writer.write("  \"fastRewriteEngine\": \"Canonical/CanonicalDistance\",\n");
+        writer.write("  \"fastRewriteMetricVersion\": \"" + CanonicalDistance.VERSION + "\",\n");
         writer.write("  \"canonicalPipelineVersion\": \"" + CanonicalAlloyPipeline.PIPELINE_VERSION + "\",\n");
         writer.write("  \"measurementProjectionVersion\": \""
                 + CanonicalAlloyPipeline.MEASUREMENT_PROJECTION_VERSION + "\",\n");
@@ -706,9 +782,10 @@ public class CanonicalBatchTest {
         writer.write("  \"results\": [\n");
     }
 
-    private static void writeJsonFooter(Writer writer, Summary summary) throws IOException {
+    private static void writeJsonFooter(Writer writer, Summary summary, Options options) throws IOException {
         writer.write("\n  ],\n");
         writer.write("  \"summary\": {\n");
+        if(options.diagnosticOperations) writer.write("    \"nativeOperationReplay\": "+options.parityGate.operationCoverage().toString()+",\n");
         writer.write("    \"total\": " + summary.total + ",\n");
         writer.write("    \"successes\": " + summary.successes + ",\n");
         writer.write("    \"skippedIdenticalRawAstPairs\": " + summary.skipped + ",\n");
@@ -815,6 +892,10 @@ public class CanonicalBatchTest {
         writer.write("      \"problemClass\": \"" + escape(result.problemClass) + "\",\n");
         writer.write("      \"statusFolder\": \"" + escape(result.statusFolder) + "\",\n");
         writer.write("      \"success\": " + result.success() + ",\n");
+        if(result.nativeOperationStatus!=null) {
+            writer.write("      \"nativeOperationStatus\": \""+escape(result.nativeOperationStatus)+"\",\n");
+            writer.write("      \"nativeOperationReason\": \""+escape(result.nativeOperationReason)+"\",\n");
+        }
         if (result.success()) {
             writer.write("      \"leftPredicate\": \"" + escape(result.leftPredicate) + "\",\n");
             writer.write("      \"rightPredicate\": \"" + escape(result.rightPredicate) + "\",\n");
@@ -939,6 +1020,7 @@ public class CanonicalBatchTest {
             writer.write("      \"skipReason\": \"" + escape(result.skipReason) + "\"\n");
         } else {
             writer.write("      \"skipped\": false,\n");
+            if(result.failedNativeSelection!=null)writer.write("      \"retainedNumericSelection\": "+result.failedNativeSelection+",\n");
             writer.write("      \"error\": \"" + escape(result.error) + "\"\n");
         }
         writer.write("    }");
@@ -947,6 +1029,10 @@ public class CanonicalBatchTest {
     private static void writeMarkdown(Path path, Options options, Summary summary) throws IOException {
         try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
             writer.write("# Canonical Rewrite Distance Summary\n\n");
+            if(options.diagnosticOperations)
+                writer.write("DIAGNOSTIC ONLY: bounded native operation replay; unchecked pairs are not matches. Public certification and publication remain BLOCKED.\n\n");
+            else if (options.diagnosticComponents)
+                writer.write("DIAGNOSTIC ONLY: component agreement is not certified edit-sequence parity. Publication remains BLOCKED.\n\n");
             writer.write("- Input root: `" + options.inputDir + "`\n");
             writer.write("- Thread count: " + options.threadCount + "\n");
             writer.write("- Memory-intensive worker limit: "
@@ -964,6 +1050,7 @@ public class CanonicalBatchTest {
                     + CanonicalAlloyPipeline.REPRESENTATIVE_TED_VERSION + "`\n");
             writer.write("- Co-maintained Fast Rewrite IR metric retained as a differential oracle: yes\n");
             writer.write("- Total files: " + summary.total + "\n");
+            if(options.diagnosticOperations) writer.write("- Native operation replay coverage (not certification): "+options.parityGate.operationCoverage()+"\n");
             writer.write("- Successful distances: " + summary.successes + "\n");
             writer.write("- Skipped identical raw AST predicate pairs: " + summary.skipped + "\n");
             writer.write("- Failures: " + summary.failures + "\n");
@@ -1168,6 +1255,9 @@ public class CanonicalBatchTest {
         private int threadCount = DEFAULT_THREAD_COUNT;
         private boolean verbose;
         private boolean skipRewards;
+        private boolean diagnosticComponents;
+        private boolean diagnosticOperations;
+        private BatchParityGate parityGate;
 
         private static Options parse(String[] args) {
             Options options = new Options();
@@ -1183,14 +1273,24 @@ public class CanonicalBatchTest {
                     options.verbose = true;
                 } else if ("--skip-rewards".equals(args[i])) {
                     options.skipRewards = true;
+                } else if ("--diagnostic-components".equals(args[i])) {
+                    options.diagnosticComponents = true;
+                } else if ("--diagnostic-operations".equals(args[i])) {
+                    options.diagnosticOperations = true;
+                } else if (args[i].startsWith("--")) {
+                    throw new IllegalArgumentException("Unknown or incomplete option: " + args[i]);
                 } else if (positional == 0) {
                     options.inputDir = Paths.get(args[i]);
                     positional++;
                 } else if (positional == 1) {
                     options.outputDir = Paths.get(args[i]);
                     positional++;
+                } else {
+                    throw new IllegalArgumentException("Unexpected argument: " + args[i]);
                 }
             }
+            if(options.diagnosticComponents && options.diagnosticOperations)
+                throw new IllegalArgumentException("Choose only one diagnostic mode");
             return options;
         }
     }
@@ -1235,6 +1335,8 @@ public class CanonicalBatchTest {
         private final String statusFolder;
         private String leftPredicate;
         private String rightPredicate;
+        private String nativeOperationStatus;
+        private String nativeOperationReason;
         private int leftGraphId;
         private int rightGraphId;
         private int leftVertices;
@@ -1298,6 +1400,7 @@ public class CanonicalBatchTest {
         private boolean skipped;
         private String skipReason;
         private String error;
+        private org.json.JSONObject failedNativeSelection;
 
         private FileResult(Path root, Path file) {
             Path relative = root.relativize(file);

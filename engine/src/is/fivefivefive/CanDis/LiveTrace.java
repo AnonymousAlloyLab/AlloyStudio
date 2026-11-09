@@ -4,6 +4,7 @@ import is.fivefivefive.CanDis.core.CanonicalDistance;
 import is.fivefivefive.CanDis.core.EGraphNode;
 import is.fivefivefive.CanDis.core.QuantiVar;
 import is.fivefivefive.CanDis.core.NormalForm;
+import is.fivefivefive.CanDis.core.FastChainGeometry;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,7 +31,7 @@ public final class LiveTrace {
     private static final Class<?> METADATA = nested("EGraphMetadata");
     private static final Method ALIGN = method("bestCoherentMatrixAlignment", List.class, List.class, METADATA, METADATA);
     private static final Method MAP = method("bestVariableMapping", NormalForm.class, NormalForm.class, Map.class, Set.class, Set.class);
-    private static final Method UPDATE = method("nodeUpdateCost", EGraphNode.class, EGraphNode.class, Map.class);
+    private static final Method UPDATE = method("nodeUpdateCost", EGraphNode.class, EGraphNode.class, Map.class, METADATA, METADATA);
     private static final Method VARIABLE = method("variableName", EGraphNode.class);
     private static final Method ATOM = method("atomIdentity", EGraphNode.class);
     private static final Method CALL = method("callIdentity", EGraphNode.class);
@@ -50,7 +51,7 @@ public final class LiveTrace {
         Matcher match = MATRIX_PATH.matcher(path);
         if (!match.matches()) return null;
         try {
-            EGraphNode node = learner.normalizedForms().get(Integer.parseInt(match.group(1))).getMatrixEGraph();
+            EGraphNode node = comparisonForms(learner).get(Integer.parseInt(match.group(1))).getMatrixEGraph();
             Matcher child = CHILD_PATH.matcher(match.group(2));
             while (child.find()) {
                 if (node == null) return null;
@@ -66,13 +67,14 @@ public final class LiveTrace {
         Matcher match = BINDING_PATH.matcher(path);
         if (!match.matches()) return null;
         try {
-            NormalForm form = learner.normalizedForms().get(Integer.parseInt(match.group(1)));
+            NormalForm form = comparisonForms(learner).get(Integer.parseInt(match.group(1)));
             List<QuantiVar> bindings = (List<QuantiVar>) invoke(QUANTIFIER_ORDER, form.getMatrixQuantiVars());
             return bindings.get(Integer.parseInt(match.group(2)));
         } catch (IndexOutOfBoundsException | NumberFormatException error) { return null; }
     }
 
     public static final class Result {
+        public final JSONArray temporal = new JSONArray();
         public final JSONArray matrix = new JSONArray();
         public final JSONArray quantifier = new JSONArray();
         public boolean matrixReplayVerified;
@@ -81,37 +83,159 @@ public final class LiveTrace {
 
     public static Result reconstruct(Canonical.Prepared learner, Canonical.Prepared reference,
                                      CanonicalDistance.DistanceBreakdown expected) {
-        List<NormalForm> left = learner.normalizedForms(), right = reference.normalizedForms();
+        return nativeProjection(learner, reference, expected);
+    }
+
+    /** Project only learner pointers and safe operator names from the upstream's
+     * checked fixed-choice replay. Private endpoint payloads never leave here. */
+    @SuppressWarnings("unchecked")
+    private static Result nativeProjection(Canonical.Prepared learner, Canonical.Prepared reference,
+            CanonicalDistance.DistanceBreakdown expected) {
+        var trace = Canonical.evaluateWithTrace(learner, reference);
+        if (trace.distance() != expected.distance() || trace.matrixDistance() != expected.matrixDistance()
+                || trace.quantifierDistance() != expected.quantifierDistance()
+                || trace.temporalDistance() != expected.temporalDistance())
+            throw new IllegalStateException("Native trace selection changed");
+        JSONObject evidence = trace.json();
+        if (!evidence.getBoolean("metricRepresentationExecutionChecked"))
+            throw new IllegalStateException("Native metric replay incomplete");
+        List<NormalForm> left = (List<NormalForm>) field(field(learner, "delegate"), "normalForms");
+        List<NormalForm> right = (List<NormalForm>) field(field(reference, "delegate"), "normalForms");
         Result result = new Result();
-        Object alignment = invoke(ALIGN, left, right, null, null);
-        @SuppressWarnings("unchecked") Map<String, String> fixed = (Map<String, String>) field(alignment, "mapping");
-        @SuppressWarnings("unchecked") Set<String> lockedLeft = (Set<String>) field(alignment, "lockedLeftNames");
-        @SuppressWarnings("unchecked") Set<String> lockedRight = (Set<String>) field(alignment, "lockedRightNames");
-        int total = 0;
-        for (int phase = 0; phase < Math.max(left.size(), right.size()); phase++) {
-            WorkBudget.charge(1);
-            EGraphNode l = phase < left.size() ? left.get(phase).getMatrixEGraph() : null;
-            EGraphNode r = phase < right.size() ? right.get(phase).getMatrixEGraph() : null;
-            @SuppressWarnings("unchecked") Map<String, String> mapping = l != null && r != null
-                    ? (Map<String, String>) invoke(MAP, left.get(phase), right.get(phase), fixed, lockedLeft, lockedRight)
-                    : Map.of();
-            Context context = new Context(mapping, result.matrix);
-            int cost = context.distance(l, r);
-            int startCount = result.matrix.length();
-            ReplayNode replayed = context.trace(l, r, "normalForm[" + phase + "].matrix", null, null);
-            if (result.matrix.length() - startCount != cost || !Objects.equals(replayed, context.snapshot(r, false))) {
-                throw new IllegalStateException("Matrix reconstruction failed its private metric-view replay");
+        JSONArray phases = evidence.getJSONArray("phases");
+        for (int phase = 0; phase < phases.length(); phase++) {
+            NormalForm form = phase < left.size() ? left.get(phase) : null;
+            EGraphNode source = form == null ? null : form.getMatrixEGraph();
+            EGraphNode target = phase < right.size() ? right.get(phase).getMatrixEGraph() : null;
+            int originalPhase = phase;
+            String prefix = "normalForm[" + originalPhase + "].matrix";
+            JSONArray actions = phases.getJSONObject(phase).getJSONObject("program").getJSONArray("operations");
+            Map<String, String> targetAnchors = new HashMap<>();
+            for (Object value : actions) {
+                JSONObject action = (JSONObject) value;
+                if (!action.isNull("source") && !action.isNull("target"))
+                    targetAnchors.put(action.getString("target"), action.getString("source"));
             }
-            total = Math.addExact(total, cost);
-            quantifierTrace(phase < left.size() ? left.get(phase) : null,
-                    phase < right.size() ? right.get(phase) : null, phase, result.quantifier);
+            for (Object value : actions) {
+                WorkBudget.charge(1);
+                JSONObject action = (JSONObject) value;
+                int cost = action.getInt("cost");
+                if (cost == 0) continue;
+                if (cost != 1) throw new IllegalStateException("Non-atomic native matrix edit");
+                boolean insertion = action.isNull("source"), deletion = action.isNull("target");
+                String address = insertion ? null : action.getString("source");
+                if (insertion) {
+                    String parent = action.getString("target");
+                    while (parent.contains("/")) {
+                        parent = parent.substring(0, parent.lastIndexOf("/child/"));
+                        if (targetAnchors.containsKey(parent)) { address = targetAnchors.get(parent); break; }
+                    }
+                }
+                Located selected = address == null ? new Located(null, prefix) : metricNode(source, address, prefix);
+                EGraphNode replacement = deletion || insertion ? null : metricNode(target, action.getString("target"), "").node();
+                if (selected.node() != null) {
+                    EGraphNode original = learnerNode(learner, selected.path());
+                    if (original == null || original.getOpcode() != selected.node().getOpcode())
+                        throw new IllegalStateException("Native learner occurrence cannot be resolved: " + selected.path()
+                                + ": " + selected.node().getOpcode() + " vs " + (original == null ? "missing" : original.getOpcode()));
+                }
+                result.matrix.put(matrixOperation(insertion ? "insert" : deletion ? "delete" : "replace",
+                        selected.node(), replacement, selected.path(), insertion ? "insertion-anchor" : "affected"));
+            }
+            JSONArray declarations = evidence.getJSONArray("nativeDeclarationPrograms").getJSONObject(phase).getJSONArray("operations");
+            for (Object value : declarations) {
+                WorkBudget.charge(1);
+                JSONObject action = (JSONObject) value;
+                if (action.getInt("cost") == 0) continue;
+                if (action.getInt("cost") != 1) throw new IllegalStateException("Non-atomic native declaration edit");
+                QuantiVar binding = null; int ordinal = 0;
+                if (!action.isNull("source") && form != null) {
+                    JSONObject atom = action.getJSONObject("source");
+                    String[] occurrence = atom.getString("occurrence").split("/");
+                    if (occurrence.length != 4 || !occurrence[0].equals("phase")
+                            || !occurrence[1].equals(Integer.toString(phase)) || !occurrence[2].equals("declaration"))
+                        throw new IllegalStateException("Invalid native binding address");
+                    binding = form.getMatrixQuantiVars().get(Integer.parseInt(occurrence[3]));
+                    List<QuantiVar> ordered = (List<QuantiVar>) invoke(QUANTIFIER_ORDER, form.getMatrixQuantiVars());
+                    ordinal = ordered.indexOf(binding);
+                    if (ordinal < 0) throw new IllegalStateException("Native binding lost its display coordinate");
+                    if (binding == null) throw new IllegalStateException("Missing native binding occurrence");
+                }
+                String kind = action.isNull("source") ? "insert" : action.isNull("target") ? "delete" : "modify";
+                JSONObject op = base(kind, "quantifier", "normalForm[" + originalPhase + "].quantifier[" + ordinal + "]");
+                if (binding != null) op.put("sourceTerm", shorten(renderBinding(binding)))
+                        .put("sourceOperator", binding.getQuantifier().name().toLowerCase(Locale.ROOT))
+                        .put("sourceNodeKind", "binding").put("sourceRole", "affected");
+                if (kind.equals("modify") && !action.isNull("target")) {
+                    String operator = action.getJSONObject("target").getJSONArray("tuple").getString(0).toLowerCase(Locale.ROOT);
+                    if (Set.of("all", "some", "no", "one", "lone", "sum").contains(operator)
+                            && (binding == null || !operator.equals(binding.getQuantifier().name().toLowerCase(Locale.ROOT))))
+                        op.put("replacementOperator", operator);
+                }
+                String hint = kind.equals("insert") ? "Check for a missing variable declaration; choose the variable and its set yourself."
+                        : kind.equals("delete") ? "Consider whether this variable declaration is needed."
+                        : op.has("replacementOperator") ? "Compare how " + op.getString("sourceOperator") + " and " + op.getString("replacementOperator") + " affect this variable declaration."
+                        : "Review which set this variable ranges over, how many values it can hold, and whether variables must have different values.";
+                op.put("action", hint).put("description", hint)
+                        .put("reason", "The comparison points to a difference in how a variable is introduced or used.")
+                        .put("nextStep", "Inspect this declaration, try one change, and check again.");
+                result.quantifier.put(op);
+            }
         }
-        if (total != expected.matrixDistance() || result.quantifier.length() != expected.quantifierDistance()) {
-            throw new IllegalStateException("Reconstructed operations disagree with the authoritative component cost");
+        JSONArray temporal = evidence.getJSONObject("nativeTemporalProgram").getJSONArray("operations");
+        for (int i = 0; i < temporal.length(); i++) {
+            JSONObject action = temporal.getJSONObject(i);
+            String kind = action.getString("kind").equals("update") ? "replace" : action.getString("kind");
+            JSONObject op = base(kind, "temporal", "temporal");
+            String before = action.optString("from", action.optString("label", "")).toLowerCase(Locale.ROOT);
+            String after = action.optString("to", "").toLowerCase(Locale.ROOT);
+            Set<String> operators = Set.of("always", "eventually", "after", "before", "historically", "once", "until", "releases", "since", "triggered", "and", "or", "not", "implies", "iff");
+            if (operators.contains(before) && !kind.equals("insert")) op.put("sourceOperator", before).put("sourceTerm", before);
+            if (operators.contains(after) && kind.equals("replace")) op.put("replacementOperator", after);
+            String hint = kind.equals("insert") ? "Consider whether a temporal condition is missing."
+                    : kind.equals("delete") ? "Consider whether this temporal condition is needed."
+                    : "Review when this condition should hold across the trace.";
+            op.put("action", hint).put("description", hint).put("reason", "The comparison points to a difference in the temporal structure.")
+                    .put("nextStep", "Inspect the temporal operators, try one change, and check again.");
+            result.temporal.put(op);
         }
-        result.matrixReplayVerified = true;
-        result.quantifierCostVerified = true;
+        if (result.matrix.length() != expected.matrixDistance() || result.quantifier.length() != expected.quantifierDistance()
+                || result.temporal.length() != expected.temporalDistance())
+            throw new IllegalStateException("Native projected operation cost mismatch");
+        result.matrixReplayVerified = true; result.quantifierCostVerified = true;
         return result;
+    }
+
+    /** Same immutable phase view used by Canonical.irTemporalFol and its metric. */
+    @SuppressWarnings("unchecked")
+    public static List<NormalForm> comparisonForms(Canonical.Prepared prepared) {
+        return (List<NormalForm>) field(field(prepared, "delegate"), "normalForms");
+    }
+
+    private record Located(EGraphNode node, String path) { }
+    private static Located metricNode(EGraphNode node, String address, String prefix) {
+        String[] parts = address.split("/");
+        if (!parts[0].equals("root") || parts.length % 2 != 1) throw new IllegalStateException("Invalid native node address");
+        String path = prefix;
+        for (int i = 1; i < parts.length; i += 2) {
+            if (node == null || !parts[i].equals("child")) throw new IllegalStateException("Unsupported native node edge");
+            int child = Integer.parseInt(parts[i + 1]);
+            List<EGraphNode> children = FastChainGeometry.children(node);
+            List<String> suffixes = new ArrayList<>();
+            collectMetricPaths(node, children, suffixes, "", new int[] {0}, true);
+            if (suffixes.size() != children.size()) throw new IllegalStateException("Metric geometry lost source paths");
+            path += suffixes.get(child); node = children.get(child);
+        }
+        return new Located(node, path);
+    }
+    private static void collectMetricPaths(EGraphNode node, List<EGraphNode> wanted,
+            List<String> paths, String path, int[] cursor, boolean root) {
+        WorkBudget.charge(1);
+        if (!root && cursor[0] < wanted.size() && node == wanted.get(cursor[0])) {
+            paths.add(path); cursor[0]++; return;
+        }
+        for (int i = 0; i < node.getChildren().size(); i++)
+            collectMetricPaths(node.getChildren().get(i), wanted, paths, path + ".child[" + i + "]", cursor, false);
     }
 
     private static final class Context {
@@ -134,7 +258,7 @@ public final class LiveTrace {
             return size;
         }
 
-        int update(EGraphNode left, EGraphNode right) { return (Integer) invoke(UPDATE, left, right, mapping); }
+        int update(EGraphNode left, EGraphNode right) { return (Integer) invoke(UPDATE, left, right, mapping, null, null); }
 
         int distance(EGraphNode left, EGraphNode right) {
             if (left == null) return size(right);
@@ -273,7 +397,7 @@ public final class LiveTrace {
 
     /** Negative controls for the verifier: omit or corrupt a real replacement. */
     public static boolean replayRejectsTamperedReplacement(Canonical.Prepared learner, Canonical.Prepared reference) {
-        NormalForm left = learner.normalizedForms().get(0), right = reference.normalizedForms().get(0);
+        NormalForm left = comparisonForms(learner).get(0), right = comparisonForms(reference).get(0);
         @SuppressWarnings("unchecked") Map<String, String> mapping = (Map<String, String>) invoke(MAP, left, right, Map.of(), Set.of(), Set.of());
         for (int fault : new int[] {1, 2}) {
             Context context = new Context(mapping, new JSONArray());

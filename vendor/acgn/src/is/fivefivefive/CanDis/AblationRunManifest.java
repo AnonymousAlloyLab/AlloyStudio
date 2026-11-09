@@ -108,6 +108,9 @@ final class AblationRunManifest {
         }
         return new JSONObject()
                 .put("armId", engine)
+                .put("slotTyping", "slotted-egraph-typed".equals(engine)
+                        ? "exact-parser-slot-colors-v1" : "slotted-egraph".equals(engine)
+                        ? "erased-slot-colors-v1" : "arm-specific")
                 .put("engineIdentifier", exact
                         ? "TypedSlottedPortEGraph"
                         : "legacy-bounded/" + engine)

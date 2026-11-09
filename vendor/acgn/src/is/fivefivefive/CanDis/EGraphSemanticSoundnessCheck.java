@@ -233,7 +233,7 @@ public final class EGraphSemanticSoundnessCheck {
                 throw new IllegalStateException("No Alloy check command found");
             }
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
             A4Solution solution = TranslateAlloyToKodkod.execute_command(
                     new A4Reporter(), module.getAllReachableSigs(), command, options);
             result.counterexample = solution != null && solution.satisfiable();
@@ -509,7 +509,7 @@ public final class EGraphSemanticSoundnessCheck {
                 }
                 result.command = command.toString();
                 A4Options options = new A4Options();
-                options.solver = A4Options.SatSolver.SAT4J;
+                options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
                 A4Solution solution = TranslateAlloyToKodkod.execute_command(
                         new A4Reporter(), module.getAllReachableSigs(), command, options);
                 result.outcome = solution != null && solution.satisfiable()

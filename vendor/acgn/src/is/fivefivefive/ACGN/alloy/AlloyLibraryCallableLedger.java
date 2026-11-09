@@ -53,7 +53,7 @@ public final class AlloyLibraryCallableLedger {
         // no library-body, arithmetic or algebraic rewrite rules. util/time uses
         // parser-expanded macros and therefore has no CALL declarations here.
 
-        // util/boolean (9 declarations).
+        // util/boolean (8 public declarations in Alloy6.2).
         formula(signatures, "util/boolean", "isTrue", 1);
         formula(signatures, "util/boolean", "isFalse", 1);
         expression(signatures, "util/boolean", "Not", 1);
@@ -62,7 +62,6 @@ public final class AlloyLibraryCallableLedger {
         expression(signatures, "util/boolean", "Xor", 2);
         expression(signatures, "util/boolean", "Nand", 2);
         expression(signatures, "util/boolean", "Nor", 2);
-        expression(signatures, "util/boolean", "subset_", 2);
 
         // util/graph (13 declarations).
         formula(signatures, "util/graph", "undirected", 1);

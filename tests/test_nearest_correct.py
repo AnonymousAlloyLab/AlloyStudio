@@ -4,8 +4,9 @@ The synthetic pool labels test selection mechanics. Corpus provenance determines
 which predicates are admitted as known correct; these tests do not infer it from
 canonical distance or claim unrestricted Alloy semantic equivalence.
 
-The corpus correctness cohort runs cold JVM requests serially, matching the
-constrained profile's single feedback lane. Concurrent load and timeout recovery
+The catalogue checks use cold JVMs with the portal's bounded work allowance.
+A capacity refusal must be explicit and contain no partial minimum. The separate
+full-corpus experiment uses its recorded60-second allowance. Concurrent load and timeout recovery
 have separate worker/scheduler regressions and constrained-runtime benchmarks.
 """
 import copy
@@ -166,13 +167,17 @@ class NearestCorrectCorpusTests(unittest.TestCase):
             raise AssertionError('Every exercise must have a registered private correct pool')
         cls.results = [corpus_case(record, pools[record['id']]) for record in records]
 
-    def test_all_181_starters_use_complete_correct_pool(self):
+    def test_all_181_starters_complete_the_pool_or_refuse_work_without_partial_minimum(self):
         self.assertEqual(len(self.results), 181)
         for identifier, count, nearest, oracle, error in self.results:
             with self.subTest(exercise=identifier):
                 self.assertIsNone(error, 'Complete corpus-pool evaluation did not finish')
-                self.assertEqual(nearest.get('status'), 'ok', 'A registered pool candidate could not be evaluated')
                 self.assertEqual(oracle.get('status'), 'ok', 'Oracle baseline did not complete')
+                if nearest.get('status') == 'unsupported':
+                    self.assertEqual([item['code'] for item in nearest['diagnostics']], ['WORK_LIMIT'])
+                    self.assertFalse({'distance', 'operations', 'comparison', 'breakdown', 'trace'} & set(nearest))
+                    continue
+                self.assertEqual(nearest.get('status'), 'ok', 'A registered pool candidate could not be evaluated')
                 self.assertEqual(nearest['comparison'], {'strategy': 'nearest-known-correct',
                                  'poolSize': count, 'evaluatedCandidates': count, 'complete': True})
                 self.assertLessEqual(nearest['distance'], oracle['distance'], 'Pool minimum exceeded its included oracle')

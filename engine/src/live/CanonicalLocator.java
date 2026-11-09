@@ -1,6 +1,7 @@
 package live;
 
 import is.fivefivefive.CanDis.Canonical;
+import is.fivefivefive.CanDis.LiveTrace;
 import is.fivefivefive.CanDis.core.CanonicalDistance;
 import is.fivefivefive.CanDis.core.EGraphNode;
 import is.fivefivefive.CanDis.core.NormalForm;
@@ -39,7 +40,6 @@ final class CanonicalLocator {
 
     private static final Pattern MATRIX_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.matrix(?:\\.child\\[[0-9]+\\])*$");
     private static final Pattern BINDING_PATH = Pattern.compile("^normalForm\\[([0-9]+)\\]\\.quantifier\\[([0-9]+)\\]$");
-    private static final Method NORMALIZED = method(Canonical.Prepared.class, "normalizedForms");
     private static final Method FORM_LABEL = method(CanonicalDistance.class, "normalFormPath", NormalForm.class, int.class);
     private static final Method NODE_RENDER = method(CanonicalDistance.class, "eGraphFormula", EGraphNode.class);
     private static final Method BINDING_RENDER = method(CanonicalDistance.class, "quantifierFormula", QuantiVar.class);
@@ -50,7 +50,7 @@ final class CanonicalLocator {
     /** Shared read-only access to the same learner graph used by LiveTrace. */
     @SuppressWarnings("unchecked")
     static List<NormalForm> normalizedForms(Canonical.Prepared learner) {
-        return (List<NormalForm>) invoke(NORMALIZED, learner);
+        return LiveTrace.comparisonForms(learner);
     }
 
     static void attach(Canonical.Prepared learner, JSONArray forms, JSONArray operations) {

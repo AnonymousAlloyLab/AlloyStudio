@@ -88,7 +88,7 @@ public final class EGraphAblationInspector {
                 continue;
             }
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             A4Solution solution = TranslateAlloyToKodkod.execute_command(
                     new edu.mit.csail.sdg.alloy4.A4Reporter(), module.getAllReachableSigs(), command, options);
             System.out.println(command + " counterexample: " + (solution != null && solution.satisfiable()));

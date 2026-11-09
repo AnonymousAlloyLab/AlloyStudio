@@ -22,6 +22,7 @@ import parser.ast.nodes.SigExpr;
 import parser.ast.nodes.UnaryExpr;
 import parser.ast.nodes.UnaryFormula;
 import parser.ast.nodes.VarExpr;
+import parser.util.AlloyUtil;
 
 final class DatasetConventions {
     private DatasetConventions() {
@@ -75,6 +76,8 @@ final class DatasetConventions {
     }
 
     static boolean sameRawAst(Node left, Node right) {
+        left = AlloyUtil.unwrapAst(left);
+        right = AlloyUtil.unwrapAst(right);
         if (left == right) {
             return true;
         }
@@ -95,6 +98,7 @@ final class DatasetConventions {
     }
 
     static String rawAstLabel(Node node) {
+        node = AlloyUtil.unwrapAst(node);
         String kind = node.getClass().getSimpleName();
         if (node instanceof RelDecl) {
             RelDecl declaration = (RelDecl) node;
@@ -150,14 +154,15 @@ final class DatasetConventions {
     }
 
     static List<Node> rawAstChildren(Node node) {
+        node = AlloyUtil.unwrapAst(node);
         if (!(node instanceof RelDecl)) {
-            return node.getChildren();
+            return node.getChildren().stream().map(AlloyUtil::unwrapAst).toList();
         }
         RelDecl declaration = (RelDecl) node;
         List<Node> children = new ArrayList<>(declaration.getVariables().size() + 1);
-        children.addAll(declaration.getVariables());
+        for (Node variable : declaration.getVariables()) children.add(AlloyUtil.unwrapAst(variable));
         if (declaration.getExpr() != null) {
-            children.add(declaration.getExpr());
+            children.add(AlloyUtil.unwrapAst(declaration.getExpr()));
         }
         return children;
     }

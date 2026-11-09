@@ -1,0 +1,186 @@
+{
+  "case": {
+    "acgnCommit": "8c9bd4b922ecee99d496be2515fa78cb09f3e12b",
+    "caseId": "coursesOld/correct/TheS7RkMu4px6Rj7m_inv2.als",
+    "fold": 2,
+    "predicate": "inv2",
+    "referenceCount": 111,
+    "requestSha256": "dd9316ef116430cee3a900ebec07cdde1a9f2b865e9f578162a0b3035d79e3da",
+    "sourceSha256": "3d674df061ee505c73d0b17f3596088021d2966cd8f324ea1f32f162986cc8c1",
+    "studentBodyBytes": 30,
+    "studentSourceBytes": 301
+  },
+  "constructedCounterexample": {
+    "actualCounterexampleWallSeconds": 0.008251274994108826,
+    "coldWorker": true,
+    "controlAstNodes": 6,
+    "controlDistance": 0,
+    "controlReferences": 111,
+    "engineResponseReceived": false,
+    "kind": "constructed virtual-clock transport counterexample, not a replay of the past delay",
+    "reportedRequestSeconds": 61.00794889201643,
+    "requestTimeoutSeconds": 60,
+    "result": {
+      "status": "timeout"
+    },
+    "simulatedPreviousWorkerCleanupSeconds": 61
+  },
+  "evidenceSha256": {
+    "case.json": "caafa4ab589ad03166eb162f7d5b160cc686688a4dd85df2aedcf2a712128fae",
+    "fresh-probe-results.json": "f3a79ed56c15b26ba18190def3d1515af013056f39f8c430ab350375457d69ad",
+    "probe.py": "a39c1785008de9dcb15f8b30b4928830380178accca60e8149622d3bb0d50554",
+    "recycle-counterexample.json": "ddfa660d94bb87f615759bf335f9a94c928976f81d560b4575910c60e430c40e",
+    "recycle_counterexample.py": "dc31387ce50e6358765759e6ef0e07b0824f2d954cec8648c4bd8cd5937593d0"
+  },
+  "interpretation": "Evidence points to an end-to-end recycling/storage-contention timeout. The benchmark starts its 60s clock before recycling/cleanup. No per-stage timings were captured for the original timeout, so the exact split cannot be recovered. Six isolated identical complete responses establish successful current computation for this input.",
+  "isolatedReruns": [
+    {
+      "astNodes": 6,
+      "attempt": 0,
+      "coldWorker": true,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 3.79711901,
+      "layout": "external-exfat",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 112,
+      "status": "ok",
+      "wallSeconds": 3.828331054013688
+    },
+    {
+      "astNodes": 6,
+      "attempt": 1,
+      "coldWorker": false,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 2.463839731,
+      "layout": "external-exfat",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 224,
+      "status": "ok",
+      "wallSeconds": 2.4644828159944154
+    },
+    {
+      "astNodes": 6,
+      "attempt": 2,
+      "coldWorker": false,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 2.105279306,
+      "layout": "external-exfat",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 336,
+      "status": "ok",
+      "wallSeconds": 2.105989361007232
+    },
+    {
+      "astNodes": 6,
+      "attempt": 0,
+      "coldWorker": true,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 1.612621592,
+      "layout": "local-ext4",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 112,
+      "status": "ok",
+      "wallSeconds": 1.64684376999503
+    },
+    {
+      "astNodes": 6,
+      "attempt": 1,
+      "coldWorker": false,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 0.798178712,
+      "layout": "local-ext4",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 224,
+      "status": "ok",
+      "wallSeconds": 0.79872201703256
+    },
+    {
+      "astNodes": 6,
+      "attempt": 2,
+      "coldWorker": false,
+      "completePool": true,
+      "distance": 0,
+      "engineSeconds": 0.76080521,
+      "layout": "local-ext4",
+      "referenceCount": 111,
+      "responseSha256WithoutTiming": "2ddc3d6488f202f57b1b8310dc8c523f8e52615be39047c4f8dc7411ca506196",
+      "scratchEntries": 336,
+      "status": "ok",
+      "wallSeconds": 0.7614390950184315
+    }
+  ],
+  "measurementIntegrity": {
+    "frozenRunInputsUnmodified": true,
+    "liveRunContinues": true,
+    "originalTimeoutUnmodified": true,
+    "rerunsNotSubstitutedIntoCorpusResults": true
+  },
+  "originalObservation": {
+    "aggregate_operation_count": 0,
+    "ast_replay_verified": null,
+    "canonical_located_operations": 0,
+    "case_id": "coursesOld/correct/TheS7RkMu4px6Rj7m_inv2.als",
+    "cohort_status": "CORRECT",
+    "cold_worker": true,
+    "distance": null,
+    "engine_seconds": null,
+    "fold": 2,
+    "group": "coursesOld",
+    "hint_available": false,
+    "located_operations": 0,
+    "matrix_replay_verified": null,
+    "operation_count": 0,
+    "predicate": "inv2",
+    "reference_count": 111,
+    "source_sha256": "3d674df061ee505c73d0b17f3596088021d2966cd8f324ea1f32f162986cc8c1",
+    "status": "timeout",
+    "supported": true,
+    "timed_out": true,
+    "tool": "live-ast",
+    "wall_seconds": 60.016640571993776
+  },
+  "otherColdTailExamples": [
+    {
+      "cold_worker": true,
+      "engine_seconds": 2.290048838,
+      "group": "coursesOld",
+      "predicate": "inv1",
+      "reference_count": 132,
+      "status": "ok",
+      "wall_seconds": 32.87606488895835
+    },
+    {
+      "cold_worker": true,
+      "engine_seconds": 3.139131259,
+      "group": "coursesOld",
+      "predicate": "inv5",
+      "reference_count": 154,
+      "status": "ok",
+      "wall_seconds": 31.577923959004693
+    }
+  ],
+  "previousObservation": {
+    "distance": 0,
+    "status": "ok",
+    "wallSeconds": 0.2897568400003365
+  },
+  "responsesIdenticalExcludingTiming": true,
+  "schema": "alloystudio-ast-timeout-investigation-v1",
+  "sourceExportWindowUtc": {
+    "approxAllocatedBytes": 1900000000,
+    "endFileCreation": "2026-11-09T20:09:03.300Z",
+    "filesystem": "exfat",
+    "startFileCreation": "2026-11-09T20:07:37.440Z"
+  },
+  "studentBody": "no (Person-Professor).teaches"
+}

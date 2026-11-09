@@ -124,3 +124,9 @@ The machine-local run root is
 previous vendor snapshot, merge provenance, private diagnostics and new
 experiment artifacts. This workstation path is not a portable installation
 requirement and its private corpus outputs must not be committed publicly.
+
+The first AST timeout and its separate six-run investigation are documented in
+[the timeout investigation](acgn-ast-timeout-20261109.md). The original timeout
+is retained. Concurrent validation export I/O on the same external volume is an
+explicit timing-isolation limitation; subsequent bulk validation waits until
+measurement finishes or uses separate storage.

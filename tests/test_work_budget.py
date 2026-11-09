@@ -114,6 +114,13 @@ def catalogue_request(exercise, conjuncts, metric):
             'predicate': predicate, 'metric': metric}
 
 
+def recovery_request():
+    # A small complete comparison tests budget reset and worker health without
+    # assuming that another large catalogue pool fits a wall-clock allowance.
+    source = 'sig A {} pred inv { some A }'
+    return {'studentSource': source, 'oracleSource': source, 'predicate': 'inv', 'metric': 'canonical'}
+
+
 @unittest.skipUnless(shutil.which('java') and shutil.which('javac')
                      and (ROOT / 'build/engine/classes/live/LiveFeedback.class').is_file(),
                      'Compiled engine and JDK required')
@@ -161,7 +168,15 @@ class WorkBudgetTests(unittest.TestCase):
             self.assertEqual(limited['diagnostics'][0]['code'], 'WORK_LIMIT')
             self.assertFalse(PARTIAL & set(limited))
         self.assertLess(elapsed, 30)
-        normal = pool.evaluate('feedback', catalogue_request('socialMedia-inv4', 1, 'canonical'), 12)
+        ordinary = pool.evaluate('feedback', catalogue_request('socialMedia-inv4', 1, 'canonical'), 12)
+        if ordinary['status'] == 'ok':
+            self.assertEqual(ordinary['distance'], 0)
+            self.assertTrue(ordinary['comparison']['complete'])
+        else:
+            self.assertEqual(ordinary['status'], 'unsupported')
+            self.assertEqual(ordinary['diagnostics'][0]['code'], 'WORK_LIMIT')
+            self.assertFalse(PARTIAL & set(ordinary))
+        normal = pool.evaluate('feedback', recovery_request(), 12)
         self.assertEqual((normal['status'], normal['distance']), ('ok', 0))
         stats = pool.stats()
         self.assertEqual(stats['launches'], 1, 'a work limit must not retire the persistent JVM')
@@ -202,7 +217,7 @@ class WorkBudgetTests(unittest.TestCase):
         self.assertEqual(limited['status'], 'unsupported')
         self.assertEqual([row['code'] for row in limited['diagnostics']], ['WORK_LIMIT'])
         self.assertFalse(PARTIAL & set(limited))
-        normal = pool.evaluate('feedback', ordinary, 12)
+        normal = pool.evaluate('feedback', recovery_request(), 12)
         self.assertEqual((normal['status'], normal['distance']), ('ok', 0))
         self.assertEqual((pool.stats()['launches'], pool.stats()['failures']), (1, 0))
 

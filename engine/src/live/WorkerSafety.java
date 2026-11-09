@@ -2,6 +2,7 @@ package live;
 
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.alloy4.ErrorFatal;
+import edu.mit.csail.sdg.alloy4.Util;
 import edu.mit.csail.sdg.parser.CompModule;
 import edu.mit.csail.sdg.parser.CompUtil;
 import is.fivefivefive.CanDis.core.EGraphNode;
@@ -10,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.UUID;
 
 /** Worker-only parser ownership and poison boundary; one-shot behavior is retained. */
 final class WorkerSafety {
@@ -44,7 +47,15 @@ final class WorkerSafety {
         // is capped upstream, and its size is charged before any parse work.
         is.fivefivefive.CanDis.WorkBudget.charge(source.length());
         Path directory = JOB.get();
-        if (directory == null) return CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
+        if (directory == null) {
+            // Alloy's source map preserves full module resolution and positions
+            // without writing a temporary file for every reference candidate.
+            String filename = Util.canon(Path.of(System.getProperty("java.io.tmpdir"),
+                    "alloy_heredoc" + UUID.randomUUID() + ".als").toString());
+            var sources = new LinkedHashMap<String, String>();
+            sources.put(filename, source);
+            return CompUtil.parseEverything_fromFile(A4Reporter.NOP, sources, filename);
+        }
         // This is exactly CompUtil.parseEverything_fromString's parser path,
         // but supplies an owned file to flushModelToFile: no deleteOnExit entry.
         // Files remain until all parser/source-location users finish the job.

@@ -102,6 +102,29 @@ class MetricModeTests(unittest.TestCase):
         self.assertNotIn('distance', answer)
         self.assertEqual(len(self.app.cache), 0)
 
+    def test_ast_view_identifier_survives_http_projection_with_fixed_values_only(self):
+        raw = self.feedback('ast')
+        raw.update(astViewVersion='acgn-semantic-ast-noop-body-erasure-v1',
+                   astOmittedNodeKinds=['UnaryExpr.NOOP', 'Body'])
+        with patch('server.subprocess.run', return_value=subprocess.CompletedProcess([], 0, json.dumps(raw), '')):
+            code, answer = self.request('/api/feedback', metric='ast')
+        self.assertEqual(code, 200)
+        self.assertEqual(answer['astViewVersion'], raw['astViewVersion'])
+        self.assertEqual(answer['astOmittedNodeKinds'], ['UnaryExpr.NOOP', 'Body'])
+
+    def test_ast_view_metadata_never_forwards_freeform_engine_fields(self):
+        for version, omitted in [('PRIVATE_TARGET', ['UnaryExpr.NOOP', 'Body']),
+                                 ('acgn-semantic-ast-noop-body-erasure-v1', ['PRIVATE_TARGET'])]:
+            self.app.cache.clear()
+            raw = self.feedback('ast')
+            raw.update(astViewVersion=version, astOmittedNodeKinds=omitted)
+            with patch('server.subprocess.run', return_value=subprocess.CompletedProcess([], 0, json.dumps(raw), '')):
+                code, answer = self.request('/api/feedback', metric='ast')
+            self.assertEqual(code, 200)
+            self.assertNotIn('astViewVersion', answer)
+            self.assertNotIn('astOmittedNodeKinds', answer)
+            self.assertNotIn('PRIVATE_TARGET', json.dumps(answer))
+
     def test_ast_explanation_receives_only_the_selected_trace_and_returns_identity(self):
         raw = self.feedback('ast')
         raw.update(oracleSource='PRIVATE_TARGET', referenceBodies=['PRIVATE_TARGET'])

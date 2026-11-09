@@ -94,6 +94,12 @@ unsupported/error outcomes remain in the denominator. Incomplete runs cannot
 be reported as complete or silently resumed from mismatched response evidence.
 Resource profiles differ from the earlier 16-worker Canonical/AST runs, so a
 before/after runtime comparison must report that difference explicitly.
+This workstation also places the new parser scratch on an external exFAT volume,
+whereas the historical run used local ext4 storage. Warm benchmark JVMs recycle
+after 256 requests; parser temporary files are removed when each JVM is reaped.
+The recorded times include parsing, temporary-file I/O, transport and recycling.
+They do not isolate the effect of the ACGN algorithm update or establish an
+equal-resource speed ranking against the preserved baselines.
 
 ## Current verification/execution record
 
@@ -106,7 +112,10 @@ that field to exactly `SAT4JRef.INSTANCE`. This preserves SAT4J selection while
 avoiding discovery. The cleanup assertion and 77 behavior/validation regressions
 pass after this fix. Only those solver-setup methods changed after the distance
 run was frozen; no Canonical/AST computation, locator or benchmark path changed.
-The wrapper-erased paper example was exported from production, with a successful
+The HTTP projection publishes only the registered AST view identifier and fixed
+omitted-node list; arbitrary engine metadata is discarded. Two constructed
+metadata-substitution controls and the existing source-location boundary checks
+pass. The wrapper-erased paper example was exported from production, with a successful
 private node-edit replay. Broader regression checks and the new corpus run are
 in progress; final observations will be linked after their completion.
 

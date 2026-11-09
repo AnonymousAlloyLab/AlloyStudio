@@ -692,6 +692,11 @@ class Portal(BoundedHTTPServer):
             allowed = ('status', 'metric', 'distance', 'breakdown', 'canonicalForm',
                        'operations', 'operationSummary', 'trace', 'diagnostics', 'comparison', 'astSize')
             result = {k: raw[k] for k in allowed if k in raw}
+            if (metric == 'ast' and raw.get('astViewVersion') == 'acgn-semantic-ast-noop-body-erasure-v1'
+                    and raw.get('astOmittedNodeKinds') == ['UnaryExpr.NOOP', 'Body']):
+                # Publish the fixed view identifier, never arbitrary engine text.
+                result['astViewVersion'] = 'acgn-semantic-ast-noop-body-erasure-v1'
+                result['astOmittedNodeKinds'] = ['UnaryExpr.NOOP', 'Body']
             if result.get('status') == 'ok' and metric == 'canonical':
                 # Rebuild the learner-only allowlist before caching/pinning it.
                 # Never accept a structural graph or DSL supplied by a client.

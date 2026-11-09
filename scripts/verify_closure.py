@@ -216,6 +216,25 @@ def python_tests(report_path):
     failure_details = {}
 
     class Results(unittest.TextTestResult):
+        def fixtureFailure(self, test, error=None):
+            # unittest's _ErrorHolder never starts the blocked test methods.
+            # Resolve only source-registered class/module coordinates; do not
+            # export the holder description, exception or fixture arguments.
+            match = re.fullmatch(r'(setUpClass|tearDownClass|setUpModule|tearDownModule) '
+                                 r'\(([A-Za-z_][A-Za-z0-9_.]*)\)', test.id())
+            if match is None:
+                return False
+            phase, owner = match.groups()
+            members = [identifier for identifier in sources
+                       if (identifier.rsplit('.', 1)[0] == owner if phase.endswith('Class')
+                           else identifier.split('.', 1)[0] == owner)]
+            for identifier in members:
+                outcomes[identifier] = 'BLOCK'
+                detail = failure_location(identifier, error, sources) if error else {'line': None, 'kind': 'error'}
+                if detail is not None:
+                    failure_details.setdefault(identifier, dict(detail, phase=phase))
+            return bool(members)
+
         def recordFailureLocation(self, test, error):
             detail = failure_location(test.id(), error, sources)
             if detail is not None:
@@ -237,10 +256,12 @@ def python_tests(report_path):
         def addError(self, test, error):
             outcomes[test.id()] = "BLOCK"
             self.recordFailureLocation(test, error)
+            self.fixtureFailure(test, error)
             super().addError(test, error)
 
         def addSkip(self, test, reason):
             outcomes[test.id()] = "BLOCK"
+            self.fixtureFailure(test)
             super().addSkip(test, reason)
 
         def addSubTest(self, test, subtest, error):

@@ -130,3 +130,9 @@ The first AST timeout and its separate six-run investigation are documented in
 is retained. Concurrent validation export I/O on the same external volume is an
 explicit timing-isolation limitation; subsequent bulk validation waits until
 measurement finishes or uses separate storage.
+
+The source-origin harness also compiles the sealed equality-certificate source
+explicitly. Class setup/teardown failures now mark the affected source-registered
+test methods as blocked with a fixed phase label; exception text remains private.
+The regression controls include real setup/teardown exceptions carrying private
+sentinels, unknown phase fields and the rebased source-origin harness.

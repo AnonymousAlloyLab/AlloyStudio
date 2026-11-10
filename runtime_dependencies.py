@@ -73,7 +73,7 @@ REQUIRED_CLASSES = (
     'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$Adapter.class',
     'is/fivefivefive/CanDis/core/OrderedTreeEditDistance$IndexedTree.class',
 )
-ENGINE_CHECKS = 500
+ENGINE_CHECKS = 503
 
 
 def runtime_classpath(root):

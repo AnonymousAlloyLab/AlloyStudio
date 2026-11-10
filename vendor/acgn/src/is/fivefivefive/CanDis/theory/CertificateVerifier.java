@@ -18,10 +18,11 @@ public final class CertificateVerifier {
     }
 
     public static void verify(TypedEqualityCertificate certificate) {
+        CertificateVerificationScope scope = CertificateVerificationScope.current();
         verify(
                 Objects.requireNonNull(certificate, "certificate"),
-                Collections.newSetFromMap(new IdentityHashMap<>()),
-                Collections.newSetFromMap(new IdentityHashMap<>()));
+                scope == null ? Collections.newSetFromMap(new IdentityHashMap<>()) : scope.visiting,
+                scope == null ? Collections.newSetFromMap(new IdentityHashMap<>()) : scope.verified());
     }
 
     private static void verify(
@@ -34,18 +35,23 @@ public final class CertificateVerifier {
         if (!visiting.add(certificate)) {
             throw new IllegalArgumentException("Certificate derivation contains a cycle");
         }
-        if (!certificate.leftEndpoint().context().equals(
-                    certificate.rightEndpoint().context())
-                || !certificate.leftEndpoint().sort().equals(
-                        certificate.rightEndpoint().sort())) {
-            throw new IllegalArgumentException("Certificate endpoints are not well typed");
+        try {
+            if (!certificate.leftEndpoint().context().equals(
+                        certificate.rightEndpoint().context())
+                    || !certificate.leftEndpoint().sort().equals(
+                            certificate.rightEndpoint().sort())) {
+                throw new IllegalArgumentException("Certificate endpoints are not well typed");
+            }
+            for (TypedEqualityCertificate premise : certificate.premises()) {
+                verify(premise, visiting, verified);
+            }
+            certificate.verifyLocal();
+            // Only completed proofs enter the memo; failed/in-progress objects do not.
+            if (CertificateVerificationScope.current() == null
+                    || verified.size() < CertificateVerificationScope.CAPACITY) verified.add(certificate);
+        } finally {
+            visiting.remove(certificate);
         }
-        for (TypedEqualityCertificate premise : certificate.premises()) {
-            verify(premise, visiting, verified);
-        }
-        certificate.verifyLocal();
-        visiting.remove(certificate);
-        verified.add(certificate);
     }
 
     public static void requirePermittedUnionDerivation(

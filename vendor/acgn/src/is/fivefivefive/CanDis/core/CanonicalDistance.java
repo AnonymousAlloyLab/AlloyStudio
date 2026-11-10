@@ -978,8 +978,8 @@ public final class CanonicalDistance {
         if (a.size() > FastPaidDeclarationAlignment.MAX_DECLARATIONS
                 || b.size() > FastPaidDeclarationAlignment.MAX_DECLARATIONS)
             throw new IllegalStateException("PAID_DECLARATION_SIZE_BUDGET");
-        var sourceOrders=FastGroupedDeclarationOrbit.orders(leftMetadata.original(left),left,a);
-        var targetOrders=FastGroupedDeclarationOrbit.orders(rightMetadata.original(right),right,b);
+        var sourceOrders=leftMetadata.groupedOrders(left,a);
+        var targetOrders=rightMetadata.groupedOrders(right,b);
         var budget=new FastGroupedDeclarationOrbit.Budget();
         MatrixAlignment[] best = {null};
         int[][] dp=DECISIONS.get()==null?quantificationDp(a,b):DECISIONS.get().declarations.get(0);
@@ -1898,6 +1898,8 @@ public final class CanonicalDistance {
 
     private static final class EGraphMetadata {
         private final IdentityHashMap<NormalForm,NormalForm> originals=new IdentityHashMap<>();
+        private final IdentityHashMap<NormalForm,GroupedOrders> groupedOrders=new IdentityHashMap<>();
+        private record GroupedOrders(List<QuantiVar> bindings,List<String> policy,List<int[]> orders) { }
         private final IdentityHashMap<EGraphNode, Integer> sizes = new IdentityHashMap<>();
         private final IdentityHashMap<EGraphNode, GraphType> resultTypes = new IdentityHashMap<>();
         private final IdentityHashMap<EGraphNode, List<EGraphNode>> metricChildren = new IdentityHashMap<>();
@@ -1915,6 +1917,25 @@ public final class CanonicalDistance {
 
         private NormalForm original(NormalForm comparison) {
             return Objects.requireNonNull(originals.get(comparison),"Missing original metric source");
+        }
+
+        private synchronized List<int[]> groupedOrders(NormalForm comparison,List<QuantiVar> order) {
+            // Metadata belongs to one frozen Prepared endpoint, never a global
+            // source-name cache. Keep the complete occurrence order in the key.
+            var policy=java.util.Arrays.asList(System.getProperty("acgn.maxGroupElements"),
+                    System.getProperty("acgn.maxGlobalRenamings"),
+                    System.getProperty("acgn.maxCanonicalRecursionDepth"),
+                    System.getProperty("acgn.maxCanonicalWorkItems"),
+                    System.getProperty("acgn.maxGroupPresentationWork"));
+            GroupedOrders cached=groupedOrders.get(comparison);
+            boolean same=cached!=null && cached.policy.equals(policy) && cached.bindings.size()==order.size();
+            for(int i=0;same && i<order.size();i++)same=cached.bindings.get(i)==order.get(i);
+            if(!same) {
+                var admitted=FastGroupedDeclarationOrbit.orders(original(comparison),comparison,order);
+                cached=new GroupedOrders(List.copyOf(order),policy,admitted);
+                groupedOrders.put(comparison,cached);
+            }
+            return cached.orders.stream().map(int[]::clone).toList();
         }
 
         private void prepare(EGraphNode node) {

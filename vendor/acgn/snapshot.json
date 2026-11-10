@@ -996,7 +996,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-      "sha256": "e785abdbb51112a7f28b5853ad8d766daa3dff7eddcc45456bc61046487a0ec2"
+      "sha256": "8efc94723f3fd45ee962eb984cbf6f6bc5fa7735fd64d0ffc3eaff05c8bb163b"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/ClosedCallEvidence.java",
@@ -1081,6 +1081,10 @@
     {
       "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
       "sha256": "a54123323249c019dd72ca8eece4fa9a093c648ba3bc2ecac2e921030329f4f6"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java",
+      "sha256": "08b9640a7ff2fe563e76f97318cea98f2d6ab6e55f3922912122b05de53bd77d"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
@@ -1483,8 +1487,12 @@
       "sha256": "0258633a0c269e76879890636eb510e82c1311d3f4d32e6b9c148fa256d7781d"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/theory/CertificateVerificationScope.java",
+      "sha256": "d87d02d974ed8c6333bfba3afe3eeb477a070bed04bdbd152b8869d162d35912"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/theory/CertificateVerifier.java",
-      "sha256": "b799022c48ca8523c643fae54140308a648e219546d5f931efc1f1a4f34c4982"
+      "sha256": "547eb37d96c38723971ef5b6634d99e0260f00a993c83c643da8624b20103373"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CertificateWriteMetrics.java",
@@ -1976,7 +1984,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java",
-      "sha256": "f358983fa695651438e044a9674bee348f37a602e8c2c7b28614f1b6dd528a30"
+      "sha256": "770a7a89dbd5fcb6bd73abd7d9c02990360824d4056b7a26b2a91b059b49f108"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/TheoryCanonicalizationTest.java",
@@ -2217,6 +2225,32 @@
         {
           "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
           "baseSha256": "33f8ccb1bb0908893c248b703f45a12e7ac61cb6189d5d7755e4d3738252afd3"
+        }
+      ]
+    },
+    {
+      "id": "scoped-positive-verification-and-prepared-orbits",
+      "description": "Ported from ACGN 4b22429df6d79ef11ac77eef028837abbac17a0f: reuse successful immutable certificate checks within one adapter invocation and admitted declaration orders within one frozen Prepared endpoint. Identity/policy scoped, bounded proof retention, no failed-result caching; retain source/type checks, complete reference pools, trace replay and charged-work instrumentation.",
+      "files": [
+        {
+          "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
+          "baseSha256": "e785abdbb51112a7f28b5853ad8d766daa3dff7eddcc45456bc61046487a0ec2"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/theory/CertificateVerifier.java",
+          "baseSha256": "b799022c48ca8523c643fae54140308a648e219546d5f931efc1f1a4f34c4982"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java",
+          "baseSha256": "f358983fa695651438e044a9674bee348f37a602e8c2c7b28614f1b6dd528a30"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/theory/CertificateVerificationScope.java",
+          "added": true
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java",
+          "added": true
         }
       ]
     }

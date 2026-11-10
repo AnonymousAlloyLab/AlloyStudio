@@ -101,11 +101,13 @@ public final class TheoryAlloyAdapter {
     public static Result adapt(
             List<NormalForm> normalForms,
             SemanticProfile semanticProfile) {
-        return new Builder(
-                normalForms,
-                semanticProfile,
-                NoOpCertificateTraceSink.instance(),
-                null).build();
+        try (var verification = CertificateVerificationScope.open()) {
+            return new Builder(
+                    normalForms,
+                    semanticProfile,
+                    NoOpCertificateTraceSink.instance(),
+                    null).build();
+        }
     }
 
     /** Exact proof-retaining path used only by Phase J export. */
@@ -126,11 +128,13 @@ public final class TheoryAlloyAdapter {
             SemanticProfile semanticProfile,
             RecordingCertificateTraceSink sink,
             CertificateProvenance provenance) {
-        return new Builder(
-                normalForms,
-                semanticProfile,
-                Objects.requireNonNull(sink, "sink"),
-                Objects.requireNonNull(provenance, "provenance")).build();
+        try (var verification = CertificateVerificationScope.open()) {
+            return new Builder(
+                    normalForms,
+                    semanticProfile,
+                    Objects.requireNonNull(sink, "sink"),
+                    Objects.requireNonNull(provenance, "provenance")).build();
+        }
     }
 
     /** Immutable bridge tying one mutable Fast Rewrite source occurrence to evidence. */

@@ -293,7 +293,7 @@ public final class MASGVisitorTypeRegressionTest {
         boolean duplicateBinderEquivalent = CanonicalAlloyPipeline.prepare(
                 duplicateBinder).equivalentTo(
                         CanonicalAlloyPipeline.prepare(duplicateBinderRenamed));
-        if (duplicateBinderSlots != 2
+        if (duplicateBinderSlots != 3
                 || !duplicateBinderHasX
                 || !duplicateBinderHasY
                 || duplicateBinderDistance != 0

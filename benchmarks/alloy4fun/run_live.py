@@ -79,6 +79,8 @@ def main():
     parser.add_argument('--output', type=Path, default=ROOT / 'build/benchmarks/alloy4fun/live')
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--timeout', type=float, default=60)
+    parser.add_argument('--heap', choices=('512m', '1g', '2g'), default='512m')
+    parser.add_argument('--initial-heap', choices=('512m', '1g', '2g'), default=None)
     parser.add_argument('--limit', type=int, default=0)
     parser.add_argument('--resume', action='store_true')
     args = parser.parse_args()
@@ -96,7 +98,8 @@ def main():
         cases = sorted(cases, key=lambda c: hashlib.sha256(c['case_id'].encode()).digest())[:args.limit]
     args.output.mkdir(parents=True, exist_ok=True)
     manifest = {'tool': 'live-canonical', 'cases': len(cases), 'workers': args.workers,
-                'timeout_seconds': args.timeout, 'limit': args.limit, 'heap': '512m',
+                'timeout_seconds': args.timeout, 'limit': args.limit, 'heap': args.heap,
+                'initial_heap': args.initial_heap,
                 'max_pending_cases': args.workers * 2,
                 'folds_sha256': sha(args.folds), 'cohort_sha256': sha(args.data / 'cohort.json'),
                 'payloads_sha256': sha(args.data / 'payloads.jsonl'),
@@ -136,7 +139,7 @@ def main():
         if case['extraction_status'] != 'ok':
             return {**metadata, **metrics({'status': 'unsupported'}, 0)}, {}
         if not hasattr(local, 'worker'):
-            local.worker = Worker(args.timeout)
+            local.worker = Worker(args.timeout, heap=args.heap, initial_heap=args.initial_heap)
             with lock:
                 workers.append(local.worker)
         references = pools[(*pool_key(case), folds[case['model_id']])]
@@ -169,6 +172,7 @@ def main():
     report = {'tool': 'live-canonical', 'cases': len(cases), 'completed': completed,
               'preparation_seconds': prepared_seconds, 'run_wall_seconds': time.perf_counter() - run_start,
               'workers': args.workers, 'timeout_seconds': args.timeout,
+              'heap': args.heap, 'initial_heap': args.initial_heap,
               'max_pending_cases': args.workers * 2,
               'transport': 'Sequential JSONL JVM workers invoking unmodified LiveFeedback.evaluate; no result or parsed-reference cache',
               'folds_sha256': hashlib.sha256(args.folds.read_bytes()).hexdigest(),

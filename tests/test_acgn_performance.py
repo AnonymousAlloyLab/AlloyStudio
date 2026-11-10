@@ -18,6 +18,11 @@ class AcgnPerformanceTests(unittest.TestCase):
                             '-sourcepath', str(source), '-d', directory,
                             str(source / 'is/fivefivefive/CanDis/theory/EqualityCertificates.java'),
                             str(source / 'is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/core/FastPrefixSourceTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/PrefixBinderPlanTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/UnusedBindingDescopeTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/UnusedBindingD8Test.java'),
+                            str(source / 'is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java'),
                             str(source / 'is/fivefivefive/CanDis/PerformanceRegressionTest.java')],
                            cwd=ROOT, check=True, capture_output=True, timeout=90)
             result = subprocess.run(['java', '-Xmx256m', '-XX:ActiveProcessorCount=1',
@@ -33,3 +38,17 @@ class AcgnPerformanceTests(unittest.TestCase):
                                     'is.fivefivefive.CanDis.core.PreparedOrbitCacheTest'],
                                    cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
             self.assertIn('PreparedOrbitCacheTest passed', orbit.stdout)
+            for name in ('PrefixBinderPlanTest', 'core.FastPrefixSourceTest',
+                         'UnusedBindingDescopeTest', 'core.UnusedBindingEvidenceTest'):
+                result = subprocess.run(['java', '-ea', '-Xmx256m', '-XX:ActiveProcessorCount=1',
+                                         '-Djava.io.tmpdir=' + directory,
+                                         '-cp', directory + os.pathsep + dependencies,
+                                         'is.fivefivefive.CanDis.' + name],
+                                        cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
+                self.assertIn('checks passed', result.stdout)
+            result = subprocess.run(['java', '-ea', '-Xmx256m', '-XX:ActiveProcessorCount=1',
+                                     '-Djava.io.tmpdir=' + directory,
+                                     '-cp', directory + os.pathsep + dependencies,
+                                     'is.fivefivefive.CanDis.UnusedBindingD8Test'],
+                                    cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
+            self.assertEqual(result.stdout.count('Fast=17 certified=17 CHECKED_NATIVE_ACTIONS_EQUAL'), 4)

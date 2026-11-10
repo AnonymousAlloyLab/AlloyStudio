@@ -110,6 +110,26 @@ public final class TheoryAlloyAdapter {
         }
     }
 
+    /** Prefix metadata only, not a semantic artifact or a certified repair view.
+     * Callers must separately validate the actual source/occurrence mapping. */
+    public static PrefixBinderPlan prefixBinderPlan(NormalForm source) {
+        Objects.requireNonNull(source, "source");
+        if (!source.isFrozenForCertification()) {
+            throw new IllegalArgumentException("A prefix plan requires a frozen source");
+        }
+        BinderPlan plan = Builder.binderPlan(
+                source.getMatrixQuantiVars(), TypedSlotContext.empty());
+        return new PrefixBinderPlan(plan.descriptor, plan.sourceToCoordinate);
+    }
+
+    public record PrefixBinderPlan(
+            BinderBlockDescriptor descriptor, List<Integer> sourceToCoordinate) {
+        public PrefixBinderPlan {
+            Objects.requireNonNull(descriptor, "descriptor");
+            sourceToCoordinate = List.copyOf(sourceToCoordinate);
+        }
+    }
+
     /** Exact proof-retaining path used only by Phase J export. */
     public static Result adaptForVerification(
             List<NormalForm> normalForms,
@@ -2640,7 +2660,7 @@ public final class TheoryAlloyAdapter {
             return references;
         }
 
-        private BinderPlan binderPlan(List<QuantiVar> variables, TypedSlotContext ambient) {
+        private static BinderPlan binderPlan(List<QuantiVar> variables, TypedSlotContext ambient) {
             List<BindingPayload> payloads = new ArrayList<>(variables.size());
             int exchangeClass = -1;
             QuantiVar previous = null;
@@ -2701,7 +2721,7 @@ public final class TheoryAlloyAdapter {
             return binderPlan(variables, payloads, ambient, false);
         }
 
-        private BinderPlan binderPlan(
+        private static BinderPlan binderPlan(
                 List<QuantiVar> variables,
                 List<BindingPayload> payloads,
                 TypedSlotContext ambient,
@@ -3034,6 +3054,11 @@ public final class TheoryAlloyAdapter {
                     ContainerLawCertificate.Law.IDEMPOTENCY));
         }
         return ContainerLawDeclaration.certified(schema, certificates);
+    }
+
+    /** Exact occurrence type validation shared with prefix admission; no graph construction. */
+    public static void requireOccurrenceOutputType(EGraphNode node) {
+        outputType(Objects.requireNonNull(node, "node"));
     }
 
     private static GraphType outputType(EGraphNode node) {

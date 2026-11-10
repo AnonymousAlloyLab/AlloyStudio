@@ -60,6 +60,10 @@ jobs:
           mkdir -p build/repair-language-lean
           python scripts/lean_offline.py --cwd . -- -j 1 -M 1024 -o build/repair-language-lean/RepairLanguage.olean formal/repair_language/RepairLanguage.lean
           python scripts/lean_offline.py --cwd . --lean-path build/repair-language-lean -- -j 1 -M 2048 formal/repair_language/Audit.lean > build/repair-language-lean/audit.log
+      - name: Check source-linked fast prefix exchange proof
+        run: python scripts/lean_offline.py --cwd . -- -j 1 -M 2048 vendor/acgn/docs/distance-parity-20261107/FastPrefixExchange.lean
+      - name: Check bottom-up unused binding proof and axiom inventory
+        run: python scripts/lean_offline.py --cwd . -- -j 1 -M 2048 vendor/acgn/docs/section3-repair-audit/formal/UnusedGroupedBindings.lean
       - name: Replay historical charged-work proof (production binding stale)
         # Replay immutable reviewed inputs, never renew their production freshness.
         # LP05-WORK's current EngineWorker.java binding is stale after LFU changes.

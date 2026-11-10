@@ -60,11 +60,12 @@ def scratch_root():
 
 
 class Worker:
-    def __init__(self, timeout=60.0, heap='512m', command=None, recycle_after=256):
+    def __init__(self, timeout=60.0, heap='512m', command=None, recycle_after=256, initial_heap=None):
         if type(recycle_after) is not int or recycle_after < 1:
             raise ValueError('recycle_after must be a positive integer')
         self.timeout = timeout
         self.heap = heap
+        self.initial_heap = initial_heap
         self.command = command
         self.process = None
         self.scratch = None
@@ -108,6 +109,8 @@ class Worker:
                 '-Dalloy.feedback.workMillis=' + str(min(60000, max(1, math.ceil(self.timeout * 1000)))),
                 '-cp', classpath,
                 'benchmark.LiveWorker']
+            if self.initial_heap is not None:
+                command = [command[0], '-Xms' + self.initial_heap, *command[1:]]
             self.scratch = tempfile.TemporaryDirectory(prefix='worker-', dir=scratch_root())
             command = [command[0], '-Djava.io.tmpdir=' + self.scratch.name, *command[1:]]
             try:

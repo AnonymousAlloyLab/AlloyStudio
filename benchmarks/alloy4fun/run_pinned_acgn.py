@@ -23,7 +23,31 @@ ARMS = (('ast', 'run_ast.py'), ('canonical', 'run_live.py'))
 POLICY = dict(workers=4, memory_high_bytes=4 * GIB, memory_max_bytes=6 * GIB,
               cpu_quota_percent=400, memory_swap_max_bytes=0,
               startup_available_bytes=10 * GIB, runtime_available_bytes=4 * GIB,
-              external_free_bytes=8 * GIB, timeout_seconds=60)
+              external_free_bytes=32 * GIB, internal_free_bytes=10 * GIB,
+              timeout_seconds=60, heap='512m', initial_heap=None)
+
+
+def run_policy(heap='512m', initial_heap=None):
+    sizes = {'512m': 512, '1g': 1024, '2g': 2048}
+    if heap not in sizes or initial_heap is not None and (
+            initial_heap not in sizes or sizes[initial_heap] > sizes[heap]):
+        raise ValueError('Invalid initial/maximum heap combination')
+    policy = dict(POLICY, heap=heap, initial_heap=initial_heap)
+    if heap != '512m':
+        policy.update(memory_high_bytes=10 * GIB, memory_max_bytes=12 * GIB,
+                      startup_available_bytes=16 * GIB)
+    return policy
+
+
+def selected_arms(names):
+    if not names or len(set(names)) != len(names) or set(names) - {a for a, _ in ARMS}:
+        raise ValueError('Invalid experiment arms')
+    return [(arm, script) for arm, script in ARMS if arm in names]
+
+
+def oom_kills():
+    return int(next(line.split()[1] for line in Path('/proc/vmstat').read_text().splitlines()
+                    if line.startswith('oom_kill ')))
 
 
 def sha(path):
@@ -77,7 +101,9 @@ def preserved_run_artifacts(prior_run, experiment):
             if path.is_file() and path.name in names}
 
 
-def prepare(experiment, data, preserve_runs=()):
+def prepare(experiment, data, preserve_runs=(), *, arms=('ast', 'canonical'), heap='512m', initial_heap=None):
+    selected = selected_arms(arms)
+    policy = run_policy(heap, initial_heap)
     experiment = experiment.resolve()
     data = data.resolve()
     if experiment.exists():
@@ -126,7 +152,7 @@ def prepare(experiment, data, preserve_runs=()):
     manifest = {'schema': 'alloystudio-pinned-acgn-rerun-v1', 'prepared_at': now(),
                 'acgn_commit': json.loads((source / 'vendor/acgn/snapshot.json').read_text())['commit'],
                 'ast_view_version': 'acgn-semantic-ast-noop-body-erasure-v1',
-                'arms': [name for name, _ in ARMS], 'policy': POLICY,
+                'arms': [name for name, _ in selected], 'policy': policy,
                 'cases': 61598, 'data_source': str(data),
                 'preserved_runs': [str(Path(p).resolve()) for p in preserve_runs],
                 'preserved_previous_results': preserved,
@@ -166,13 +192,18 @@ def execute(experiment):
                        TMPDIR=str(experiment / 'scratch'), TMP=str(experiment / 'scratch'),
                        TEMP=str(experiment / 'scratch'), ALLOY_BENCHMARK_TMP_ROOT=str(experiment / 'scratch'))
     completed = {}
-    for arm, script in ARMS:
+    policy = manifest['policy']
+    for arm, script in selected_arms(manifest['arms']):
         check_snapshot(experiment, manifest)
         check_preserved(manifest)
         write(experiment / 'state.json', {'status': 'RUNNING', 'arm': arm, 'at': now(), 'completed': completed})
         command = [sys.executable, str(experiment / 'source/benchmarks/alloy4fun' / script),
                    '--data', str(experiment / 'inputs'), '--folds', str(experiment / 'inputs/lineage.json'),
                    '--output', str(experiment / arm), '--workers', '4', '--timeout', '60']
+        if arm == 'canonical':
+            command += ['--heap', policy['heap']]
+            if policy['initial_heap'] is not None:
+                command += ['--initial-heap', policy['initial_heap']]
         start = now()
         with (experiment / 'logs' / (arm + '.log')).open('x') as log:
             subprocess.run(command, cwd=experiment / 'source', env=environment, stdout=log,
@@ -192,17 +223,36 @@ def properties(unit):
     return dict(line.split('=', 1) for line in run.stdout.splitlines() if '=' in line)
 
 
+def live_cgroup(state, root=Path('/sys/fs/cgroup')):
+    terminal = state.get('ActiveState') in ('inactive', 'failed') or state.get('SubState') == 'exited'
+    group = state.get('ControlGroup')
+    cgroup = root / group.lstrip('/') if group else None
+    if cgroup is None or not (cgroup / 'memory.current').is_file():
+        if terminal:
+            return None
+        raise RuntimeError('UNKNOWN live service cgroup telemetry; stopping owned workload')
+    return cgroup
+
+
 def supervise(experiment, prefix):
     manifest = json.loads((experiment / 'manifest.json').read_text())
+    policy = manifest['policy']
+    if policy != run_policy(policy['heap'], policy['initial_heap']):
+        raise RuntimeError('Manifest resource policy does not match the frozen runner')
+    selected_arms(manifest['arms'])
     check_preserved(manifest)
     check_snapshot(experiment, manifest)
-    if available() < POLICY['startup_available_bytes']:
-        raise RuntimeError('Less than 10 GiB host memory available; nothing launched')
+    if available() < policy['startup_available_bytes']:
+        raise RuntimeError('Insufficient startup headroom; nothing launched')
+    if (shutil.disk_usage(experiment).free < policy['external_free_bytes']
+            or shutil.disk_usage(Path.home()).free < policy['internal_free_bytes']):
+        raise RuntimeError('Insufficient storage reserve; nothing launched')
     unit = prefix + '-workload.service'
     supervisor = prefix + '-supervisor.service'
     frozen = experiment / 'source/benchmarks/alloy4fun/run_pinned_acgn.py'
     command = ['systemd-run', '--user', '--unit=' + unit, '--property=MemoryAccounting=yes',
-               '--property=MemoryHigh=4G', '--property=MemoryMax=6G', '--property=MemorySwapMax=0',
+               '--property=MemoryHigh=' + str(policy['memory_high_bytes']),
+               '--property=MemoryMax=' + str(policy['memory_max_bytes']), '--property=MemorySwapMax=0',
                '--property=CPUQuota=400%', '--property=Nice=10', '--property=OOMPolicy=kill',
                '--property=KillMode=control-group', '--property=TimeoutStopSec=5s',
                '--property=RemainAfterExit=yes', '--property=BindsTo=' + supervisor,
@@ -210,43 +260,54 @@ def supervise(experiment, prefix):
                '--property=StandardOutput=append:' + str(experiment / 'logs/pipeline.log'),
                '--property=StandardError=inherit', sys.executable, str(frozen),
                '--experiment', str(experiment), '--execute']
-    guard = {'status': 'STARTING', 'at': now(), 'policy': POLICY, 'unit': unit,
+    initial_oom = oom_kills()
+    guard = {'status': 'STARTING', 'at': now(), 'policy': policy, 'unit': unit,
              'supervisor': supervisor, 'peak_bytes': 0, 'minimum_host_available_bytes': available(),
-             'initial_device': experiment.stat().st_dev, 'memory_events': {}}
+             'initial_device': experiment.stat().st_dev, 'initial_global_oom_kills': initial_oom,
+             'memory_events': {}}
     subprocess.run(command, check=True, capture_output=True, timeout=20)
     try:
         while True:
             state = properties(unit)
             free = available()
             guard['minimum_host_available_bytes'] = min(guard['minimum_host_available_bytes'], free)
-            group = state.get('ControlGroup')
-            if group:
-                cgroup = Path('/sys/fs/cgroup') / group.lstrip('/')
-                if (cgroup / 'memory.current').exists():
-                    guard['peak_bytes'] = max(guard['peak_bytes'], int((cgroup / 'memory.peak').read_text()))
-                    guard['memory_events'] = {k: int(v) for k, v in (line.split() for line in (cgroup / 'memory.events').read_text().splitlines())}
-                    quota, period = (cgroup / 'cpu.max').read_text().split()
-                    limits = {'memory_max': int((cgroup / 'memory.max').read_text()),
-                              'memory_high': int((cgroup / 'memory.high').read_text()),
-                              'swap_max': int((cgroup / 'memory.swap.max').read_text()),
-                              'cpu_percent': int(quota) * 100 // int(period)}
-                    if limits != {'memory_max': 6 * GIB, 'memory_high': 4 * GIB, 'swap_max': 0, 'cpu_percent': 400}:
-                        raise RuntimeError('Effective cgroup limits do not match policy')
-                    guard['effective_limits'] = limits
+            cgroup = live_cgroup(state)
+            if cgroup is not None:
+                guard['peak_bytes'] = max(guard['peak_bytes'], int((cgroup / 'memory.peak').read_text()))
+                guard['memory_events'] = {k: int(v) for k, v in (line.split() for line in (cgroup / 'memory.events').read_text().splitlines())}
+                quota, period = (cgroup / 'cpu.max').read_text().split()
+                limits = {'memory_max': int((cgroup / 'memory.max').read_text()),
+                          'memory_high': int((cgroup / 'memory.high').read_text()),
+                          'swap_max': int((cgroup / 'memory.swap.max').read_text()),
+                          'cpu_percent': int(quota) * 100 // int(period)}
+                if limits != {'memory_max': policy['memory_max_bytes'],
+                              'memory_high': policy['memory_high_bytes'], 'swap_max': 0, 'cpu_percent': 400}:
+                    raise RuntimeError('Effective cgroup limits do not match policy')
+                guard['effective_limits'] = limits
+                guard['swap_bytes'] = int((cgroup / 'memory.swap.current').read_text())
+                if guard['swap_bytes'] or any(guard['memory_events'].get(k, 0)
+                        for k in ('oom', 'oom_kill', 'oom_group_kill')):
+                    raise RuntimeError('Service swap or OOM incident')
+            if oom_kills() != initial_oom:
+                raise RuntimeError('Host OOM incident')
             if state.get('ActiveState') in ('inactive', 'failed') or state.get('SubState') == 'exited':
+                if 'effective_limits' not in guard:
+                    raise RuntimeError('UNKNOWN effective resource limits; no verified service sample')
                 guard['service_state'] = state
                 guard['status'] = 'COMPLETED' if state.get('ExecMainStatus') == '0' and state.get('Result') == 'success' else 'FAILED'
                 break
-            if free < POLICY['runtime_available_bytes']:
+            if free < policy['runtime_available_bytes']:
                 raise RuntimeError('Global memory reserve crossed')
-            if experiment.stat().st_dev != guard['initial_device'] or shutil.disk_usage(experiment).free < POLICY['external_free_bytes']:
+            if (experiment.stat().st_dev != guard['initial_device']
+                    or shutil.disk_usage(experiment).free < policy['external_free_bytes']
+                    or shutil.disk_usage(Path.home()).free < policy['internal_free_bytes']):
                 raise RuntimeError('Experiment storage unavailable or below reserve')
             guard['status'] = 'RUNNING'; guard['at'] = now()
             write(experiment / 'resource-guard.json', guard)
             time.sleep(2)
     except BaseException as error:
         subprocess.run(['systemctl', '--user', 'stop', unit], check=False, timeout=15)
-        guard['status'] = 'STOPPED'; guard['reason'] = type(error).__name__
+        guard['status'] = 'STOPPED'; guard['reason'] = str(error)
         raise
     finally:
         guard['ended_at'] = now()
@@ -260,6 +321,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--experiment', type=Path, required=True)
     parser.add_argument('--data', type=Path)
+    parser.add_argument('--arm', choices=('ast', 'canonical', 'both'), default='both')
+    parser.add_argument('--heap', choices=('512m', '1g', '2g'), default='512m')
+    parser.add_argument('--initial-heap', choices=('512m', '1g', '2g'))
     parser.add_argument('--preserve-run', type=Path, action='append', default=[],
                         help='Hash prior paused/completed evidence without reusing observations')
     parser.add_argument('--prepare', action='store_true')
@@ -274,12 +338,15 @@ def main():
     if args.prepare:
         if args.data is None:
             parser.error('--prepare requires --data')
-        manifest = prepare(experiment, args.data, args.preserve_run)
+        arms = tuple(a for a, _ in ARMS) if args.arm == 'both' else (args.arm,)
+        manifest = prepare(experiment, args.data, args.preserve_run,
+                           arms=arms, heap=args.heap, initial_heap=args.initial_heap)
         print(json.dumps({'status': 'PREPARED', 'cases': manifest['cases'], 'experiment': str(experiment)}))
     elif args.launch:
         frozen = experiment / 'source/benchmarks/alloy4fun/run_pinned_acgn.py'
         subprocess.run(['systemd-run', '--user', '--unit=' + args.unit_prefix + '-supervisor.service',
-                        '--property=MemoryMax=256M', '--property=Nice=10',
+                        '--property=MemoryMax=256M', '--property=MemorySwapMax=0',
+                        '--property=OOMPolicy=kill', '--property=Nice=10',
                         '--property=StandardOutput=append:' + str(experiment / 'logs/supervisor.log'),
                         '--property=StandardError=inherit', sys.executable, str(frozen),
                         '--experiment', str(experiment), '--supervise', '--unit-prefix', args.unit_prefix], check=True)

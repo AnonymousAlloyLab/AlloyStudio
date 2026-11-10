@@ -34,7 +34,48 @@ class RepositoryTests(unittest.TestCase):
         patches = snapshot['localPatches']
         self.assertEqual([patch['id'] for patch in patches],
                          ['parser-source-origins', 'canonical-residual-quantifier-rendering',
-                          'request-work-budget', 'bundled-library-call-signatures'])
+                          'request-work-budget', 'bundled-library-call-signatures',
+                          'scoped-positive-verification-and-prepared-orbits',
+                          'source-checked-fast-prefix-admission',
+                          'bottom-up-unused-binding-normalization'])
+        reduction = patches[6]
+        self.assertRegex(reduction['upstreamIntegratedCommit'], r'^[0-9a-f]{40}$')
+        self.assertEqual({entry['path'] for entry in reduction['files']}, {
+            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+            'src/is/fivefivefive/CanDis/core/NormalForm.java',
+            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+            'src/is/fivefivefive/CanDis/MASGVisitorTypeRegressionTest.java',
+            'src/is/fivefivefive/CanDis/core/GroupedPaidDeclarationAlignmentTest.java',
+            'src/is/fivefivefive/CanDis/UnusedBindingDescopeTest.java',
+            'src/is/fivefivefive/CanDis/UnusedBindingD8Test.java',
+            'src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java',
+            'docs/section3-repair-audit/formal/UnusedGroupedBindings.lean',
+            'docs/distance-parity-20261107/UNUSED_BINDER_NORMALIZATION.md',
+        })
+        for entry in reduction['files']:
+            self.assertIn(entry['path'], expected)
+            if entry.get('added'):
+                self.assertEqual(set(entry), {'path', 'added'})
+            else:
+                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
+        prefix = patches[5]['files']
+        self.assertEqual({entry['path'] for entry in prefix}, {
+            'src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java',
+            'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
+            'src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java',
+            'src/is/fivefivefive/CanDis/core/FastPrefixSource.java',
+            'src/is/fivefivefive/CanDis/core/FastPrefixSourceTest.java',
+            'src/is/fivefivefive/CanDis/PrefixBinderPlanTest.java',
+            'docs/distance-parity-20261107/FastPrefixExchange.lean',
+        })
+        for entry in prefix:
+            self.assertIn(entry['path'], expected)
+            if entry.get('added'):
+                self.assertEqual(set(entry), {'path', 'added'})
+            else:
+                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
         libraries = patches[3]['files']
         self.assertEqual({entry['path'] for entry in libraries}, {
             'src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java',

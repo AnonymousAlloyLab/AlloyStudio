@@ -46,6 +46,30 @@ public class NormalForm {
     // Only prenexRelDecl can create these witnesses. Publicly assembled binding
     // lists cannot manufacture a grouped ONE owner by relabelling SOME slots.
     private final List<GroupedOneOrigin> groupedOneOrigins = new ArrayList<>();
+    private final List<UnusedBindingReduction> unusedBindingReductions = new ArrayList<>();
+    /** Pre-prenex source coordinates, including removed slots, retained for audit. */
+    public record UnusedBindingReduction(String scope, Opcode quantifier,
+            long declarationLineage, List<String> sourceNames, List<String> alphaNames,
+            List<String> sourceIdentities, List<Long> sourceLineages,
+            List<String> exactTypes, List<Integer> retainedSourceSlots, String residual) {
+        public UnusedBindingReduction {
+            sourceNames = List.copyOf(sourceNames);
+            alphaNames = List.copyOf(alphaNames);
+            sourceIdentities = List.copyOf(sourceIdentities);
+            sourceLineages = List.copyOf(sourceLineages);
+            exactTypes = List.copyOf(exactTypes);
+            retainedSourceSlots = List.copyOf(retainedSourceSlots);
+        }
+    }
+    public List<UnusedBindingReduction> getUnusedBindingReductions() {
+        synchronized (lifecycleLock) { return List.copyOf(unusedBindingReductions); }
+    }
+    public record UnusedBindingProjection(String sourceOwner, int sourceSlot,
+            String normalizedSlot, String sourceIdentity, String exactType) { }
+    private final List<UnusedBindingProjection> unusedBindingProjections = new ArrayList<>();
+    public List<UnusedBindingProjection> getUnusedBindingProjections() {
+        synchronized (lifecycleLock) { return List.copyOf(unusedBindingProjections); }
+    }
     private record GroupedOneOrigin(long declaration, List<QuantiVar> bindings,
             List<String> keys, String owner) { }
     private String phasePath;
@@ -257,6 +281,8 @@ public class NormalForm {
             copy.params = params;
             copy.matrixQuantiVars = matrixQuantiVars;
             copy.inheritedQuantiVars = inheritedQuantiVars;
+            copy.unusedBindingReductions.addAll(unusedBindingReductions);
+            copy.unusedBindingProjections.addAll(unusedBindingProjections);
             copy.phaseLocalBindingImports = phaseLocalBindingImports;
             copy.temporalChildBindingImports.putAll(temporalChildBindingImports);
             copy.localBindingSeeds.putAll(localBindingSeeds);
@@ -1342,6 +1368,10 @@ public class NormalForm {
                 matrixEGraphRoot, inheritedAlphaNames, new int[] { 0 });
         matrixEGraphRoot = betaRewriteLet(matrixEGraphRoot, new HashMap<>());
         matrixEGraphRoot = removeEndNodes(matrixEGraphRoot);
+        unusedBindingReductions.clear();
+        unusedBindingProjections.clear();
+        stages.onStage("begin-unused-binding-descope", this);
+        matrixEGraphRoot = descopeUnusedBindings(matrixEGraphRoot, "root", false);
         matrixEGraphRoot = removeEndNodes(rewriteBranchConnectives(matrixEGraphRoot));
         stages.onStage("alpha-beta-branch", this);
         stages.onStage("begin-nnf", this);
@@ -1563,6 +1593,153 @@ public class NormalForm {
 
     private static String bindingKey(EGraphNode node) {
         return firstNonEmpty(node.getAlphaName(), node.getSourceName());
+    }
+
+    // Correspondence: UnusedGroupedBindings.{all_drop_unused,some_drop_unused,
+    // no_drop_unused,all_vacuous,some_vacuous}. Run before both canonical paths.
+    @LeanVerifiedRewrite("R0-STRUCT-002")
+    private EGraphNode descopeUnusedBindings(EGraphNode node, String path, boolean inBindingScope) {
+        boolean bodyScope = inBindingScope || node.getOpcode() == Opcode.FORALL
+                || node.getOpcode() == Opcode.EXISTS || node.getOpcode() == Opcode.NO;
+        List<EGraphNode> children = new ArrayList<>();
+        for (int i = 0; i < node.getChildren().size(); i++) {
+            children.add(descopeUnusedBindings(node.getChildren().get(i), path + "/" + i, bodyScope));
+        }
+        if (!children.equals(node.getChildren())) node.setNormalizedChildren(children);
+        if (inBindingScope) node.simplifyBooleanAfterChildren();
+        children = node.getChildren();
+        Opcode kind = node.getOpcode();
+        // Counting, disjoint, output and interface binders have implicit uses.
+        if (kind != Opcode.FORALL && kind != Opcode.EXISTS && kind != Opcode.NO) return node;
+        if (!EGraphNode.hasBooleanFormulaType(node)) return node;
+        // REF carries uses in another phase; a matrix-only scan cannot erase them.
+        if (containsOpcode(node, Opcode.REF)) return node;
+        java.util.Set<String> uses = new java.util.HashSet<>();
+        for (EGraphNode child : children) {
+            if (!isRelDecl(child.getOpcode())) collectBindingUses(child, uses);
+        }
+        List<EGraphNode> retainedChildren = new ArrayList<>();
+        List<EGraphNode> guards = new ArrayList<>();
+        // Later domains may read earlier bindings. Only surviving declarations
+        // and residual guards keep those reads live; removed SET domains do not.
+        for (int declIndex = children.size() - 1; declIndex >= 0; declIndex--) {
+            EGraphNode decl = children.get(declIndex);
+            if (decl.getOpcode() != Opcode.GENERICRELDECL || decl.getChildren().size() < 2) {
+                if (isRelDecl(decl.getOpcode())) collectBindingUses(decl, uses);
+                retainedChildren.add(decl); continue;
+            }
+            DomainDescriptor domain = domainDescriptor(decl.getChildren().get(0));
+            if (domain.domain == null || domain.cardinality == Cardinality.EXACTLY) {
+                collectBindingUses(decl, uses);
+                retainedChildren.add(decl); continue;
+            }
+            List<EGraphNode> slots = decl.getChildren().subList(1, decl.getChildren().size());
+            var domainType = domain.domain.getExactAlloyType();
+            boolean authenticated = domainType != null && domainType.hasParserAuthenticatedAncestry();
+            java.util.Set<String> keys = new java.util.HashSet<>();
+            java.util.Set<String> aliases = new java.util.HashSet<>();
+            java.util.Set<Long> lineages = new java.util.HashSet<>();
+            for (var slot : slots) {
+                var type = slot.getExactAlloyType();
+                String key = bindingKey(slot);
+                authenticated &= slot.getOpcode() == Opcode.VARIABLE && slot.getChildren().isEmpty()
+                        && key != null && key.startsWith("@bind:") && keys.add(key)
+                        && slot.getSourceName() != null && slot.getSemanticIdentity() != null
+                        && type != null && type.hasParserAuthenticatedAncestry()
+                        && domainType != null && type.sameOccurrenceEvidenceAs(domainType);
+                // Display names may be shadowed, but lexical identities may not.
+                authenticated &= aliases.add(slot.getSemanticIdentity())
+                        && slot.getSourceOccurrenceLineage() > 0
+                        && lineages.add(slot.getSourceOccurrenceLineage());
+            }
+            if (!authenticated) { collectBindingUses(decl, uses); retainedChildren.add(decl); continue; }
+            List<Integer> kept = new ArrayList<>();
+            for (int i = 0; i < slots.size(); i++) if (uses.contains(bindingKey(slots.get(i)))) kept.add(i);
+            if (kept.size() == slots.size()) { collectBindingUses(decl, uses); retainedChildren.add(decl); continue; }
+            String residual = "same-domain-retained-witness";
+            if (kept.isEmpty()) {
+                residual = "admissible-domain-existence";
+                // SET/LONE admit the empty relation even if their carrier is empty.
+                if (domain.cardinality != Cardinality.SET && domain.cardinality != Cardinality.LONE) {
+                    collectBindingUses(domain.domain, uses);
+                    guards.add(EGraphNode.buildDerivedRelationCardinality(
+                            node, Opcode.SOME, cloneEGraph(domain.domain).getEClassRef()));
+                }
+            } else {
+                collectBindingUses(decl, uses);
+                EGraphNode reduced = copyShallow(decl, decl.getOpcode());
+                reduced.addNormalizedChild(decl.getChildren().get(0));
+                for (int i : kept) reduced.addNormalizedChild(slots.get(i));
+                retainedChildren.add(reduced);
+            }
+            var reduction = new UnusedBindingReduction(path + "/decl[" + declIndex + "]", kind,
+                    decl.getSourceOccurrenceLineage(), slots.stream().map(EGraphNode::getSourceName).toList(),
+                    slots.stream().map(NormalForm::bindingKey).toList(),
+                    slots.stream().map(EGraphNode::getSemanticIdentity).toList(),
+                    slots.stream().map(EGraphNode::getSourceOccurrenceLineage).toList(),
+                    slots.stream().map(s -> s.getExactAlloyType().stableString()).toList(), kept,
+                    residual);
+            unusedBindingReductions.add(reduction);
+            if (!kept.isEmpty()) retainedChildren.get(retainedChildren.size() - 1)
+                    .attachUnusedBindingReduction(reduction);
+        }
+        Collections.reverse(retainedChildren);
+        Collections.reverse(guards);
+        if (retainedChildren.equals(children)) return node;
+        List<EGraphNode> bodies = new ArrayList<>();
+        List<EGraphNode> declarations = new ArrayList<>();
+        for (var child : retainedChildren) {
+            if (isRelDecl(child.getOpcode())) declarations.add(child); else bodies.add(child);
+        }
+        EGraphNode body = conjoin(null, bodies);
+        if (body == null) throw new IllegalStateException("Unused-slot reduction lost its body");
+        if (!guards.isEmpty()) {
+            EGraphNode guard = conjoin(null, guards);
+            EGraphNode combined = syntheticNode(node, kind == Opcode.FORALL ? Opcode.IMPLIES : Opcode.AND, -10);
+            combined.addNormalizedChild(guard); combined.addNormalizedChild(body); body = combined;
+            body.simplifyBooleanAfterChildren();
+        }
+        if (declarations.isEmpty()) {
+            EGraphNode result = kind == Opcode.NO ? syntheticUnary(node, Opcode.NOT, body, -11) : body;
+            result.simplifyBooleanAfterChildren(); return result;
+        }
+        declarations.add(body); node.setNormalizedChildren(declarations); return node;
+    }
+
+    @LeanVerifiedRewrite("R0-STRUCT-002")
+    private void checkUnusedBindingProjection(EGraphNode declaration, EGraphNode slot, int index, QuantiVar q) {
+        var reduction = declaration.unusedBindingReduction();
+        if (reduction != null) {
+            if (unusedBindingReductions.stream().noneMatch(r -> r == reduction)
+                    || reduction.declarationLineage() != declaration.getSourceOccurrenceLineage())
+                throw new IllegalStateException("Unused binding projection changed declaration owner");
+            if (declaration.getChildren().size() != reduction.retainedSourceSlots().size() + 1
+                    || index < 0 || index >= reduction.retainedSourceSlots().size())
+                throw new IllegalStateException("Unused binding projection changed declaration width");
+            int original = reduction.retainedSourceSlots().get(index);
+            if (!reduction.sourceNames().get(original).equals(slot.getSourceName())
+                    || !reduction.sourceIdentities().get(original).equals(slot.getSemanticIdentity())
+                    || reduction.sourceLineages().get(original) != slot.getSourceOccurrenceLineage()
+                    || !reduction.exactTypes().get(original).equals(slot.getExactAlloyType().stableString())
+                    || !q.getOriginalNames().contains(slot.getSemanticIdentity())
+                    || !q.getExactAlloyType().sameOccurrenceEvidenceAs(slot.getExactAlloyType()))
+                throw new IllegalStateException("Unused binding projection changed source slot authority");
+            unusedBindingProjections.add(new UnusedBindingProjection(reduction.scope(), original,
+                    q.getDeBruijnKey(), slot.getSemanticIdentity(), slot.getExactAlloyType().stableString()));
+        }
+    }
+
+    private static boolean containsOpcode(EGraphNode node, Opcode opcode) {
+        if (node.getOpcode() == opcode) return true;
+        for (var child : node.getChildren()) if (containsOpcode(child, opcode)) return true;
+        return false;
+    }
+
+    private static void collectBindingUses(EGraphNode node, java.util.Set<String> uses) {
+        if (node.getOpcode() == Opcode.VARIABLE) uses.add(bindingKey(node));
+        if (isRelDecl(node.getOpcode())) {
+            if (!node.getChildren().isEmpty()) collectBindingUses(node.getChildren().get(0), uses);
+        } else for (var child : node.getChildren()) collectBindingUses(child, uses);
     }
 
     private void registerQuantifierSymmetries() {
@@ -2379,6 +2556,7 @@ public class NormalForm {
                         + ":" + qv.getCardinality()
                         + ":" + normalizeType(varType)
                         + "@" + bindingPath);
+                checkUnusedBindingProjection(relDecl, candidate, i - 1, qv);
                 candidateCopy.setAlphaName(alphaName);
                 LocalBindingSeed prior = localBindingSeeds.put(
                         alphaName,
@@ -2681,6 +2859,7 @@ public class NormalForm {
             qv.setDeBruijnKey(deBruijnBase + "#" + (i - 1) + ":" + qv.getCardinality()
                     + ":" + normalizeType(varType));
             QuantiVar representative = parameterDecl ? qv : slots.bind(qv);
+            checkUnusedBindingProjection(relDecl, candidate, i - 1, representative);
             if (representative == qv) {
                 nextVarId[0]++;
             }
@@ -4279,6 +4458,7 @@ public class NormalForm {
         copy.setAlphaName(sameOpcode ? source.getAlphaName() : null);
         if (sameOpcode) {
             copy.preserveSourceOccurrenceLineageFrom(source);
+            copy.attachUnusedBindingReduction(source.unusedBindingReduction());
         }
         copy.setCallOccurrenceId(sameOpcode ? source.getCallOccurrenceId() : -1L);
         copy.setDeclaredArity(sameOpcode ? source.getDeclaredArity() : -1);
@@ -4475,6 +4655,7 @@ public class NormalForm {
         clone.setExactAlloyType(node.getExactAlloyType());
         clone.setAlphaName(node.getAlphaName());
         clone.preserveSourceOccurrenceLineageFrom(node);
+        clone.attachUnusedBindingReduction(node.unusedBindingReduction());
         clone.setCallOccurrenceId(node.getCallOccurrenceId());
         clone.setDeclaredArity(node.getDeclaredArity());
         clone.setCallArityAuthority(node.getCallArityAuthority());
@@ -4715,7 +4896,7 @@ public class NormalForm {
             if (representative != null) {
                 representative.mergeSourceOrigin(candidate);
                 representative.mergeExactAlloyType(candidate.getExactAlloyType());
-                representative.addOriginalName(candidate.getOriginalName());
+                for (String name : candidate.getOriginalNames()) representative.addOriginalName(name);
                 return representative;
             }
             representatives.put(coordinate, candidate);

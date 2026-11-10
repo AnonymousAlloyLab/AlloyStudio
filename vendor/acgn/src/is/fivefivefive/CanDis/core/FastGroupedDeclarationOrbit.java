@@ -1,7 +1,6 @@
 package is.fivefivefive.CanDis.core;
 
 import java.util.*;
-import is.fivefivefive.CanDis.metric.RepairProjection;
 import is.fivefivefive.CanDis.theory.*;
 
 /** Identity plus one source-certified homogeneous-prefix transposition per endpoint.
@@ -43,15 +42,12 @@ final class FastGroupedDeclarationOrbit {
                 var p=identity(order.size());p[i]=j;p[j]=i;candidates.add(p);
             }
         if(candidates.isEmpty())return List.copyOf(result);
-        var evidence=TheoryAlloyAdapter.adapt(List.of(source),source.getCertificationMatrixEGraph().getSemanticProfile());
-        evidence.requireRepairProjectionSources(List.of(source));
-        RepairProjection.project(evidence,List.of(source));
+        var evidence=FastPrefixSource.checkedPlan(source,comparison);
         // supports() checks retained local owners against the original source.
         // This certified outer permutation transports references, not local slots.
-        var descriptor=evidence.phaseBinderDescriptors().get(0);
+        var descriptor=evidence.descriptor();
         for(var proof:descriptor.automorphisms().generatorCertificates())CertificateVerifier.verify(proof);
-        for(var proof:evidence.semanticArtifact().binderOccurrenceCertificates())CertificateVerifier.verify(proof);
-        var coordinates=evidence.phaseSourceCoordinates().get(0);var slots=new ArrayList<TypedSlot>();
+        var coordinates=evidence.sourceToCoordinate();var slots=new ArrayList<TypedSlot>();
         var payloads=new ArrayList<BinderCoordinateDescriptor>();
         for(var q:order) {
             var coordinate=descriptor.coordinates().get(coordinates.get(indices.get(q)));

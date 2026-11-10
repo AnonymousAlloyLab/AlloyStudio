@@ -57,16 +57,16 @@ public final class PreparedOrbitCacheTest {
                 check(expected.getCause() instanceof IllegalArgumentException,"foreign occurrence rejection");
             }
             check(entry==cache.values().iterator().next(),"failed admission never replaces cached success");
-            String prior=System.getProperty("acgn.maxCanonicalWorkItems");
+            String prior=System.getProperty("acgn.maxGroupElements");
             try {
-                System.setProperty("acgn.maxCanonicalWorkItems","0");
+                System.setProperty("acgn.maxGroupElements","1");
                 try {
                     Canonical.distance(left,right);
                     throw new AssertionError("cached endpoint bypassed changed resource policy");
                 } catch(IllegalStateException expected) { checks++; }
             } finally {
-                if(prior==null)System.clearProperty("acgn.maxCanonicalWorkItems");
-                else System.setProperty("acgn.maxCanonicalWorkItems",prior);
+                if(prior==null)System.clearProperty("acgn.maxGroupElements");
+                else System.setProperty("acgn.maxGroupElements",prior);
             }
             check(Canonical.distance(left,right)==first.distance(),"restored resource policy preserves result");
         }

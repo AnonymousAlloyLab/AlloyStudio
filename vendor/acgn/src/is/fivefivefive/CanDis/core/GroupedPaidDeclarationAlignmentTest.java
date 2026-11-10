@@ -153,7 +153,8 @@ public final class GroupedPaidDeclarationAlignmentTest {
         check(FastPaidDeclarationAlignment.supports(retained),"grouped slots compose with checked local scope");
         check(!FastDeclarationPermutation.admission(retainedForm,retainedSlots).test(0,1),
                 "composed paid admission does not enable free local exchange");
-        for(String name:List.of("parameter","temporal","sets","unused"))
+        check(FastPaidDeclarationAlignment.supports(prepare(model,"unused")),"unused slot removed by checked shared normalization");
+        for(String name:List.of("parameter","temporal","sets"))
             check(!FastPaidDeclarationAlignment.supports(prepare(model,name)),"unsupported scope "+name);
 
         var separate=prepare(model,"separate").get(0);

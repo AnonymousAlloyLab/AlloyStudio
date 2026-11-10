@@ -2859,7 +2859,10 @@ public final class EGraphNode {
     static Boolean parserCertifiedReflexiveComparison(
             EGraphNode owner,
             List<EClassRef> operands) {
-        if (owner == null || operands == null || operands.size() != 2
+        if (owner == null
+                || (owner.opcode != Opcode.IN && owner.opcode != Opcode.NOT_IN
+                    && owner.opcode != Opcode.EQUALS && owner.opcode != Opcode.NOT_EQUALS)
+                || operands == null || operands.size() != 2
                 || !hasBooleanFormulaType(owner)
                 || !sameCertifiedContainerInvocation(
                         operands.get(0), operands.get(1))) {
@@ -7636,6 +7639,9 @@ public final class EGraphNode {
         }
 
         private void preserveSnapshot(EGraphNode node) {
+            // Materialize the single-node interface before cached intersections
+            // become authoritative for a multi-node e-class.
+            ensureSlots();
             node.eClass = this;
             nodes.add(node);
         }

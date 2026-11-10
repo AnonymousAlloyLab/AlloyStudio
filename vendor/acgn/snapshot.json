@@ -876,7 +876,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/UnusedBindingDescopeTest.java",
-      "sha256": "a5ee7ec9c79240ce03d86aae4c1396116c575e23662a44fbbfa935f54ed5e168"
+      "sha256": "29f88c4ae4a2578f1c9adc052a17141b12f1ef37be975578ef72b7656e7e4de2"
     },
     {
       "path": "src/is/fivefivefive/CanDis/UnusedDeclarationCompletionTest.java",
@@ -1036,7 +1036,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-      "sha256": "46961edea915f61e7899735afa4c0da910c1a5b06211a231ecb02cc8f46f6187"
+      "sha256": "871bb5d4468ef60aa2db96c256e96a5a44ea3cbc63f6e7653805b84eeb8ee6b2"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastChainGeometry.java",
@@ -2328,8 +2328,15 @@
     {
       "id": "bottom-up-unused-binding-normalization",
       "description": "Port reviewed shared Boolean binder normalization and actual typed source-slot transport; retain AlloyStudio source origins and work budgets. Includes both-direction native replay, invalid evidence and compiled Lean controls. Temporal liveness remains conservative; no full corpus parity claim.",
-      "upstreamIntegratedCommit": "ef46feaeaa22d9c12475cde38159fbf65021c748",
-      "reviewedCandidateManifestSha256": "cf74d01ddd41ce2e1ccbb299948eb366ea512683be723980da8f2de7c0c48992",
+      "upstreamIntegratedCommit": "8579d93f514d5f957729a6aa1a08ade67268d8fd",
+      "reviewedCandidateManifestSha256": "0768f56ff73d9e646f88d3582686275326b1dbb3da6e5d0ffb45409c159a12e9",
+      "originalUpstreamIntegratedCommit": "ef46feaeaa22d9c12475cde38159fbf65021c748",
+      "originalReviewedCandidateManifestSha256": "cf74d01ddd41ce2e1ccbb299948eb366ea512683be723980da8f2de7c0c48992",
+      "correctiveIntegration": "Initialize exposed-slot interfaces before snapshot insertion; dispatch reflexive comparison only for supported relation operators. Full reference-pool and both-path typed replay controls retained.",
+      "boundedSourceModelReports": {
+        "fourth": "8274a21d1bfbcbc8945f90beb6a4002b3ea7fd68c111a65ed418b1aef56b1a10",
+        "fifth": "b6be69c1acf3231073a511f614f98d09e0238f913a7eee8ff791448885848df0"
+      },
       "files": [
         {
           "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",

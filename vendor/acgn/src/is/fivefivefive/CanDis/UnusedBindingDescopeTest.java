@@ -62,7 +62,30 @@ public final class UnusedBindingDescopeTest {
         }
     }
     public static void main(String[] args) throws Exception {
+        String context = "sig Person { Tutors:set Person, Teaches:set Class } sig Group {} "
+                + "sig Class { Groups:Person -> Group } sig Teacher in Person {} sig Student in Person {} ";
+        String nested = "all p:Person | not(not p in Student and not p in Teacher)";
+        var negated = prepare(context + "pred p {" + nested + "}", "p");
+        var disjunction = prepare(context + "pred p {all p:Person | p in Student or p in Teacher}", "p");
+        check(slots(negated)==1, "nested negation retains its used typed slot");
+        var certifiedNegated = CanonicalAlloyPipeline.prepare(negated);
+        var certifiedDisjunction = CanonicalAlloyPipeline.prepare(disjunction);
+        for (boolean reverse : List.of(false,true)) {
+            var left = reverse ? disjunction : negated;
+            var right = reverse ? negated : disjunction;
+            var fast = CanonicalRepairTraces.fast(left,right);
+            var cert = CanonicalRepairTraces.certified(
+                    reverse ? certifiedDisjunction : certifiedNegated,
+                    reverse ? certifiedNegated : certifiedDisjunction);
+            check(fast.replay(fast.json())==0, "nested negation Fast equivalence");
+            check(cert.replay(cert.json())==0, "nested negation certified equivalence");
+            check(NativeOperationComparison.compare(left,right,fast,cert).status()
+                    == NativeOperationComparison.Status.MATCHED, "nested negation typed correspondence");
+            tamper(fast); tamper(cert);
+        }
         equivalent("all x,y:A | x in x.r", "all x:A | x in x.r", 1);
+        equivalent("all x,y:A | x in y.r and x not in y.r.r implies some z:A | x in y.r.r.r",
+                "all x,y:A | x in y.r and x not in y.r.r implies (some A and x in y.r.r.r)", 2);
         equivalent("all y,x:A | x in x.r", "all x:A | x in x.r", 1);
         equivalent("some x,y,z:A | y in y.r", "some y:A | y in y.r", 1);
         equivalent("no x,y:A | x in x.r", "no x:A | x in x.r", 1);

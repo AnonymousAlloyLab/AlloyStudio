@@ -141,6 +141,8 @@ def compile_engine(root, *, output=None, compiler='javac'):
         if report.get('status') != 'PASS':
             raise BuildError('Bundled Java dependencies are missing, changed or unsafe. Restore vendor/acgn/lib and vendor/acgn/snapshot.json from the complete distribution.')
         entries = [root / 'engine/src/live' / name for name in ENTRY_POINTS]
+        # The sealed hierarchy also names a package-private class in this source.
+        entries.append(root / 'vendor/acgn/src/is/fivefivefive/CanDis/theory/EqualityCertificates.java')
         if any(not path.is_file() or _linked(path) for path in entries):
             raise BuildError('Required Java engine sources are missing or unsafe. Restore the complete source checkout.')
         output.parent.mkdir(parents=True, exist_ok=True)

@@ -56,7 +56,9 @@ class EngineCorpusTests(unittest.TestCase):
             raise AssertionError('Build the actual JVM engine before running closure tests')
         cls.records = json.loads((ROOT / 'exercises/catalogue.json').read_text())['exercises']
         tasks = [(record, self_match) for record in cls.records for self_match in (False, True)]
-        with ThreadPoolExecutor(max_workers=4) as pool:
+        # Bound cold-JVM contention on small CI runners while retaining the
+        # unchanged 8s analysis allowance and strict complete-result checks.
+        with ThreadPoolExecutor(max_workers=2) as pool:
             cls.results = list(pool.map(lambda args: case(*args), tasks))
 
     def assert_valid_feedback(self, result):

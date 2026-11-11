@@ -308,21 +308,23 @@ each JAR's SHA-256 against `backend/vendor/acgn/snapshot.json`, checks the
 compiled entry classes, and runs 500 engine checks in a fresh JVM. The engine
 uses an explicit classpath built from these files and ignores ambient Java
 classpath/option settings. The check needs no compiler, download, network
-connection, credential, or original ACGN checkout. Retain all seven files under
+connection, credential, or original ACGN checkout. Retain all eight files under
 `backend/vendor/acgn/lib`:
 
 | File | Contents |
 | --- | --- |
-| `AlloyASG-Release.jar` | Compiled AlloyASG classes and bundled third-party classes. |
+| `AlloyASG-Release.jar` | AlloyASG classes without bundled third-party duplicates. |
 | `AlloyASG.jar` | Source-only archive preserved from the framework snapshot. |
 | `AlloyParser.jar` | Parser AST classes. |
 | `alloy.jar` | Alloy parser and runtime classes. |
-| `commons-cli-1.4.jar` | Command-line parsing dependency. |
+| `commons-cli-1.11.0.jar` | Command-line parsing dependency. |
 | `json-java.jar` | JSON dependency. |
-| `slf4j-simple-1.7.36.jar` | Logging implementation. |
+| `slf4j-api-2.0.20.jar` | Logging API. |
+| `slf4j-simple-2.0.20.jar` | Logging implementation. |
 
-The release JAR contains duplicate classes from the other compiled JARs, and
-`AlloyASG.jar` contains source files rather than `.class` files. A successful
+The updated AlloyASG release JAR excludes third-party duplicates;
+`AlloyASG.jar` contains source files rather than `.class` files. The two parser
+source overlays compile ahead of the JARs for Alloy 6.2 compatibility. A successful
 single repair request therefore cannot prove that every declared dependency was
 copied. The inventory/hash checks reject a missing, changed, or extra JAR before
 the JVM smoke test. Copy the entire private `backend` directory from the ZIP;
@@ -725,7 +727,7 @@ path generated from `-RuntimeRoot`. It does not select another user's config.
 & "$Bundle\deploy\iis\Test-IisDeployment.ps1" -PublicUrl $PublicUrl -RuntimeRoot $RuntimeRoot -CheckLuna
 ```
 
-The script first records all seven dependency filenames, expected/actual SHA-256
+The script first records all eight dependency filenames, expected/actual SHA-256
 hashes, compiled-class results, and the fresh JVM's 500-check result. Those
 details remain in `runtime_dependencies` even when a dependency failure prevents
 HTTP tests. It then runs through IIS, checks the scheduled task's identity, loopback
@@ -952,7 +954,7 @@ counts; run `Test-IisDeployment.ps1` for the full deployment acceptance checks.
 | IIS 502.3 | Task state, private `backend.log`, the Python/Java paths, port 8080, and ARR proxy timeout. |
 | API POST returns 403 | Exact public scheme, hostname and port in `-PublicUrl`; re-register after changing bindings. |
 | Java analysis unavailable | Java 17+ runtime, LOCAL SERVICE read/execute access, and packaged classes/JARs. |
-| Missing/changed dependency or Java packages not found | Run `runtime_dependencies.py` with `--java`; restore all seven JARs from the same distribution instead of relying on duplicate classes in the release JAR. A source build also requires the complete `vendor/acgn/lib` directory. |
+| Missing/changed dependency or Java packages not found | Run `runtime_dependencies.py` with `--java`; restore all eight JARs from the same distribution instead of relying on duplicate classes in the release JAR. A source build also requires the complete `vendor/acgn/lib` directory. |
 | Task fails after boot | Machine-wide runtime paths and task-account policy; inspect Task Scheduler history. |
 | Luna is disabled/unavailable | Install with `-EnableLuna`, check the private `openai.local.json` values and ACLs, restart after adding/removing that config, and check outbound HTTPS/account access. The masked key setup is available when the config is absent. |
 | `/alloy/` assets or API fail | Use an IIS application and its trailing-slash URL; inspect inherited rewrite/authentication rules. |

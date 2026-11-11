@@ -374,6 +374,7 @@ public final class CanonicalMemoryAttribution {
     }
 
     private static int astSize(Node node) {
+        node = AlloyUtil.unwrapAst(node);
         if (node == null) return 0;
         int size = 1;
         if (node.getChildren() != null) {

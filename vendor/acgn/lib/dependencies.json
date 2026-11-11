@@ -1,0 +1,39 @@
+{
+  "AlloyASG-Release.jar": {
+    "sha256": "fe672d7e54b75ce2e68fd512a3e0aa11f58cd8694b6b02b8da9606958a4847c4",
+    "source": "repository-local ASG, dependency-free extraction"
+  },
+  "AlloyASG.jar": {
+    "sha256": "5adc247bae551739bb61db848eb8ba6ee3292300f126e2b286c3a298a22c9dc6",
+    "source": "repository-local adapter"
+  },
+  "AlloyParser.jar": {
+    "sha256": "be040bcd26ddcf042bb629f9c2a8c56e2f8bca0c829281c5cc0d07a047474fe3",
+    "source": "repository-local adapter"
+  },
+  "alloy.jar": {
+    "sha256": "8a8746b89d95f28762903c9acbd2bee8aca5014fe49a522b7184ba32ffcc5b58",
+    "upstreamSha256": "6037cbeee0e8423c1c468447ed10f5fcf2f2743a2ffc39cb1c81f2905c0fdb9d",
+    "url": "https://repo.maven.apache.org/maven2/org/alloytools/org.alloytools.alloy.dist/6.2.0/org.alloytools.alloy.dist-6.2.0.jar"
+  },
+  "commons-cli-1.11.0.jar": {
+    "sha256": "8f7f8605d68e15bf32db61ec94eac6fdafc51b1bdbe1e0e0802b57d23f387792",
+    "upstreamSha256": "8f7f8605d68e15bf32db61ec94eac6fdafc51b1bdbe1e0e0802b57d23f387792",
+    "url": "https://repo.maven.apache.org/maven2/commons-cli/commons-cli/1.11.0/commons-cli-1.11.0.jar"
+  },
+  "json-java.jar": {
+    "sha256": "7dd2de1533e766e2b6c07d8194da85145ad313a167a4760050f5c9b6839604fe",
+    "upstreamSha256": "7dd2de1533e766e2b6c07d8194da85145ad313a167a4760050f5c9b6839604fe",
+    "url": "https://repo.maven.apache.org/maven2/org/json/json/20260814/json-20260814.jar"
+  },
+  "slf4j-api-2.0.20.jar": {
+    "sha256": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439",
+    "upstreamSha256": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439",
+    "url": "https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar"
+  },
+  "slf4j-simple-2.0.20.jar": {
+    "sha256": "8e701404786a4f87219d39d4853c86dfe4e86ae99376a39749df6c08e75022e0",
+    "upstreamSha256": "8e701404786a4f87219d39d4853c86dfe4e86ae99376a39749df6c08e75022e0",
+    "url": "https://repo.maven.apache.org/maven2/org/slf4j/slf4j-simple/2.0.20/slf4j-simple-2.0.20.jar"
+  }
+}

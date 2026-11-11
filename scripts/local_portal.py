@@ -128,7 +128,8 @@ def setup(root, *, source_root=None, bundle=None, java_home=None, java=None):
                str(root / 'engine/src/live/BehaviorFeedback.java'),
                str(root / 'engine/src/live/EngineWorker.java'),
                str(root / 'engine/src/live/ExerciseValidator.java'),
-               str(root / 'engine/src/live/UploadInspector.java')]
+               str(root / 'engine/src/live/UploadInspector.java'),
+               str(root / 'vendor/acgn/src/is/fivefivefive/CanDis/theory/EqualityCertificates.java')]
     print('Building the Java engine...', flush=True)
     try:
         completed = subprocess.run(command, cwd=root, env=clean_environment(),

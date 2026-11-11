@@ -138,9 +138,9 @@ public final class CanonicalBacktranslationEquivalenceTest {
     private static boolean satisfiable(CompModule module, String expression, int scope) throws Exception {
         A4Reporter reporter = reporter();
         Expr expr = CompUtil.parseOneExpression_fromString(module, expression);
-        Command command = new Command(true, scope, scope, scope, expr);
+        Command command = new Command(true, scope, scope, scope, null, expr);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         A4Solution solution = TranslateAlloyToKodkod.execute_command(reporter, module.getAllReachableSigs(), command, options);
         return solution != null && solution.satisfiable();
     }

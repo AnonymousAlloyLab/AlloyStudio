@@ -3,10 +3,11 @@
 from __future__ import annotations
 import argparse
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 import gzip
 import hashlib
 import json
+import math
 from pathlib import Path
 import sys
 import threading
@@ -14,7 +15,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from benchmarks.alloy4fun.live.adapter import Worker, metrics
+from benchmarks.alloy4fun.live.adapter import Worker, metrics, bounded_results
 
 
 def read_jsonl(path):
@@ -78,6 +79,8 @@ def main():
     parser.add_argument('--output', type=Path, default=ROOT / 'build/benchmarks/alloy4fun/live')
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--timeout', type=float, default=60)
+    parser.add_argument('--heap', choices=('512m', '1g', '2g'), default='512m')
+    parser.add_argument('--initial-heap', choices=('512m', '1g', '2g'), default=None)
     parser.add_argument('--limit', type=int, default=0)
     parser.add_argument('--resume', action='store_true')
     args = parser.parse_args()
@@ -95,13 +98,19 @@ def main():
         cases = sorted(cases, key=lambda c: hashlib.sha256(c['case_id'].encode()).digest())[:args.limit]
     args.output.mkdir(parents=True, exist_ok=True)
     manifest = {'tool': 'live-canonical', 'cases': len(cases), 'workers': args.workers,
-                'timeout_seconds': args.timeout, 'limit': args.limit, 'heap': '512m',
+                'timeout_seconds': args.timeout, 'limit': args.limit, 'heap': args.heap,
+                'initial_heap': args.initial_heap,
+                'max_pending_cases': args.workers * 2,
                 'folds_sha256': sha(args.folds), 'cohort_sha256': sha(args.data / 'cohort.json'),
                 'payloads_sha256': sha(args.data / 'payloads.jsonl'),
                 'runtime_hashes': runtime_hashes(),
                 'scratch_policy': 'private per-JVM directories under ALLOY_BENCHMARK_TMP_ROOT or build/benchmarks/tmp; parent cleanup after exit/kill',
                 'recycle_after_requests': 256,
-                'profile': 'five_fold_student_branch_crossfit_warm_jvm_no_result_cache'}
+                'parser_source_policy': 'request-local in-memory source map; no per-reference source files',
+                'profile': 'five_fold_student_branch_crossfit_warm_jvm_no_result_cache',
+                'acgn_snapshot_commit': json.loads((ROOT / 'vendor/acgn/snapshot.json').read_text())['commit'],
+                'ast_view_version': 'acgn-semantic-ast-noop-body-erasure-v1',
+                'feedback_work_millis': min(60000, max(1, math.ceil(args.timeout * 1000)))}
     manifest_path = args.output / 'manifest.json'
     if manifest_path.exists():
         if not args.resume or json.loads(manifest_path.read_text()) != manifest:
@@ -130,7 +139,7 @@ def main():
         if case['extraction_status'] != 'ok':
             return {**metadata, **metrics({'status': 'unsupported'}, 0)}, {}
         if not hasattr(local, 'worker'):
-            local.worker = Worker(args.timeout)
+            local.worker = Worker(args.timeout, heap=args.heap, initial_heap=args.initial_heap)
             with lock:
                 workers.append(local.worker)
         references = pools[(*pool_key(case), folds[case['model_id']])]
@@ -148,9 +157,8 @@ def main():
         with results_path.open('a') as output, \
              gzip.open(args.output / 'responses.jsonl.gz', 'at') as responses, \
              ThreadPoolExecutor(max_workers=args.workers) as executor:
-            futures = {executor.submit(evaluate, case): case['case_id'] for case in pending}
-            for future in as_completed(futures):
-                row, response = future.result()
+            for row, response in bounded_results(executor, evaluate, pending,
+                                                 max_pending=args.workers * 2):
                 output.write(json.dumps(row, sort_keys=True) + '\n')
                 responses.write(json.dumps({'case_id': row['case_id'], 'response': response}) + '\n')
                 output.flush()
@@ -164,6 +172,8 @@ def main():
     report = {'tool': 'live-canonical', 'cases': len(cases), 'completed': completed,
               'preparation_seconds': prepared_seconds, 'run_wall_seconds': time.perf_counter() - run_start,
               'workers': args.workers, 'timeout_seconds': args.timeout,
+              'heap': args.heap, 'initial_heap': args.initial_heap,
+              'max_pending_cases': args.workers * 2,
               'transport': 'Sequential JSONL JVM workers invoking unmodified LiveFeedback.evaluate; no result or parsed-reference cache',
               'folds_sha256': hashlib.sha256(args.folds.read_bytes()).hexdigest(),
               'cohort_sha256': hashlib.sha256((args.data / 'cohort.json').read_bytes()).hexdigest()}

@@ -103,7 +103,7 @@ public final class CapabilitySoundnessCheck {
             result.temporal = CompUtil.isTemporalModel(module.getAllReachableSigs(), prepared);
             result.temporalModeExposed = prepared != target;
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
             A4Solution solution = TranslateAlloyToKodkod.execute_command(
                     new A4Reporter(), module.getAllReachableSigs(), prepared, options);
             if (solution == null) throw new IllegalStateException("Solver returned no result");

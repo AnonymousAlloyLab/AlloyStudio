@@ -101,11 +101,33 @@ public final class TheoryAlloyAdapter {
     public static Result adapt(
             List<NormalForm> normalForms,
             SemanticProfile semanticProfile) {
-        return new Builder(
-                normalForms,
-                semanticProfile,
-                NoOpCertificateTraceSink.instance(),
-                null).build();
+        try (var verification = CertificateVerificationScope.open()) {
+            return new Builder(
+                    normalForms,
+                    semanticProfile,
+                    NoOpCertificateTraceSink.instance(),
+                    null).build();
+        }
+    }
+
+    /** Prefix metadata only, not a semantic artifact or a certified repair view.
+     * Callers must separately validate the actual source/occurrence mapping. */
+    public static PrefixBinderPlan prefixBinderPlan(NormalForm source) {
+        Objects.requireNonNull(source, "source");
+        if (!source.isFrozenForCertification()) {
+            throw new IllegalArgumentException("A prefix plan requires a frozen source");
+        }
+        BinderPlan plan = Builder.binderPlan(
+                source.getMatrixQuantiVars(), TypedSlotContext.empty());
+        return new PrefixBinderPlan(plan.descriptor, plan.sourceToCoordinate);
+    }
+
+    public record PrefixBinderPlan(
+            BinderBlockDescriptor descriptor, List<Integer> sourceToCoordinate) {
+        public PrefixBinderPlan {
+            Objects.requireNonNull(descriptor, "descriptor");
+            sourceToCoordinate = List.copyOf(sourceToCoordinate);
+        }
     }
 
     /** Exact proof-retaining path used only by Phase J export. */
@@ -126,11 +148,13 @@ public final class TheoryAlloyAdapter {
             SemanticProfile semanticProfile,
             RecordingCertificateTraceSink sink,
             CertificateProvenance provenance) {
-        return new Builder(
-                normalForms,
-                semanticProfile,
-                Objects.requireNonNull(sink, "sink"),
-                Objects.requireNonNull(provenance, "provenance")).build();
+        try (var verification = CertificateVerificationScope.open()) {
+            return new Builder(
+                    normalForms,
+                    semanticProfile,
+                    Objects.requireNonNull(sink, "sink"),
+                    Objects.requireNonNull(provenance, "provenance")).build();
+        }
     }
 
     /** Immutable bridge tying one mutable Fast Rewrite source occurrence to evidence. */
@@ -750,6 +774,7 @@ public final class TheoryAlloyAdapter {
         private final CertificateProvenance provenance;
         private final SemanticProfile semanticProfile;
         private final Map<InvocationKey, TypedInvocation> memo = new HashMap<>();
+        private final Map<OnePort, FlatOperandExposure> flatExposures = new HashMap<>();
         private final Map<RelationalCoercionKey, TypedInvocation> relationalCoercions =
                 new HashMap<>();
         private final Map<String, List<ContainerLawDeclaration>> certifiedContainerLaws =
@@ -760,6 +785,7 @@ public final class TheoryAlloyAdapter {
                 new ArrayList<>();
         private final List<DependentChainCertificate> dependentChainConstructions =
                 new ArrayList<>();
+        private final List<GuardedJoinCertificate> guardedJoinConstructions = new ArrayList<>();
         private final List<CallOccurrenceCertificate> callOccurrenceCertificates =
                 new ArrayList<>();
         private final Map<Long, CallOccurrenceCertificate> callOccurrencesById =
@@ -973,6 +999,7 @@ public final class TheoryAlloyAdapter {
                     containerConstructions,
                     dependentChainConstructions,
                     callOccurrenceCertificates,
+                    guardedJoinConstructions,
                     constructionSources.build(),
                     semanticProfile);
             CertificateExportSession exportSession = recordingSink == null
@@ -1734,6 +1761,9 @@ public final class TheoryAlloyAdapter {
                         new HashSet<>());
             } catch (UnsupportedDependentChain
                     | DependentChainTheory.UnsupportedFlattening exception) {
+                if (kind == DependentChainKind.JOIN) {
+                    return constructGuardedJoin(source, slotNames, context, bindings, temporalReferences);
+                }
                 return null;
             }
             requireDependentResultProof(source, application);
@@ -1768,6 +1798,76 @@ public final class TheoryAlloyAdapter {
                     construction, graph.coherentWitnessFamily());
             return OnePort.invocation(
                     context, finishInsertion(context, insertion));
+        }
+
+        private OnePort constructGuardedJoin(EGraphNode source, Map<String, String> names,
+                TypedSlotContext context, Map<String, TypedSlot> bindings,
+                Map<String, TemporalReferencePlan> temporalReferences) {
+            GuardedJoinTree tree, normalized;
+            try {
+                tree = guardedJoinTree(source, names, context, bindings,
+                        temporalReferences, new int[]{127}, 0);
+                normalized = GuardedJoinCertificate.normalized(tree);
+            } catch (IllegalArgumentException unsupported) {
+                // This optional, single-product slice cannot authorize any
+                // change when a local type, boundary, or finite budget fails.
+                return null;
+            }
+            GuardedJoinNodeCertificate realization = realizeGuardedJoin(normalized);
+            GuardedJoinCertificate certificate = GuardedJoinCertificate.create(source,
+                    sourceOccurrencePaths.get(source), tree, semanticProfile, realization);
+            constructionSources.recordGuardedJoin(certificate.source(), certificate.sourceOccurrenceCommitment());
+            guardedJoinConstructions.add(certificate);
+            ensureQuiescent();
+            CertifiedInsertionResult inserted = graph.insertNodeConstructed(certificate, graph.coherentWitnessFamily());
+            return OnePort.invocation(context, finishInsertion(context, inserted));
+        }
+
+        private GuardedJoinNodeCertificate realizeGuardedJoin(GuardedJoinTree tree) {
+            List<GuardedJoinNodeCertificate.Child> children = new ArrayList<>();
+            for (GuardedJoinTree operand : tree.presentationOperands()) {
+                if (operand.isLeaf()) continue;
+                GuardedJoinNodeCertificate child = realizeGuardedJoin(operand);
+                ensureQuiescent();
+                CertifiedInsertionResult inserted = graph.insertNodeConstructed(child, graph.coherentWitnessFamily());
+                TypedInvocation returned = finishInsertion(tree.context(), inserted);
+                TypedFindResult found = graph.findWithProvenance(inserted.returnedInvocation());
+                TypedEqualityCertificate proof = EqualityCertificates.transitive(
+                        inserted.sourceToReturnedInvocation(), found.parentCertificate());
+                if (!found.leaderInvocation().callerContext().equals(tree.context()))
+                    proof = EqualityCertificates.rename(proof, TypedEmbedding.inclusion(
+                            found.leaderInvocation().callerContext(), tree.context()));
+                children.add(new GuardedJoinNodeCertificate.Child(child,
+                        OnePort.invocation(tree.context(), returned), proof));
+            }
+            return new GuardedJoinNodeCertificate(tree, children, semanticProfile);
+        }
+
+        private GuardedJoinTree guardedJoinTree(EGraphNode source, Map<String, String> names,
+                TypedSlotContext context, Map<String, TypedSlot> bindings,
+                Map<String, TemporalReferencePlan> temporalReferences, int[] budget, int depth) {
+            if (--budget[0] < 0 || depth > 64)
+                throw new IllegalArgumentException("Guarded JOIN source budget exceeded");
+            DependentTypeDag exact = dependentTypeDagForSource(source, new HashSet<>());
+            if (exact.alternatives().size() != 1)
+                throw new IllegalArgumentException("Guarded JOIN source is not one exact product");
+            if (source.getOpcode() != Opcode.JOIN) {
+                OnePort port = buildOperand(source, names, context, bindings, temporalReferences);
+                return GuardedJoinTree.leaf(new DependentChainLeaf(port, exact, source.getExactAlloyType()));
+            }
+            if (source.getChildClasses().size() != 2)
+                throw new IllegalArgumentException("Guarded JOIN source is not binary");
+            List<GuardedJoinTree> children = new ArrayList<>();
+            for (EClassRef child : source.getChildClasses()) {
+                EClassRef ref = child.canonical();
+                children.add(guardedJoinTree(ref.getEClass().getRepresentative(),
+                        composeSlotNames(ref.getSlotMap(), names), context, bindings,
+                        temporalReferences, budget, depth+1));
+            }
+            GuardedJoinTree tree = GuardedJoinTree.join(children.get(0), children.get(1));
+            if (!tree.type().equals(exact))
+                throw new IllegalArgumentException("Guarded JOIN result differs from parser type");
+            return tree;
         }
 
         private DependentChainApplication dependentChainApplication(
@@ -2012,10 +2112,16 @@ public final class TheoryAlloyAdapter {
                     new HashSet<>());
             constructionSources.recordFlat(application);
             CertifiedFlatConstruction construction = TypedENode.flatConstructCertified(
-                    application, this::insert, semanticProfile);
+                    application, this::insert, semanticProfile,
+                    source.getOpcode() == Opcode.AND || source.getOpcode() == Opcode.OR
+                            ? flatExposures : Map.of());
             FlatConstructionCertificate certificate = construction.certificate();
             flatConstructions.add(certificate);
-            recordCertifiedSetPartition(source, certificate.containerTrace());
+            // Exposed occurrences have different coordinates from the original
+            // source children; never mislabel their trace as a source partition.
+            if (!certificate.hasExposures()) {
+                recordCertifiedSetPartition(source, certificate.containerTrace());
+            }
             if (construction.collapsedToSingleton()) {
                 return construction.singleton();
             }
@@ -2328,6 +2434,7 @@ public final class TheoryAlloyAdapter {
                 Map<String, TypedSlot> bindings,
                 Map<String, TemporalReferencePlan> temporalReferences) {
             List<LocalCoordinate> locals = new ArrayList<>();
+            List<OnePort> explicitDomains = new ArrayList<>();
             int nextDisjointnessClass = 1;
             for (EClassRef childRef : source.getChildClasses()) {
                 EClassRef canonical = childRef.canonical();
@@ -2345,6 +2452,18 @@ public final class TheoryAlloyAdapter {
                 EGraphNode domain = Objects.requireNonNull(
                         declarationChildren.get(0), "local declaration domain");
                 StructuralKey domainKey = domainKey(domain, declarationNames, locals);
+                EClassRef domainRef = child.getChildClasses().get(0);
+                if (ambientDomainReferences(domainRef, declarationNames, context, bindings,
+                        locals, new int[] {4096}, 0) > 0) {
+                    // The descriptor indexes an actual typed operand. Never erase
+                    // an ambient dependency into a generated-name-free annotation.
+                    OnePort operand = buildChildOperand(domainRef, declarationNames,
+                            context, bindings, temporalReferences);
+                    domainKey = StructuralKey.of("alloy-local-domain-port",
+                            List.of(Integer.toString(explicitDomains.size())),
+                            List.of(TheoryKeys.type(operand.schema().type())));
+                    explicitDomains.add(operand);
+                }
                 String multiplicity = domainMultiplicity(domain);
                 int disjointnessClass = isDisjointDecl(child.getOpcode())
                         ? nextDisjointnessClass++
@@ -2409,6 +2528,35 @@ public final class TheoryAlloyAdapter {
             activeLocalBinders.addLast(frame);
             TypedInvocation body;
             try {
+                // Construct original domain occurrences too. Descriptor syntax
+                // retains local dependencies, but is not a JOIN certificate.
+                // Each domain sees only ambient and earlier declaration slots;
+                // a grouped declaration's variables enter together afterwards.
+                // Existing source commitments, result proofs and occurrence
+                // bindings authorize projection of these exact subtrees.
+                TypedSlotContext domainContext = context;
+                Map<String, TypedSlot> domainBindings = new LinkedHashMap<>(bindings);
+                int declared = 0;
+                for (EClassRef childRef : source.getChildClasses()) {
+                    EClassRef canonical = childRef.canonical();
+                    EGraphNode declaration = canonical.getEClass().getRepresentative();
+                    if (!isRelDecl(declaration.getOpcode())) continue;
+                    Map<String, String> declarationNames = composeSlotNames(
+                            canonical.getSlotMap(), outerNames);
+                    buildChildOperand(declaration.getChildClasses().get(0), declarationNames,
+                            domainContext, domainBindings, temporalReferences);
+                    for (int index = 1; index < declaration.getChildren().size(); index++) {
+                        EGraphNode variable = declaration.getChildren().get(index);
+                        if (variable.getOpcode() != Opcode.VARIABLE) continue;
+                        LocalCoordinate local = locals.get(declared++);
+                        TypedSlot slot = bodyBindings.get(local.name);
+                        if (slot == null || !slot.type().equals(local.type)) {
+                            throw new IllegalStateException("Local domain prefix lost its typed owner slot");
+                        }
+                        domainBindings.put(local.name, slot);
+                        domainContext = domainContext.plus(slot);
+                    }
+                }
                 List<OnePort> bodies = new ArrayList<>();
                 for (EClassRef childRef : source.getChildClasses()) {
                     EClassRef canonical = childRef.canonical();
@@ -2446,19 +2594,73 @@ public final class TheoryAlloyAdapter {
                     context,
                     plan.occurrence,
                     OnePort.invocation(bodyContext, body));
+            List<PortSchema> schemas = new ArrayList<>();
+            List<PortValue> ports = new ArrayList<>();
+            for (OnePort domain : explicitDomains) {
+                schemas.add(domain.schema());
+                ports.add(domain);
+            }
+            schemas.add(schema);
+            ports.add(block);
             OperatorDeclaration declaration = OperatorDeclaration.monomorphic(
-                    "ALLOY/LOCAL-BIND/" + source.getOpcode(),
-                    Collections.singletonList(schema),
+                    (explicitDomains.isEmpty() ? "ALLOY/LOCAL-BIND/" : "ALLOY/LOCAL-BIND-DOMAINS/")
+                            + source.getOpcode(),
+                    schemas,
                     outputType(source),
                     Collections.emptyMap(),
                     null);
             return insert(TypedENode.construct(
                     declaration.instantiateMonomorphic(),
                     context,
-                    Collections.singletonList(block)));
+                    ports));
         }
 
-        private BinderPlan binderPlan(List<QuantiVar> variables, TypedSlotContext ambient) {
+        // -1 is outside this slice; 0 is closed; positive means ambient-dependent.
+        // Follow invocation maps exactly as buildChildOperand does, and exclude
+        // current-block dependencies, binders, temporal operators and opaque calls.
+        private int ambientDomainReferences(EClassRef reference, Map<String, String> outerNames,
+                TypedSlotContext context, Map<String, TypedSlot> bindings,
+                List<LocalCoordinate> preceding, int[] budget, int depth) {
+            if (depth > 128 || --budget[0] < 0) {
+                throw new IllegalStateException("Local domain operand admission budget exceeded");
+            }
+            EClassRef canonical = reference.canonical();
+            EGraphNode node = canonical.getEClass().getRepresentative();
+            Map<String, String> names = composeSlotNames(canonical.getSlotMap(), outerNames);
+            if (node.getExactAlloyType() == null
+                    || node.getExactAlloyType().kind() != ExactAlloyType.Kind.RELATION
+                    || isLocalBinder(node)) return -1;
+            if (node.getOpcode() == Opcode.VARIABLE) {
+                String local = firstNonempty(node.getAlphaName(), node.getSourceName());
+                String resolved = names.getOrDefault(local, local);
+                for (LocalCoordinate earlier : preceding) {
+                    if (earlier.name.equals(resolved)) return -1;
+                }
+                TypedSlot slot = bindings.get(resolved);
+                // Admission requires the resolved occurrence, not a same-spelled
+                // fallback that could refer to a shadowed ambient declaration.
+                return slot != null && context.contains(slot) && slot.type().equals(bindingType(node)) ? 1 : -1;
+            }
+            switch (node.getOpcode()) {
+                case GLOBALBINDING: case CONSTANT:
+                    return node.getChildClasses().isEmpty() ? 0 : -1;
+                case ONE: case LONE: case SOME: case SETOF: case EXACTLY:
+                case MINUS: case JOIN: case ARROW: case PLUS: case INTERSECT:
+                case TRANSPOSE: case DOMAIN: case RANGE: case CLOSURE: case RCLOSURE: case PLUSPLUS:
+                    break;
+                default:
+                    return -1;
+            }
+            int references = 0;
+            for (EClassRef child : node.getChildClasses()) {
+                int count = ambientDomainReferences(child, names, context, bindings, preceding, budget, depth+1);
+                if (count < 0) return -1;
+                references = Math.addExact(references, count);
+            }
+            return references;
+        }
+
+        private static BinderPlan binderPlan(List<QuantiVar> variables, TypedSlotContext ambient) {
             List<BindingPayload> payloads = new ArrayList<>(variables.size());
             int exchangeClass = -1;
             QuantiVar previous = null;
@@ -2519,7 +2721,7 @@ public final class TheoryAlloyAdapter {
             return binderPlan(variables, payloads, ambient, false);
         }
 
-        private BinderPlan binderPlan(
+        private static BinderPlan binderPlan(
                 List<QuantiVar> variables,
                 List<BindingPayload> payloads,
                 TypedSlotContext ambient,
@@ -2696,7 +2898,22 @@ public final class TheoryAlloyAdapter {
             ensureQuiescent();
             CertifiedInsertionResult insertion = graph.insertNodeConstructed(
                     construction, graph.coherentWitnessFamily());
-            return finishInsertion(callerContext, insertion);
+            TypedInvocation returned = finishInsertion(callerContext, insertion);
+            if (construction.node().ports().get(0) instanceof SetPort
+                    && (construction.node().operator().operator().equals("ALLOY/AND")
+                            || construction.node().operator().operator().equals("ALLOY/OR"))) {
+                TypedFindResult found = graph.findWithProvenance(insertion.returnedInvocation());
+                TypedEqualityCertificate proof = EqualityCertificates.transitive(
+                        insertion.sourceToReturnedInvocation(), found.parentCertificate());
+                if (!found.leaderInvocation().callerContext().equals(callerContext)) {
+                    proof = EqualityCertificates.rename(proof, TypedEmbedding.inclusion(
+                            found.leaderInvocation().callerContext(), callerContext));
+                }
+                OnePort leaf = OnePort.invocation(callerContext, returned);
+                flatExposures.putIfAbsent(leaf, new FlatOperandExposure(
+                        leaf, construction.node(), proof, semanticProfile));
+            }
+            return returned;
         }
 
         private TypedInvocation insert(NodeConstruction construction) {
@@ -2837,6 +3054,11 @@ public final class TheoryAlloyAdapter {
                     ContainerLawCertificate.Law.IDEMPOTENCY));
         }
         return ContainerLawDeclaration.certified(schema, certificates);
+    }
+
+    /** Exact occurrence type validation shared with prefix admission; no graph construction. */
+    public static void requireOccurrenceOutputType(EGraphNode node) {
+        outputType(Objects.requireNonNull(node, "node"));
     }
 
     private static GraphType outputType(EGraphNode node) {

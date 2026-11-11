@@ -117,7 +117,8 @@ class SourceOriginMetadataTests(unittest.TestCase):
         compiled = subprocess.run([compiler, '--release', '17', '-encoding', 'UTF-8',
                                    '-Xprefer:source', '-cp', dependencies,
                                    '-sourcepath', str(ROOT / 'vendor/acgn/src'),
-                                   '-d', str(directory), str(source)],
+                                   '-d', str(directory), str(source),
+                                   str(ROOT / 'vendor/acgn/src/is/fivefivefive/CanDis/theory/EqualityCertificates.java')],
                                   capture_output=True, text=True, timeout=120)
         if compiled.returncode:
             raise AssertionError(compiled.stderr)

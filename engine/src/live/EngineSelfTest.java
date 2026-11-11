@@ -14,9 +14,57 @@ public final class EngineSelfTest {
     private static int checks;
     private static final String ENV = "module fixture\nsig A { r: set A }\n";
 
+    private static void checkNestedNegationReferencePool() {
+        JSONObject request = new JSONObject()
+                .put("studentSource", "sig Person  {\n\tTutors : set Person,\n\tTeaches : set Class\n}\nsig Group {}\n\nsig Class  {\n\tGroups : Person -> Group\n}\n\nsig Teacher in Person  {}\n\nsig Student in Person  {}\n\npred inv4 {\nno Student and no Teacher\n}\n\n\n\n\n\n\n \n \n\n")
+                .put("predicate", "inv4")
+                .put("referencePrefix", "sig Person  {\n\tTutors : set Person,\n\tTeaches : set Class\n}\nsig Group {}\n\nsig Class  {\n\tGroups : Person -> Group\n}\n\nsig Teacher in Person  {}\n\nsig Student in Person  {}\n\npred inv4 {")
+                .put("referenceSuffix", "}\n\n\n\n\n\n\n \n \n\n")
+                .put("referenceBodies", new JSONArray(List.of(
+                        "\nno p:Person | p not in Teacher and p not in Student\n",
+                        "\nPerson = Teacher + Student\n",
+                        "\nPerson in Teacher + Student\n",
+                        "\nall p:Person | p in Student or p in Teacher\n",
+                        "\nno (Person-Student-Teacher)\n",
+                        "\nall p : Person | p in Student or p in Teacher\n",
+                        "\nall p : Person | p in Teacher or p in Student\n",
+                        "\nnot some p : Person | not p in Student and not p in Teacher\n",
+                        "\nall p:Person | not (p not in Student and p not in Teacher)\n",
+                        "\nall p: Person | (p in Teacher) or (p in Student)\n",
+                        "\nall p : Person | (p not in Student implies p in Teacher) and (p not in Teacher implies p in Student)\n",
+                        "\nall x : Person | x not in Student implies x in Teacher\n",
+                        "\nall f : Person | f in (Student + Teacher)\n",
+                        "\nall p : Person | (p in Teacher) or (p in Student)\n",
+                        "\n(all p : Person | p in Student or p in Teacher)\n",
+                        "\nall w : Person | w in Student or w in Teacher\n",
+                        "\nPerson = Student + Teacher\n",
+                        "\nall x : Person | x in Student or x in Teacher\n",
+                        "\nall p : Person | p in (Student + Teacher)\n",
+                        "\nall x: Person | x not in Student implies x in Teacher\n",
+                        "\nall p : Person | (p in Student or p in Teacher)\n",
+                        "\nnot some p:Person | p not in Student and p not in Teacher\n",
+                        "\nall p:Person | p in Teacher or p in Student\n",
+                        "\nall p:Person | p not in Student implies p in Teacher\n",
+                        "\nno p:Person | p not in Student and p not in Teacher\n",
+                        "\nall p : Person | p in Student || p in Teacher\n",
+                        "\nall p: Person | p in Student or p in Teacher\n",
+                        "\nnot some p: Person | p not in Student and p not in Teacher\n",
+                        "\nStudent + Teacher = Person\n",
+                        "\nno p:Person | not p in Teacher and not p in Student\n",
+                        "\nall p : Person | not(not p in Student and not p in Teacher)\n",
+                        "\nnot some p : Person | p not in Student and p not in Teacher\n",
+                        "\nPerson = Student + Teacher\n  \tall x : Person | x in Student or x in Teacher\n",
+                        "\n Person in Student + Teacher\n")));
+        JSONObject result = LiveFeedback.evaluate(request);
+        check(result.getString("status").equals("ok"), "nested-negation full reference pool");
+        check(result.getInt("distance") == 5, "full pool selected distance");
+        check(request.getJSONArray("referenceBodies").length() == 34, "all original references retained");
+    }
+
     public static void main(String[] args) {
         PrintStream report = System.out;
         System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        checkNestedNegationReferencePool();
         JSONObject identical = compare("some A", "some A");
         check(identical.getInt("distance") == 0, "identity distance");
         check(identical.getJSONArray("operations").length() == 0, "identity operations");
@@ -36,8 +84,8 @@ public final class EngineSelfTest {
         check(compare("all x: A | some x.r", "some A")
                 .getJSONObject("operationSummary").getInt("delete") > 0, "delete operations");
         JSONObject temporalFallback = compare("always eventually some A", "eventually some A");
-        check(temporalFallback.getJSONObject("trace").getBoolean("hasAggregates"),
-                "temporal trace discrepancy is explicit");
+        check(!temporalFallback.getJSONObject("trace").getBoolean("hasAggregates"),
+                "native temporal replay provides complete atomic edits");
         String callEnvironment = ENV + "pred p { some A }\npred q { no A }\n";
         JSONObject callFallback = evaluate(callEnvironment + "pred target { p }\n",
                 callEnvironment + "pred target { q }\n");

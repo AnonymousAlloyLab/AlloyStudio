@@ -85,7 +85,7 @@ class WindowsSourceBuildTests(unittest.TestCase):
         self.assertEqual(completed.stderr, '')
         return completed, json.loads(completed.stdout)
 
-    def test_fresh_relocated_source_build_uses_explicit_seven_jar_classpath(self):
+    def test_fresh_relocated_source_build_uses_explicit_bundled_jar_classpath(self):
         output = self.source / 'fresh class output with spaces'
         self.assertFalse(output.exists(), 'This witness must not reuse compiled classes.')
         completed, report = self.preflight()

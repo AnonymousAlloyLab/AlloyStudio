@@ -66,7 +66,15 @@ final class AlloyRewriteSystem {
     }
 
     static Pass rewriteOnce(AlloyTerm input, ArityMode arityMode) {
-        Counter counter = new Counter();
+        return rewriteOnce(input, arityMode, false);
+    }
+
+    static Pass rewriteSlottedOnce(AlloyTerm input) {
+        return rewriteOnce(input, ArityMode.VARIADIC, true);
+    }
+
+    private static Pass rewriteOnce(AlloyTerm input, ArityMode arityMode, boolean slotOrdering) {
+        Counter counter = new Counter(slotOrdering);
         AlloyTerm output = rewriteTree(
                 input, counter, arityMode, Collections.emptyMap());
         return new Pass(output, counter.changes);
@@ -90,7 +98,7 @@ final class AlloyRewriteSystem {
             childChanged |= rewritten != child;
         }
         AlloyTerm current = childChanged ? input.withChildren(rewrittenChildren) : input;
-        AlloyTerm rewritten = rewriteNode(current, arityMode, positiveBindings);
+        AlloyTerm rewritten = rewriteNode(current, arityMode, positiveBindings, counter.slotOrdering);
         if (!rewritten.equals(current)) {
             counter.changes++;
             return rewritten;
@@ -118,7 +126,7 @@ final class AlloyRewriteSystem {
         AlloyTerm current = childChanged
                 ? input.withChildren(rewrittenChildren)
                 : input;
-        AlloyTerm rewritten = rewriteNode(current, arityMode, outerBindings);
+        AlloyTerm rewritten = rewriteNode(current, arityMode, outerBindings, counter.slotOrdering);
         if (!rewritten.equals(current)) {
             counter.changes++;
             return rewritten;
@@ -180,7 +188,8 @@ final class AlloyRewriteSystem {
     private static AlloyTerm rewriteNode(
             AlloyTerm input,
             ArityMode arityMode,
-            Map<String, Boolean> positiveBindings) {
+            Map<String, Boolean> positiveBindings,
+            boolean slotOrdering) {
         String canonicalHead = canonicalHead(input.head());
         AlloyTerm current = canonicalHead.equals(input.head())
                 ? input
@@ -284,7 +293,8 @@ final class AlloyRewriteSystem {
         }
         if (COMMUTATIVE.contains(current.head())) {
             List<AlloyTerm> sorted = new ArrayList<>(current.children());
-            Collections.sort(sorted);
+            if (slotOrdering) SlotCanonicalizer.sortOperands(sorted);
+            else Collections.sort(sorted);
             current = current.withChildren(sorted);
         }
         if (ACI.contains(current.head())) {
@@ -573,7 +583,7 @@ final class AlloyRewriteSystem {
             if (substitutionVisible && renamed.equals(variable)) {
                 return replacement;
             }
-            return renamed.equals(term.atom()) ? term : AlloyTerm.atom("VAR", renamed);
+            return renamed.equals(term.atom()) ? term : term.renameVariable(renamed);
         }
         if (term.children().isEmpty()) {
             return term;
@@ -592,7 +602,7 @@ final class AlloyRewriteSystem {
                     renamed = freshName(usedNames, nextFresh);
                 }
                 localRenames.put(original, renamed);
-                children.add(AlloyTerm.atom("VAR", renamed));
+                children.add(binder.renameVariable(renamed));
                 if (renamed.equals(variable) || original.equals(variable)) {
                     bodyVisible = false;
                 }
@@ -635,7 +645,7 @@ final class AlloyRewriteSystem {
                         renamed = freshName(usedNames, nextFresh);
                     }
                     localRenames.put(original, renamed);
-                    renamedVariables.add(AlloyTerm.atom("VAR", renamed));
+                    renamedVariables.add(declaredVariable.renameVariable(renamed));
                     if (renamed.equals(variable) || original.equals(variable)) {
                         bodyVisible = false;
                     }
@@ -907,5 +917,10 @@ final class AlloyRewriteSystem {
 
     private static final class Counter {
         private int changes;
+        private final boolean slotOrdering;
+
+        private Counter(boolean slotOrdering) {
+            this.slotOrdering = slotOrdering;
+        }
     }
 }

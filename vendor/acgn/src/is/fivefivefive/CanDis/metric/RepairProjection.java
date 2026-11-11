@@ -35,6 +35,9 @@ import is.fivefivefive.CanDis.theory.ContainerLawDeclaration;
 import is.fivefivefive.CanDis.theory.DependentChainCertificate;
 import is.fivefivefive.CanDis.theory.DependentChainKind;
 import is.fivefivefive.CanDis.theory.DependentChainTheory;
+import is.fivefivefive.CanDis.theory.GuardedJoinSourceFiber;
+import is.fivefivefive.CanDis.theory.GuardedJoinTree;
+import is.fivefivefive.CanDis.theory.CertificateVerifier;
 import is.fivefivefive.CanDis.theory.GraphType;
 import is.fivefivefive.CanDis.theory.OnePortSchema;
 import is.fivefivefive.CanDis.theory.PortPath;
@@ -55,7 +58,10 @@ import is.fivefivefive.CanDis.theory.TheoryAlloyAdapter.DependentChainSourceBind
  * scope/container legality obtained from the faithful certified artifact.
  */
 public final class RepairProjection {
-    public static final String VERSION = "faithful-fast-rewrite-repair-projection-v13";
+    public static final String VERSION = "faithful-fast-rewrite-repair-projection-v25-typed-branch-reservation";
+    private static final int MAX_BOOLEAN_FLATTEN_ALTERNATIVES = 4096;
+    private static final long MAX_BOOLEAN_FLATTEN_CHILD_REFERENCES = 1_000_000L;
+    private static final int MAX_PROJECTED_COMPARISON_STEPS = 1_000_000;
 
     private RepairProjection() {
     }
@@ -123,7 +129,7 @@ public final class RepairProjection {
         CertifiedContainers containers = CertifiedContainers.from(
                 artifact, evidence.certifiedSetOperandPartitions());
         CertifiedDependentChains chains = CertifiedDependentChains.from(
-                artifact, dependentChainSourceBindings);
+                artifact, dependentChainSourceBindings, normalForms);
         OriginIndex origins = new OriginIndex(
                 normalForms, phaseDescriptors, phaseSourceCoordinates);
         List<Phase> phases = new ArrayList<>(normalForms.size());
@@ -146,7 +152,9 @@ public final class RepairProjection {
                 canonical.temporalRoot,
                 canonical.phases,
                 artifact.semanticProfile(),
-                evidence.canonicalKey());
+                evidence.canonicalKey(),
+                canonical.sourceOrder.stream().map(index ->
+                        new RepairView.PhaseCoordinate(index, normalForms.get(index))).toList());
     }
 
     static final class Projection {
@@ -154,18 +162,21 @@ public final class RepairProjection {
         final List<Phase> phases;
         final SemanticProfile semanticProfile;
         final StructuralKey producerObservationKey;
+        final List<RepairView.PhaseCoordinate> phaseCoordinates;
 
         private Projection(
                 TemporalNode temporalRoot,
                 List<Phase> phases,
                 SemanticProfile semanticProfile,
-                StructuralKey producerObservationKey) {
+                StructuralKey producerObservationKey,
+                List<RepairView.PhaseCoordinate> phaseCoordinates) {
             this.temporalRoot = Objects.requireNonNull(temporalRoot, "temporalRoot");
             this.phases = List.copyOf(phases);
             this.semanticProfile = Objects.requireNonNull(
                     semanticProfile, "semanticProfile");
             this.producerObservationKey = Objects.requireNonNull(
                     producerObservationKey, "producerObservationKey");
+            this.phaseCoordinates = List.copyOf(phaseCoordinates);
         }
     }
 
@@ -485,7 +496,7 @@ public final class RepairProjection {
                 primary.containerKind(),
                 primary.orderInsensitive(),
                 primary.children(),
-                alternatives);
+                alternatives).withObservationFrom(primary);
     }
 
     private static int permutedCoordinate(
@@ -519,6 +530,23 @@ public final class RepairProjection {
             CertifiedContainers containers,
             CertifiedDependentChains chains,
             boolean mergeLocalDeclarations) {
+        GuardedJoinSourceFiber rotation = chains.rotations.get(source);
+        if (rotation != null) {
+            rotation.requireMatches(source);
+            List<EGraphNode> leaves = new ArrayList<>();
+            collectDependentChainLeaves(source, Opcode.JOIN, leaves,
+                    Collections.newSetFromMap(new IdentityHashMap<>()));
+            List<GuardedJoinTree> proofLeaves = rotation.source().leaves();
+            if (leaves.size() != proofLeaves.size())
+                throw new IllegalStateException("Guarded JOIN occurrence count differs");
+            Map<GuardedJoinTree, Node> projected = new IdentityHashMap<>();
+            for (int index = 0; index < leaves.size(); index++) {
+                projected.put(proofLeaves.get(index), projectNode(leaves.get(index), aliases,
+                        aliasTypes, localAliases, localTypes, localDepth, localBinderDescriptors,
+                        localBinderSourceCoordinates, containers, chains));
+            }
+            return projectGuardedJoin(rotation.target(), projected);
+        }
         DependentChainCertificate dependentChain = chains.certificateFor(source);
         if (dependentChain != null) {
             return projectDependentChain(
@@ -592,9 +620,14 @@ public final class RepairProjection {
         String operator = source.getOpcode().name();
         String payload = repairPayload(source);
         if (source.getOpcode() != Opcode.VARIABLE) {
-            return new Node(
+            Node projected = new Node(
                     operator, payload, repairSemanticPayload(source), null, -1, containerKind,
-                    source.isOrderInsensitive(), children);
+                    source.isOrderInsensitive(), children).withObservation(
+                            isRelDecl(source.getOpcode()) ? null : requireExactResultType(source), List.of(), null);
+            if (source.getOpcode() == Opcode.REF) projected = projected.withSourceOccurrence(source);
+            return (source.getOpcode() == Opcode.AND || source.getOpcode() == Opcode.OR)
+                    && source.hasFlatLicense() && containerKind == ContainerKind.SET
+                    ? flattenProjectedBoolean(projected) : projected;
         }
 
         String variable = firstNonempty(source.getAlphaName(), source.getSourceName());
@@ -604,17 +637,28 @@ public final class RepairProjection {
         }
         if (localVariable != null) {
             return new Node(operator, null, localVariable, -1, containerKind,
-                    source.isOrderInsensitive(), children);
+                    source.isOrderInsensitive(), children).withObservation(
+                            dependentLeafType(source, aliasTypes, localTypes), List.of(), null);
         }
         Integer bindingIndex = aliases.get(variable);
         if (bindingIndex == null && source.getSourceName() != null) {
             bindingIndex = aliases.get(source.getSourceName());
         }
-        return bindingIndex == null
+        return (bindingIndex == null
                 ? new Node(operator, null, variable, -1, containerKind,
                         source.isOrderInsensitive(), children)
                 : new Node(operator, null, variable, bindingIndex, containerKind,
-                        source.isOrderInsensitive(), children);
+                        source.isOrderInsensitive(), children)).withObservation(
+                                dependentLeafType(source, aliasTypes, localTypes), List.of(), null);
+    }
+
+    private static Node projectGuardedJoin(GuardedJoinTree tree, Map<GuardedJoinTree, Node> leaves) {
+        if (tree.isLeaf()) return Objects.requireNonNull(leaves.get(tree), "guarded JOIN leaf occurrence");
+        List<GuardedJoinTree> operands = tree.presentationOperands();
+        List<Node> children = operands.stream().map(child -> projectGuardedJoin(child, leaves)).toList();
+        GraphType type = tree.type().relationType();
+        return new Node("JOIN", null, "identity=;type=" + type, null, -1,
+                ContainerKind.SEQUENCE, false, children).withObservation(type, List.of(), null);
     }
 
     private static Node projectDependentChain(
@@ -667,7 +711,7 @@ public final class RepairProjection {
         }
         return new Node(
                 opcode.name(), null, repairSemanticPayload(source), null, -1,
-                ContainerKind.SEQUENCE, false, children);
+                ContainerKind.SEQUENCE, false, children).withObservation(requireExactResultType(source), List.of(), null);
     }
 
     private static void collectDependentChainLeaves(
@@ -782,10 +826,15 @@ public final class RepairProjection {
                 left.bindingIndex(),
                 left.containerKind(),
                 left.orderInsensitive(),
-                children);
+                children).withObservationFrom(left);
     }
 
     private static boolean sameProjectedNode(Node left, Node right) {
+        return sameProjectedNode(left, right, new int[] { MAX_PROJECTED_COMPARISON_STEPS });
+    }
+
+    private static boolean sameProjectedNode(Node left, Node right, int[] budget) {
+        requireProjectedComparisonStep(budget);
         if (!left.certifiedAlternatives().isEmpty()
                 || !right.certifiedAlternatives().isEmpty()) {
             List<Node> leftAlternatives = left.certifiedAlternatives().isEmpty()
@@ -796,7 +845,7 @@ public final class RepairProjection {
                     : right.certifiedAlternatives();
             for (Node leftAlternative : leftAlternatives) {
                 for (Node rightAlternative : rightAlternatives) {
-                    if (sameProjectedNode(leftAlternative, rightAlternative)) {
+                    if (sameProjectedNode(leftAlternative, rightAlternative, budget)) {
                         return true;
                     }
                 }
@@ -812,13 +861,128 @@ public final class RepairProjection {
                 || left.children().size() != right.children().size()) {
             return false;
         }
+        if (left.orderInsensitive()) {
+            int[] matched = new int[right.children().size()];
+            int[] leftMatches = new int[left.children().size()];
+            java.util.Arrays.fill(matched, -1);
+            java.util.Arrays.fill(leftMatches, -1);
+            for (int index = 0; index < left.children().size(); index++) {
+                if (!matchProjectedChild(index, left.children(), right.children(), matched,
+                        leftMatches, budget)) {
+                    return false;
+                }
+            }
+            return true;
+        }
         for (int index = 0; index < left.children().size(); index++) {
             if (!sameProjectedNode(
-                    left.children().get(index), right.children().get(index))) {
+                    left.children().get(index), right.children().get(index), budget)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean matchProjectedChild(int index, List<Node> left, List<Node> right,
+            int[] matched, int[] leftMatches, int[] budget) {
+        int[] parent = new int[right.size()];
+        java.util.Arrays.fill(parent, -1);
+        boolean[] queued = new boolean[left.size()];
+        java.util.ArrayDeque<Integer> pending = new java.util.ArrayDeque<>();
+        pending.add(index);
+        queued[index] = true;
+        // A perfect matching preserves Bag multiplicity and handles overlapping
+        // certified alternatives without greedy matches or recursive augmenting paths.
+        while (!pending.isEmpty()) {
+            int current = pending.removeFirst();
+            for (int candidate = 0; candidate < right.size(); candidate++) {
+                requireProjectedComparisonStep(budget);
+                if (parent[candidate] >= 0
+                        || !sameProjectedNode(left.get(current), right.get(candidate), budget)) {
+                    continue;
+                }
+                parent[candidate] = current;
+                if (matched[candidate] < 0) {
+                    while (candidate >= 0) {
+                        int owner = parent[candidate];
+                        int previous = leftMatches[owner];
+                        matched[candidate] = owner;
+                        leftMatches[owner] = candidate;
+                        candidate = previous;
+                    }
+                    return true;
+                }
+                if (!queued[matched[candidate]]) {
+                    queued[matched[candidate]] = true;
+                    pending.addLast(matched[candidate]);
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void requireProjectedComparisonStep(int[] budget) {
+        if (budget[0] <= 0) {
+            throw new IllegalStateException("Projected duplicate comparison exceeds its finite step budget");
+        }
+        budget[0]--;
+    }
+
+    private static Node flattenProjectedBoolean(Node source) {
+        if (source.children().stream().noneMatch(child -> canFlattenBooleanChild(source, child))) {
+            return source;
+        }
+        List<List<Node>> alternatives = new ArrayList<>();
+        alternatives.add(new ArrayList<>());
+        for (Node child : source.children()) {
+            if (!canFlattenBooleanChild(source, child)) {
+                requireBooleanFlattenBudget(alternatives.size(), alternatives.stream()
+                        .mapToLong(prefix -> (long) prefix.size() + 1).sum());
+                for (List<Node> prefix : alternatives) prefix.add(child);
+                continue;
+            }
+            List<Node> choices = child.certifiedAlternatives().isEmpty()
+                    ? List.of(child) : child.certifiedAlternatives();
+            long product = Math.multiplyExact((long) alternatives.size(), choices.size());
+            long prefixes = alternatives.stream().mapToLong(List::size).sum();
+            long suffixes = choices.stream().mapToLong(choice -> choice.children().size()).sum();
+            requireBooleanFlattenBudget(product, Math.addExact(
+                    Math.multiplyExact(prefixes, choices.size()),
+                    Math.multiplyExact(suffixes, alternatives.size())));
+            List<List<Node>> next = new ArrayList<>((int) product);
+            for (List<Node> prefix : alternatives) {
+                for (Node choice : choices) {
+                    List<Node> combined = new ArrayList<>(prefix);
+                    combined.addAll(choice.children());
+                    next.add(combined);
+                }
+            }
+            alternatives = next;
+        }
+        List<Node> results = new ArrayList<>(alternatives.size());
+        for (List<Node> children : alternatives) {
+            results.add(new Node(source.operator(), source.payload(), source.semanticPayload(),
+                    null, -1, source.containerKind(), source.orderInsensitive(),
+                    deduplicateSetChildren(children)).withObservationFrom(source));
+        }
+        return certifiedAlternativeNode(results);
+    }
+
+    private static boolean canFlattenBooleanChild(Node parent, Node child) {
+        List<Node> choices = child.certifiedAlternatives().isEmpty()
+                ? List.of(child) : child.certifiedAlternatives();
+        return choices.stream().allMatch(choice -> parent.operator().equals(choice.operator())
+                && Objects.equals(parent.semanticPayload(), choice.semanticPayload())
+                && Objects.equals(parent.observationType(), choice.observationType())
+                && choice.containerKind() == ContainerKind.SET && choice.orderInsensitive());
+    }
+
+    private static void requireBooleanFlattenBudget(long alternatives, long references) {
+        if (alternatives > MAX_BOOLEAN_FLATTEN_ALTERNATIVES
+                || references > MAX_BOOLEAN_FLATTEN_CHILD_REFERENCES) {
+            throw new IllegalStateException("Certified Boolean flattening exceeds its finite budget: "
+                    + alternatives + " alternatives, " + references + " child references");
+        }
     }
 
     private static List<Node> deduplicateSetChildren(List<Node> children) {
@@ -869,7 +1033,7 @@ public final class RepairProjection {
                 primary.containerKind(),
                 primary.orderInsensitive(),
                 primary.children(),
-                unique);
+                unique).withObservationFrom(primary);
     }
 
     private static ContainerKind containerKind(EGraphNode node) {
@@ -957,7 +1121,8 @@ public final class RepairProjection {
                 variable.getDisjointnessClass(),
                 domain,
                 exchangeClass,
-                dependencies);
+                dependencies).withObservation(bindingType(variable),
+                        StructuralKey.leaf("alloy-binder-domain", variable.getCarrierTypeName()));
     }
 
     private static Declaration certifiedDeclaration(
@@ -979,7 +1144,7 @@ public final class RepairProjection {
                 variable,
                 coordinate.domain().stableString(),
                 coordinate.exchangeClass(),
-                dependencies);
+                dependencies).withObservation(coordinate.canonicalSlot().type(), coordinate.domain());
     }
 
     private static Map<TypedSlot, Integer> coordinateIndices(
@@ -1146,6 +1311,7 @@ public final class RepairProjection {
         private final Set<Integer> activeKeys = new LinkedHashSet<>();
         private final List<Integer> sourceOrder = new ArrayList<>();
         private final Set<Integer> visited = new LinkedHashSet<>();
+        private final Set<Integer> reserved = new LinkedHashSet<>();
         private final Map<Integer, Integer> canonicalIndices = new HashMap<>();
         private final List<Phase> phases;
         private final TemporalNode temporalRoot;
@@ -1173,6 +1339,7 @@ public final class RepairProjection {
                 return;
             }
 
+            reservePhase(0);
             visitPhase(0);
             // The exact adapter has already proved every source phase reachable.
             // A phase can disappear here only when a certified alternative (most
@@ -1188,7 +1355,8 @@ public final class RepairProjection {
             }
             phases = Collections.unmodifiableList(reordered);
             temporalRoot = new TemporalNode(
-                    naturalTemporalLabel(TemporalOp.NONE), temporalChildren(0));
+                    naturalTemporalLabel(TemporalOp.NONE), temporalChildren(0), -1, List.of(0),
+                    null, List.of(forms.get(0)));
         }
 
         private static CanonicalPhaseProjection create(
@@ -1201,12 +1369,18 @@ public final class RepairProjection {
             if (!visited.add(sourceIndex)) {
                 return;
             }
-            sourceOrder.add(sourceIndex);
             for (TemporalReference reference : orderedReferences(sourceIndex)) {
+                // Keep certified ACI reference order, but reserve both typed
+                // binary roles before either body, just as IRAgent does.
+                for (int branch : reference.branches) reservePhase(branch);
                 for (int branch : reference.branches) {
                     visitPhase(branch);
                 }
             }
+        }
+
+        private void reservePhase(int sourceIndex) {
+            if (reserved.add(sourceIndex)) sourceOrder.add(sourceIndex);
         }
 
         private Phase reindexPhase(Phase phase, int sourceIndex) {
@@ -1253,7 +1427,10 @@ public final class RepairProjection {
                         node.containerKind(),
                         node.orderInsensitive(),
                         Collections.emptyList(),
-                        Collections.emptyList());
+                        Collections.emptyList()).withObservation(node.observationType(),
+                                java.util.Arrays.stream(reference.branches).map(canonicalIndices::get).boxed().toList(),
+                                reference.label).withReferenceOrigin(
+                                        forms.get(parentPhase).temporalReferenceOrigin(node.sourceOccurrence()));
             }
             List<Node> children = new ArrayList<>(node.children().size());
             for (Node child : node.children()) {
@@ -1273,17 +1450,27 @@ public final class RepairProjection {
                     node.containerKind(),
                     node.orderInsensitive(),
                     children,
-                    alternatives);
+                    alternatives).withObservationFrom(node);
         }
 
         private List<TemporalNode> temporalChildren(int phaseIndex) {
             List<TemporalNode> result = new ArrayList<>();
+            Set<SourceTemporalOccurrence> seen = new LinkedHashSet<>();
             for (TemporalReference reference : orderedReferences(phaseIndex)) {
+                // IFF/Boolean expansion can use one admitted source occurrence
+                // twice. Count its owner/branch identity once, not its matrix
+                // use count. Equal bodies with distinct source branches remain.
+                if (!seen.add(new SourceTemporalOccurrence(phaseIndex,
+                        java.util.Arrays.stream(reference.branches).boxed().toList()))) continue;
                 List<TemporalNode> descendants = new ArrayList<>();
                 for (int branch : reference.branches) {
                     descendants.addAll(temporalChildren(branch));
                 }
-                result.add(new TemporalNode(reference.label, descendants));
+                result.add(new TemporalNode(reference.label, descendants,
+                        canonicalIndices.get(phaseIndex),
+                        java.util.Arrays.stream(reference.branches).map(canonicalIndices::get).boxed().toList(),
+                        forms.get(phaseIndex),
+                        java.util.Arrays.stream(reference.branches).mapToObj(forms::get).toList()));
             }
             return result;
         }
@@ -1504,6 +1691,10 @@ public final class RepairProjection {
         }
     }
 
+    private record SourceTemporalOccurrence(int ownerPhase, List<Integer> branches) {
+        private SourceTemporalOccurrence { branches = List.copyOf(branches); }
+    }
+
     private static final class TemporalReference {
         private final String label;
         private final int[] branches;
@@ -1530,14 +1721,14 @@ public final class RepairProjection {
         }
     }
 
-    private static boolean isBinaryLeft(TemporalOp operation) {
+    static boolean isBinaryLeft(TemporalOp operation) {
         return operation == TemporalOp.UNTILL
                 || operation == TemporalOp.RELEASESL
                 || operation == TemporalOp.SINCEL
                 || operation == TemporalOp.TRIGGEREDL;
     }
 
-    private static TemporalOp matchingRight(TemporalOp operation) {
+    static TemporalOp matchingRight(TemporalOp operation) {
         switch (operation) {
             case UNTILL:
                 return TemporalOp.UNTILR;
@@ -1552,7 +1743,7 @@ public final class RepairProjection {
         }
     }
 
-    private static String naturalTemporalLabel(TemporalOp operation) {
+    static String naturalTemporalLabel(TemporalOp operation) {
         switch (operation) {
             case UNTILL:
             case UNTILR:
@@ -1677,15 +1868,21 @@ public final class RepairProjection {
     /** Identity-bound bridge from repaired syntax to checked chain certificates. */
     private static final class CertifiedDependentChains {
         private final Map<EGraphNode, DependentChainCertificate> certificates;
+        private final Map<EGraphNode, GuardedJoinSourceFiber> rotations;
+        private final List<is.fivefivefive.CanDis.theory.GuardedJoinErasureEvidence> erasedJoinPremises;
 
         private CertifiedDependentChains(
-                Map<EGraphNode, DependentChainCertificate> certificates) {
+                Map<EGraphNode, DependentChainCertificate> certificates,
+                GuardedJoinSourceFiber.Binding rotations) {
             this.certificates = certificates;
+            this.rotations = rotations.live();
+            this.erasedJoinPremises = rotations.erased();
         }
 
         private static CertifiedDependentChains from(
                 CertifiedSemanticArtifact artifact,
-                Map<EGraphNode, DependentChainSourceBinding> sourceBindings) {
+                Map<EGraphNode, DependentChainSourceBinding> sourceBindings,
+                List<NormalForm> normalForms) {
             Set<DependentChainCertificate> admitted = Collections.newSetFromMap(
                     new IdentityHashMap<>());
             admitted.addAll(artifact.dependentChainConstructions());
@@ -1721,7 +1918,8 @@ public final class RepairProjection {
                 }
                 checked.put(source, certificate);
             }
-            return new CertifiedDependentChains(Collections.unmodifiableMap(checked));
+            var rotations = GuardedJoinSourceFiber.bindWithEvidence(artifact, normalForms);
+            return new CertifiedDependentChains(Collections.unmodifiableMap(checked), rotations);
         }
 
         private static boolean matchesCertifiedResultType(
@@ -1775,7 +1973,14 @@ public final class RepairProjection {
             CertifiedSetOperandPartition partition = kind == ContainerKind.SET
                     ? setPartitions.get(source) : null;
             if (partition != null) {
-                return partition.inputFibers(source);
+                // The trace orders quotient classes by internal certificate
+                // keys. Metric DP/backtrace instead follows the shared source
+                // encounter order, as Fast's first-occurrence Set reduction
+                // does. Re-enumerate whole checked fibers, never their members
+                // or emitted edits; inputFibers retains exact source lineage.
+                List<List<Integer>> fibers = new ArrayList<>(partition.inputFibers(source));
+                fibers.sort(java.util.Comparator.comparingInt(fiber -> fiber.get(0)));
+                return List.copyOf(fibers);
             }
             List<List<Integer>> all = new ArrayList<>(source.getChildren().size());
             for (int index = 0; index < source.getChildren().size(); index++) {

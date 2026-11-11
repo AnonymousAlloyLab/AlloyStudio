@@ -66,21 +66,22 @@ class LibraryCallFeedbackTests(unittest.TestCase):
     def test_ledger_exactly_matches_all_public_bundled_declarations(self):
         self.assertEqual(self.observations['resources'], 11)
         self.assertEqual(self.observations['counts'], {
-            'boolean': 9, 'graph': 13, 'integer': 31, 'natural': 12, 'ordering': 14,
+            'boolean': 8, 'graph': 13, 'integer': 31, 'natural': 12, 'ordering': 14,
             'relation': 20, 'seqrel': 22, 'sequence': 25, 'sequniv': 20, 'ternary': 9,
             'time': 0,
         })
-        self.assertEqual(len(self.observations['declarations']), 175)
+        self.assertEqual(len(self.observations['declarations']), 174)
         self.assertEqual(self.observations['ledger'],
-                         dict(missing=[], extra=[], accepted=175, rejected=525))
+                         dict(missing=[], extra=[], accepted=174, rejected=522))
 
     def test_every_public_callable_in_each_parser_valid_module_has_zero_self_distance(self):
         records = self.observations['identities']
         expected = {key for key in self.observations['declarations']
-                    if not key.startswith('util/sequence/')
-                    and not (os.name == 'nt' and key.startswith('util/natural/'))}
+                    if not any(key.startswith('util/' + module + '/')
+                               for module in self.observations['parserBlocked'])}
         self.assertEqual({record['declaration'] for record in records}, expected)
-        self.assertEqual(len(records), 138 if os.name == 'nt' else 150)
+        self.assertEqual(len(records), 174 - sum(len(item['declarations'])
+                                               for item in self.observations['parserBlocked'].values()))
         for record in records:
             with self.subTest(declaration=record['declaration']):
                 self.assert_feedback(record['feedback'], zero=True)
@@ -108,7 +109,8 @@ class LibraryCallFeedbackTests(unittest.TestCase):
 
     def test_natural_library_windows_parser_boundary_is_explicit(self):
         blocked = self.observations['parserBlocked']
-        if os.name == 'nt':
+        if blocked:
+            self.assertEqual(os.name, 'nt')
             self.assertEqual(set(blocked), {'natural'})
             self.assertEqual(len(blocked['natural']['declarations']), 12)
             self.assertCountEqual(blocked['natural']['declarations'],
@@ -135,14 +137,9 @@ class LibraryCallFeedbackTests(unittest.TestCase):
                 self.assertCountEqual([call['callee'] for call in record['actual']],
                                       ['util/graph<Node>/util/relation/dom', 'util/integer/signum'])
 
-    def test_upstream_sequence_type_error_is_explicit_and_does_not_poison_feedback(self):
-        # The bundled sequence.als line125 applies integer add to SeqIdx because
-        # its cardinality expression is missing parentheses. It is not valid
-        # input to either distance adapter; an allowlist cannot repair its body.
-        result = self.observations['controls']['sequence-upstream-invalid']
-        self.assertEqual(result['status'], 'invalid')
-        self.assertNotIn('distance', result)
-        self.assertNotIn('operations', result)
+    def test_refreshed_sequence_module_is_supported_and_next_request_succeeds(self):
+        # Alloy6.2 repairs the old library-body type error; exercise real calls.
+        self.assert_feedback(self.observations['controls']['sequence-supported'], zero=True)
         self.assert_feedback(self.observations['controls']['after-invalid'], zero=True)
 
 

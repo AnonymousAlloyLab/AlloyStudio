@@ -243,6 +243,7 @@ public final class LiveFeedback {
             evaluatedCandidates = selected.evaluatedCandidates();
         } catch (Throwable error) {
             WorkerSafety.rethrowFatal(error);
+            if (nativeResourceLimit(error)) return workLimit(METRIC);
             return poolMode ? failure("engine_error", "REFERENCE_POOL_UNAVAILABLE",
                     "The complete reference pool could not be evaluated. No partial comparison is available.")
                     : failure("engine_error", "REFERENCE_UNAVAILABLE", "The reference for this exercise could not be prepared.");
@@ -258,10 +259,7 @@ public final class LiveFeedback {
             // learner-node pointers. Temporal fallback remains explicitly separate.
             LiveTrace.Result reconstructed = LiveTrace.reconstruct(student, oracle, distance);
             JSONArray hints = new JSONArray();
-            JSONArray oldHints = redactedOperations(Canonical.edits(student, oracle));
-            for (int i = 0; i < oldHints.length(); i++) {
-                if (oldHints.getJSONObject(i).getString("component").equals("temporal")) hints.put(oldHints.getJSONObject(i));
-            }
+            for (int i = 0; i < reconstructed.temporal.length(); i++) hints.put(reconstructed.temporal.getJSONObject(i));
             for (int i = 0; i < reconstructed.quantifier.length(); i++) hints.put(reconstructed.quantifier.getJSONObject(i));
             for (int i = 0; i < reconstructed.matrix.length(); i++) hints.put(reconstructed.matrix.getJSONObject(i));
             JSONArray operations = new JSONArray();
@@ -323,6 +321,7 @@ public final class LiveFeedback {
             return response;
         } catch (Throwable error) {
             WorkerSafety.rethrowFatal(error);
+            if (nativeResourceLimit(error)) return workLimit(METRIC);
             return failure("unsupported", "COMPARISON_UNAVAILABLE", "The framework could not compare this predicate.");
         }
     }
@@ -339,6 +338,19 @@ public final class LiveFeedback {
         if (forestId == null) throw new IllegalArgumentException("predicate unavailable");
         Multigraph graph = visitor.getForest().get(forestId);
         return Canonical.prepare(graph);
+    }
+
+    /** Upstream replay capacities are bounded work refusals, never partial hints. */
+    private static boolean nativeResourceLimit(Throwable error) {
+        java.util.Set<Throwable> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (int depth = 0; error != null && depth < 64 && seen.add(error); depth++, error = error.getCause()) {
+            String message = error.getMessage();
+            if (error instanceof IllegalStateException && message != null && (
+                    message.matches("[A-Z][A-Z0-9_]*_BUDGET")
+                    || message.endsWith("_CELL_BUDGET") || message.endsWith("_SIZE_BUDGET")
+                    || message.equals("FAST_CHAIN_GEOMETRY_BUDGET") || message.equals("FAST_PRODUCT_GEOMETRY_BUDGET"))) return true;
+        }
+        return false;
     }
 
     static JSONArray redactedOperations(List<String> edits) {

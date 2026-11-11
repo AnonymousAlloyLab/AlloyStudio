@@ -113,8 +113,8 @@ try {
     if (@($task.Actions).Count -ne 1) { throw 'The backend task must have exactly one Python action.' }
     $runtimeDependencies = Invoke-RuntimeDependencyCheck -PythonExe ([string]$task.Actions[0].Execute) `
         -BackendRoot ([string]$config.backend_root) -JavaExe ([string]$config.java_exe)
-    Assert-Check ($runtimeDependencies.dependencies.Count -eq 7) 'all seven bundled JARs have their recorded SHA-256 hashes'
-    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 500) 'fresh JVM passes 500 engine checks with the packaged classpath'
+    Assert-Check ($runtimeDependencies.dependencies.Count -eq 8) 'all eight bundled JARs have their recorded SHA-256 hashes'
+    Assert-Check ($runtimeDependencies.engine.status -eq 'PASS' -and $runtimeDependencies.engine.checks -eq 503) 'fresh JVM passes 503 engine checks with the packaged classpath'
 
     $stage = 'task identity, configuration, and isolation'
     $publicRoots = @(Get-IisPhysicalRoots)

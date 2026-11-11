@@ -165,7 +165,7 @@ public final class IntegerCallFeedbackProbe {
                     + "for exactly 2 Address, 4 Int, 2..2 steps\n";
             CompModule module = WorkerSafety.parse(source);
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.DEFAULT;
             options.noOverflow = true;
             return TranslateAlloyToKodkod.execute_command(A4Reporter.NOP, module.getAllReachableSigs(),
                     module.getAllCommands().get(0), options).satisfiable();

@@ -22,6 +22,7 @@ public final class CertifiedSemanticArtifact {
     private final List<FlatConstructionCertificate> flatConstructions;
     private final List<ContainerConstructionCertificate> containerConstructions;
     private final List<DependentChainCertificate> dependentChainConstructions;
+    private final List<GuardedJoinCertificate> guardedJoinConstructions;
     private final List<CallOccurrenceCertificate> callOccurrenceCertificates;
     private final ConstructionSourceLedger constructionSources;
     private final List<BinderOccurrenceAutomorphismCertificate> binderOccurrenceCertificates;
@@ -109,6 +110,21 @@ public final class CertifiedSemanticArtifact {
             List<? extends CallOccurrenceCertificate> callOccurrenceCertificates,
             ConstructionSourceLedger constructionSources,
             SemanticProfile semanticProfile) {
+        this(root, classes, witnesses, unfoldings, containerLaws, flatConstructions,
+                containerConstructions, dependentChainConstructions, callOccurrenceCertificates,
+                List.of(), constructionSources, semanticProfile);
+    }
+
+    CertifiedSemanticArtifact(
+            TypedInvocation root, Map<EClassId, TypedEClassRecord> classes,
+            CoherentWitnessFamily witnesses, List<? extends FiniteUnfoldingTree> unfoldings,
+            Map<String, ? extends List<? extends ContainerLawDeclaration>> containerLaws,
+            List<? extends FlatConstructionCertificate> flatConstructions,
+            List<? extends ContainerConstructionCertificate> containerConstructions,
+            List<? extends DependentChainCertificate> dependentChainConstructions,
+            List<? extends CallOccurrenceCertificate> callOccurrenceCertificates,
+            List<? extends GuardedJoinCertificate> guardedJoinConstructions,
+            ConstructionSourceLedger constructionSources, SemanticProfile semanticProfile) {
         this.root = Objects.requireNonNull(root, "root");
         this.semanticProfile = Objects.requireNonNull(semanticProfile, "semanticProfile");
         Objects.requireNonNull(classes, "classes");
@@ -211,6 +227,12 @@ public final class CertifiedSemanticArtifact {
         }
         this.dependentChainConstructions = Collections.unmodifiableList(
                 copiedDependentChains);
+        this.guardedJoinConstructions = List.copyOf(guardedJoinConstructions);
+        for (var certificate : this.guardedJoinConstructions) {
+            if (!semanticProfile.equals(certificate.semanticProfile()))
+                throw new IllegalArgumentException("Guarded JOIN profile differs");
+            CertificateVerifier.verify(certificate);
+        }
         Objects.requireNonNull(callOccurrenceCertificates, "callOccurrenceCertificates");
         List<CallOccurrenceCertificate> copiedCallOccurrences = new ArrayList<>();
         Set<Long> occurrenceIds = new LinkedHashSet<>();
@@ -292,6 +314,14 @@ public final class CertifiedSemanticArtifact {
         return dependentChainConstructions;
     }
 
+    public List<GuardedJoinCertificate> guardedJoinConstructions() { return guardedJoinConstructions; }
+
+    public CertifiedSemanticArtifact withGuardedJoinConstructions(List<GuardedJoinCertificate> replacements) {
+        return new CertifiedSemanticArtifact(root, classes, witnesses, unfoldings, containerLaws,
+                flatConstructions, containerConstructions, dependentChainConstructions,
+                callOccurrenceCertificates, replacements, constructionSources, semanticProfile);
+    }
+
     public List<CallOccurrenceCertificate> callOccurrenceCertificates() {
         return callOccurrenceCertificates;
     }
@@ -321,6 +351,7 @@ public final class CertifiedSemanticArtifact {
                 containerConstructions,
                 dependentChainConstructions,
                 callOccurrenceCertificates,
+                guardedJoinConstructions,
                 constructionSources,
                 semanticProfile);
     }
@@ -341,6 +372,7 @@ public final class CertifiedSemanticArtifact {
                 Objects.requireNonNull(replacements, "replacements"),
                 dependentChainConstructions,
                 callOccurrenceCertificates,
+                guardedJoinConstructions,
                 constructionSources,
                 semanticProfile);
     }
@@ -357,6 +389,7 @@ public final class CertifiedSemanticArtifact {
                 containerConstructions,
                 Objects.requireNonNull(replacements, "replacements"),
                 callOccurrenceCertificates,
+                guardedJoinConstructions,
                 constructionSources,
                 semanticProfile);
     }
@@ -373,11 +406,17 @@ public final class CertifiedSemanticArtifact {
                 containerConstructions,
                 dependentChainConstructions,
                 Objects.requireNonNull(replacements, "replacements"),
+                guardedJoinConstructions,
                 constructionSources,
                 semanticProfile);
     }
 
     private void validateConstructionCoverage() {
+        Map<StructuralKey, Integer> suppliedJoins = new LinkedHashMap<>();
+        for (var certificate : guardedJoinConstructions)
+            increment(suppliedJoins, certificate.leftEndpoint().structuralKey());
+        if (!constructionSources.guardedJoinSources().equals(suppliedJoins))
+            throw new IllegalArgumentException("Guarded JOIN source occurrences and evidence differ");
         Set<StructuralKey> flatTargets = new LinkedHashSet<>();
         Map<StructuralKey, Integer> suppliedFlatSources = new LinkedHashMap<>();
         for (FlatConstructionCertificate construction : flatConstructions) {
@@ -415,6 +454,9 @@ public final class CertifiedSemanticArtifact {
                             + ", supplied=" + suppliedContainerSources);
         }
         Set<StructuralKey> dependentTargets = new LinkedHashSet<>();
+        for (var certificate : guardedJoinConstructions)
+            for (var node : certificate.realization().nodes())
+                dependentTargets.add(witnesses.canonicalShapeOf(node).structuralKey());
         Map<StructuralKey, Integer> suppliedDependentSources = new LinkedHashMap<>();
         for (DependentChainCertificate construction : dependentChainConstructions) {
             increment(

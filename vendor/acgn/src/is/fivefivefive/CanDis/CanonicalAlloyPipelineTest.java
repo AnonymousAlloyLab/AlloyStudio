@@ -784,10 +784,10 @@ public final class CanonicalAlloyPipelineTest {
             QuotientRepairDistance.Result localGroupingRepair =
                     QuotientRepairDistance.evaluate(
                             localGroupingLeft.repairView(), localGroupingRight.repairView());
-            int localGroupingLegacy = legacyDistance(
+            int localGroupingFast = legacyDistance(
                     visitor, "localGroupingLeft", "localGroupingRight");
-            check(localGroupingLegacy > 0,
-                    "the local-grouping fixture must expose the documented Fast Rewrite ambiguity");
+            check(localGroupingFast == 0,
+                    "Fast Rewrite must normalize local declaration grouping without changing the certified source");
             check(localGroupingRepair.distance() == 0,
                     "equivalent local declaration grouping must lie in the repair zero kernel");
             check(localGroupingRepair.kernelAuthority()
@@ -1655,8 +1655,8 @@ public final class CanonicalAlloyPipelineTest {
                 visitor, "fastFieldWrongOwner");
         check(Canonical.distance(fieldLeft, fieldAlpha) == 0,
                 "Fast Rewrite field identity must preserve alpha-equivalence");
-        check(Canonical.distance(fieldLeft, fieldWrongOwner) == 1,
-                "Fast Rewrite must distinguish same-spelled fields owned by different signatures");
+        check(Canonical.distance(fieldLeft, fieldWrongOwner) == 2,
+                "Fast Rewrite must charge the field identity and changed JOIN result type");
         check(CanonicalAlloyPipeline.distance(
                         CanonicalAlloyPipeline.prepare(fieldLeft),
                         CanonicalAlloyPipeline.prepare(fieldWrongOwner)) == 2,
@@ -1867,7 +1867,7 @@ public final class CanonicalAlloyPipelineTest {
 
         edu.mit.csail.sdg.translator.A4Options options =
                 new edu.mit.csail.sdg.translator.A4Options();
-        options.solver = edu.mit.csail.sdg.translator.A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         List<edu.mit.csail.sdg.ast.Command> commands = module.getAllCommands();
         for (int index = 0; index < commands.size(); index++) {
             edu.mit.csail.sdg.translator.A4Solution result =
@@ -1953,7 +1953,7 @@ public final class CanonicalAlloyPipelineTest {
 
         edu.mit.csail.sdg.translator.A4Options options =
                 new edu.mit.csail.sdg.translator.A4Options();
-        options.solver = edu.mit.csail.sdg.translator.A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         List<edu.mit.csail.sdg.ast.Command> commands = module.getAllCommands();
         for (int index = 0; index < commands.size(); index++) {
             edu.mit.csail.sdg.translator.A4Solution result =
@@ -2885,7 +2885,7 @@ public final class CanonicalAlloyPipelineTest {
 
         edu.mit.csail.sdg.translator.A4Options options =
                 new edu.mit.csail.sdg.translator.A4Options();
-        options.solver = edu.mit.csail.sdg.translator.A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         List<edu.mit.csail.sdg.ast.Command> commands = module.getAllCommands();
         for (int index = 0; index < commands.size(); index++) {
             edu.mit.csail.sdg.translator.A4Solution result =
@@ -3420,7 +3420,7 @@ public final class CanonicalAlloyPipelineTest {
                         ExactAlloyType.from(componentType)));
 
         PrimSig syntheticParent = new PrimSig("SyntheticParent");
-        PrimSig syntheticChild = new PrimSig("SyntheticChild", syntheticParent);
+        PrimSig syntheticChild = new PrimSig(null, "SyntheticChild", edu.mit.csail.sdg.alloy4.Pos.UNKNOWN, syntheticParent);
         ExactAlloyType synthetic = ExactAlloyType.from(syntheticChild.type());
         check(!synthetic.hasParserAuthenticatedAncestry(),
                 "public PrimSig constructors must not mint parser ancestry authority");
@@ -3429,7 +3429,9 @@ public final class CanonicalAlloyPipelineTest {
 
         PrimSig parsedComponent = componentType.iterator().next().get(0);
         PrimSig transplanted = new PrimSig(
+                null,
                 "TransplantedChild",
+                edu.mit.csail.sdg.alloy4.Pos.UNKNOWN,
                 syntheticParent,
                 parsedComponent.attributes.toArray(new Attr[0]));
         ExactAlloyType transplantedType = ExactAlloyType.fromParser(

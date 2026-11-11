@@ -126,6 +126,14 @@ public final class CertificateBundleWriter {
 
     private static Slice requireSupportedSlice(CertificateExportSession session)
             throws IOException {
+        if (!session.artifact().guardedJoinConstructions().isEmpty()) {
+            throw uncheckable("source-linked guarded JOIN rotation wire replay is not implemented");
+        }
+        for (FlatConstructionCertificate construction : session.artifact().flatConstructions()) {
+            if (construction.hasExposures()) {
+                throw uncheckable("source-linked flat exposure wire replay is not implemented");
+            }
+        }
         if (!session.containerLaws().equals(session.artifact().containerLaws())) {
             throw uncheckable(
                     "session and artifact container-law registries differ");

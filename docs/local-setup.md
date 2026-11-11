@@ -194,7 +194,7 @@ key file and configuration precedence.
 | JDK missing, too old, or unusable | Install a complete JDK and set `JAVA_HOME` or pass `--java-home`. A JRE is insufficient for a source clone. |
 | `SOURCE_CORPUS_MISSING` | Restore the bundled data pair from Git using the command above. Legacy/custom checkouts can supply `--from-bundle` or `--source-root`. |
 | `PARTIAL_PRIVATE_DATA` or `PRIVATE_DATA_INVALID` | Restore both matching data files from Git after preserving local edits. These legacy diagnostic names refer to exercise data; setup leaves existing files untouched. |
-| Dependency missing or hash mismatch | Restore the complete checkout including all seven JARs in `vendor/acgn/lib`; do not copy source directories alone. |
+| Dependency missing or hash mismatch | Restore the complete checkout including all eight JARs in `vendor/acgn/lib`; do not copy source directories alone. |
 | Address already in use | Choose another `--port`, or stop the process using that port. |
 | OpenAI unavailable | Deterministic feedback still works; check your private configuration and account access. |
 

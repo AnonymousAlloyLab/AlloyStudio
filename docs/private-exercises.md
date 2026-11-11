@@ -54,7 +54,7 @@ This is **bounded equivalence**, not an unrestricted proof. `equivalenceScope`
 is 1–8 (default 5), integer bitwidth is 5, maximum sequence length is the scope,
 and temporal traces are bounded to 1–10 states (static models have one state).
 The database records the completed bounds, solver identity, body/environment
-hashes, the full class-tree hash and all seven dependency JAR hashes. Local
+hashes, the full class-tree hash and all eight dependency JAR hashes. Local
 filesystem modules are rejected; imported utilities must come from the bundled
 JAR supplying the actual Alloy parser. The primary oracle remains the administrator's intended
 solution; agreement does not prove the English description. Legacy classified

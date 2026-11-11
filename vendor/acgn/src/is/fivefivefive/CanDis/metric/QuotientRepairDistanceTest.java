@@ -408,6 +408,11 @@ public final class QuotientRepairDistanceTest {
                 check(actual == expected,
                         "Zhang-Shasha result must equal the independent bounded mapping oracle"
                                 + " (expected=" + expected + ", actual=" + actual + ")");
+                var replay = TemporalReplay.capture(leftTree,rightTree,expected,
+                        TemporalNode::label,TemporalNode::children);
+                check(TemporalReplay.verify(leftTree,rightTree,TemporalNode::label,
+                        TemporalNode::children,replay) == expected,
+                        "Temporal edit replay must attain the independent exhaustive mapping minimum");
             }
         }
 
@@ -484,6 +489,18 @@ public final class QuotientRepairDistanceTest {
                 int actual = QuotientRepairDistance.minimumAssignmentCost(costs);
                 check(actual == expected,
                         "Hungarian assignment must equal bounded exhaustive permutation");
+                int[] columns = QuotientRepairDistance.minimumAssignmentColumns(costs);
+                boolean[] used = new boolean[size];
+                int replayed = 0;
+                for (int row = 0; row < size; row++) {
+                    check(columns[row] >= 0 && columns[row] < size && !used[columns[row]],
+                            "Assignment backtrace consumes each column once");
+                    used[columns[row]] = true;
+                    replayed += costs[row][columns[row]];
+                }
+                check(replayed == expected,"Assignment backtrace attains the independent minimum");
+                check(Arrays.equals(columns,QuotientRepairDistance.minimumAssignmentColumns(costs)),
+                        "Assignment backtrace has deterministic ties");
             }
         }
 

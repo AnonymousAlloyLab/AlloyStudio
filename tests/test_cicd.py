@@ -238,6 +238,47 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(ci_check.python_outcome_summary(raw, frozenset(sources), sources)
                              ['failureDetails'], [{'test': identifier, 'line': line, 'kind': 'error'}])
 
+    def test_class_fixture_failures_block_registered_methods_without_disclosing_exception_text(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
+        path = self.root / 'tests/test_registered.py'
+        path.parent.mkdir(parents=True)
+        for phase in ('setUpClass', 'tearDownClass'):
+            source = ('class Registered(unittest.TestCase):\n'
+                      '    @classmethod\n'
+                      f'    def {phase}(cls):\n'
+                      '        raise RuntimeError("PRIVATE_SENTINEL")\n'
+                      '    def test_member(self): pass\n')
+            path.write_text(source)
+            namespace = {'__name__': 'test_registered', 'unittest': unittest}
+            exec(compile(source, str(path), 'exec'), namespace)
+            suite = unittest.defaultTestLoader.loadTestsFromTestCase(namespace['Registered'])
+            report = self.root / (phase + '.json')
+            with self.subTest(phase=phase), patch.object(verify_closure, 'ROOT', self.root), \
+                 patch.object(unittest.defaultTestLoader, 'discover', return_value=suite), \
+                 patch.object(verify_closure.sys, 'path', list(verify_closure.sys.path)), \
+                 redirect_stderr(StringIO()):
+                self.assertEqual(verify_closure.python_tests(report), 1)
+            raw = json.loads(report.read_text())
+            sources = verify_closure.discover_test_sources(self.root)
+            result = ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+            identifier = 'test_registered.Registered.test_member'
+            self.assertEqual(result['failedRegisteredTests'], [identifier])
+            self.assertEqual(result['failureDetails'], [
+                {'test': identifier, 'line': 4, 'kind': 'error', 'phase': phase}])
+            self.assertNotIn('PRIVATE_SENTINEL', report.read_text() + json.dumps(result))
+            self.assertNotIn(str(self.root), json.dumps(result))
+
+    def test_freeform_fixture_phase_is_never_published(self):
+        identifier = self.register_python_fixture() + 'test_failure'
+        sources = verify_closure.discover_test_sources(self.root)
+        for phase in ('PRIVATE_SENTINEL', ['PRIVATE_SENTINEL'], True):
+            raw = {'tests_run': 1, 'outcomes': {identifier: 'BLOCK'},
+                   'failureDetails': {identifier: {'line': 3, 'kind': 'error', 'phase': phase}}}
+            result = ci_check.python_outcome_summary(raw, frozenset(sources), sources)
+            self.assertNotIn('phase', result['failureDetails'][0])
+            self.assertNotIn('PRIVATE_SENTINEL', json.dumps(result))
+
     def test_os_failure_categories_never_export_exception_identity_or_values(self):
         path = self.root / 'tests/test_registered.py'
         path.parent.mkdir(parents=True)

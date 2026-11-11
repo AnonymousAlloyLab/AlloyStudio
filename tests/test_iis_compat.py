@@ -18,10 +18,24 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import luna
 import server
+from runtime_dependencies import ENGINE_CHECKS
 
 
 class IISAdminModuleInventoryTests(unittest.TestCase):
     """Portable inventory contracts, without executing Windows/IIS or Java."""
+
+    def test_native_runtime_probe_requires_the_exact_registered_engine_check_count(self):
+        deployment = (ROOT / 'deploy/iis/Test-IisDeployment.ps1').read_text(encoding='utf-8')
+        # The native acceptance gate must retain both PASS and exact-count
+        # checks. A stale 500 or a weaker checks>0 condition must fail here.
+        gate = re.search(
+            r"Assert-Check \(\$runtimeDependencies\.engine\.status -eq 'PASS' -and "
+            r"\$runtimeDependencies\.engine\.checks -eq ([0-9]+)\) "
+            r"'fresh JVM passes ([0-9]+) engine checks with the packaged classpath'",
+            deployment)
+        self.assertIsNotNone(gate, 'Native runtime acceptance must require PASS and an exact check count')
+        self.assertEqual(int(gate.group(1)), ENGINE_CHECKS)
+        self.assertEqual(int(gate.group(2)), ENGINE_CHECKS)
 
     def test_candidate_runtime_imports_are_required_readonly_and_not_public_routes(self):
         required = set()

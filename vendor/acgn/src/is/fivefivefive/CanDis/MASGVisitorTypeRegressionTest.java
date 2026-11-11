@@ -293,7 +293,7 @@ public final class MASGVisitorTypeRegressionTest {
         boolean duplicateBinderEquivalent = CanonicalAlloyPipeline.prepare(
                 duplicateBinder).equivalentTo(
                         CanonicalAlloyPipeline.prepare(duplicateBinderRenamed));
-        if (duplicateBinderSlots != 2
+        if (duplicateBinderSlots != 3
                 || !duplicateBinderHasX
                 || !duplicateBinderHasY
                 || duplicateBinderDistance != 0
@@ -450,7 +450,7 @@ public final class MASGVisitorTypeRegressionTest {
                 "");
         CompModule module = CompUtil.parseEverything_fromString(A4Reporter.NOP, source);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         for (int index = 0; index < module.getAllCommands().size(); index++) {
             A4Solution result = TranslateAlloyToKodkod.execute_command(
                     A4Reporter.NOP,
@@ -543,7 +543,7 @@ public final class MASGVisitorTypeRegressionTest {
         CompModule module = CompUtil.parseEverything_fromString(
                 A4Reporter.NOP, source);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         for (int index = 0; index < module.getAllCommands().size(); index++) {
             A4Solution result = TranslateAlloyToKodkod.execute_command(
                     A4Reporter.NOP,
@@ -604,7 +604,7 @@ public final class MASGVisitorTypeRegressionTest {
         CompModule module = CompUtil.parseEverything_fromString(
                 A4Reporter.NOP, source);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         for (int index = 0; index < module.getAllCommands().size(); index++) {
             A4Solution result = TranslateAlloyToKodkod.execute_command(
                     A4Reporter.NOP,
@@ -717,7 +717,7 @@ public final class MASGVisitorTypeRegressionTest {
         CompModule module = CompUtil.parseEverything_fromString(
                 A4Reporter.NOP, source);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         for (int index = 0; index < module.getAllCommands().size(); index++) {
             A4Solution result = TranslateAlloyToKodkod.execute_command(
                     A4Reporter.NOP,
@@ -779,7 +779,7 @@ public final class MASGVisitorTypeRegressionTest {
         CompModule module = CompUtil.parseEverything_fromString(
                 A4Reporter.NOP, source);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         A4Solution result = TranslateAlloyToKodkod.execute_command(
                 A4Reporter.NOP,
                 module.getAllReachableSigs(),
@@ -839,7 +839,7 @@ public final class MASGVisitorTypeRegressionTest {
                     "Temporal snapshot guarding disabled a sound static-carrier absorption");
         }
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         A4Solution result = TranslateAlloyToKodkod.execute_command(
                 A4Reporter.NOP,
                 module.getAllReachableSigs(),
@@ -900,7 +900,7 @@ public final class MASGVisitorTypeRegressionTest {
             CompModule module = CompUtil.parseEverything_fromFile(
                     A4Reporter.NOP, null, file.toString());
             A4Options options = new A4Options();
-            options.solver = A4Options.SatSolver.SAT4J;
+            options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
             for (int index = 0; index < module.getAllCommands().size(); index++) {
                 A4Solution result = TranslateAlloyToKodkod.execute_command(
                         A4Reporter.NOP,

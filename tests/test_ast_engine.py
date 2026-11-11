@@ -167,7 +167,7 @@ class AstEngineTests(unittest.TestCase):
     def test_raw_metric_keeps_order_names_and_duplicates(self):
         fixtures = [('some A and no A', 'no A and some A', 2),
                     ('all x:A | some x.r', 'all y:A | some y.r', 2),
-                    ('some A and some A', 'some A', 4)]
+                    ('some A and some A', 'some A', 3)]
         for body, reference, expected in fixtures:
             with self.subTest(expected=expected):
                 result = compare(body, reference)
@@ -189,11 +189,17 @@ class AstEngineTests(unittest.TestCase):
                                 if 'replacementOperator' in operation]
                 self.assertIn(expected, replacements)
 
-    def test_raw_parser_wrappers_are_counted_without_normalization(self):
+    def test_decorative_wrappers_are_erased_but_real_unary_operators_are_counted(self):
         result = compare('some A', 'not some A')
         self.assert_feedback(result)
-        self.assertEqual(result['distance'], 2)
-        self.assertEqual(result['operationSummary'], {'insert': 2})
+        self.assertEqual(result['distance'], 1)
+        self.assertEqual(result['operationSummary'], {'insert': 1})
+        self.assertEqual(result['astSize'], 2)
+        self.assertEqual(result['astViewVersion'], 'acgn-semantic-ast-noop-body-erasure-v1')
+        self.assertEqual(result['astOmittedNodeKinds'], ['UnaryExpr.NOOP', 'Body'])
+        same = compare('some (((A)))', 'some A')
+        self.assert_feedback(same)
+        self.assertEqual((same['distance'], same['astSize']), (0, 2))
 
     def test_temporal_wrapper_insertion_and_deletion_use_node_cost(self):
         inserted, deleted = compare('some A', 'always some A'), compare('always some A', 'some A')
@@ -261,7 +267,8 @@ class AstEngineTests(unittest.TestCase):
         self.assertGreater(result['distance'], 1)
         for op in result['operations']:
             if op['kind'] == 'insert':
-                self.assertEqual(fragment(source(body), op['sourceLocation']), ['no A'])
+                self.assertEqual(fragment(source(body), op['sourceLocation']), [op['sourceTerm']])
+                self.assertIn(op['sourceTerm'], ('no A', 'A'))
                 self.assertIn('does not specify where', op['sourceLocation']['reason'])
 
     def test_private_references_names_calls_and_literals_never_leave_engine(self):
@@ -328,7 +335,7 @@ class AstEngineTests(unittest.TestCase):
         self.assertNotIn('PRIVATE_UNKNOWN_NAME', json.dumps(result))
 
     def test_ast_limits_do_not_publish_partial_pool_minimum(self):
-        huge = ' and '.join(['some A'] * 400)
+        huge = ' and '.join(['some A'] * 600)
         result = compare(huge, 'some A')
         self.assertEqual(result['status'], 'unsupported')
         self.assertEqual(result['diagnostics'][0]['code'], 'AST_UNAVAILABLE')

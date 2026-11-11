@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "distance": 8,
+  "allSubtreeDistanceCellsMatch": true,
+  "rootForestMatrixMatches": true,
+  "affectedDistance": 8,
+  "nodes": [
+    17,
+    13
+  ],
+  "noopAndBodyAbsent": true
+}

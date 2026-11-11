@@ -50,7 +50,7 @@ public class AlloyEnumeration {
         //These options configure "how" to run a command - what solver to use, what is the max memory the execution can use, etc
         //We usually just set it up in a very bare bones format - i.e. just set the SAT solver then use the default for everything else
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
 		
 		//Runs first command, stores the result
         A4Solution instance = TranslateAlloyToKodkod.execute_command(rep, world.getAllReachableSigs(), command, options);

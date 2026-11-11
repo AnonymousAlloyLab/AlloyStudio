@@ -9,15 +9,22 @@ import java.util.Objects;
 public final class AlloyTerm implements Comparable<AlloyTerm> {
     private final String head;
     private final String atom;
+    private final String slotType;
     private final List<AlloyTerm> children;
     private final int hashCode;
     private final int size;
 
     private AlloyTerm(String head, String atom, List<AlloyTerm> children) {
+        this(head, atom, children, "");
+    }
+
+    private AlloyTerm(String head, String atom, List<AlloyTerm> children, String slotType) {
         this.head = Objects.requireNonNull(head, "head");
         this.atom = atom == null ? "" : atom;
+        this.slotType = Objects.requireNonNull(slotType, "slotType");
         this.children = Collections.unmodifiableList(new ArrayList<>(children));
-        this.hashCode = Objects.hash(this.head, this.atom, this.children);
+        int structuralHash = Objects.hash(this.head, this.atom, this.children);
+        this.hashCode = slotType.isEmpty() ? structuralHash : 31 * structuralHash + slotType.hashCode();
         int nodeCount = 1;
         for (AlloyTerm child : this.children) {
             nodeCount += child.size;
@@ -41,6 +48,35 @@ public final class AlloyTerm implements Comparable<AlloyTerm> {
 
     public static AlloyTerm of(String head, String atom, List<AlloyTerm> children) {
         return new AlloyTerm(head, atom, children);
+    }
+
+    public static AlloyTerm typedVariable(String name, String type) {
+        if (type == null || type.isEmpty()) {
+            throw new IllegalArgumentException("A typed slot requires an exact type");
+        }
+        return new AlloyTerm("VAR", name, Collections.emptyList(), type);
+    }
+
+    public String slotType() {
+        return slotType;
+    }
+
+    public AlloyTerm renameVariable(String name) {
+        if (!isVariable()) {
+            throw new IllegalArgumentException("Only variable leaves can be renamed");
+        }
+        return new AlloyTerm(head, name, children, slotType);
+    }
+
+    public AlloyTerm eraseSlotTypes() {
+        if (isVariable() && !slotType.isEmpty()) {
+            return atom("VAR", atom);
+        }
+        List<AlloyTerm> erased = new ArrayList<>(children.size());
+        for (AlloyTerm child : children) {
+            erased.add(child.eraseSlotTypes());
+        }
+        return withChildren(erased);
     }
 
     public String head() {
@@ -67,7 +103,7 @@ public final class AlloyTerm implements Comparable<AlloyTerm> {
         if (children.equals(replacement)) {
             return this;
         }
-        return new AlloyTerm(head, atom, replacement);
+        return new AlloyTerm(head, atom, replacement, slotType);
     }
 
     @Override
@@ -80,6 +116,10 @@ public final class AlloyTerm implements Comparable<AlloyTerm> {
             return comparison;
         }
         comparison = atom.compareTo(other.atom);
+        if (comparison != 0) {
+            return comparison;
+        }
+        comparison = slotType.compareTo(other.slotType);
         if (comparison != 0) {
             return comparison;
         }
@@ -105,7 +145,8 @@ public final class AlloyTerm implements Comparable<AlloyTerm> {
             return false;
         }
         AlloyTerm term = (AlloyTerm) other;
-        return head.equals(term.head) && atom.equals(term.atom) && children.equals(term.children);
+        return head.equals(term.head) && atom.equals(term.atom)
+                && slotType.equals(term.slotType) && children.equals(term.children);
     }
 
     @Override
@@ -116,7 +157,8 @@ public final class AlloyTerm implements Comparable<AlloyTerm> {
     @Override
     public String toString() {
         if (children.isEmpty()) {
-            return atom.isEmpty() ? head : head + "(" + atom + ")";
+            return atom.isEmpty() ? head : head + "(" + atom
+                    + (slotType.isEmpty() ? "" : ":" + slotType) + ")";
         }
         StringBuilder builder = new StringBuilder(head).append('(');
         for (int i = 0; i < children.size(); i++) {

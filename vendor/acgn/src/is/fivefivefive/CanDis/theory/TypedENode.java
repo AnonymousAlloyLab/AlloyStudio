@@ -87,7 +87,15 @@ public final class TypedENode implements HasSlotSupport {
             FlatApplication source,
             NodeSealer sealer,
             SemanticProfile semanticProfile) {
-        TypedENode node = flattenVisible(source, sealer);
+        return flatConstructCertified(source, sealer, semanticProfile, java.util.Map.of());
+    }
+
+    static CertifiedFlatConstruction flatConstructCertified(
+            FlatApplication source, NodeSealer sealer, SemanticProfile semanticProfile,
+            java.util.Map<OnePort, FlatOperandExposure> exposures) {
+        List<FlatOperandExposure> used = new ArrayList<>();
+        FlatApplication expanded = FlatOperandExposure.expand(source, exposures, semanticProfile, used);
+        TypedENode node = flattenVisible(expanded, sealer);
         PortValue container = node.ports().get(
                 source.operator().flatLicense().path().portIndex());
         if (container instanceof SetPort
@@ -100,13 +108,13 @@ public final class TypedENode implements HasSlotSupport {
             OnePort singleton = (OnePort) sole;
             return new CertifiedFlatConstruction(
                     singleton,
-                    FlatConstructionCertificate.createSingletonProduction(
-                            source, singleton, semanticProfile));
+                    FlatConstructionCertificate.createWithExposures(
+                            source, null, singleton, semanticProfile, exposures));
         }
         return new CertifiedFlatConstruction(
                 node,
-                FlatConstructionCertificate.createProduction(
-                        source, node, semanticProfile));
+                FlatConstructionCertificate.createWithExposures(
+                        source, node, null, semanticProfile, exposures));
     }
 
     /** Constructs one nonflat container and retains its exact source occurrence order. */

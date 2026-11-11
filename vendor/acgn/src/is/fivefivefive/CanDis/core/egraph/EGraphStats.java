@@ -12,6 +12,8 @@ public final class EGraphStats {
     public final long slotMappings;
     public final long redundantSlots;
     public final long estimatedBytes;
+    /** Null when an engine does not provide this observation. */
+    public final java.util.Map<String, Long> slotsByType;
 
     public EGraphStats(
             long eclasses,
@@ -24,6 +26,13 @@ public final class EGraphStats {
             long slotMappings,
             long redundantSlots,
             long estimatedBytes) {
+        this(eclasses, enodes, unions, rebuilds, rewriteApplications, iterations,
+                slots, slotMappings, redundantSlots, estimatedBytes, null);
+    }
+
+    public EGraphStats(long eclasses, long enodes, long unions, long rebuilds,
+            long rewriteApplications, long iterations, long slots, long slotMappings,
+            long redundantSlots, long estimatedBytes, java.util.Map<String, Long> slotsByType) {
         this.eclasses = eclasses;
         this.enodes = enodes;
         this.unions = unions;
@@ -34,6 +43,10 @@ public final class EGraphStats {
         this.slotMappings = slotMappings;
         this.redundantSlots = redundantSlots;
         this.estimatedBytes = estimatedBytes;
+        this.slotsByType = slotsByType == null ? null : java.util.Map.copyOf(slotsByType);
+        if (slotsByType != null && slotsByType.values().stream().mapToLong(Long::longValue).sum() != slots) {
+            throw new IllegalArgumentException("Interface slot counts do not sum to total");
+        }
     }
 
     public static EGraphStats empty() {

@@ -36,9 +36,10 @@ include the selected metric; behavioral examples still compare to the oracle.
 
 AST mode uses the vendored `OrderedTreeEditDistance` Zhang–Shasha routine with
 `DatasetConventions.rawAstLabel/rawAstChildren`, rooted at `Predicate.getBody()`.
-It preserves `Body` and synthetic `NOOP` wrappers, variable names and ordered
-children. It does not canonicalize first. Consequently a source-level operator
-change can involve more than one tree edit when wrappers differ. This differs
+It removes `Body` and synthetic `NOOP` wrappers before counting, indexing and
+matching, retaining variable names and meaningful ordered children. It does not
+canonicalize first. Responses identify this view as
+`acgn-semantic-ast-noop-body-erasure-v1`. This differs
 from the historical augmenter's raw-AST subtree recurrence; the portal uses
 unit node deletion with child promotion and insertion with consecutive-child
 adoption. A private independent backtrace and actual replay must agree with the

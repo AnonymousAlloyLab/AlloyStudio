@@ -1,0 +1,40 @@
+// Updated ACGN 8c9bd4b9: NOOP and Body erased before postorder indexing.
+// Render with neato -n2. Subscripts are production postorder IDs.
+digraph ZhangShasha {
+ graph [layout=neato,splines=line,overlap=true,bgcolor="white",outputorder=edgesfirst,pad="0.035",margin=0];
+ node [pin=true,fontname="Liberation Sans",fontsize=9,shape=ellipse,style=filled,fillcolor="white",color="#68707a",fontcolor="#20252b",penwidth=0.7,margin="0.035,0.015",width=0.25,height=0.20];
+ edge [color="#80858b",penwidth=0.7,arrowhead=none,arrowsize=0.35];
+ nw [pos="-2,153!",shape=point,style=invis,width=0];
+ se [pos="248,-5!",shape=point,style=invis,width=0];
+ lhs [pos="49,146!",shape=plain,label=<<B>Student AST</B>>];
+ rhs [pos="195,146!",shape=plain,label=<<B>Reference AST</B>>];
+
+ s15 [pos="49,123!",label=<+<SUB><FONT POINT-SIZE="6">15</FONT></SUB>>,color="#316b9c",fontcolor="#245d8d",fillcolor="#edf5fc"];
+ s9 [pos="24,102!",label=<<B>.</B><SUB><FONT POINT-SIZE="6">9</FONT></SUB>>,color="#b63f3f",fontcolor="#a52d2d",fillcolor="#fff0ef",style="filled,dashed"];
+ s6 [pos="10,80!",label=<n<SUB><FONT POINT-SIZE="6">6</FONT></SUB>>];
+ s8 [pos="39,80!",label=<^<SUB><FONT POINT-SIZE="6">8</FONT></SUB>>,color="#b63f3f",fontcolor="#a52d2d",fillcolor="#fff0ef",style="filled,dashed"];
+ s7 [pos="39,58!",label=<adj<SUB><FONT POINT-SIZE="6">7</FONT></SUB>>,color="#b63f3f",fontcolor="#a52d2d",fillcolor="#fff0ef",style="filled,dashed"];
+ s14 [pos="86,102!",label=<<B>.</B><SUB><FONT POINT-SIZE="6">14</FONT></SUB>>,color="#316b9c",fontcolor="#245d8d",fillcolor="#edf5fc"];
+ s10 [pos="69,80!",label=<n<SUB><FONT POINT-SIZE="6">10</FONT></SUB>>,color="#b63f3f",fontcolor="#a52d2d",fillcolor="#fff0ef",style="filled,dashed"];
+ s13 [pos="108,80!",label=<^<SUB><FONT POINT-SIZE="6">13</FONT></SUB>>];
+ s12 [pos="108,58!",label=<~<SUB><FONT POINT-SIZE="6">12</FONT></SUB>>,color="#b63f3f",fontcolor="#a52d2d",fillcolor="#fff0ef",style="filled,dashed"];
+ s11 [pos="108,36!",label=<adj<SUB><FONT POINT-SIZE="6">11</FONT></SUB>>];
+ s15 -> s9; s15 -> s14; s9 -> s6; s9 -> s8; s8 -> s7;
+ s14 -> s10; s14 -> s13; s13 -> s12; s12 -> s11;
+
+ t11 [pos="191,123!",label=<<B>.</B><SUB><FONT POINT-SIZE="6">11</FONT></SUB>>,color="#316b9c",fontcolor="#245d8d",fillcolor="#edf5fc"];
+ t6 [pos="165,102!",label=<n<SUB><FONT POINT-SIZE="6">6</FONT></SUB>>];
+ t10 [pos="214,102!",label=<+<SUB><FONT POINT-SIZE="6">10</FONT></SUB>>,color="#316b9c",fontcolor="#245d8d",fillcolor="#edf5fc"];
+ t8 [pos="190,80!",label=<^<SUB><FONT POINT-SIZE="6">8</FONT></SUB>>];
+ t9 [pos="230,80!",label=<iden<SUB><FONT POINT-SIZE="6">9</FONT></SUB>>,color="#23734d",fontcolor="#175b3a",fillcolor="#ecf7ef",peripheries=2];
+ t7 [pos="190,58!",label=<adj<SUB><FONT POINT-SIZE="6">7</FONT></SUB>>];
+ t11 -> t6; t11 -> t10; t10 -> t8; t10 -> t9; t8 -> t7;
+
+ s15 -> t11 [style=dashed,color="#316b9c",arrowhead=normal,arrowsize=0.43,penwidth=0.85];
+ s14 -> t10 [style=dashed,color="#316b9c",arrowhead=normal,arrowsize=0.43,penwidth=0.85,
+  pos="e,203,102 96,102 120,91 120,91 120,91 180,91 180,91 180,91 197,98 199,100 202,101"];
+ s13 -> t8 [style=dashed,color="#717880",arrowhead=normal,arrowsize=0.43,penwidth=0.75];
+ node [shape=plain,style="",fillcolor="white",fontsize=8];
+ flow [pos="125,18!",label=<Postorder IDs &#8594; forest DP &#8594; backtrace>];
+ cost [pos="125,3!",label=<<FONT COLOR="#a52d2d">5 deletions</FONT> + <FONT COLOR="#245d8d">2 relabels</FONT> + <FONT COLOR="#175b3a">1 insertion</FONT> = <B>8</B>>];
+}

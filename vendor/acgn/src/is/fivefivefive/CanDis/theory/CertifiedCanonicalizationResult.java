@@ -127,6 +127,8 @@ public final class CertifiedCanonicalizationResult {
         if (construction instanceof DependentChainCertificate) {
             return ((DependentChainCertificate) construction).target();
         }
+        if (construction instanceof GuardedJoinCertificate guarded) return guarded.realization().node();
+        if (construction instanceof GuardedJoinNodeCertificate guarded) return guarded.node();
         throw new IllegalArgumentException(
                 "A certified canonicalization requires concrete construction evidence");
     }

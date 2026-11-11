@@ -4,7 +4,9 @@ Each worker is sequential. The JVM remains warm between requests; there is no
 result/reference cache inside it. Corpus/train-pool construction is offline.
 """
 from __future__ import annotations
+from concurrent.futures import FIRST_COMPLETED, wait
 import json
+import math
 import os
 from pathlib import Path
 import selectors
@@ -20,6 +22,37 @@ if str(ROOT) not in sys.path:
 from runtime_dependencies import clean_java_environment
 
 
+def bounded_results(executor, function, items, *, max_pending):
+    """Yield completed results with a bounded submission/response window.
+
+    A case is submitted exactly once. Exceptions propagate without retrying it;
+    queued work is cancelled if iteration fails or the consumer stops early.
+    """
+    if type(max_pending) is not int or max_pending < 1:
+        raise ValueError('max_pending must be a positive integer')
+    source = iter(items)
+    pending = set()
+    try:
+        while True:
+            while len(pending) < max_pending:
+                try:
+                    item = next(source)
+                except StopIteration:
+                    break
+                pending.add(executor.submit(function, item))
+            if not pending:
+                return
+            # Do not retain completed Futures (and their full responses) for the
+            # entire corpus. The window includes both running and finished work.
+            future = next(iter(wait(pending, return_when=FIRST_COMPLETED)[0]))
+            pending.remove(future)
+            yield future.result()
+            del future
+    finally:
+        for future in pending:
+            future.cancel()
+
+
 def scratch_root():
     root = Path(os.environ.get('ALLOY_BENCHMARK_TMP_ROOT', ROOT / 'build/benchmarks/tmp')).resolve()
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -27,11 +60,12 @@ def scratch_root():
 
 
 class Worker:
-    def __init__(self, timeout=60.0, heap='512m', command=None, recycle_after=256):
+    def __init__(self, timeout=60.0, heap='512m', command=None, recycle_after=256, initial_heap=None):
         if type(recycle_after) is not int or recycle_after < 1:
             raise ValueError('recycle_after must be a positive integer')
         self.timeout = timeout
         self.heap = heap
+        self.initial_heap = initial_heap
         self.command = command
         self.process = None
         self.scratch = None
@@ -71,8 +105,12 @@ class Worker:
             classpath = os.pathsep.join(str(ROOT / p) for p in
                 ('build/benchmarks/alloy4fun/classes', 'build/engine/classes', 'vendor/acgn/lib/*'))
             command = self.command or ['java', '-Xmx' + self.heap,
-                '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC', '-cp', classpath,
+                '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC',
+                '-Dalloy.feedback.workMillis=' + str(min(60000, max(1, math.ceil(self.timeout * 1000)))),
+                '-cp', classpath,
                 'benchmark.LiveWorker']
+            if self.initial_heap is not None:
+                command = [command[0], '-Xms' + self.initial_heap, *command[1:]]
             self.scratch = tempfile.TemporaryDirectory(prefix='worker-', dir=scratch_root())
             command = [command[0], '-Djava.io.tmpdir=' + self.scratch.name, *command[1:]]
             try:

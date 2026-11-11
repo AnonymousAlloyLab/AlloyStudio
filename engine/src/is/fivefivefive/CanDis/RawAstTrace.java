@@ -6,6 +6,7 @@ import edu.mit.csail.sdg.parser.CompModule;
 import is.fivefivefive.ACGN.visitor.MASGVisitor;
 import is.fivefivefive.CanDis.core.OrderedTreeEditDistance;
 import parser.ast.nodes.*;
+import parser.util.AlloyUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,6 +58,7 @@ public final class RawAstTrace {
     }
 
     private static Tree from(Node node, int[] count, int depth) {
+        node = AlloyUtil.unwrapAst(node);
         if (node == null || ++count[0] > MAX_NODES || depth > 256) throw new IllegalArgumentException("AST limit");
         WorkBudget.charge(1);
         List<Tree> children = new ArrayList<>();

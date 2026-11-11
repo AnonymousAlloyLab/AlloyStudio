@@ -262,7 +262,7 @@ public final class CallExtractionRegressionTest {
 
         Command witness = module.getAllCommands().get(0);
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J;
+        options.solver = kodkod.engine.satlab.SATFactory.get("sat4j");
         A4Solution solution = TranslateAlloyToKodkod.execute_command(
                 A4Reporter.NOP, module.getAllReachableSigs(), witness, options);
         check(solution != null && solution.satisfiable(),

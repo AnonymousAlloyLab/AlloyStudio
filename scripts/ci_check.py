@@ -37,6 +37,9 @@ def python_outcome_summary(raw, registered, sources=None):
             if line is not None and (type(line) is not int or not 1 <= line <= sources[identifier][1]):
                 continue
             projected = {'test': identifier, 'line': line, 'kind': detail['kind']}
+            phase = detail.get('phase')
+            if type(phase) is str and phase in {'setUpClass', 'tearDownClass', 'setUpModule', 'tearDownModule'}:
+                projected['phase'] = phase
             code = detail.get('osError')
             if type(code) is str and code in OS_ERROR_CODES:
                 projected['osError'] = code

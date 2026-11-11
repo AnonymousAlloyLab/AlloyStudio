@@ -30,11 +30,52 @@ class RepositoryTests(unittest.TestCase):
         actual = {p.relative_to(vendor).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in vendor.rglob('*') if p.is_file() and p.name != 'snapshot.json'}
         self.assertEqual(actual, expected)
-        self.assertEqual(snapshot['commit'], '1e2667351532b0c632166fa21ae5fbc7308a8fe7')
+        self.assertEqual(snapshot['commit'], 'f955150dec4fc92e35b4ee543a7d71b82381c686')
         patches = snapshot['localPatches']
         self.assertEqual([patch['id'] for patch in patches],
                          ['parser-source-origins', 'canonical-residual-quantifier-rendering',
-                          'request-work-budget', 'bundled-library-call-signatures'])
+                          'request-work-budget', 'bundled-library-call-signatures',
+                          'scoped-positive-verification-and-prepared-orbits',
+                          'source-checked-fast-prefix-admission',
+                          'bottom-up-unused-binding-normalization'])
+        reduction = patches[6]
+        self.assertRegex(reduction['upstreamIntegratedCommit'], r'^[0-9a-f]{40}$')
+        self.assertEqual({entry['path'] for entry in reduction['files']}, {
+            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+            'src/is/fivefivefive/CanDis/core/NormalForm.java',
+            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+            'src/is/fivefivefive/CanDis/MASGVisitorTypeRegressionTest.java',
+            'src/is/fivefivefive/CanDis/core/GroupedPaidDeclarationAlignmentTest.java',
+            'src/is/fivefivefive/CanDis/UnusedBindingDescopeTest.java',
+            'src/is/fivefivefive/CanDis/UnusedBindingD8Test.java',
+            'src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java',
+            'docs/section3-repair-audit/formal/UnusedGroupedBindings.lean',
+            'docs/distance-parity-20261107/UNUSED_BINDER_NORMALIZATION.md',
+        })
+        for entry in reduction['files']:
+            self.assertIn(entry['path'], expected)
+            if entry.get('added'):
+                self.assertEqual(set(entry), {'path', 'added'})
+            else:
+                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
+        prefix = patches[5]['files']
+        self.assertEqual({entry['path'] for entry in prefix}, {
+            'src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java',
+            'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
+            'src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java',
+            'src/is/fivefivefive/CanDis/core/FastPrefixSource.java',
+            'src/is/fivefivefive/CanDis/core/FastPrefixSourceTest.java',
+            'src/is/fivefivefive/CanDis/PrefixBinderPlanTest.java',
+            'docs/distance-parity-20261107/FastPrefixExchange.lean',
+        })
+        for entry in prefix:
+            self.assertIn(entry['path'], expected)
+            if entry.get('added'):
+                self.assertEqual(set(entry), {'path', 'added'})
+            else:
+                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
+                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
         libraries = patches[3]['files']
         self.assertEqual({entry['path'] for entry in libraries}, {
             'src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java',
@@ -48,6 +89,9 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual({entry['path'] for entry in budget}, {
             'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
             'src/is/fivefivefive/CanDis/WorkBudget.java',
+            'src/is/fivefivefive/CanDis/metric/TraceResources.java',
+            'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
+            'src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java',
             'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
             'src/is/fivefivefive/CanDis/core/EGraphNode.java',
             'src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java',
@@ -78,7 +122,7 @@ class RepositoryTests(unittest.TestCase):
         rendering = patches[1]['files']
         self.assertEqual(rendering, [{
             'path': 'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
-            'baseSha256': '9396337563551660ac237ab7d3c271bd10174bf73204b806f422937664c32e40',
+            'baseSha256': '3999fa9b351f9660204c52a476338f05716e92241b4360c2270ce32f12d639e0',
         }])
         self.assertNotEqual(rendering[0]['baseSha256'], expected[rendering[0]['path']])
 

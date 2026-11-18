@@ -12,6 +12,7 @@ public final class DeclarationMatrixLink {
     private final Map<String,String> selected;
     private final Set<String> targets, observedLeft, observedRight;
     private final boolean permitAbsentKeep;
+    private final BiPredicate<Integer,Integer> fixedPathCompletion;
 
     public DeclarationMatrixLink(List<String> left, List<String> right, Map<String,String> selected,
             Set<String> observedLeft, Set<String> observedRight) {
@@ -21,6 +22,12 @@ public final class DeclarationMatrixLink {
     /** Enabled only by callers with a complete, single-owner occurrence census. */
     public DeclarationMatrixLink(List<String> left, List<String> right, Map<String,String> selected,
             Set<String> observedLeft, Set<String> observedRight,boolean permitAbsentKeep) {
+        this(left,right,selected,observedLeft,observedRight,permitAbsentKeep,null);
+    }
+
+    DeclarationMatrixLink(List<String> left,List<String> right,Map<String,String> selected,
+            Set<String> observedLeft,Set<String> observedRight,boolean permitAbsentKeep,
+            BiPredicate<Integer,Integer> fixedPathCompletion) {
         DeclarationReplay.requireBounded(left.size(),right.size());
         DeclarationReplay.require(selected.size() <= 4096 && observedLeft.size() <= 4096
                 && observedRight.size() <= 4096,"Joint binding budget");
@@ -29,6 +36,7 @@ public final class DeclarationMatrixLink {
         targets = Set.copyOf(selected.values());
         this.observedLeft = Set.copyOf(observedLeft); this.observedRight = Set.copyOf(observedRight);
         this.permitAbsentKeep=permitAbsentKeep;
+        this.fixedPathCompletion=fixedPathCompletion;
         DeclarationReplay.require(new HashSet<>(left).size() == left.size()
                 && new HashSet<>(right).size() == right.size(),"Repeated declaration identity");
         DeclarationReplay.require(targets.size() == selected.size(),"Noninjective matrix correspondence");
@@ -38,7 +46,8 @@ public final class DeclarationMatrixLink {
         if(allows(i,j)) return true;
         return permitAbsentKeep && cost==0 && i>=0 && j>=0
                 && !selected.containsKey(left.get(i)) && !targets.contains(right.get(j))
-                && (!observedLeft.contains(left.get(i)) || !observedRight.contains(right.get(j)));
+                && (!observedLeft.contains(left.get(i)) || !observedRight.contains(right.get(j))
+                    || fixedPathCompletion!=null&&fixedPathCompletion.test(i,j));
     }
 
     /** Materializes each added keep, then verifies the receipt under that fixed
@@ -56,12 +65,15 @@ public final class DeclarationMatrixLink {
             if(i<0 || j<0 || completed.containsKey(left.get(i))) continue;
             String a=left.get(i),b=right.get(j);
             DeclarationReplay.require(op.getInt("cost")==0 && source.get(i).tuple().equals(target.get(j).tuple())
-                    && !occupied.contains(b) && (!observedLeft.contains(a) || !observedRight.contains(b)),
+                    && !occupied.contains(b) && (!observedLeft.contains(a) || !observedRight.contains(b)
+                        || fixedPathCompletion!=null&&fixedPathCompletion.test(i,j)),
                     "Unproved declaration completion");
             completed.put(a,b); occupied.add(b);
             premises.put(new JSONObject().put("sourceBinding",a).put("targetBinding",b)
                     .put("sourceAbsent",!observedLeft.contains(a)).put("targetAbsent",!observedRight.contains(b))
                     .put("source",source.get(i).json()).put("target",target.get(j).json()));
+            if(observedLeft.contains(a)&&observedRight.contains(b))
+                premises.getJSONObject(premises.length()-1).put("selectedPathNoNewVariableDiagonalChecked",true);
         }
         new DeclarationMatrixLink(left,right,completed,observedLeft,observedRight).verify(source,target,receipt);
         return new JSONObject().put("selectedMapping",new JSONObject(new TreeMap<>(selected)))

@@ -152,20 +152,34 @@ public final class CallOccurrenceCertificate {
 
     /**
      * True only when trusted normalization duplicated one parser occurrence
-     * without changing its callee, typed endpoint, or ordered arguments.  The
+     * without changing its callee or exact-support typed argument payload. The
      * deterministic tree path is intentionally excluded because each clone has
      * a different normalized path while retaining one parser occurrence id.
      */
     boolean sameParserOccurrencePayloadAs(
             CallOccurrenceCertificate other) {
-        return other != null
+        if (!(other != null
                 && occurrenceId == other.occurrenceId
                 && declaredArity == other.declaredArity
                 && sourceName.equals(other.sourceName)
                 && qualifiedCallee.equals(other.qualifiedCallee)
                 && kind.equals(other.kind)
-                && arityAuthority == other.arityAuthority
-                && sourceEndpoint.equals(other.sourceEndpoint)
-                && orderedArguments.equals(other.orderedArguments);
+                && arityAuthority == other.arityAuthority)) {
+            return false;
+        }
+        if (sourceEndpoint.equals(other.sourceEndpoint)
+                && orderedArguments.equals(other.orderedArguments)) {
+            return true;
+        }
+        // Domain/body clones can add unused ambient binders. Keep the raw
+        // receipts and require inverse inclusion to recover both endpoints.
+        TypedENode exact = sourceEndpoint.inExactSupportContext();
+        TypedENode otherExact = other.sourceEndpoint.inExactSupportContext();
+        return exact.equals(otherExact)
+                && exact.act(TypedEmbedding.inclusion(
+                        exact.context(), sourceEndpoint.context())).equals(sourceEndpoint)
+                && otherExact.act(TypedEmbedding.inclusion(
+                        otherExact.context(), other.sourceEndpoint.context()))
+                        .equals(other.sourceEndpoint);
     }
 }

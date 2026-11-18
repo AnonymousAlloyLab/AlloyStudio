@@ -7,7 +7,6 @@ import java.util.Set;
 
 /** Positive identity memo owned by one synchronous adapter invocation. */
 final class CertificateVerificationScope implements AutoCloseable {
-    static final int CAPACITY = 8192;
     private static final ThreadLocal<CertificateVerificationScope> CURRENT = new ThreadLocal<>();
     private final CertificateVerificationScope previous;
     final Set<TypedEqualityCertificate> visiting = identities();
@@ -35,8 +34,9 @@ final class CertificateVerificationScope implements AutoCloseable {
 
     Set<TypedEqualityCertificate> verified() {
         var currentPolicy = policy();
-        if (!policy.equals(currentPolicy) || verified.size() >= CAPACITY) {
-            // Discarding the memo only causes ordinary verification again.
+        if (!policy.equals(currentPolicy)) {
+            // Policy changes invalidate successes; size does not. The entire
+            // finite invocation memo is released by close().
             verified = identities();
             policy = currentPolicy;
         }

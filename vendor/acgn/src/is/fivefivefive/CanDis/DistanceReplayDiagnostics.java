@@ -31,12 +31,28 @@ public final class DistanceReplayDiagnostics {
         return capture(left, right, () -> CanonicalRepairTraces.certified(leftExact,rightExact).json());
     }
 
+    record Capture(JSONObject report,RuntimeException failure) { }
+
+    static Capture captureOutcome(Canonical.Prepared left,Canonical.Prepared right,
+            CanonicalAlloyPipeline.Prepared leftExact,CanonicalAlloyPipeline.Prepared rightExact) {
+        return captureOutcome(()->Canonical.evaluateWithTrace(left,right).json(),
+                ()->CanonicalRepairTraces.certified(leftExact,rightExact).json());
+    }
+
     private static JSONObject capture(Canonical.Prepared left, Canonical.Prepared right,
             Supplier<JSONObject> certified) {
-        JSONObject report = envelope();
-        report.put("fast", arm(() -> Canonical.evaluateWithTrace(left,right).json()));
-        report.put("certified", arm(certified));
-        return report;
+        return captureOutcome(()->Canonical.evaluateWithTrace(left,right).json(),certified).report();
+    }
+
+    // Keep the actual exception alongside diagnostic JSON; wire flags are not authority.
+    static Capture captureOutcome(Supplier<JSONObject> fast,Supplier<JSONObject> certified) {
+        var failures=new java.util.ArrayList<RuntimeException>();
+        var report=envelope().put("fast",arm(fast,failures)).put("certified",arm(certified,failures));
+        RuntimeException selected=failures.isEmpty()?null:failures.get(0);
+        for(var failure:failures)if(NativeOperationComparison.failure(failure,null).status()!=NativeOperationComparison.Status.UNCHECKABLE) {
+            selected=failure;break;
+        }
+        return new Capture(report,selected);
     }
 
     /** Diagnostic capture of the exact records that supplied the scan costs; no optimization. */
@@ -48,12 +64,14 @@ public final class DistanceReplayDiagnostics {
                 .put("sameSelectedRecordsAsNumericEvaluation",true);
     }
 
-    private static JSONObject arm(Supplier<JSONObject> supplier) {
+    private static JSONObject arm(Supplier<JSONObject> supplier,java.util.List<RuntimeException> failures) {
         try { return supplier.get().put("diagnosticStatus", "MATRIX_REPLAY_CHECKED"); }
         catch (RuntimeException ex) {
+            failures.add(ex);
             var failure=new JSONObject().put("diagnosticStatus", "BLOCKED").put("complete", false)
                     .put("matrixReplayChecked", false).put("errorType", ex.getClass().getName())
-                    .put("error", String.valueOf(ex.getMessage()));
+                    .put("error", String.valueOf(ex.getMessage()))
+                    .put("failureProvenance",NativeOperationComparison.failure(ex,null).evidence());
             if(ex instanceof is.fivefivefive.CanDis.metric.NativeRepairTrace.CaptureFailure capture)
                 failure.put("retainedNumericSelection",capture.selectedReceipt()).put("nativeTraceExtractionFailed",true);
             if(ex instanceof is.fivefivefive.CanDis.metric.NativeRepairTrace.ReplayFailure replay)

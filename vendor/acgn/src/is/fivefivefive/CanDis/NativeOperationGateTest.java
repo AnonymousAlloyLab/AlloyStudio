@@ -68,6 +68,82 @@ public final class NativeOperationGateTest {
         check(failedTrace.getJSONObject("retainedNumericSelection").getInt("distance")==7
                 && failedTrace.getJSONObject("previousNativeTrace").getBoolean("retainedPrevious"),"failed selection and prior arm retained");
         check(coverage.getString("certificationStatus").equals("BLOCKED"),"no certification grant");
+        Path collected=Files.createDirectory(root.resolve("collected"));
+        var all=new BatchParityGate(collected,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+        all.requireParity(source,"inv","invc",fast,driftCosts);
+        all.requireOperations(source,"inv","invc",fast,cert,()->mismatch,()->report);
+        all.requireOperations(naturalSource,"inv12","inv12c",mc,mc,()->unchecked,()->mr);
+        all.requireOperations(naturalSource,"inv12","inv12c",mc,mc,()->matched);
+        all.checkRunning();
+        check(all.discrepancyCoverage().getLong("events")==3,"ordinary discrepancies collected without latching");
+        check(all.operationCoverage().getLong("attempted")==3 && all.operationCoverage().getLong("matched")==1
+                && all.operationCoverage().getLong("mismatches")==1 && all.operationCoverage().getLong("unchecked")==1
+                && all.operationCoverage().getLong("invalidReplay")==0,"collecting never promotes nonmatches");
+        Path findings=collected.resolve("replay-discrepancies");
+        var recorded=new JSONObject(Files.readString(findings.resolve("00000002/incident.json")));
+        check(recorded.getString("reason").equals("NATIVE_OPERATION_MISMATCH")
+                && recorded.getString("sourceText").equals(Files.readString(source))
+                && !recorded.getBoolean("publicationAllowed"),"collected exact source and diagnostic boundary");
+        var collectedNative=new JSONObject(Files.readString(findings.resolve("00000002/native-replay.json")))
+                .getJSONObject("diagnostic");
+        check(collectedNative.has("firstDifference") && collectedNative.getBoolean("scanCostBindingChecked")
+                && collectedNative.has("selectedNativeTraces"),"collected first action and actual selected receipts");
+        // Fatal cases have fresh gates: invalid/internal failures are never collect-and-continue.
+        Path collectedDrift=Files.createDirectory(root.resolve("collected-drift"));
+        var fatalDrift=new BatchParityGate(collectedDrift,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+        stopped(()->fatalDrift.requireOperations(source,"inv","invc",driftCosts,driftCosts,()->mismatch));
+        stopped(fatalDrift::checkRunning);
+        check(fatalDrift.operationCoverage().getLong("invalidReplay")==1
+                && fatalDrift.discrepancyCoverage().getLong("events")==1,"invalid drift retained and latched");
+        Path collectedExtraction=Files.createDirectory(root.resolve("collected-extraction"));
+        var fatalExtraction=new BatchParityGate(collectedExtraction,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+        stopped(()->fatalExtraction.captureTrace(source,"inv","invc",()->{throw is.fivefivefive.CanDis.metric.NativeRepairTrace.captureFailure(
+                new JSONObject().put("distance",7),new IllegalArgumentException("broken extraction"));},()->mr));
+        stopped(fatalExtraction::checkRunning);
+        var extractionEvidence=new JSONObject(Files.readString(collectedExtraction.resolve("replay-discrepancies/00000001/native-replay.json")))
+                .getJSONObject("diagnostic");
+        check(extractionEvidence.getJSONObject("retainedNumericSelection").getInt("distance")==7
+                && extractionEvidence.has("previousNativeTrace"),"collect failed selection without pretending replayed");
+        Thread[] collectors=new Thread[4];
+        for(int i=0;i<collectors.length;i++) {
+            collectors[i]=new Thread(()->all.requireOperations(source,"inv","invc",fast,cert,()->mismatch));
+            collectors[i].start();
+        }
+        for(var collector:collectors)collector.join(5000);
+        check(all.discrepancyCoverage().getLong("events")==7
+                && Files.readAllLines(findings.resolve("index.jsonl")).size()==7,"concurrent findings have distinct retained records");
+        all.checkRunning();
+        Path collectedFile=Files.createDirectory(root.resolve("collected-file"));
+        var fatalFile=new BatchParityGate(collectedFile,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+        stopped(()->fatalFile.recordFileFailure(source,null,null,"original parse failure"));
+        stopped(fatalFile::checkRunning);
+        var laterCalls=new AtomicInteger();
+        stopped(()->fatalFile.requireOperations(source,"inv","invc",fast,cert,()->{laterCalls.incrementAndGet();return mismatch;}));
+        check(laterCalls.get()==0,"file failure prevents next comparison");
+        var unnamed=new JSONObject(Files.readString(collectedFile.resolve("replay-discrepancies/00000001/incident.json")));
+        var unnamedEvidence=new JSONObject(Files.readString(collectedFile.resolve("replay-discrepancies/00000001/native-replay.json")));
+        check(unnamed.isNull("leftPredicate") && unnamed.isNull("rightPredicate")
+                && unnamedEvidence.isNull("leftPredicate")
+                && unnamedEvidence.getJSONObject("diagnostic").getString("error").equals("original parse failure"),
+                "null predicate names retain the original file failure");
+        check(unnamed.getString("status").equals("RECORDED_STOPPED")
+                && fatalFile.discrepancyCoverage().getLong("events")==1
+                && Files.readAllLines(collectedFile.resolve("replay-discrepancies/index.jsonl")).size()==1,"unnamed fatal failure indexed once");
+        var mainFile=new JSONObject(Files.readString(collectedFile.resolve("parity-incident.json")));
+        var mainFileEvidence=new JSONObject(Files.readString(collectedFile.resolve("parity-native-replay.json")));
+        check(mainFile.isNull("leftPredicate")&&mainFile.isNull("rightPredicate")
+                &&mainFileEvidence.isNull("leftPredicate")&&mainFileEvidence.isNull("rightPredicate")
+                &&mainFileEvidence.getJSONObject("diagnostic").getString("error").equals("original parse failure"),
+                "main fatal evidence preserves unknown identity and exact error");
+        try{new BatchParityGate(collected,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+            throw new AssertionError("Collected findings overwritten");}catch(IllegalStateException expected){checks++;}
+        try{new BatchParityGate(root,BatchParityGate.Mode.STRICT_CERTIFIED,true);
+            throw new AssertionError("Collecting enabled strict certification");}catch(IllegalArgumentException expected){checks++;}
+        Path unavailable=Files.createDirectory(root.resolve("unavailable"));
+        var failedWriter=new BatchParityGate(unavailable,BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS,true);
+        Files.writeString(unavailable.resolve("replay-discrepancies"),"not a directory");
+        stopped(()->failedWriter.requireParity(source,"inv","invc",fast,driftCosts));
+        stopped(failedWriter::checkRunning);
         Files.writeString(root.resolve("coverage.json"),coverage.toString(2),StandardOpenOption.CREATE_NEW);
         System.out.println("NativeOperationGateTest: "+checks+" checks passed");
     }

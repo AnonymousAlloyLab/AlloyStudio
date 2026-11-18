@@ -2,16 +2,21 @@ package is.fivefivefive.CanDis.metric;
 
 /** Resource accounting, not admission of a syntactic subset. Failures never count as replay. */
 public final class TraceResources {
+    /** Identifies an existing accounting limit, not a new admission policy. */
+    public static final class Exhausted extends IllegalStateException {
+        public Exhausted(String code) { super(code); }
+    }
     private static final long MAX_BYTES=64L*1024*1024;
     private long remaining=MAX_BYTES;
     public void spend(long bytes) {
         is.fivefivefive.CanDis.WorkBudget.charge(1);
-        if(bytes<0||bytes>remaining)throw new IllegalStateException("NATIVE_TRACE_RESOURCE_BUDGET");
+        if(bytes<0)throw new IllegalArgumentException("Negative trace byte count");
+        if(bytes>remaining)throw new Exhausted("NATIVE_TRACE_RESOURCE_BUDGET");
         remaining-=bytes;
     }
     public void cells(long rows,long columns) {
-        if(rows<0||columns<0||(rows!=0&&columns>remaining/4/rows))
-            throw new IllegalStateException("NATIVE_TRACE_RESOURCE_BUDGET");
+        if(rows<0||columns<0)throw new IllegalArgumentException("Negative trace cell dimensions");
+        if(rows!=0&&columns>remaining/4/rows)throw new Exhausted("NATIVE_TRACE_RESOURCE_BUDGET");
         spend(4L*rows*columns);
     }
     public static void requireCells(long rows,long columns) { new TraceResources().cells(rows,columns); }

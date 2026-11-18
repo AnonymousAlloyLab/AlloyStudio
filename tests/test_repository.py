@@ -27,104 +27,76 @@ class RepositoryTests(unittest.TestCase):
         vendor = ROOT / 'vendor/acgn'
         snapshot = json.loads((vendor / 'snapshot.json').read_text())
         expected = {entry['path']: entry['sha256'] for entry in snapshot['files']}
+        self.assertEqual(len(expected), len(snapshot['files']))
         actual = {p.relative_to(vendor).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in vendor.rglob('*') if p.is_file() and p.name != 'snapshot.json'}
-        self.assertEqual(actual, expected)
-        self.assertEqual(snapshot['commit'], 'f955150dec4fc92e35b4ee543a7d71b82381c686')
+        self.assertEqual(actual.keys(), expected.keys())
+        self.assertEqual([path for path in expected if actual[path] != expected[path]], [])
+        self.assertEqual(snapshot['upstreamTag'], 'v3')
+        self.assertEqual(snapshot['commit'], '8770cb4b5f7133bad78058d9bc214f0ca36130d0')
+
         patches = snapshot['localPatches']
-        self.assertEqual([patch['id'] for patch in patches],
-                         ['parser-source-origins', 'canonical-residual-quantifier-rendering',
-                          'request-work-budget', 'bundled-library-call-signatures',
-                          'scoped-positive-verification-and-prepared-orbits',
-                          'source-checked-fast-prefix-admission',
-                          'bottom-up-unused-binding-normalization'])
-        reduction = patches[6]
-        self.assertRegex(reduction['upstreamIntegratedCommit'], r'^[0-9a-f]{40}$')
-        self.assertEqual({entry['path'] for entry in reduction['files']}, {
-            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
-            'src/is/fivefivefive/CanDis/core/NormalForm.java',
-            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
-            'src/is/fivefivefive/CanDis/MASGVisitorTypeRegressionTest.java',
-            'src/is/fivefivefive/CanDis/core/GroupedPaidDeclarationAlignmentTest.java',
-            'src/is/fivefivefive/CanDis/UnusedBindingDescopeTest.java',
-            'src/is/fivefivefive/CanDis/UnusedBindingD8Test.java',
-            'src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java',
-            'docs/section3-repair-audit/formal/UnusedGroupedBindings.lean',
-            'docs/distance-parity-20261107/UNUSED_BINDER_NORMALIZATION.md',
-        })
-        for entry in reduction['files']:
-            self.assertIn(entry['path'], expected)
-            if entry.get('added'):
-                self.assertEqual(set(entry), {'path', 'added'})
-            else:
-                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
-                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
-        prefix = patches[5]['files']
-        self.assertEqual({entry['path'] for entry in prefix}, {
-            'src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java',
-            'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
-            'src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java',
-            'src/is/fivefivefive/CanDis/core/FastPrefixSource.java',
-            'src/is/fivefivefive/CanDis/core/FastPrefixSourceTest.java',
-            'src/is/fivefivefive/CanDis/PrefixBinderPlanTest.java',
-            'docs/distance-parity-20261107/FastPrefixExchange.lean',
-        })
-        for entry in prefix:
-            self.assertIn(entry['path'], expected)
-            if entry.get('added'):
-                self.assertEqual(set(entry), {'path', 'added'})
-            else:
-                self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
-                self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
-        libraries = patches[3]['files']
-        self.assertEqual({entry['path'] for entry in libraries}, {
-            'src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java',
-            'src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java',
-            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
-        })
-        for entry in libraries:
-            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
-            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
-        budget = patches[2]['files']
-        self.assertEqual({entry['path'] for entry in budget}, {
-            'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
+        patch_paths = {
+            'parser-source-origins': {
+                'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
+                'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+                'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+                'src/is/fivefivefive/CanDis/core/NormalForm.java',
+                'src/is/fivefivefive/CanDis/core/QuantiVar.java',
+                'src/is/fivefivefive/CanDis/ir/IRAgent.java',
+            },
+            'canonical-residual-quantifier-rendering': {
+                'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
+            },
+            'request-work-budget': {
+                'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
+                'src/is/fivefivefive/CanDis/WorkBudget.java',
+                'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
+                'src/is/fivefivefive/CanDis/core/EGraphNode.java',
+                'src/is/fivefivefive/CanDis/core/FastBinderOrbit.java',
+                'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
+                'src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java',
+                'src/is/fivefivefive/CanDis/core/FastSetDedup.java',
+                'src/is/fivefivefive/CanDis/core/JoinSegmentation.java',
+                'src/is/fivefivefive/CanDis/core/LocalBinderTransport.java',
+                'src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java',
+                'src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java',
+                'src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java',
+                'src/is/fivefivefive/CanDis/core/V3WorkBudgetTest.java',
+                'src/is/fivefivefive/CanDis/ir/IRAgent.java',
+                'src/is/fivefivefive/CanDis/metric/MatrixReplay.java',
+                'src/is/fivefivefive/CanDis/metric/TraceResources.java',
+            },
+            'bundled-library-call-signatures': {
+                'src/is/fivefivefive/ACGN/alloy/AlloyLibraryCallableLedger.java',
+                'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
+                'src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java',
+            },
+        }
+        self.assertEqual([patch['id'] for patch in patches], list(patch_paths))
+        added_paths = {
             'src/is/fivefivefive/CanDis/WorkBudget.java',
-            'src/is/fivefivefive/CanDis/metric/TraceResources.java',
-            'src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java',
-            'src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java',
-            'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
-            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
-            'src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java',
-            'src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java',
-            'src/is/fivefivefive/CanDis/ir/IRAgent.java',
-        })
-        for entry in budget:
-            if entry.get('added'):
-                # A file the local patch introduces has no upstream base.
-                self.assertEqual(set(entry), {'path', 'added'})
-                self.assertIn(entry['path'], expected)
-                continue
-            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
-            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
-        files = patches[0]['files']
-        self.assertEqual({entry['path'] for entry in files}, {
-            'src/is/fivefivefive/ACGN/asg/AugmentedNode.java',
-            'src/is/fivefivefive/ACGN/visitor/MASGVisitor.java',
-            'src/is/fivefivefive/CanDis/ir/IRAgent.java',
-            'src/is/fivefivefive/CanDis/core/EGraphNode.java',
-            'src/is/fivefivefive/CanDis/core/NormalForm.java',
-            'src/is/fivefivefive/CanDis/core/QuantiVar.java',
-        })
-        self.assertEqual(len(files), 6)
-        for entry in files:
-            self.assertRegex(entry['baseSha256'], r'^[0-9a-f]{64}$')
-            self.assertNotEqual(entry['baseSha256'], expected[entry['path']])
-        rendering = patches[1]['files']
-        self.assertEqual(rendering, [{
-            'path': 'src/is/fivefivefive/CanDis/core/CanonicalDistance.java',
-            'baseSha256': '3999fa9b351f9660204c52a476338f05716e92241b4360c2270ce32f12d639e0',
-        }])
-        self.assertNotEqual(rendering[0]['baseSha256'], expected[rendering[0]['path']])
+            'src/is/fivefivefive/CanDis/core/V3WorkBudgetTest.java',
+        }
+        upstream_bases = {}
+        for patch in patches:
+            paths = {entry['path'] for entry in patch['files']}
+            self.assertEqual(len(paths), len(patch['files']))
+            self.assertEqual(paths, patch_paths[patch['id']])
+            for entry in patch['files']:
+                path = entry['path']
+                self.assertIn(path, expected)
+                if path in added_paths:
+                    self.assertEqual(entry, {'path': path, 'added': True})
+                    continue
+                self.assertEqual(set(entry), {'path', 'baseSha256'})
+                upstream_hash = entry['baseSha256']
+                self.assertRegex(upstream_hash, r'^[0-9a-f]{64}$')
+                self.assertNotEqual(upstream_hash, expected[path])
+                self.assertEqual(upstream_bases.setdefault(path, upstream_hash), upstream_hash)
+
+        self.assertEqual(upstream_bases['src/is/fivefivefive/CanDis/core/CanonicalDistance.java'],
+                         '0bac9738024c21f47a4fd7d4f4dfde0f3ac91de616f0fd3652c5447608cc1ff1')
 
     def test_no_credential_files_or_token_patterns_in_delivery_source(self):
         token = re.compile(rb'sk-(?:proj-)?[A-Za-z0-9_-]{40,}')

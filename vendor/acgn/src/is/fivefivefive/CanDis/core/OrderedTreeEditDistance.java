@@ -177,7 +177,7 @@ public final class OrderedTreeEditDistance {
                 List<String> labels,
                 List<Integer> leftmost,int[] budget,int depthRemaining) {
             if (--budget[0] < 0 || depthRemaining < 0)
-                throw new IllegalStateException("TEMPORAL_REPLAY_NODE_OR_DEPTH_BUDGET");
+                throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("TEMPORAL_REPLAY_NODE_OR_DEPTH_BUDGET");
             Objects.requireNonNull(node, "tree node");
             is.fivefivefive.CanDis.WorkBudget.charge(1);
             List<? extends T> children = Objects.requireNonNull(

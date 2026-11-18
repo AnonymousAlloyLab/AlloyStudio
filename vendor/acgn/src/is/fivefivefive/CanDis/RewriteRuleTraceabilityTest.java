@@ -15,15 +15,15 @@ public final class RewriteRuleTraceabilityTest {
         if (!assessment.failures().isEmpty()) {
             throw new AssertionError(assessment.render());
         }
-        if (assessment.rules() != 61) {
-            throw new AssertionError("Expected 61 governed rule families, found "
+        if (assessment.rules() != 63) {
+            throw new AssertionError("Expected 63 governed rule families, found "
                     + assessment.rules());
         }
         if (assessment.baselineRules() != 24) {
             throw new AssertionError("Expected 24 bootstrap rules, found "
                     + assessment.baselineRules());
         }
-        System.out.println("RewriteRuleTraceabilityTest passed: 61 rule families, "
+        System.out.println("RewriteRuleTraceabilityTest passed: 63 rule families, "
                 + "24 bootstrap rules, 0 correspondence failures");
     }
 }

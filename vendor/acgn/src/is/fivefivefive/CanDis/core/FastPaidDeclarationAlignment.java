@@ -13,7 +13,7 @@ final class FastPaidDeclarationAlignment {
 
     static boolean supportsPair(List<NormalForm> left,List<NormalForm> right) {
         if(FastNestedPaidScope.supportsPair(left,right)) return true;
-        if(!supports(left) || !supports(right)) return false;
+        if(!supportsDirectEndpoint(left) || !supportsDirectEndpoint(right)) return false;
         boolean multipleOwners=(!left.get(0).getLocalQuantiVars().isEmpty()
                 && FastLocalPaidScope.checkedOwnerCount(left.get(0))>1)
                 || (!right.get(0).getLocalQuantiVars().isEmpty()
@@ -31,8 +31,10 @@ final class FastPaidDeclarationAlignment {
      * prefixes, never a replacement for their existing alpha/exchange route. */
     static boolean supportsSupplementalPair(List<NormalForm> left,List<NormalForm> right) {
         if(!supports(left) || !supports(right)) return false;
+        if(!supportsDirectEndpoint(left) || !supportsDirectEndpoint(right)) return true;
         var a=left.get(0); var b=right.get(0);
         boolean localA=!a.getLocalQuantiVars().isEmpty(), localB=!b.getLocalQuantiVars().isEmpty();
+        if(localA && localB) return true;
         if(localA==localB) return false;
         return FastLocalPaidScope.checkedOwnerCount(localA?a:b)>1
                 && (!rigidPrefix(a) || !rigidPrefix(b));
@@ -56,6 +58,16 @@ final class FastPaidDeclarationAlignment {
     }
 
     static boolean supports(List<NormalForm> forms) {
+        return supports(forms, true);
+    }
+
+    // Broader rigid-group admission adds candidates; it must not select the
+    // exclusive direct route in place of an existing coherent candidate.
+    static boolean supportsDirectEndpoint(List<NormalForm> forms) {
+        return supports(forms, false);
+    }
+
+    private static boolean supports(List<NormalForm> forms, boolean rigidGroups) {
         if (forms.size() != 1) return false;
         NormalForm f = forms.get(0);
         if (!f.isFrozenForCertification() || f.getMatrixEGraph() == null
@@ -67,6 +79,7 @@ final class FastPaidDeclarationAlignment {
         // A changed owner must not evade grouped validation by splitting one
         // original ONE tuple into apparently independent singleton owners.
         if (!f.originalGroupedOneOriginsIntact()) return false;
+        if (f.hasIssuedGroupedDeclarations() && !f.matrixDeclarationsMatchSource()) return false;
         Set<String> names = new HashSet<>();
         Map<String,List<QuantiVar>> declarations = new LinkedHashMap<>();
         var firstType = qs.get(0).getExactAlloyType();
@@ -80,9 +93,9 @@ final class FastPaidDeclarationAlignment {
                         && q.getQuantifier() != QuantiVar.Quantifier.LONE
                         && q.getQuantifier() != QuantiVar.Quantifier.ONE)
                     || q.getCardinality() != QuantiVar.Cardinality.ONE || q.getDisjointnessClass() < 0
-                    || (q.getDisjointnessClass() > 0 && (!f.getLocalQuantiVars().isEmpty()
-                        || (q.getQuantifier() != QuantiVar.Quantifier.ALL
-                            && q.getQuantifier() != QuantiVar.Quantifier.SOME)))
+                    || (!rigidGroups && q.getDisjointnessClass() > 0
+                        && q.getQuantifier() != QuantiVar.Quantifier.ALL
+                        && q.getQuantifier() != QuantiVar.Quantifier.SOME)
                     || q.getBindingPath().isEmpty()
                     // A substituted owner must not split a retained grouped
                     // prefix into unchecked singletons while keeping its slot key.
@@ -92,7 +105,7 @@ final class FastPaidDeclarationAlignment {
                     || !type.sharesParserModuleAuthorityWith(firstType)) return false;
             declarations.computeIfAbsent(q.getBindingPath(), ignored -> new ArrayList<>()).add(q);
         }
-        if (!groupedSlotsMatchSource(f, declarations)) return false;
+        if (!groupedSlotsMatchSource(f, declarations, rigidGroups)) return false;
         // ONE/LONE remain ordered prefix barriers. Admission beneath a retained
         // local binder requires its actual source kind, owner, domain and types;
         // the paid path changes neither that scope nor prefix ordering.
@@ -105,7 +118,7 @@ final class FastPaidDeclarationAlignment {
         while (!pending.isEmpty()) {
             EGraphNode node = pending.removeFirst();
             if (!seen.add(node)) continue;
-            if (seen.size() > 4096) throw new IllegalStateException("PAID_DECLARATION_GRAPH_BUDGET");
+            if (seen.size() > 4096) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_GRAPH_BUDGET");
             if (node.getOpcode() == EGraphNode.Opcode.REF) return false;
             if (node.getOpcode() == EGraphNode.Opcode.CALL) {
                 if(calls == null) calls = ClosedCallEvidence.from(f);
@@ -138,7 +151,7 @@ final class FastPaidDeclarationAlignment {
             pending.add(side==0?form.getCertificationMatrixEGraph():form.getMatrixEGraph());
             while(!pending.isEmpty()) {
                 var node=pending.remove();if(!seen.add(node))continue;
-                if(seen.size()>4096)throw new IllegalStateException("PAID_DECLARATION_GRAPH_BUDGET");
+                if(seen.size()>4096)throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_GRAPH_BUDGET");
                 switch(node.getOpcode()) {
                     case GENERICRELDECL,DISJ,VAR,DISJVAR,EXISTS,FORALL -> { return false; }
                     case VARIABLE -> {
@@ -164,10 +177,26 @@ final class FastPaidDeclarationAlignment {
     // A shared declaration path is an owner, not a slot. Disjoint groups keep
     // their original payload and slot order; charged links are not exchanges.
     private static boolean groupedSlotsMatchSource(NormalForm form, Map<String,List<QuantiVar>> declarations) {
+        return groupedSlotsMatchSource(form, declarations, true);
+    }
+
+    private static boolean groupedSlotsMatchSource(NormalForm form, Map<String,List<QuantiVar>> declarations,
+            boolean rigidGroups) {
+        // Presentation paths may coalesce separate declarations during prefix
+        // normalization. Only issued occurrences identify an original tuple.
+        if(form.matrixDeclarationsMatchSource()) {
+            declarations=new LinkedHashMap<>();
+            for(var q:form.getMatrixQuantiVars())for(var frame:q.getDeclarationFrames()) {
+                var group=declarations.computeIfAbsent(Long.toString(frame.declarationOccurrence()),
+                        ignored -> new ArrayList<>());
+                if(!group.contains(q))group.add(q);
+            }
+        }
         Map<String,QuantiVar> grouped = new HashMap<>();
         Set<String> aliases = new HashSet<>();
         Map<Integer,String> disjointOwners = new HashMap<>();
         Map<QuantiVar,Integer> positions = new IdentityHashMap<>();
+        boolean checkedRigidGroup = false;
         for (int i=0;i<form.getMatrixQuantiVars().size();i++) positions.put(form.getMatrixQuantiVars().get(i),i);
         for (var group : declarations.values()) {
             if (group.size() < 2) {
@@ -177,13 +206,15 @@ final class FastPaidDeclarationAlignment {
             // Grouped outer slots remain distinct beneath a retained owner.
             // supports() also requires FastLocalPaidScope's original/current
             // occurrence checks; this does not admit local or disjoint exchange.
-            if (!form.getLocalQuantiVars().isEmpty()
-                    && group.get(0).getDisjointnessClass()!=0) return false;
             var first = group.get(0);
             boolean groupedOne = first.getQuantifier() == QuantiVar.Quantifier.ONE
                     && form.getLocalQuantiVars().isEmpty() && form.hasOriginalGroupedOne(group);
+            boolean rigid = first.getQuantifier() == QuantiVar.Quantifier.ONE
+                    || first.getQuantifier() == QuantiVar.Quantifier.LONE;
+            checkedRigidGroup |= rigidGroups && rigid;
             if (first.getQuantifier() != QuantiVar.Quantifier.ALL
-                    && first.getQuantifier() != QuantiVar.Quantifier.SOME && !groupedOne) return false;
+                    && first.getQuantifier() != QuantiVar.Quantifier.SOME && !groupedOne
+                    && !(rigidGroups && rigid && issuedTupleMatches(form, group))) return false;
             int disjoint = first.getDisjointnessClass();
             if (disjoint > 0 && disjointOwners.putIfAbsent(disjoint,first.getBindingPath()) != null) return false;
             for (int slot=0;slot<group.size();slot++) {
@@ -195,10 +226,13 @@ final class FastPaidDeclarationAlignment {
                 if (!q.getDeBruijnKey().equals(expectedKey)
                         || q.getQuantifier() != first.getQuantifier()
                         || q.getDisjointnessClass() != disjoint
-                        || ((disjoint > 0 || groupedOne) && positions.get(q) != positions.get(first)+slot)
+                        || ((disjoint > 0 || rigid) && positions.get(q) != positions.get(first)+slot)
                         || !q.getCarrierTypeName().equals(first.getCarrierTypeName())
                         || !q.getExactAlloyType().sameOccurrenceEvidenceAs(first.getExactAlloyType())) return false;
-                for (String alias : q.getOriginalNames()) if (!aliases.add(alias)) return false;
+                // Shadowed spellings in separate declarations are not identities.
+                // Only the complete issued-frame check may discharge a collision.
+                for (String alias : q.getOriginalNames())
+                    if (!aliases.add(alias) && !form.matrixDeclarationsMatchSource()) return false;
                 grouped.put(q.getName(),q);
             }
         }
@@ -212,7 +246,7 @@ final class FastPaidDeclarationAlignment {
         while (!pending.isEmpty()) {
             EGraphNode node = pending.removeFirst();
             if (!seen.add(node)) continue;
-            if (seen.size() > 4096) throw new IllegalStateException("PAID_DECLARATION_GRAPH_BUDGET");
+            if (seen.size() > 4096) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_GRAPH_BUDGET");
             QuantiVar q = node.getOpcode() == EGraphNode.Opcode.VARIABLE ? grouped.get(node.getAlphaName()) : null;
             if (q != null) {
                 if (node.getSemanticIdentity() == null || !q.getOriginalNames().contains(node.getSemanticIdentity())
@@ -223,7 +257,65 @@ final class FastPaidDeclarationAlignment {
             }
             pending.addAll(node.getChildren());
         }
-        return observed.equals(grouped.keySet());
+        if (observed.equals(grouped.keySet()) && !checkedRigidGroup) return true;
+        return form.matrixDeclarationsMatchSource() && declaredReadsMatchSource(form);
+    }
+
+    private static boolean issuedTupleMatches(NormalForm form, List<QuantiVar> group) {
+        if (!form.matrixDeclarationsMatchSource()) return false;
+        Map<Long,Set<Integer>> declarations = new HashMap<>();
+        for (int slot = 0; slot < group.size(); slot++) {
+            for (var frame : group.get(slot).getDeclarationFrames()) {
+                if (!form.ownsDeclarationFrame(frame) || frame.tupleSlot() != slot
+                        || !declarations.computeIfAbsent(frame.declarationOccurrence(), ignored -> new HashSet<>()).add(slot))
+                    return false;
+            }
+        }
+        return !declarations.isEmpty() && declarations.values().stream().allMatch(slots -> slots.size() == group.size());
+    }
+
+    private static boolean declaredReadsMatchSource(NormalForm form) {
+        var declarations = new HashMap<String,QuantiVar>();
+        var semanticAliases = new HashMap<String,QuantiVar>();
+        for (var q : form.getMatrixQuantiVars()) {
+            declarations.put(q.getName(), q);
+            for (String alias : q.getOriginalNames()) semanticAliases.put(alias, q);
+        }
+        var sourceOccurrences = new HashMap<Long,QuantiVar>();
+        Set<EGraphNode> sourceReads = Collections.newSetFromMap(new IdentityHashMap<>());
+        boolean checkingSource = true;
+        for (var root : List.of(form.getCertificationMatrixEGraph(), form.getMatrixEGraph())) {
+            Set<EGraphNode> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            var pending = new ArrayDeque<EGraphNode>();
+            pending.add(root);
+            while (!pending.isEmpty()) {
+                var node = pending.removeFirst();
+                if (!seen.add(node)) continue;
+                if (seen.size() > 4096) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_GRAPH_BUDGET");
+                if (node.getOpcode() == EGraphNode.Opcode.VARIABLE) {
+                    if (checkingSource) sourceReads.add(node);
+                    var q = declarations.get(node.getAlphaName());
+                    if (q == null) {
+                        if (semanticAliases.containsKey(node.getSemanticIdentity())
+                                || form.getLocalQuantiVars().isEmpty()) return false;
+                    } else if (!node.getChildren().isEmpty() || node.getSemanticIdentity() == null
+                            || !q.getOriginalNames().contains(node.getSemanticIdentity())
+                            || !q.getOriginalNames().contains(node.getSourceName())
+                            || !q.getExactAlloyType().sameOccurrenceEvidenceAs(node.getExactAlloyType())) return false;
+                    if (q != null) {
+                        long occurrence = node.getSourceOccurrenceLineage();
+                        if (checkingSource) {
+                            var prior = sourceOccurrences.putIfAbsent(occurrence, q);
+                            if (prior != null && prior != q) return false;
+                        } else if (sourceOccurrences.get(occurrence) != q) return false;
+                    }
+                }
+                pending.addAll(node.getChildren());
+            }
+            if (checkingSource && !form.sourceReadInventoryMatches(sourceReads)) return false;
+            checkingSource = false;
+        }
+        return true;
     }
 
     static void enumerate(List<QuantiVar> left, List<QuantiVar> right, int[][] dp,
@@ -236,7 +328,7 @@ final class FastPaidDeclarationAlignment {
             java.util.function.BiConsumer<Map<String,String>,List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move>> accept,
             boolean retain) {
         if (left.size() > MAX_DECLARATIONS || right.size() > MAX_DECLARATIONS)
-            throw new IllegalStateException("PAID_DECLARATION_SIZE_BUDGET");
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_SIZE_BUDGET");
         walk(left,right,dp,update,accept,left.size(),right.size(),new LinkedHashMap<>(),new long[1],retain?new ArrayList<>():null);
     }
 
@@ -245,7 +337,7 @@ final class FastPaidDeclarationAlignment {
             java.util.function.BiConsumer<Map<String,String>,List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move>> accept,
             int i,int j,Map<String,String> paid,long[] visits,List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move> path) {
         is.fivefivefive.CanDis.WorkBudget.charge(1);
-        if (visits[0] >= MAX_VISITS) throw new IllegalStateException("PAID_DECLARATION_PATH_BUDGET");
+        if (visits[0] >= MAX_VISITS) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_PATH_BUDGET");
         visits[0]++;
         if (i == 0 && j == 0) {
             var selected=path==null?List.<is.fivefivefive.CanDis.metric.DeclarationReplay.Move>of():new ArrayList<>(path);

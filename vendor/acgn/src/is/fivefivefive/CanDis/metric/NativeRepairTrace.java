@@ -7,7 +7,7 @@ import org.json.JSONObject;
 /** Immutable numeric selection and executable metric-representation program.
  * This is in-process authority, not a source-construction or wire certificate. */
 public final class NativeRepairTrace {
-    public static final class ReplayFailure extends IllegalArgumentException {
+    public static final class ReplayFailure extends ReplayValidationException {
         private final int operation;
         private final String payloadPath;
         ReplayFailure(int operation,String payloadPath,String message,Throwable cause) {
@@ -34,8 +34,19 @@ public final class NativeRepairTrace {
     private final boolean exactForStoredOrbits;
     private final long binderAlignments;
     private final ToIntFunction<JSONObject> replayer;
+    private record Endpoints(java.util.List<is.fivefivefive.CanDis.core.NormalForm> fastSource,
+            java.util.List<is.fivefivefive.CanDis.core.NormalForm> fastTarget,
+            RepairView projectedSource, RepairView projectedTarget) { }
+    private final Endpoints endpoints;
+    private final is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact sourceArtifact,targetArtifact;
 
     private NativeRepairTrace(JSONObject evidence, ToIntFunction<JSONObject> replayer) {
+        this(evidence,replayer,null,null,null);
+    }
+    private NativeRepairTrace(JSONObject evidence, ToIntFunction<JSONObject> replayer, Endpoints endpoints,
+            is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact sourceArtifact,
+            is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact targetArtifact) {
+        this.endpoints=endpoints;this.sourceArtifact=sourceArtifact;this.targetArtifact=targetArtifact;
         this.replayer=Objects.requireNonNull(replayer);
         distance=DeclarationReplay.integer(evidence,"distance");
         temporal=DeclarationReplay.integer(evidence,"temporalDistance");quantifiers=DeclarationReplay.integer(evidence,"quantifierDistance");
@@ -58,6 +69,27 @@ public final class NativeRepairTrace {
     /** Producers supply the retained decision and a fixed-choice, non-optimizing executor. */
     public static NativeRepairTrace checked(JSONObject evidence,ToIntFunction<JSONObject> replayer) {
         return new NativeRepairTrace(evidence,replayer);
+    }
+    public static NativeRepairTrace checkedFast(JSONObject evidence,ToIntFunction<JSONObject> replayer,
+            is.fivefivefive.CanDis.core.CanonicalDistance.Prepared source,
+            is.fivefivefive.CanDis.core.CanonicalDistance.Prepared target) {
+        return new NativeRepairTrace(evidence,replayer,new Endpoints(source.comparisonForms(),target.comparisonForms(),null,null),null,null);
+    }
+    public static NativeRepairTrace checkedProjected(JSONObject evidence,ToIntFunction<JSONObject> replayer,
+            RepairView source,RepairView target) {
+        return new NativeRepairTrace(evidence,replayer,new Endpoints(null,null,source,target),null,null);
+    }
+    /** Actual endpoints captured by the native producer, never reconstructed from receipt ordinals. */
+    public java.util.List<is.fivefivefive.CanDis.core.NormalForm> comparisonForms(boolean source) {
+        if(endpoints==null||endpoints.fastSource()==null)throw new IllegalArgumentException("Missing retained Fast endpoints");
+        return source?endpoints.fastSource():endpoints.fastTarget();
+    }
+    public RepairView projectedView(boolean source) {
+        if(endpoints==null||endpoints.projectedSource()==null)throw new IllegalArgumentException("Missing retained projected endpoints");
+        return source?endpoints.projectedSource():endpoints.projectedTarget();
+    }
+    public is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact constructionArtifact(boolean source) {
+        return Objects.requireNonNull(source?sourceArtifact:targetArtifact,"Missing retained construction artifact");
     }
 
     public int distance() { return distance; }
@@ -185,7 +217,12 @@ public final class NativeRepairTrace {
 
     /** Retains construction derivations separately; they are not charged repair operations. */
     public NativeRepairTrace linkConstruction(JSONObject evidence,Runnable checkPremises) {
+        return linkConstruction(evidence,checkPremises,sourceArtifact,targetArtifact);
+    }
+    public NativeRepairTrace linkConstruction(JSONObject evidence,Runnable checkPremises,
+            is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact source,
+            is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact target) {
         JSONObject linked=json().put("constructionDerivations",evidence);
-        return checked(linked,program->{checkPremises.run();return replayer.applyAsInt(program);});
+        return new NativeRepairTrace(linked,program->{checkPremises.run();return replayer.applyAsInt(program);},endpoints,source,target);
     }
 }

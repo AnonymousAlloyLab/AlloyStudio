@@ -29,7 +29,9 @@ public final class UnusedBindingEvidenceTest {
     }
     private static void rejectsUnpaidSimplification() throws Exception {
         try {
-            agent("all x:A | x in x.r and not (x in x.r)").computeNormalForm((stage, form, forms) -> {
+            // v3 folds contradictions before this stage. Duplicate conjuncts
+            // still reach the in-scope simplifier and exercise the paid rewrite.
+            agent("all x:A | x in x.r and x in x.r").computeNormalForm((stage, form, forms) -> {
                 if (!stage.equals("begin-unused-binding-descope")) return;
                 var node = conjunction(form.getMatrixEGraph());
                 check(node != null, "Boolean control exists before simplification");
@@ -42,6 +44,9 @@ public final class UnusedBindingEvidenceTest {
                 check(rejected, "zero fuel refuses the new simplifier entry point");
                 check(node.getOpcode() == EGraphNode.Opcode.AND && node.getChildren().equals(children),
                         "exhaustion occurs before Boolean rewriting");
+                node.simplifyBooleanAfterChildren();
+                check(node.getOpcode() != EGraphNode.Opcode.AND || !node.getChildren().equals(children),
+                        "the funded control can rewrite the conjunction");
                 throw new Observed();
             });
             throw new AssertionError("missing simplifier observation");

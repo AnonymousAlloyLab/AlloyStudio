@@ -49,7 +49,7 @@ public final class GroupedPaidDeclarationAlignmentTest {
     private static void unsupported(NormalForm source,Consumer<List<QuantiVar>> edit,String why) {
         check(!FastPaidDeclarationAlignment.supports(List.of(changed(source,true,edit))),why);
     }
-    /** Closed disjoint groups admit charged edits, not a free source exchange. */
+    /** Same-group replay transport retains disjoint guards and paid edit charges. */
     static void checkedDisjointScope(String model) throws Exception {
         var forms=prepare(model,"disjoint"); var form=forms.get(0); var qs=form.getMatrixQuantiVars();
         check(qs.size()==2 && form.getLocalQuantiVars().isEmpty(),"actual closed two-slot disjoint prefix");
@@ -63,9 +63,10 @@ public final class GroupedPaidDeclarationAlignmentTest {
                     && q.getExactAlloyType().sameOccurrenceEvidenceAs(qs.get(0).getExactAlloyType()),"source slot/type evidence "+i);
         }
         check(FastPaidDeclarationAlignment.supports(forms),"source-observed disjoint SOME paid admission");
-        check(!FastDeclarationPermutation.admission(form,qs).test(0,1),"disjoint free permutation still excluded");
-        check(FastGroupedDeclarationOrbit.orders(form,NormalForm.fastComparisonViews(forms).get(0),qs).size()==1,
-                "disjoint grouped orbit still identity-only");
+        check(FastDeclarationPermutation.admission(form,qs).test(0,1),"source-issued same-disjoint-group replay permutation");
+        var orders=FastGroupedDeclarationOrbit.orders(form,NormalForm.fastComparisonViews(forms).get(0),qs);
+        check(orders.size()==2&&Arrays.equals(orders.get(0),new int[]{0,1})&&Arrays.equals(orders.get(1),new int[]{1,0}),
+                "source-certified same-disjoint-group selection retains identity and swap");
         unsupported(form,v->v.get(1).setDisjointnessClass(0),"mixed disjoint payload rejected");
         unsupported(form,v->v.remove(1),"incomplete disjoint group rejected");
         unsupported(form,v->v.get(1).setBindingPath("foreign"),"foreign disjoint owner rejected");

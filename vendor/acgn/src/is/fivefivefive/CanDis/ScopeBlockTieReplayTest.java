@@ -61,15 +61,17 @@ public final class ScopeBlockTieReplayTest {
             var evidence=result.evidence();
             Files.writeString(out.resolve("after-"+direction+".json"),evidence.toString(2),StandardOpenOption.CREATE_NEW);
             check(result.status()==NativeOperationComparison.Status.MATCHED,"all ordered original-coordinate actions: "+evidence.opt("firstDifference"));
-            check(evidence.getInt("fastActionCount")==23 && evidence.getInt("certifiedActionCount")==23,"preserve all paid and zero actions");
+            check(evidence.getInt("fastActionCount")==24 && evidence.getInt("certifiedActionCount")==24,"preserve representation, paid and zero actions");
             check(evidence.getBoolean("sourceCertificatesChecked") && evidence.getBoolean("fixedChoiceReplaysChecked"),"actual certificate/replay premises checked");
-            check(evidence.getJSONArray("fastActions").getJSONObject(0).getString("kind").equals("keep"),"earlier compatible declaration retained");
             var report=evidence.getJSONObject("diagnostic");
+            var operations=declaration(report).getJSONArray("operations");
+            check(operations.getJSONObject(0).getString("kind").equals("keep"),"existing matrix map retains the first declaration");
+            for(int i=1;i<4;i++)check(operations.getJSONObject(i).getString("kind").equals(direction==0?"delete":"insert"),"remaining selected declaration suffix");
             check(NativeOperationComparison.compareCaptured(q.left,q.right,report).status()==NativeOperationComparison.Status.MATCHED,"independent original endpoint replay");
             check(result.bindScanCosts(new int[]{49,0,3,46},new int[]{49,0,3,46}).status()==NativeOperationComparison.Status.MATCHED,"native components unchanged");
             int[] selected=direction==0?new int[]{0,-1,-1,-1}:new int[]{0};
             var cert=report.getJSONObject("certified");
-            check(new JSONArray(selected).similar(cert.getJSONArray("selectedGlobalMapping")),"selected actual earlier scope mapping");
+            check(new JSONArray(selected).similar(cert.getJSONArray("selectedGlobalMapping")),"existing matrix map and native keep are selected together");
             int[] later=direction==0?new int[]{-1,-1,-1,0}:new int[]{3};
             int replay=QuotientRepairDistance.verifyFixedMatrixReplay(q.exactLeft.repairView(),q.exactRight.repairView(),selected,later,
                     cert.getJSONArray("phases").getJSONObject(0).getJSONObject("receipt"));
@@ -79,7 +81,7 @@ public final class ScopeBlockTieReplayTest {
             var bad=copy(report);bad.getJSONArray("nativeOperationEndpoints").put(0,"foreign");invalid(q,bad,"foreign source");
             bad=copy(report);declaration(bad).getJSONArray("source").getJSONObject(0).put("occurrence","foreign-owner");invalid(q,bad,"foreign owner");
             bad=copy(report);declaration(bad).getJSONArray("source").getJSONObject(0).getJSONArray("tuple").put(1,"ForeignType");invalid(q,bad,"foreign literal declaration type");
-            bad=copy(report);declaration(bad).getJSONArray("operations").getJSONObject(0).put("kind","delete");invalid(q,bad,"false delete in place of keep");
+            bad=copy(report);declaration(bad).getJSONArray("operations").getJSONObject(0).put("kind","delete");invalid(q,bad,"false delete in place of actual keep");
             bad=copy(report);bad.getJSONObject("certified").getJSONArray("selectedGlobalMapping").put(0,999);invalid(q,bad,"foreign mapping coordinate");
             bad=copy(report);bad.getJSONObject("certified").getJSONObject("selectedDeclarationPermutation").getJSONArray("left").put(0,999);invalid(q,bad,"unadmitted permutation");
         }
@@ -88,7 +90,7 @@ public final class ScopeBlockTieReplayTest {
         for(var row:List.of(
                 new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27",""},
                 new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22",""},
-                new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","20",""},
+                new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","22",""},
                 new String[]{"7KzgkuDqY7Q4ZfQ4Z_inv14","inv14","19","[-1,0,-1,1]"},
                 new String[]{"7TYSDPnXqtud3bjku_inv12","inv12","27","[-1,0,-1]"},
                 new String[]{"83RWHQkLc3bdocWg4_inv12","inv12","15","[-1,-1,0]"},
@@ -98,7 +100,11 @@ public final class ScopeBlockTieReplayTest {
                 new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49",""})) {
             String folder=row[0].startsWith("xJnit")?"coursesOld":"classroom_fol";
             var control=prepare(Path.of("classified-data",folder,"both",row[0]+".als"),row[1]);
-            var report=DistanceReplayDiagnostics.capture(control.left,control.right,control.exactLeft,control.exactRight);
+            var comparison=NativeOperationComparison.compare(control.left,control.right,control.exactLeft,control.exactRight);
+            check(comparison.status()==NativeOperationComparison.Status.MATCHED,"prior family native comparison "+row[0]);
+            var report=comparison.evidence().getJSONObject("diagnostic");
+            check(NativeOperationComparison.compareCaptured(control.left,control.right,report).status()==NativeOperationComparison.Status.MATCHED,
+                    "prior family actual ordered actions "+row[0]);
             for(String arm:List.of("fast","certified")) {
                 var replay=report.getJSONObject(arm);
                 check(replay.getInt("distance")==Integer.parseInt(row[2]) && replay.getBoolean("matrixReplayChecked"),"prior family native endpoint "+row[0]+" "+arm);
@@ -110,6 +116,6 @@ public final class ScopeBlockTieReplayTest {
         }
         Files.writeString(out.resolve("checks.json"),new JSONObject().put("checks",checks).put("controls",controls)
                 .put("certificationStatus","BLOCKED").toString(2),StandardOpenOption.CREATE_NEW);
-        System.out.println("ScopeBlockTieReplayTest: "+checks+" checks passed; original49 both directions/actions23; ten prior native-family controls; public certification BLOCKED");
+        System.out.println("ScopeBlockTieReplayTest: "+checks+" checks passed; original49 both directions/actions24; ten prior native-family controls; public certification BLOCKED");
     }
 }

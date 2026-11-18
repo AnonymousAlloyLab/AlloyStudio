@@ -1,6 +1,7 @@
 package is.fivefivefive.CanDis.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -13,6 +14,7 @@ import is.fivefivefive.CanDis.core.NormalForm.TemporalOp;
 import is.fivefivefive.CanDis.theory.AlloyTypeBridge;
 import is.fivefivefive.CanDis.theory.GraphType;
 import is.fivefivefive.CanDis.metric.MatrixDecision;
+import is.fivefivefive.CanDis.metric.FastTemporalReferences;
 
 /**
  * Specification and reference implementation of the CanDis repair metric over
@@ -20,9 +22,29 @@ import is.fivefivefive.CanDis.metric.MatrixDecision;
  * and unordered matching are metric semantics, not approximation heuristics.
  */
 public final class CanonicalDistance {
-    public static final String VERSION = "typed-fast-distance-v35-original-owner-phase-order";
+    public static final String VERSION = "typed-fast-distance-v38-selected-temporal-references";
     private static final ThreadLocal<MutableAllocationStats> ALLOCATION_TRACKER = new ThreadLocal<>();
     private static final ThreadLocal<DecisionCapture> DECISIONS = new ThreadLocal<>();
+    private static final ThreadLocal<TemporalContext> TEMPORAL_CONTEXT = new ThreadLocal<>();
+    private record TemporalContext(Prepared left,Prepared right,OrderedTreeEditDistance.Alignment alignment,
+            FastTemporalReferences.Payment payments) { }
+
+    private static <T> T withTemporal(Prepared left,Prepared right,java.util.function.Supplier<T> work) {
+        var current=TEMPORAL_CONTEXT.get();
+        if(current!=null) {
+            if(current.left()!=left||current.right()!=right)throw new IllegalStateException("Foreign temporal comparison context");
+            return work.get();
+        }
+        var alignment=OrderedTreeEditDistance.alignment(left.temporalTree,right.temporalTree,TEMPORAL_ADAPTER);
+        return withTemporal(new TemporalContext(left,right,alignment,left.temporalReferences.select(right.temporalReferences,alignment)),work);
+    }
+    private static <T> T withTemporal(TemporalContext context,java.util.function.Supplier<T> work) {
+        var previous=TEMPORAL_CONTEXT.get();
+        if(previous!=null&&previous!=context)throw new IllegalStateException("Foreign selected temporal payment");
+        TEMPORAL_CONTEXT.set(context);
+        try {return work.get();}
+        finally {if(previous==null)TEMPORAL_CONTEXT.remove();else TEMPORAL_CONTEXT.set(previous);}
+    }
     private record PhaseDecision(Map<String,String> mapping,MatrixDecision<EGraphNode> matrix) {
         PhaseDecision { mapping=Map.copyOf(mapping); }
     }
@@ -68,19 +90,28 @@ public final class CanonicalDistance {
 
     /** Exposes the normative metric decomposition without changing its units. */
     public static DistanceBreakdown evaluate(Prepared left, Prepared right) {
+        return withTemporal(left,right,()->evaluateSelected(left,right));
+    }
+    private static DistanceBreakdown evaluateSelected(Prepared left,Prepared right) {
         var capture=DECISIONS.get();
-        int temporalDistance;
-        if(capture==null)temporalDistance=treeDistance(left.temporalTree,right.temporalTree);
-        else {capture.temporal=OrderedTreeEditDistance.alignment(left.temporalTree,right.temporalTree,TEMPORAL_ADAPTER);temporalDistance=capture.temporal.cost();}
+        var temporal=TEMPORAL_CONTEXT.get().alignment();
+        int temporalDistance=temporal.cost();
+        if(capture!=null)capture.temporal=temporal;
         int quantificationDistance = quantificationDistance(left.normalForms, right.normalForms);
-        int matrixDistance = matrixDistance(left.normalForms, right.normalForms, left.metadata, right.metadata);
+        MatrixAlignment matrix = bestCoherentMatrixAlignment(left.normalForms, right.normalForms,
+                left.metadata, right.metadata);
+        matrix = selectedPaidImportAlignment(left, right, matrix);
+        if (temporalDistance == 0 && quantificationDistance == 0 && matrix.distance > 0)
+            matrix = samePhasePrefixAlignment(left, right, matrix);
+        if (capture != null) capture.alignment = matrix;
+        int matrixDistance = matrix.distance;
         return new DistanceBreakdown(
                 temporalDistance, quantificationDistance, matrixDistance);
     }
 
     /** Native matrix-only backtrace. Never a replacement for a complete public edit plan. */
     public static org.json.JSONObject matrixReplay(Prepared left, Prepared right) {
-        return captureDecisions(left,right).matrix;
+        return withTemporal(left,right,()->captureDecisions(left,right).matrix);
     }
     private record Captured(org.json.JSONObject matrix,DecisionCapture decisions) { }
     private static Captured captureDecisions(Prepared left,Prepared right) {
@@ -115,6 +146,12 @@ public final class CanonicalDistance {
                 .put("quantifierDistance", nativeResult.quantifierDistance())
                 .put("matrixDistance", nativeResult.matrixDistance()).put("replayedMatrixCost", cost)
                 .put("matrixReplayChecked", true).put("complete", false).put("phases", phases);
+        if (!left.setDeduplications.isEmpty() || !right.setDeduplications.isEmpty()) {
+            var rows = new org.json.JSONArray();
+            for (var row : left.setDeduplications) rows.put(new org.json.JSONObject(row.toString()));
+            for (var row : right.setDeduplications) rows.put(new org.json.JSONObject(row.toString()));
+            result.put("fastSetDeduplications", rows);
+        }
         if (coherent.paidCorrespondence != null) result.put("selectedPaidDeclarationCorrespondence",
                 new org.json.JSONObject(new java.util.TreeMap<>(coherent.paidCorrespondence)));
         if (coherent.sourceOrder != null) result.put("selectedGroupedDeclarationPermutation",
@@ -148,10 +185,13 @@ public final class CanonicalDistance {
                         .put("sourceOccurrenceLineage",n.getSourceOccurrenceLineage()):org.json.JSONObject.NULL;
             }
             public List<EGraphNode> children(EGraphNode n) { return FastChainGeometry.children(n); }
-            public List<EGraphNode> alternatives(EGraphNode n) { return List.of(); }
+            public List<EGraphNode> alternatives(EGraphNode n) {
+                List<EGraphNode> retained = left.metadata.alternatives(n);
+                return retained.isEmpty() ? right.metadata.alternatives(n) : retained;
+            }
             public boolean unordered(EGraphNode a,EGraphNode b) { return a.getOpcode()==b.getOpcode() && a.isOrderInsensitive() && b.isOrderInsensitive(); }
             public int size(EGraphNode n) { return eGraphSize(n); }
-            public int update(EGraphNode a,EGraphNode b) { return nodeUpdateCost(a,b,costs,left.metadata,right.metadata); }
+            public int update(EGraphNode a,EGraphNode b) { return nodeUpdateCost(a,b,costs,left.metadata,right.metadata,context.temporalPayments); }
             public int distance(EGraphNode a,EGraphNode b) {
                 if(!search) throw new IllegalStateException("Completion replay cannot search");
                 return context.distance(a,b);
@@ -167,12 +207,36 @@ public final class CanonicalDistance {
     /** Numeric value and executable native metric representation from one evaluation.
      * Cross-arm correspondence is deliberately not a precondition of this API. */
     public static is.fivefivefive.CanDis.metric.NativeRepairTrace evaluateWithTrace(Prepared left,Prepared right) {
+        return withTemporal(left,right,()->evaluateWithSelectedTrace(left,right));
+    }
+    private static is.fivefivefive.CanDis.metric.NativeRepairTrace evaluateWithSelectedTrace(Prepared left,Prepared right) {
+        var temporalContext=TEMPORAL_CONTEXT.get();
         var captured=captureDecisions(left,right);var out=captured.matrix;
         try {
         var phaseOrder=new org.json.JSONArray();
         appendPhaseOrder(left,"source",phaseOrder);appendPhaseOrder(right,"target",phaseOrder);
         if(!phaseOrder.isEmpty())out.put("nativePhaseRepresentationSteps",phaseOrder);
         var selected=captured.decisions.alignment;
+        var projections=new org.json.JSONArray();
+        for(var projection:selected.guardedProjections) {
+            if(!projection.valid())throw new IllegalStateException("GUARDED_PROJECTION_AUTHORITY_CHANGED");
+            projections.put(projection.evidence());
+        }
+        var emittedProjections=new org.json.JSONArray(projections.toString());
+        var expectedProjections=new org.json.JSONArray(emittedProjections.toString());
+        if(!emittedProjections.isEmpty())out.put("guardedDomainProjections",emittedProjections);
+        var guardEdits=new org.json.JSONArray();
+        for(var edit:selected.paidGuardEdits){
+            if(!edit.selectedValid())throw new IllegalStateException("PAID_GUARD_EDIT_AUTHORITY_CHANGED");
+            guardEdits.put(edit.evidence());
+        }
+        var emittedGuardEdits=new org.json.JSONArray(guardEdits.toString());
+        var expectedGuardEdits=new org.json.JSONArray(emittedGuardEdits.toString());
+        if(!emittedGuardEdits.isEmpty())out.put("selectedPaidGuardEdits",emittedGuardEdits);
+        var branchRoutes=new org.json.JSONArray();
+        for(var route:selected.paidBranchRoutes){
+            if(!route.valid())throw new IllegalStateException("PAID_BRANCH_ROUTE_AUTHORITY_CHANGED");
+        }
         var as=new ArrayList<List<is.fivefivefive.CanDis.metric.DeclarationReplay.Atom>>();
         var bs=new ArrayList<List<is.fivefivefive.CanDis.metric.DeclarationReplay.Atom>>();
         var declarations=new org.json.JSONArray();
@@ -186,31 +250,115 @@ public final class CanonicalDistance {
                 b=is.fivefivefive.CanDis.metric.DeclarationMatrixLink.permute(b,selected.targetOrder);
             }
             as.add(List.copyOf(declarationAtoms(source,a,phase)));bs.add(List.copyOf(declarationAtoms(target,b,phase)));
-            var moves=phase==0&&selected.declarationPath!=null?selected.declarationPath:captured.decisions.declarationMoves.get(phase);
+            var moves=selected.importDeclarations!=null && phase<selected.importDeclarations.size()
+                    ? selected.importDeclarations.get(phase).moves()
+                    : phase==0&&selected.declarationPath!=null?selected.declarationPath:captured.decisions.declarationMoves.get(phase);
             int[][] dp=captured.decisions.declarations.get(phase);
-            declarations.put(is.fivefivefive.CanDis.metric.DeclarationReplay.captureSelected(as.get(phase),bs.get(phase),moves,dp[a.size()][b.size()]));
             var choice=selected.phases.get(phase);
+            // Finalize a linked equal-cost fallback before freezing its native
+            // program. Explicit paid/guarded selections retain their exact path.
+            if(selected.declarationPath==null && selected.sourceOrder==null && selected.targetOrder==null
+                    && selected.paidCorrespondence==null && selected.guardedProjections.isEmpty()
+                    && selected.paidGuardEdits.isEmpty() && selected.paidBranchRoutes.isEmpty()
+                    && selected.paidSlotRoutes.isEmpty()) {
+                var joint=new is.fivefivefive.CanDis.metric.DeclarationMatrixLink(
+                        a.stream().map(QuantiVar::getName).toList(),b.stream().map(QuantiVar::getName).toList(),
+                        choice.mapping,Set.of(),Set.of());
+                try {
+                    moves=is.fivefivefive.CanDis.metric.DeclarationReplay.selectedMoves(
+                            as.get(phase),bs.get(phase),dp,joint::allows);
+                } catch(is.fivefivefive.CanDis.metric.DeclarationReplay.NoMatchingPath missing) {
+                    // Keep the actual native path; the missing joint link stays open.
+                }
+            }
+            declarations.put(is.fivefivefive.CanDis.metric.DeclarationReplay.captureSelected(as.get(phase),bs.get(phase),moves,dp[a.size()][b.size()]));
             var matrix=out.getJSONArray("phases").getJSONObject(phase);
             matrix.put("program",matrixReplayEngine(choice.mapping,choice.mapping,left,right,false).executable(
                     choice.matrix.source(),choice.matrix.target(),matrix.getJSONObject("receipt")));
         }
-        out.put("nativeDeclarationPrograms",declarations).put("nativeTemporalProgram",
-                is.fivefivefive.CanDis.metric.TemporalReplay.capture(left.temporalTree,right.temporalTree,
-                        out.getInt("temporalDistance"),n->n.label,n->n.children,captured.decisions.temporal))
+        var temporalCapture=is.fivefivefive.CanDis.metric.TemporalReplay.captureWithUpdates(left.temporalTree,right.temporalTree,
+                        out.getInt("temporalDistance"),n->n.label,n->n.children,captured.decisions.temporal);
+        out.put("nativeDeclarationPrograms",declarations).put("nativeTemporalProgram",temporalCapture.program())
+                .put("selectedTemporalReferencePayments",temporalContext.payments().json())
                 .put("executionRepresentation","Native temporal tree, ordered declaration tuples and selected mapped matrix occurrences")
                 .put("jointBindingCorrespondenceChecked",false)
                 .put("sourceBindingContexts",traceBindingContexts(left))
                 .put("targetBindingContexts",traceBindingContexts(right))
                 .put("constructionLink","Retained Prepared sourceForms and exact comparisonForms; not a source wire certificate");
+        for(var route:selected.paidBranchRoutes){
+            if(!route.bindTemporal(temporalCapture.updates(),temporalCapture.program()))throw new IllegalStateException("PAID_BRANCH_LOCAL_TEMPORAL_PAYMENT_CHANGED");
+            branchRoutes.put(route.evidence());
+        }
+        var expectedBranchRoutes=new org.json.JSONArray(branchRoutes.toString());
+        if(!branchRoutes.isEmpty())out.put("selectedPaidBranchRoutes",branchRoutes);
+        var selectedGuardPrograms=new ArrayList<org.json.JSONObject>();
+        org.json.JSONObject branchPrograms=null;
+        if(!branchRoutes.isEmpty()){
+            for(var route:selected.paidBranchRoutes)if(declarations.getJSONObject(route.owner).getInt("cost")!=1)
+                throw new IllegalStateException("PAID_BRANCH_DECLARATION_PAYMENT_CHANGED");
+            branchPrograms=new org.json.JSONObject().put("temporal",new org.json.JSONObject(out.getJSONObject("nativeTemporalProgram").toString()))
+                .put("declarations",new org.json.JSONArray(declarations.toString()))
+                .put("phases",new org.json.JSONArray(out.getJSONArray("phases").toString()));
+        }
+        final var expectedBranchPrograms=branchPrograms;
+        var slotRoutes = new org.json.JSONArray();
+        for (var route : selected.paidSlotRoutes) {
+            if (!route.valid() || !route.bindProgram(out)) throw new IllegalStateException("PAID_SLOT_GUARD_PROGRAM_UNBOUND");
+            slotRoutes.put(route.evidence());
+        }
+        if (!slotRoutes.isEmpty()) out.put("selectedPaidSlotRoutes", slotRoutes);
+        var expectedSlotRoutes = new org.json.JSONArray(slotRoutes.toString());
+        var expectedSlotPrograms = slotRoutes.isEmpty() ? null : new org.json.JSONObject()
+                .put("declarations", new org.json.JSONArray(declarations.toString()))
+                .put("temporal", new org.json.JSONObject(out.getJSONObject("nativeTemporalProgram").toString()))
+                .put("phases", new org.json.JSONArray(out.getJSONArray("phases").toString()));
+        for(var edit:selected.paidGuardEdits){
+            int owner=left.normalForms.indexOf(edit.sourceOwner());int future=left.normalForms.indexOf(edit.sourceFuture());
+            var frame=new org.json.JSONObject().put("owner",owner).put("future",future)
+                .put("ownerProgram",new org.json.JSONObject(out.getJSONArray("phases").getJSONObject(owner).getJSONObject("program").toString()))
+                .put("futureProgram",new org.json.JSONObject(out.getJSONArray("phases").getJSONObject(future).getJSONObject("program").toString()))
+                .put("declaration",new org.json.JSONObject(declarations.getJSONObject(owner).toString()));
+            if(frame.getJSONObject("ownerProgram").getJSONArray("operations").length()!=6
+                    ||declarations.getJSONObject(owner).getInt("cost")!=1)throw new IllegalStateException("PAID_GUARD_EDIT_SLICE_CHANGED");
+            selectedGuardPrograms.add(frame);
+        }
         // Preserve the existing joint/cross-arm diagnostic separately from the
         // executable native choices. Its failure cannot discard native CRUD.
         is.fivefivefive.CanDis.metric.PhaseReplay.attach(out,()->declarationReplay(left,right,out,captured.decisions),
                 ()->new org.json.JSONObject(out.getJSONObject("nativeTemporalProgram").toString()));
-        return is.fivefivefive.CanDis.metric.NativeRepairTrace.checked(out,program->{
+        return is.fivefivefive.CanDis.metric.NativeRepairTrace.checkedFast(out,program->withTemporal(temporalContext,()->{
+            for (var route : selected.paidSlotRoutes)
+                if (!route.valid()) throw new IllegalArgumentException("PAID_SLOT_AUTHORITY_CHANGED");
+            if (expectedSlotPrograms != null && (!expectedSlotRoutes.similar(program.getJSONArray("selectedPaidSlotRoutes"))
+                    || !expectedSlotPrograms.getJSONArray("declarations").similar(program.getJSONArray("nativeDeclarationPrograms"))
+                    || !expectedSlotPrograms.getJSONObject("temporal").similar(program.getJSONObject("nativeTemporalProgram"))
+                    || !expectedSlotPrograms.getJSONArray("phases").similar(program.getJSONArray("phases"))))
+                throw new IllegalArgumentException("PAID_SLOT_SELECTED_PROGRAM_CHANGED");
+            for(var route:selected.paidBranchRoutes)if(!route.valid()||!route.temporalValid(program.getJSONObject("nativeTemporalProgram")))throw new IllegalArgumentException("PAID_BRANCH_ROUTE_AUTHORITY_CHANGED");
+            if(!expectedBranchRoutes.isEmpty()&&(!expectedBranchRoutes.similar(program.getJSONArray("selectedPaidBranchRoutes"))
+                    ||!expectedBranchPrograms.getJSONObject("temporal").similar(program.getJSONObject("nativeTemporalProgram"))
+                    ||!expectedBranchPrograms.getJSONArray("declarations").similar(program.getJSONArray("nativeDeclarationPrograms"))
+                    ||!expectedBranchPrograms.getJSONArray("phases").similar(program.getJSONArray("phases"))))
+                throw new IllegalArgumentException("PAID_BRANCH_ROUTE_SELECTED_PROGRAM_CHANGED");
+            for(var edit:selected.paidGuardEdits)if(!edit.selectedValid())throw new IllegalArgumentException("PAID_GUARD_EDIT_AUTHORITY_CHANGED");
+            if(!expectedGuardEdits.isEmpty()&&!expectedGuardEdits.similar(program.getJSONArray("selectedPaidGuardEdits")))
+                throw new IllegalArgumentException("PAID_GUARD_EDIT_FRAME_CHANGED");
+            for(var frame:selectedGuardPrograms){int owner=frame.getInt("owner"),future=frame.getInt("future");
+                if(!frame.getJSONObject("ownerProgram").similar(program.getJSONArray("phases").getJSONObject(owner).getJSONObject("program"))
+                        ||!frame.getJSONObject("futureProgram").similar(program.getJSONArray("phases").getJSONObject(future).getJSONObject("program"))
+                        ||!frame.getJSONObject("declaration").similar(program.getJSONArray("nativeDeclarationPrograms").getJSONObject(owner)))
+                    throw new IllegalArgumentException("PAID_GUARD_EDIT_SELECTED_PROGRAM_CHANGED");
+            }
+            for(var projection:selected.guardedProjections)if(!projection.valid())
+                throw new IllegalArgumentException("GUARDED_PROJECTION_AUTHORITY_CHANGED");
+            if(!expectedProjections.isEmpty()&&!expectedProjections.similar(program.getJSONArray("guardedDomainProjections")))
+                throw new IllegalArgumentException("GUARDED_PROJECTION_EVIDENCE_CHANGED");
             if(!phaseOrder.isEmpty()&&!phaseOrder.similar(program.getJSONArray("nativePhaseRepresentationSteps")))
                 throw new IllegalArgumentException("Original temporal phase permutation changed");
             int temporal=is.fivefivefive.CanDis.metric.TemporalReplay.verify(left.temporalTree,right.temporalTree,
                     n->n.label,n->n.children,program.getJSONObject("nativeTemporalProgram"));
+            temporalContext.payments().requireReceipt(program.getJSONObject("nativeTemporalProgram"),
+                    program.getJSONObject("selectedTemporalReferencePayments"));
             int quantifiers=0,matrix=0;
             if(program.getJSONArray("nativeDeclarationPrograms").length()!=count||program.getJSONArray("phases").length()!=count)
                 throw new IllegalArgumentException("Native trace phase coverage");
@@ -224,7 +372,7 @@ public final class CanonicalDistance {
             if(temporal!=program.getInt("temporalDistance")||quantifiers!=program.getInt("quantifierDistance")||matrix!=program.getInt("matrixDistance"))
                 throw new IllegalArgumentException("Native trace component costs");
             return Math.addExact(temporal,Math.addExact(quantifiers,matrix));
-        });
+        }),left,right);
         } catch(RuntimeException failure) {
             throw is.fivefivefive.CanDis.metric.NativeRepairTrace.captureFailure(out,failure);
         }
@@ -338,6 +486,7 @@ public final class CanonicalDistance {
             try {
                 receipt=captureDeclarations(aSource,bSource,a,b,phase,dp,selected,usedA,usedB,paid,linked,completeAbsent);
             } catch(is.fivefivefive.CanDis.metric.DeclarationReplay.NoMatchingPath missing) {
+                try {
                 if(grouped!=null) throw missing;
                 if(phase>=left.normalForms.size()) throw missing;
                 var joint=new is.fivefivefive.CanDis.metric.DeclarationMatrixLink(
@@ -356,6 +505,10 @@ public final class CanonicalDistance {
                             paid,linked,completeAbsent,phase,dp[a.size()][b.size()]);
                     if(completed==null) throw stillMissing;
                     receipt=completed.getJSONObject("receipt"); connecting=completed.getJSONObject("connectingPermutation");
+                }
+                } catch(is.fivefivefive.CanDis.metric.DeclarationReplay.NoMatchingPath exhausted) {
+                    receipt=selectedProgramCompletion(left,right,a,b,phase,originalMatrixMapping,selected,matrix,decisions);
+                    if(receipt==null) throw exhausted;
                 }
             }
             if(receipt.has("matrixCorrespondenceCompletion")) {
@@ -381,6 +534,164 @@ public final class CanonicalDistance {
                 .put("selectedMatrixDeclarationLinksChecked",true)
                 .put("jointLinkScope","Original outer coordinates under selected map plus checked completion; local declarations never edited")
                 .put("bindingRelationship","Every emitted keep/delete/insert checked against the selected or explicitly completed matrix map; scalar searches unchanged");
+    }
+
+    private record CompletionLink(QuantiVar source,QuantiVar target,int operation) { }
+
+    /** Link the original paid program, never a recaptured equal-cost alternative. */
+    private static org.json.JSONObject selectedProgramCompletion(Prepared left,Prepared right,
+            List<QuantiVar> a,List<QuantiVar> b,int phase,Map<String,String> original,Map<String,String> selected,
+            org.json.JSONObject trace,DecisionCapture decisions) {
+        var as=declarationAtoms(phase<left.normalForms.size()?left.normalForms.get(phase).getMatrixQuantiVars():List.of(),a,phase);
+        var bs=declarationAtoms(phase<right.normalForms.size()?right.normalForms.get(phase).getMatrixQuantiVars():List.of(),b,phase);
+        var program=trace.getJSONArray("nativeDeclarationPrograms").getJSONObject(phase);
+        is.fivefivefive.CanDis.metric.DeclarationReplay.execute(as,bs,program);
+        var sourceFrames=completionFrames(left,phase,a); var targetFrames=completionFrames(right,phase,b);
+        var completed=new java.util.LinkedHashMap<>(selected); var paid=new java.util.LinkedHashMap<String,String>();
+        var links=new ArrayList<CompletionLink>();
+        var operations=program.getJSONArray("operations");
+        for(int operation=0;operation<operations.length();operation++) {
+            var op=operations.getJSONObject(operation); int i=op.getInt("leftIndex"),j=op.getInt("rightIndex");
+            if(i<0 || j<0) continue;
+            String x=a.get(i).getName(),y=b.get(j).getName();
+            if(completed.containsKey(x)) { if(!y.equals(completed.get(x))) return null; }
+            else { if(completed.containsValue(y)) return null; completed.put(x,y); }
+            if(op.getInt("cost")!=0) paid.put(x,y);
+            if(!original.containsKey(x)) links.add(new CompletionLink(a.get(i),b.get(j),operation));
+        }
+        var namesA=a.stream().map(QuantiVar::getName).toList(); var namesB=b.stream().map(QuantiVar::getName).toList();
+        var joint=new is.fivefivefive.CanDis.metric.DeclarationMatrixLink(namesA,namesB,completed,Set.copyOf(namesA),Set.copyOf(namesB));
+        for(Object item:program.getJSONArray("operations")) {
+            var op=(org.json.JSONObject)item;
+            if(!joint.allows(op.getInt("leftIndex"),op.getInt("rightIndex"))) return null;
+        }
+        joint.verify(as,bs,program);
+        var sourceTemporal=new ArrayList<TemporalTree>();var targetTemporal=new ArrayList<TemporalTree>();
+        temporalPostorder(left.temporalTree,sourceTemporal);temporalPostorder(right.temporalTree,targetTemporal);
+        var temporal=new IdentityHashMap<TemporalTree,TemporalTree>();
+        for(var match:decisions.temporal.matches())
+            temporal.put(sourceTemporal.get(match.leftPostorder()-1),targetTemporal.get(match.rightPostorder()-1));
+        var contexts=new ArrayList<Map<String,String>>();
+        var scopeLinks=new ArrayList<org.json.JSONArray>();
+        // Target occupancy also affects local-coordinate fallback. Check every
+        // selected phase, including imports, with the actual native cost function.
+        for(int use=0;use<decisions.alignment.phases.size();use++) {
+            var choice=decisions.alignment.phases.get(use);
+            var context=new HashMap<>(choice.mapping());
+            var authorized=new org.json.JSONArray();
+            for(var link:links) {
+                if(!completionVisible(left,phase,use,link.source()) || !completionVisible(right,phase,use,link.target())) continue;
+                boolean route=sameSelectedTemporalRoute(left,right,use,temporal);
+                for(var branch:decisions.alignment.paidBranchRoutes)
+                    if(branch.sourceBinding==link.source() && branch.targetBinding==link.target() && branch.owner==phase && branch.route(use))route=true;
+                for(var slot:decisions.alignment.paidSlotRoutes)
+                    if(slot.source==link.source() && slot.target==link.target() && slot.owner==phase && slot.visible(use))route=true;
+                if(!route)return null;
+                String x=link.source().getName(),y=link.target().getName(),old=context.get(x);
+                if(old!=null && !old.equals(y) || old==null && context.containsValue(y)) return null;
+                context.put(x,y);
+                authorized.put(new org.json.JSONObject().put("declarationPhase",phase).put("operationIndex",link.operation())
+                        .put("source",x).put("target",y).put("sourceOwner",link.source().getBindingPath())
+                        .put("targetOwner",link.target().getBindingPath())
+                        .put("sourceUsePhase",left.normalForms.get(use).comparisonSource().getPhasePath())
+                        .put("targetUsePhase",right.normalForms.get(use).comparisonSource().getPhasePath()));
+            }
+            if(!unchangedSelectedCharges(choice.matrix(),choice.mapping(),context,left,right)) return null;
+            contexts.add(Map.copyOf(context));
+            scopeLinks.add(authorized);
+        }
+        var checkedPhases=new org.json.JSONArray();
+        for(int use=0;use<contexts.size();use++) {
+            var choice=decisions.alignment.phases.get(use); var payload=trace.getJSONArray("phases").getJSONObject(use);
+            int cost=matrixReplayEngine(choice.mapping(),contexts.get(use),left,right,false).verifyExecutable(
+                    choice.matrix().source(),choice.matrix().target(),payload.getJSONObject("receipt"),payload.getJSONObject("program"));
+            checkedPhases.put(new org.json.JSONObject().put("phase",use).put("cost",cost)
+                    .put("declarationLinks",scopeLinks.get(use))
+                    .put("selectedMapping",new org.json.JSONObject(new java.util.TreeMap<>(choice.mapping())))
+                    .put("completedMapping",new org.json.JSONObject(new java.util.TreeMap<>(contexts.get(use)))));
+        }
+        return new org.json.JSONObject(program.toString()).put("matrixCorrespondenceCompletion",new org.json.JSONObject()
+                .put("selectedMapping",new org.json.JSONObject(new java.util.TreeMap<>(original)))
+                .put("completedMapping",new org.json.JSONObject(new java.util.TreeMap<>(completed)))
+                .put("paidCorrespondence",new org.json.JSONObject(new java.util.TreeMap<>(paid)))
+                .put("sourceBindingFrames",sourceFrames).put("targetBindingFrames",targetFrames)
+                .put("checkedMatrixPhases",checkedPhases).put("selectedDeclarationProgramUnchanged",true)
+                .put("scope","ACTUAL_SELECTED_DECLARATION_PROGRAM_FIXED_NATIVE_REPLAY"));
+    }
+
+    /** Scope membership is reference-based on both the source and its view. */
+    private static boolean completionVisible(Prepared prepared,int declarationPhase,int usePhase,QuantiVar binding) {
+        if(declarationPhase<0 || declarationPhase>=prepared.normalForms.size()
+                || usePhase<0 || usePhase>=prepared.normalForms.size())return false;
+        var owner=prepared.normalForms.get(declarationPhase).comparisonSource();
+        var view=prepared.normalForms.get(usePhase);var use=view.comparisonSource();
+        if(prepared.sourceForms.stream().noneMatch(f->f==owner) || prepared.sourceForms.stream().noneMatch(f->f==use)
+                || !owner.isFrozenForCertification() || !use.isFrozenForCertification()
+                || owner.getMatrixQuantiVars().stream().noneMatch(q->q==binding))return false;
+        if(use==owner)return view.getMatrixQuantiVars().stream().anyMatch(q->q==binding);
+        if(use.getInheritedQuantiVars().stream().noneMatch(q->q==binding)
+                || view.getInheritedQuantiVars().stream().noneMatch(q->q==binding))return false;
+        var ownerRoute=temporalOwnerRoute(prepared.temporalTree,prepared.normalForms.get(declarationPhase));
+        var useRoute=temporalOwnerRoute(prepared.temporalTree,view);
+        if(ownerRoute==null || useRoute==null || ownerRoute.size()>useRoute.size())return false;
+        for(int i=0;i<ownerRoute.size();i++) {
+            var a=ownerRoute.get(i);var b=useRoute.get(i);
+            if(a.tree()!=b.tree() || a.role()!=b.role() || i+1<ownerRoute.size() && a.branch()!=b.branch())return false;
+        }
+        return true;
+    }
+
+    private static org.json.JSONArray completionFrames(Prepared prepared,int phase,List<QuantiVar> ordered) {
+        var rows=new org.json.JSONArray();
+        if(ordered.isEmpty()) return rows;
+        var owner=prepared.normalForms.get(phase).comparisonSource();
+        if(!owner.isFrozenForCertification() || prepared.sourceForms.stream().noneMatch(f->f==owner))
+            throw new IllegalStateException("COMPLETION_ORIGINAL_PHASE_OWNER");
+        for(var q:ordered) {
+            if(owner.getMatrixQuantiVars().stream().noneMatch(v->v==q) || !q.isFrozenForCertification()
+                    || q.getExactAlloyType()==null || !q.getExactAlloyType().hasParserAuthenticatedAncestry()
+                    || q.getDeclarationFrames().isEmpty()) throw new IllegalStateException("COMPLETION_ORIGINAL_BINDING");
+            var frames=new org.json.JSONArray();
+            for(var frame:q.getDeclarationFrames()) {
+                if(frame.variable()!=q || !frame.owner().ownsDeclarationFrame(frame))
+                    throw new IllegalStateException("COMPLETION_ORIGINAL_DECLARATION_FRAME");
+                var dependencies=new org.json.JSONArray();
+                for(var dependency:frame.dependencies()) {
+                    if(!dependency.isFrozenForCertification() || dependency.getExactAlloyType()==null
+                            || !dependency.getExactAlloyType().hasParserAuthenticatedAncestry()
+                            || java.util.stream.Stream.of(frame.owner().getParams(),frame.owner().getMatrixQuantiVars(),
+                                    frame.owner().getLocalQuantiVars(),frame.owner().getInheritedQuantiVars())
+                                .flatMap(List::stream).noneMatch(v->v==dependency))
+                        throw new IllegalStateException("COMPLETION_ORIGINAL_DEPENDENCY_FRAME");
+                    dependencies.put(new org.json.JSONObject().put("binding",dependency.getName())
+                            .put("owner",dependency.getBindingPath()).put("type",dependency.getExactAlloyType().stableString()));
+                }
+                frames.put(new org.json.JSONObject().put("ownerPhase",frame.owner().getPhasePath())
+                        .put("declarationOccurrence",frame.declarationOccurrence()).put("variableOccurrence",frame.variableOccurrence())
+                        .put("domain",frame.domain().toString())
+                        .put("dependencies",dependencies));
+            }
+            rows.put(new org.json.JSONObject().put("binding",q.getName()).put("owner",q.getBindingPath())
+                    .put("type",q.getExactAlloyType().stableString()).put("frames",frames));
+        }
+        return rows;
+    }
+
+    private static boolean unchangedSelectedCharges(MatrixDecision<EGraphNode> selected,Map<String,String> before,
+            Map<String,String> after,Prepared left,Prepared right) {
+        var pending=new java.util.ArrayDeque<MatrixDecision<EGraphNode>>();pending.add(selected);
+        while(!pending.isEmpty()) {
+            var op=pending.removeFirst();
+            if(op.kind().equals("select")) pending.add(op.selected());
+            else if(op.kind().equals("node")) {
+                int cost=nodeUpdateCost(op.source(),op.target(),before,left.metadata,right.metadata);
+                if(cost!=op.headCost()) throw new IllegalStateException("COMPLETION_SELECTED_NATIVE_CHARGE");
+                if(cost!=nodeUpdateCost(op.source(),op.target(),after,left.metadata,right.metadata)) return false;
+                for(var child:op.children()) pending.add(child.decision());
+            } else if(!op.kind().equals("delete") && !op.kind().equals("insert"))
+                throw new IllegalStateException("COMPLETION_SELECTED_NATIVE_KIND");
+        }
+        return true;
     }
 
     private static org.json.JSONObject retainedPaidCompletion(Prepared left,Prepared right,List<QuantiVar> a,
@@ -511,7 +822,7 @@ public final class CanonicalDistance {
         var pending=new java.util.ArrayDeque<EGraphNode>(); if(f.getMatrixEGraph()!=null) pending.add(f.getMatrixEGraph());
         while(!pending.isEmpty()) {
             var n=pending.removeFirst(); if(!seen.add(n)) continue;
-            if(seen.size()>4096) throw new IllegalStateException("COMPLETION_OCCURRENCE_BUDGET");
+            if(seen.size()>4096) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("COMPLETION_OCCURRENCE_BUDGET");
             if(n.getOpcode()==EGraphNode.Opcode.CALL || n.getOpcode()==EGraphNode.Opcode.REF
                     || n.getOpcode()==EGraphNode.Opcode.VARIABLE && !names.contains(variableName(n))) return false;
             pending.addAll(n.getChildren());
@@ -606,7 +917,18 @@ public final class CanonicalDistance {
         }
         List<NormalForm> originals=List.copyOf(snapshot);
         snapshot = NormalForm.fastComparisonViews(snapshot);
-        return new Prepared(originals,snapshot, temporalTree(snapshot), canonicalFormSize(snapshot));
+        List<org.json.JSONObject> setDeduplications = new ArrayList<>();
+        for (NormalForm form : snapshot) {
+            NormalForm source = form.comparisonSource();
+            EGraphNode root = form.getMatrixEGraph();
+            if (source == null || source == form || root == null) continue;
+            var initialOrbit = FastBinderOrbit.build(source, root);
+            var dedup = FastSetDedup.dedup(root, initialOrbit);
+            if (dedup.root() != root) form.replaceComparisonMatrixRoot(dedup.root());
+            for (Object row : dedup.evidence()) setDeduplications.add((org.json.JSONObject) row);
+        }
+        return new Prepared(originals,snapshot, temporalTree(snapshot), canonicalFormSize(snapshot),
+                setDeduplications);
     }
 
     private static void validateCalls(List<NormalForm> normalForms) {
@@ -645,17 +967,36 @@ public final class CanonicalDistance {
         private final TemporalTree temporalTree;
         private final int size;
         private final EGraphMetadata metadata;
+        private final FastTemporalReferences temporalReferences;
         private final EGraphNode.ReachabilityStats eGraphStats;
+        private final List<org.json.JSONObject> setDeduplications;
 
         /** Frozen metric views for bounded endpoint-linked diagnostic replay. */
         public List<NormalForm> comparisonForms() { return List.copyOf(normalForms); }
 
-        private Prepared(List<NormalForm> sourceForms,List<NormalForm> normalForms, TemporalTree temporalTree, int size) {
+        /** Exact owner-local orbit candidates for one comparison node. The first
+         * element is the primary member; later elements are non-identity copies. */
+        public List<EGraphNode> fastAlternatives(EGraphNode node) {
+            return metadata.alternatives(node);
+        }
+
+        /** Source-order SET duplicates removed after owner-local normalization. */
+        public org.json.JSONArray fastSetDeduplications() {
+            var rows = new org.json.JSONArray();
+            for (var row : setDeduplications) rows.put(new org.json.JSONObject(row.toString()));
+            return rows;
+        }
+
+        private Prepared(List<NormalForm> sourceForms,List<NormalForm> normalForms, TemporalTree temporalTree, int size,
+                List<org.json.JSONObject> setDeduplications) {
             this.sourceForms=sourceForms;
             this.normalForms = normalForms;
             this.temporalTree = temporalTree;
             this.size = size;
+            this.setDeduplications = List.copyOf(setDeduplications);
             this.metadata = new EGraphMetadata(sourceForms,normalForms);
+            this.temporalReferences=new FastTemporalReferences(normalForms,temporalShape(temporalTree),
+                    metadata::alternatives,metadata::type);
             List<EGraphNode> roots = new ArrayList<>(normalForms.size());
             for (NormalForm normalForm : normalForms) {
                 if (normalForm.getMatrixEGraph() != null) {
@@ -696,7 +1037,7 @@ public final class CanonicalDistance {
         }
 
         public int metadataEntryCount() {
-            return metadata.sizes.size();
+            return metadata.entryCount();
         }
     }
 
@@ -874,17 +1215,27 @@ public final class CanonicalDistance {
             Set<String> lockedRightNames,
             EGraphMetadata leftMetadata,
             EGraphMetadata rightMetadata) {
+        return matrixDistanceWithFixedMapping(left,right,fixedMapping,lockedLeftNames,lockedRightNames,
+                leftMetadata,rightMetadata,null);
+    }
+
+    private static int matrixDistanceWithFixedMapping(List<NormalForm> left,List<NormalForm> right,
+            Map<String,String> fixedMapping,Set<String> lockedLeftNames,Set<String> lockedRightNames,
+            EGraphMetadata leftMetadata,EGraphMetadata rightMetadata,List<Map<String,String>> mappings) {
         int size = Math.max(left.size(), right.size());
         int distance = 0;
         var capture=DECISIONS.get();var phases=capture==null?null:new ArrayList<PhaseDecision>();
         for (int i = 0; i < size; i++) {
             if (i >= left.size()) {
+                if(mappings!=null)mappings.add(Map.of());
                 distance += eGraphSize(right.get(i).getMatrixEGraph(), rightMetadata);
                 if(capture!=null)capture.lastPhase=new PhaseDecision(Map.of(),MatrixDecision.whole(null,right.get(i).getMatrixEGraph(),eGraphSize(right.get(i).getMatrixEGraph(),rightMetadata)));
             } else if (i >= right.size()) {
+                if(mappings!=null)mappings.add(Map.of());
                 distance += eGraphSize(left.get(i).getMatrixEGraph(), leftMetadata);
                 if(capture!=null)capture.lastPhase=new PhaseDecision(Map.of(),MatrixDecision.whole(left.get(i).getMatrixEGraph(),null,eGraphSize(left.get(i).getMatrixEGraph(),leftMetadata)));
             } else {
+                var selected=mappings==null?null:new BestMapping();
                 distance += matrixDistance(
                         left.get(i),
                         right.get(i),
@@ -892,7 +1243,8 @@ public final class CanonicalDistance {
                         lockedLeftNames,
                         lockedRightNames,
                         leftMetadata,
-                        rightMetadata);
+                        rightMetadata,selected);
+                if(mappings!=null)mappings.add(Map.copyOf(selected.mapping));
             }
             if(capture!=null)phases.add(capture.lastPhase);
         }
@@ -905,12 +1257,15 @@ public final class CanonicalDistance {
             List<NormalForm> right,
             EGraphMetadata leftMetadata,
             EGraphMetadata rightMetadata) {
-        if (FastPaidDeclarationAlignment.supportsPair(left,right))
+        if (FastPaidDeclarationAlignment.supportsPair(left,right)
+                || FastPaidDeclarationAlignment.supportsSupplementalPair(left,right))
             return paidDeclarationMatrixAlignment(left.get(0),right.get(0),leftMetadata,rightMetadata);
         // One source binder imported into several temporal phases must consume
         // one alpha mapping; phase-local binders remain independently aligned.
-        CoherentVariableSpace leftSpace = coherentVariableSpace(left);
-        CoherentVariableSpace rightSpace = coherentVariableSpace(right);
+        // Whole-phase inserts/deletes never query a cross-endpoint binder map.
+        int aligned = Math.min(left.size(), right.size());
+        CoherentVariableSpace leftSpace = coherentVariableSpace(left.subList(0, aligned));
+        CoherentVariableSpace rightSpace = coherentVariableSpace(right.subList(0, aligned));
         Set<String> lockedLeftNames = leftSpace.coherentNames();
         Set<String> lockedRightNames = rightSpace.coherentNames();
         closeCoherentCandidateRegion(
@@ -959,15 +1314,7 @@ public final class CanonicalDistance {
                 lockedLeftNames,
                 lockedRightNames);
         existing.phases=best.phases;
-        if (FastPaidDeclarationAlignment.supportsSupplementalPair(left,right)) {
-            // Both families attain the same minimum declaration cost. Retain
-            // the old family, including cheaper exchange paths, and prefer an
-            // actual canonical paid path on a body-cost tie. Scoring and replay
-            // consume this same selected mapping and its paid correspondence.
-            MatrixAlignment canonical = paidDeclarationMatrixAlignment(
-                    left.get(0),right.get(0),leftMetadata,rightMetadata);
-            if (canonical.distance <= existing.distance) return canonical;
-        }
+        existing.mappings=best.mappings;
         return existing;
     }
 
@@ -977,31 +1324,1024 @@ public final class CanonicalDistance {
         List<QuantiVar> b = canonicalQuantifierOrder(right.getMatrixQuantiVars());
         if (a.size() > FastPaidDeclarationAlignment.MAX_DECLARATIONS
                 || b.size() > FastPaidDeclarationAlignment.MAX_DECLARATIONS)
-            throw new IllegalStateException("PAID_DECLARATION_SIZE_BUDGET");
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_SIZE_BUDGET");
         var sourceOrders=leftMetadata.groupedOrders(left,a);
         var targetOrders=rightMetadata.groupedOrders(right,b);
+        Set<String> sourceCensus = new HashSet<>(), targetCensus = new HashSet<>();
+        for(var variable:a)sourceCensus.add(variable.getName());
+        for(var variable:b)targetCensus.add(variable.getName());
         var budget=new FastGroupedDeclarationOrbit.Budget();
         MatrixAlignment[] best = {null};
+        boolean[] bestLinked = {false};
+        boolean[] bestExisting = {false};
+        boolean[] bestPaidSupported = {true};
         int[][] dp=DECISIONS.get()==null?quantificationDp(a,b):DECISIONS.get().declarations.get(0);
+        // Zero-charge paths retain their existing source-issued alpha orbit.
+        // Mixed paid paths constrain every keep as well as each charged update.
+        boolean constrainPath=dp[a.size()][b.size()]!=0;
         FastPaidDeclarationAlignment.enumerateSelected(a,b,dp,CanonicalDistance::quantifierUpdateCost,(paid,path) -> {
-            for(var p:sourceOrders)for(var q:targetOrders) {
+            // Keep every paired step fixed; one-sided slots cannot re-enter the
+            // residual search. Zero keeps constrain selection but are not paid.
+            var links=new java.util.LinkedHashMap<String,String>();
+            for(var move:path)if(move.left()>=0&&move.right()>=0)
+                links.put(a.get(move.left()).getName(),b.get(move.right()).getName());
+            if(constrainPath) {
+                var retained=retainedDeclarationMatrixAlignment(left,right,a,b,paid,links,path,
+                        sourceCensus,targetCensus,sourceOrders,leftMetadata,rightMetadata);
+                if(retained!=null && (best[0]==null || retained.distance<best[0].distance
+                        || retained.distance==best[0].distance && !bestExisting[0])) {
+                    best[0]=retained;
+                    bestLinked[0]=true;
+                    bestExisting[0]=true;
+                    bestPaidSupported[0]=true;
+                }
+            }
+            var distinctSources=FastGroupedDeclarationOrbit.quotientSources(a,b,
+                    constrainPath?links:paid,paid,sourceOrders,targetOrders);
+            for(var p:distinctSources)for(var q:targetOrders) {
                 budget.spend();
-                var moved=FastGroupedDeclarationOrbit.transport(a,b,paid,p,q);
-                Set<String> lockedLeft = moved.keySet(), lockedRight = new HashSet<>(moved.values());
-                int distance = matrixDistance(left,right,moved,lockedLeft,lockedRight,leftMetadata,rightMetadata);
+                var moved=FastGroupedDeclarationOrbit.transport(a,b,constrainPath?links:paid,p,q);
+                Set<String> lockedLeft=constrainPath?sourceCensus:moved.keySet();
+                Set<String> lockedRight=constrainPath?targetCensus:new HashSet<>(moved.values());
+                var selectedMapping = new BestMapping();
+                int distance = matrixDistance(left,right,moved,lockedLeft,lockedRight,leftMetadata,rightMetadata,selectedMapping);
                 boolean canonical=FastGroupedDeclarationOrbit.isIdentity(p)&&FastGroupedDeclarationOrbit.isIdentity(q);
+                var capture=DECISIONS.get();
+                boolean linked=declarationPathMatches(a,b,p,q,path,selectedMapping.mapping);
+                var paidMoved=FastGroupedDeclarationOrbit.transport(a,b,paid,p,q);
+                boolean paidSupported=FastGroupedDeclarationOrbit.paidSupported(a,paid.keySet(),p)
+                        && FastGroupedDeclarationOrbit.paidSupported(b,paid.values(),q);
+                boolean existing=false;
+                if(constrainPath && (best[0]==null || distance<=best[0].distance)) {
+                    // On ties retain an already-attaining candidate, as in the
+                    // certified path. Never reuse the old unconstrained score.
+                    var fullPhase=capture==null?null:capture.lastPhase;
+                    var priorMapping=new BestMapping();
+                    int prior=matrixDistance(left,right,paidMoved,paidMoved.keySet(),
+                            new HashSet<>(paidMoved.values()),leftMetadata,rightMetadata,priorMapping);
+                    existing=prior==distance && declarationPathMatches(a,b,p,q,path,priorMapping.mapping);
+                    if(capture!=null)capture.lastPhase=fullPhase;
+                }
                 if (best[0] == null || distance < best[0].distance
-                        || distance == best[0].distance && canonical && best[0].sourceOrder!=null) {
+                        || distance == best[0].distance && (canonical && best[0].sourceOrder!=null
+                            || canonical==(best[0].sourceOrder==null) && linked
+                                && (!bestLinked[0] || existing && !bestExisting[0]
+                                    || existing==bestExisting[0] && paidSupported && !bestPaidSupported[0]
+                                        && moved.equals(best[0].mapping)
+                                        && paidMoved.equals(best[0].paidCorrespondence)))) {
                     best[0] = new MatrixAlignment(distance,moved,lockedLeft,lockedRight);
-                    var capture=DECISIONS.get();if(capture!=null)best[0].phases=List.of(capture.lastPhase);
-                    best[0].paidCorrespondence = Map.copyOf(moved);
-                    if(capture!=null)best[0].declarationPath=path;
+                    if(capture!=null)best[0].phases=List.of(capture.lastPhase);
+                    bestLinked[0]=linked;
+                    bestExisting[0]=existing;
+                    bestPaidSupported[0]=paidSupported;
+                    best[0].paidCorrespondence = paidMoved;
+                    best[0].declarationPath=path;
                     if(!canonical){best[0].sourceOrder=p.clone();best[0].targetOrder=q.clone();}
                 }
             }
-        },DECISIONS.get()!=null);
+        },true);
         if (best[0] == null) throw new IllegalStateException("PAID_DECLARATION_NO_MINIMUM_PATH");
         return best[0];
+    }
+
+    /** Preserve an existing group exchange only with an attaining path and
+     * unchanged matrix cost under its complete, source-authorized constraints. */
+    private static MatrixAlignment retainedDeclarationMatrixAlignment(NormalForm left,NormalForm right,
+            List<QuantiVar> a,List<QuantiVar> b,Map<String,String> paid,Map<String,String> links,
+            List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move> path,
+            Set<String> sourceCensus,Set<String> targetCensus,
+            List<int[]> sourceOrders,
+            EGraphMetadata leftMetadata,EGraphMetadata rightMetadata) {
+        var prior=new BestMapping();
+        int previous=matrixDistance(left,right,paid,paid.keySet(),new HashSet<>(paid.values()),
+                leftMetadata,rightMetadata,prior);
+        var joint=new is.fivefivefive.CanDis.metric.DeclarationMatrixLink(
+                a.stream().map(QuantiVar::getName).toList(),b.stream().map(QuantiVar::getName).toList(),
+                prior.mapping,sourceCensus,targetCensus);
+        int[] p=joint.connectingPermutation(declarationAtoms(left.getMatrixQuantiVars(),a,0),
+                FastDeclarationPermutation.admission(left,a));
+        // Preserve the old grouped/disjoint route, then reuse only whole orders
+        // already authenticated by the source-certified prefix orbit.
+        var orders=new ArrayList<int[]>();orders.add(p);
+        for(var order:sourceOrders)if(!java.util.Arrays.equals(order,p)
+                // The unchanged native program must delete the same occurrence.
+                && path.stream().noneMatch(move->move.left()>=0 && move.right()<0
+                        && order[move.left()]!=move.left()))orders.add(order);
+        for(var order:orders) {
+            var full=FastGroupedDeclarationOrbit.transport(a,b,links,order,FastGroupedDeclarationOrbit.identity(b.size()));
+            if(!full.entrySet().containsAll(prior.mapping.entrySet())
+                    || !full.entrySet().containsAll(paid.entrySet())) continue;
+            int distance=matrixDistance(left,right,full,sourceCensus,targetCensus,leftMetadata,rightMetadata);
+            if(distance!=previous)continue;
+            var result=new MatrixAlignment(distance,full,sourceCensus,targetCensus);
+            var capture=DECISIONS.get();
+            if(capture!=null)result.phases=List.of(capture.lastPhase);
+            result.paidCorrespondence=paid;
+            result.declarationPath=path;
+            if(!FastGroupedDeclarationOrbit.isIdentity(order)) {
+                result.sourceOrder=order.clone();
+                result.targetOrder=FastGroupedDeclarationOrbit.identity(b.size());
+            }
+            return result;
+        }
+        return null;
+    }
+
+    // Scalar and receipt modes use the same attaining path and tie rule.
+    private static boolean declarationPathMatches(List<QuantiVar> source,List<QuantiVar> target,
+            int[] sourceOrder,int[] targetOrder,
+            List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move> path,Map<String,String> mapping) {
+        var links=new HashMap<String,String>();
+        for(var move:path)if(move.left()>=0 && move.right()>=0)
+            links.put(source.get(sourceOrder[move.left()]).getName(),target.get(targetOrder[move.right()]).getName());
+        for(var variable:source)if(!Objects.equals(links.get(variable.getName()),mapping.get(variable.getName())))return false;
+        return true;
+    }
+
+    /** A paid quantifier-head update retains its exact typed lexical slot in
+     * descendant matrices. It is not a free ALL/SOME alpha equivalence. */
+    private static MatrixAlignment selectedPaidImportAlignment(
+            Prepared left, Prepared right, MatrixAlignment existing) {
+        var declarations=selectedImportDeclarations(left,right,existing,DECISIONS.get());
+        var reads=new ArrayList<PhaseReadSupport>();
+        for(int phase=0;phase<Math.min(left.normalForms.size(),right.normalForms.size());phase++)
+            reads.add(new PhaseReadSupport(matrixVariableNames(left.normalForms.get(phase).getMatrixEGraph()),
+                    matrixVariableNames(right.normalForms.get(phase).getMatrixEGraph())));
+        var best=new MatrixAlignment[]{null};
+        boolean[] attained={existing.declarationPath!=null};
+        java.util.function.Consumer<List<ImportDeclarations>> consider=choices -> {
+            attained[0] |= declarationMapsMatch(choices,existing.mappings,reads);
+            var candidate=selectedPaidImportAlignment(left,right,existing,choices,reads);
+            if(candidate!=null && (best[0]==null || candidate.distance<best[0].distance))best[0]=candidate;
+        };
+        consider.accept(declarations);
+        if(existing.declarationPath==null)importDeclarationChoices(declarations,0,new long[1],consider);
+        if(best[0]==null || attained[0] && existing.distance<=best[0].distance)return existing;
+        return best[0];
+    }
+
+    /** Enumerate minimum programs before selecting their downstream import
+     * transport. Equal declaration costs need not induce equal matrix costs. */
+    private static void importDeclarationChoices(List<ImportDeclarations> declarations,int phase,
+            long[] visits,java.util.function.Consumer<List<ImportDeclarations>> accept) {
+        if(++visits[0]>FastPaidDeclarationAlignment.MAX_VISITS)
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_IMPORT_PATH_BUDGET");
+        if(phase==declarations.size()){accept.accept(List.copyOf(declarations));return;}
+        var d=declarations.get(phase);
+        var dp=quantificationDp(d.source(),d.target());
+        if(dp[d.source().size()][d.target().size()]==0) {
+            importDeclarationChoices(declarations,phase+1,visits,accept);return;
+        }
+        FastPaidDeclarationAlignment.enumerateSelected(d.source(),d.target(),dp,
+                CanonicalDistance::quantifierUpdateCost,(paid,path) -> {
+                    declarations.set(phase,new ImportDeclarations(d.source(),d.target(),path));
+                    importDeclarationChoices(declarations,phase+1,visits,accept);
+                },true);
+        declarations.set(phase,d);
+    }
+
+    private static MatrixAlignment selectedPaidImportAlignment(
+            Prepared left,Prepared right,MatrixAlignment existing,List<ImportDeclarations> declarations,
+            List<PhaseReadSupport> reads) {
+        var aSpace = coherentVariableSpace(left.normalForms);
+        var bSpace = coherentVariableSpace(right.normalForms);
+        var paid = new HashMap<String,String>();
+        var guarded = new ArrayList<NormalForm.GuardedProjectionMatch>();
+        var guardEdits = new ArrayList<NormalForm.PaidGuardEditMatch>();
+        var branchRoutes = new ArrayList<PaidBranchRoute>();
+        var slotRoutes = new ArrayList<PaidSlotRoute>();
+        var used = new HashSet<String>();
+        Map<TemporalTree,TemporalTree> temporal = null;
+        var capture = DECISIONS.get();
+        var selectedDeclarations = new IdentityHashMap<QuantiVar,QuantiVar>();
+        for (int phase = 0; phase < Math.min(left.normalForms.size(),right.normalForms.size()); phase++) {
+            var af = left.normalForms.get(phase); var bf = right.normalForms.get(phase);
+            var a = declarations.get(phase).source();
+            var b = declarations.get(phase).target();
+            var moves = declarations.get(phase).moves();
+            for (var move : moves) if (move.left() >= 0 && move.right() >= 0)
+                selectedDeclarations.put(a.get(move.left()),b.get(move.right()));
+            for (int i = 0; i < Math.min(af.getParams().size(),bf.getParams().size()); i++)
+                selectedDeclarations.put(af.getParams().get(i),bf.getParams().get(i));
+        }
+        for (int phase = 0; phase < Math.min(left.normalForms.size(),right.normalForms.size()); phase++) {
+            var a = declarations.get(phase).source();
+            var b = declarations.get(phase).target();
+            var moves = declarations.get(phase).moves();
+            for (var move : moves) {
+                if (move.left() < 0 || move.right() < 0) continue;
+                var source = a.get(move.left()); var target = b.get(move.right());
+                var av = aSpace.variables.get(source.getName());
+                var bv = bSpace.variables.get(target.getName());
+                NormalForm.GuardedProjectionMatch projection=null;
+                NormalForm.PaidGuardEditMatch guardEdit=null;
+                boolean admitted = paidImportFrame(av,bv,source,target,phase,selectedDeclarations);
+                if (!admitted && paidImportIdentity(av,bv,source,target,phase)
+                        && projectedDependencies(source,target,selectedDeclarations)) {
+                    projection=left.normalForms.get(phase).guardedProjectionMatch(right.normalForms.get(phase),source,target);
+                    if(projection==null){
+                        guardEdit=left.normalForms.get(phase).paidGuardEditMatch(right.normalForms.get(phase),source,target);
+                        if(guardEdit!=null){
+                            var ownerRoute=temporalOwnerRoute(left.temporalTree,guardEdit.sourceOwner());
+                            var useRoute=temporalOwnerRoute(left.temporalTree,guardEdit.sourceFuture());
+                            // PaidGuardEdit.readCheck binds the owner coordinate to its actual prefix length.
+                            if(ownerRoute==null||useRoute==null||ownerRoute.size()-1!=phase||useRoute.size()<=ownerRoute.size())guardEdit=null;
+                        }
+                    }
+                    admitted=projection!=null||guardEdit!=null;
+                }
+                if (temporal == null) {
+                    var alignment = capture == null
+                            ? OrderedTreeEditDistance.alignment(left.temporalTree,right.temporalTree,TEMPORAL_ADAPTER)
+                            : capture.temporal;
+                    var as = new ArrayList<TemporalTree>(); var bs = new ArrayList<TemporalTree>();
+                    temporalPostorder(left.temporalTree,as); temporalPostorder(right.temporalTree,bs);
+                    temporal = new IdentityHashMap<>();
+                    for (var match : alignment.matches())
+                        temporal.put(as.get(match.leftPostorder()-1),bs.get(match.rightPostorder()-1));
+                }
+                PaidBranchRoute branchRoute=null;
+                if(admitted)for(int use:av.phases)if(bv.phases.contains(use)&&!sameSelectedTemporalRoute(left,right,use,temporal)){
+                    branchRoute=PaidBranchRoute.create(left,right,phase,source,target,temporal,selectedDeclarations);
+                    break;
+                }
+                boolean retained = admitted && sameSelectedTemporalRoute(left,right,phase,temporal);
+                if((projection!=null||guardEdit!=null)&&!sameExactTemporalRoute(left,right,phase))retained=false;
+                if(admitted)for (int use : av.phases) if (bv.phases.contains(use)
+                        && (!(sameSelectedTemporalRoute(left,right,use,temporal)
+                                ||branchRoute!=null&&branchRoute.route(use))
+                            ||(projection!=null||guardEdit!=null)&&!sameExactTemporalRoute(left,right,use))) retained = false;
+                PaidSlotRoute slotRoute=null;
+                if (!retained) {
+                    slotRoute=PaidSlotRoute.create(left,right,phase,source,target,av,bv,selectedDeclarations,declarations.get(phase));
+                    if(slotRoute==null)continue;
+                    retained=true;
+                    for(int use:av.phases)if(bv.phases.contains(use)&&!slotRoute.visible(use))retained=false;
+                    if(!retained)continue;
+                    projection=null;guardEdit=null;branchRoute=null;
+                }
+                if (paid.put(source.getName(),target.getName()) != null || !used.add(target.getName()))
+                    throw new IllegalStateException("PAID_IMPORT_NONINJECTIVE_SELECTED_PATH");
+                if(projection!=null)guarded.add(projection);
+                if(guardEdit!=null)guardEdits.add(guardEdit);
+                if(branchRoute!=null)branchRoutes.add(branchRoute);
+                if(slotRoute!=null)slotRoutes.add(slotRoute);
+            }
+        }
+        if (paid.isEmpty()) return null;
+        var combinedPaid = mergePaidCorrespondence(existing.paidCorrespondence,paid);
+        if (combinedPaid == null) return null;
+        // Declaration locks include unread slots; retain their selected payments
+        // rather than searching for them in the matrix-read descriptor census.
+        var fixed = mergePaidCorrespondence(existing.declarationPath==null?Map.of():existing.mapping,combinedPaid);
+        if (fixed==null) return null;
+        var deleted = Collections.newSetFromMap(new IdentityHashMap<QuantiVar,Boolean>());
+        var inserted = Collections.newSetFromMap(new IdentityHashMap<QuantiVar,Boolean>());
+        for (var declaration:declarations) for (var move:declaration.moves()) {
+            if (move.left()>=0 && move.right()<0) deleted.add(declaration.source().get(move.left()));
+            if (move.right()>=0 && move.left()<0) inserted.add(declaration.target().get(move.right()));
+        }
+        for (var route:slotRoutes) for (var payment:route.dependencyPayments())
+            (payment.sourceSide()?deleted:inserted).add(payment.binding());
+        for (var entry : paid.entrySet()) {
+            var source = aSpace.variables.get(entry.getKey()).descriptor.variable;
+            if (!retainPaidImportDependencies(source,selectedDeclarations,combinedPaid,fixed,
+                    java.util.Collections.newSetFromMap(new IdentityHashMap<>()),deleted)) return null;
+        }
+        if (new HashSet<>(fixed.values()).size() != fixed.size()) return null;
+        var deletedNames=new HashSet<String>(); var insertedNames=new HashSet<String>();
+        for(var q:deleted)deletedNames.add(q.getName());
+        for(var q:inserted)insertedNames.add(q.getName());
+        if (!excludesOneSidedBindings(fixed,deletedNames,insertedNames)) return null;
+        var lockedA = new HashSet<>(existing.lockedLeftNames);
+        var lockedB = new HashSet<>(existing.lockedRightNames);
+        lockedA.addAll(fixed.keySet()); lockedB.addAll(fixed.values());
+        lockedA.addAll(deletedNames); lockedB.addAll(insertedNames);
+        var namesA = new ArrayList<>(lockedA); namesA.removeAll(fixed.keySet()); namesA.sort(String::compareTo);
+        var namesB = new ArrayList<>(lockedB); namesB.removeAll(fixed.values()); namesB.sort(String::compareTo);
+        namesA.removeAll(deletedNames); namesB.removeAll(insertedNames);
+        var best = new BestCoherentMapping();
+        boolean localCapture=capture==null&&(!guardEdits.isEmpty()||!branchRoutes.isEmpty()||!slotRoutes.isEmpty());
+        if(localCapture)DECISIONS.set(new DecisionCapture());
+        try {
+            searchBestCoherentMapping(left.normalForms,right.normalForms,namesA,namesB,aSpace,bSpace,
+                    fixed,new HashSet<>(fixed.values()),0,0,
+                    maximumCoherentMatches(namesA,namesB,aSpace,bSpace),lockedA,lockedB,left.metadata,right.metadata,best);
+        } finally {if(localCapture)DECISIONS.remove();}
+        if (!excludesOneSidedBindings(best.mapping,deletedNames,insertedNames)
+                || best.phases!=null && best.phases.stream().anyMatch(p ->
+                    !excludesOneSidedBindings(p.mapping(),deletedNames,insertedNames))) return null;
+        if(!declarationMapsMatch(declarations,best.mappings,reads))return null;
+        for(var edit:guardEdits){
+            int owner=left.normalForms.indexOf(edit.sourceOwner()),future=left.normalForms.indexOf(edit.sourceFuture());
+            if(owner<0||future<0||right.normalForms.indexOf(edit.targetOwner())!=owner||right.normalForms.indexOf(edit.targetFuture())!=future
+                    ||!edit.bindSelected(best.phases.get(owner).matrix(),best.phases.get(future).matrix()))return null;
+        }
+        for(var route:branchRoutes)if(!route.bind(best.phases))return null;
+        for(var route:slotRoutes)if(!route.bind(best.phases))return null;
+        var result = new MatrixAlignment(best.distance,best.mapping,lockedA,lockedB);
+        result.phases = best.phases;
+        result.mappings = best.mappings;
+        result.paidCorrespondence = Map.copyOf(combinedPaid);
+        result.declarationPath = existing.declarationPath;
+        result.sourceOrder = existing.sourceOrder;
+        result.targetOrder = existing.targetOrder;
+        result.importDeclarations = List.copyOf(declarations);
+        result.guardedProjections=List.copyOf(guarded);
+        result.paidGuardEdits=List.copyOf(guardEdits);
+        result.paidBranchRoutes=List.copyOf(branchRoutes);
+        result.paidSlotRoutes=List.copyOf(slotRoutes);
+        return result;
+    }
+
+    /** A regrouped prefix retains its typed slots even when raw source paths differ.
+     * Keep the old candidate and recapture all decisions under the new mapping. */
+    private static MatrixAlignment samePhasePrefixAlignment(Prepared left, Prepared right,
+            MatrixAlignment existing) {
+        if (left.normalForms.size() != right.normalForms.size()) return existing;
+        var selected = new IdentityHashMap<TemporalTree, TemporalTree>();
+        var as = new ArrayList<TemporalTree>();
+        var bs = new ArrayList<TemporalTree>();
+        temporalPostorder(left.temporalTree, as);
+        temporalPostorder(right.temporalTree, bs);
+        for (var match : TEMPORAL_CONTEXT.get().alignment().matches())
+            selected.put(as.get(match.leftPostorder() - 1), bs.get(match.rightPostorder() - 1));
+        var mapping = new HashMap<>(existing.mapping);
+        boolean changed = false;
+        for (int phase = 0; phase < left.normalForms.size(); phase++) {
+            var a = left.normalForms.get(phase);
+            var b = right.normalForms.get(phase);
+            if (!sameSelectedTemporalRoute(left, right, phase, selected)
+                    || !sameExactTemporalRoute(left, right, phase)) return existing;
+            var aq = canonicalQuantifierOrder(a.getMatrixQuantiVars());
+            var bq = canonicalQuantifierOrder(b.getMatrixQuantiVars());
+            if (!FastSamePhasePrefix.matches(a, b, aq, bq)) return existing;
+            for (int i = 0; i < aq.size(); i++) {
+                String source = aq.get(i).getName(), target = bq.get(i).getName();
+                String prior = mapping.putIfAbsent(source, target);
+                if (prior != null && !prior.equals(target)) return existing;
+                changed |= prior == null;
+            }
+        }
+        if (!changed || new HashSet<>(mapping.values()).size() != mapping.size()) return existing;
+        var lockedA = new HashSet<>(existing.lockedLeftNames);
+        var lockedB = new HashSet<>(existing.lockedRightNames);
+        lockedA.addAll(mapping.keySet());
+        lockedB.addAll(mapping.values());
+        int distance = matrixDistanceWithFixedMapping(left.normalForms, right.normalForms,
+                mapping, lockedA, lockedB, left.metadata, right.metadata);
+        if (distance >= existing.distance) return existing;
+        var result = new MatrixAlignment(distance, mapping, lockedA, lockedB);
+        var capture = DECISIONS.get();
+        if (capture != null) result.phases = capture.phases;
+        return result;
+    }
+
+    private record ImportDeclarations(List<QuantiVar> source,List<QuantiVar> target,
+            List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move> moves) { }
+
+    private record PhaseReadSupport(Set<String> source,Set<String> target) { }
+
+    private static boolean excludesOneSidedBindings(Map<String,String> mapping,
+            Set<String> deleted,Set<String> inserted) {
+        return mapping!=null && Collections.disjoint(mapping.keySet(),deleted)
+                && Collections.disjoint(mapping.values(),inserted);
+    }
+
+    private static boolean declarationPathsMatch(List<ImportDeclarations> declarations,
+            List<PhaseDecision> phases) {
+        if (phases==null || phases.size()<declarations.size()) return false;
+        for (int i=0;i<declarations.size();i++) {
+            var d=declarations.get(i);
+            if (!declarationPathMatches(d.source(),d.target(),
+                    java.util.stream.IntStream.range(0,d.source().size()).toArray(),
+                    java.util.stream.IntStream.range(0,d.target().size()).toArray(),
+                    d.moves(),phases.get(i).mapping())) return false;
+        }
+        return true;
+    }
+
+    /** Actual read support must extend the selected path. Unread keeps can be
+     * completed, but a read cannot resurrect a deleted or inserted slot. */
+    private static boolean declarationMapsMatch(List<ImportDeclarations> declarations,
+            List<Map<String,String>> mappings,List<PhaseReadSupport> reads) {
+        if(mappings==null || mappings.size()<declarations.size() || mappings.size()<reads.size())return false;
+        var links=new HashMap<String,String>();var source=new HashSet<String>();var target=new HashSet<String>();
+        for(var d:declarations) {
+            for(var q:d.source())source.add(q.getName());
+            for(var q:d.target())target.add(q.getName());
+            for(var m:d.moves())if(m.left()>=0&&m.right()>=0)
+                links.put(d.source().get(m.left()).getName(),d.target().get(m.right()).getName());
+        }
+        for(var map:mappings)for(var e:map.entrySet())
+            if((source.contains(e.getKey()) || target.contains(e.getValue()))
+                    && !Objects.equals(links.get(e.getKey()),e.getValue()))return false;
+        for(int phase=0;phase<reads.size();phase++)for(var link:links.entrySet())
+            if((reads.get(phase).source().contains(link.getKey())
+                    || reads.get(phase).target().contains(link.getValue()))
+                    && !Objects.equals(mappings.get(phase).get(link.getKey()),link.getValue()))return false;
+        return true;
+    }
+
+    /** PaidSlotDomainTransport: actual selected declarations, never a guessed alpha orbit. */
+    private static final class PaidSlotRoute {
+        final Prepared left, right;
+        final int owner;
+        final QuantiVar source, target;
+        final Map<QuantiVar,QuantiVar> selected;
+        final ImportDeclarations declarations;
+        private record DependencyPayment(boolean sourceSide,QuantiVar binding,int operationIndex,int declarationIndex) { }
+        private org.json.JSONArray reads;
+        private List<GuardChoice> guardChoices;
+        private org.json.JSONArray guardOperations;
+        private record GuardChoice(MatrixDecision<EGraphNode> decision, String sourcePath, String targetPath,
+                boolean sourceSide, String guardPath, EGraphNode guard) { }
+
+        private PaidSlotRoute(Prepared left, Prepared right, int owner, QuantiVar source,
+                QuantiVar target, Map<QuantiVar,QuantiVar> selected,ImportDeclarations declarations) {
+            this.left=left; this.right=right; this.owner=owner; this.source=source; this.target=target;
+            this.selected=Collections.unmodifiableMap(new IdentityHashMap<>(selected));
+            this.declarations=declarations;
+        }
+
+        static PaidSlotRoute create(Prepared left, Prepared right, int owner, QuantiVar source,
+                QuantiVar target, CoherentVariable a, CoherentVariable b, Map<QuantiVar,QuantiVar> selected,
+                ImportDeclarations declarations) {
+            if (a==null || b==null || a.ambiguous || b.ambiguous || a.ownerPhase!=owner || b.ownerPhase!=owner
+                    || a.descriptor.variable!=source || b.descriptor.variable!=target
+                    || a.descriptor.role!=BindingRole.MATRIX || b.descriptor.role!=BindingRole.MATRIX
+                    || quantifierUpdateCost(source,target)!=1) return null;
+            var route=new PaidSlotRoute(left,right,owner,source,target,selected,declarations);
+            return route.valid() ? route : null;
+        }
+
+        boolean visible(int use) {
+            return completionVisible(left,owner,use,source) && completionVisible(right,owner,use,target);
+        }
+
+        boolean valid() {
+            return visible(owner) && frames(source,target,Collections.newSetFromMap(new IdentityHashMap<>()),null,null);
+        }
+
+        private List<DependencyPayment> dependencyPayments() {
+            var payments=new ArrayList<DependencyPayment>();
+            if(!frames(source,target,Collections.newSetFromMap(new IdentityHashMap<>()),null,payments))
+                throw new IllegalStateException("UNBOUND_DEPENDENCY_PAYMENT");
+            return List.copyOf(payments);
+        }
+
+        private boolean oneSidedDependencies(boolean sourceSide,List<QuantiVar> dependencies,
+                List<DependencyPayment> payments) {
+            var form=(sourceSide?left:right).normalForms.get(owner);
+            var vector=sourceSide?declarations.source():declarations.target();
+            for(var dependency:dependencies) {
+                int index=vector.indexOf(dependency),operation=-1;
+                if(index<0 || !form.getMatrixQuantiVars().contains(dependency)
+                        || (sourceSide?selected.containsKey(dependency):selected.containsValue(dependency))
+                        || !carrierFrames(form,dependency,dependency.getDeclarationFrames()))return false;
+                for(int i=0;i<declarations.moves().size();i++) {
+                    var move=declarations.moves().get(i);
+                    if((sourceSide?move.left():move.right())!=index)continue;
+                    if(operation>=0 || (sourceSide?move.right():move.left())!=-1)return false;
+                    operation=i;
+                }
+                if(operation<0)return false;
+                var payment=new DependencyPayment(sourceSide,dependency,operation,index);
+                if(payments!=null && !payments.contains(payment))payments.add(payment);
+            }
+            return true;
+        }
+
+        private static boolean carrierFrames(NormalForm form, QuantiVar variable,
+                List<NormalForm.DeclarationFrame> frames) {
+            if (frames.isEmpty()) return false;
+            var domain=frames.get(0).domain();
+            for (var frame:frames) {
+                if (frame.variable()!=variable || !form.authenticDeclarationFrame(frame)
+                        || !frame.dependencies().isEmpty() || !frame.domain().equals(domain)) return false;
+                var evidence=form.retainedDeclarationDomainEvidence(frame);
+                if (evidence==null || !evidence.getString("kind").equals("declaration-carrier")) return false;
+            }
+            return true;
+        }
+
+        private boolean frames(QuantiVar a, QuantiVar b, Set<QuantiVar> active, org.json.JSONArray guards,
+                List<DependencyPayment> payments) {
+            if (selected.get(a)!=b || !active.add(a)) return false;
+            try {
+                var xs=a.getDeclarationFrames(); var ys=b.getDeclarationFrames();
+                var af=left.normalForms.get(owner); var bf=right.normalForms.get(owner);
+                // CarrierFrameMultiplicity: preserve every issuer, without pairing guard-free frames.
+                if (xs.size()!=ys.size()) return carrierFrames(af,a,xs) && carrierFrames(bf,b,ys);
+                if (xs.isEmpty()) return false;
+                for (int i=0;i<xs.size();i++) {
+                    var x=xs.get(i); var y=ys.get(i);
+                    if (x.variable()!=a || y.variable()!=b || !af.authenticDeclarationFrame(x)
+                            || !bf.authenticDeclarationFrame(y)) return false;
+                    boolean oneSided=x.dependencies().size()!=y.dependencies().size();
+                    if(oneSided && (!oneSidedDependencies(true,x.dependencies(),payments)
+                            || !oneSidedDependencies(false,y.dependencies(),payments)))return false;
+                    if (oneSided || !x.domain().equals(y.domain())) {
+                        var before=af.retainedDeclarationDomainEvidence(x);
+                        var after=bf.retainedDeclarationDomainEvidence(y);
+                        if(before==null||after==null)return false;
+                        if(guards!=null)guards.put(new org.json.JSONObject().put("source",before).put("target",after));
+                    }
+                    if(!oneSided)for (int j=0;j<x.dependencies().size();j++)
+                        if (!frames(x.dependencies().get(j),y.dependencies().get(j),active,guards,payments)) return false;
+                }
+                return true;
+            } finally { active.remove(a); }
+        }
+
+        boolean bind(List<PhaseDecision> phases) {
+            reads=null; guardChoices=null; guardOperations=null;
+            if (!valid()) return false;
+            var guards=new org.json.JSONArray();
+            if (!frames(source,target,Collections.newSetFromMap(new IdentityHashMap<>()),guards,null)) return false;
+            var choices=new ArrayList<GuardChoice>();
+            for (Object raw:guards) {
+                var pair=(org.json.JSONObject)raw;
+                for (boolean sourceSide:new boolean[]{true,false}) {
+                    var evidence=pair.getJSONObject(sourceSide?"source":"target");
+                    if(evidence.getString("kind").equals("declaration-carrier"))continue;
+                    if(owner>=phases.size())return false;
+                    String path=evidence.getString("path");
+                    var choice=guardDecision(phases.get(owner).matrix(),"root","root",sourceSide,path);
+                    var form=(sourceSide?left:right).normalForms.get(owner);
+                    if(choice==null || choice.guard()!=matrixAt(form.getMatrixEGraph(),path))return false;
+                    choices.add(choice);
+                }
+            }
+            var result=new org.json.JSONArray();
+            for (int phase=0;phase<phases.size();phase++) {
+                if (!bindRead(phases.get(phase).matrix(),phase,"root","root",result)) return false;
+            }
+            reads=result;
+            guardChoices=List.copyOf(choices);
+            return true;
+        }
+
+        private static EGraphNode matrixAt(EGraphNode root,String path) {
+            var parts=path.split("/"); var node=root;
+            for(int i=1;i<parts.length;i+=2)node=node.getChildren().get(Integer.parseInt(parts[i+1]));
+            return node;
+        }
+
+        private static GuardChoice guardDecision(MatrixDecision<EGraphNode> op,
+                String from,String to,boolean sourceSide,String wanted) {
+            if (op.kind().equals("select")) return guardDecision(op.selected(),from,to,sourceSide,wanted);
+            var node=sourceSide?op.source():op.target();
+            String path=sourceSide?from:to;
+            boolean whole=(sourceSide&&op.kind().equals("delete"))||(!sourceSide&&op.kind().equals("insert"));
+            if(node!=null && (path.equals(wanted)||whole&&within(wanted,path)))
+                return new GuardChoice(op,op.source()==null?null:from,op.target()==null?null:to,
+                        sourceSide,wanted,matrixAt(node,"root"+wanted.substring(path.length())));
+            if (!op.kind().equals("node")) return null;
+            for (var edge:op.children()) {
+                var found=guardDecision(edge.decision(),from+"/child/"+edge.leftIndex(),to+"/child/"+edge.rightIndex(),sourceSide,wanted);
+                if(found!=null)return found;
+            }
+            return null;
+        }
+
+        private static boolean within(String path,String root) {
+            return root!=null && (path.equals(root)||path.startsWith(root+"/child/"));
+        }
+
+        private static boolean occurrenceMatches(org.json.JSONObject payload,EGraphNode node) {
+            if(payload==null)return false;
+            var evidence=new org.json.JSONObject(payload.getString("nativeEvidence"));
+            return evidence.getLong("sourceOccurrenceLineage")==node.getSourceOccurrenceLineage()
+                    && evidence.getString("exactType").equals(String.valueOf(node.getExactAlloyType()));
+        }
+
+        boolean bindProgram(org.json.JSONObject program) {
+            guardOperations=null;
+            if(guardChoices==null)return false;
+            for(var payment:dependencyPayments()) {
+                var declaration=program.getJSONArray("nativeDeclarationPrograms").getJSONObject(owner);
+                var ops=declaration.getJSONArray("operations");
+                if(payment.operationIndex()>=ops.length())return false;
+                var op=ops.getJSONObject(payment.operationIndex());boolean side=payment.sourceSide();
+                var vector=side?declarations.source():declarations.target();
+                var original=(side?left:right).normalForms.get(owner).getMatrixQuantiVars();
+                var atom=declarationAtoms(original,vector,owner).get(payment.declarationIndex()).json();
+                if(!op.getString("kind").equals(side?"delete":"insert") || op.getInt("cost")!=1
+                        || op.getInt(side?"leftIndex":"rightIndex")!=payment.declarationIndex()
+                        || op.getInt(side?"rightIndex":"leftIndex")!=-1 || !op.isNull(side?"target":"source")
+                        || !atom.similar(op.optJSONObject(side?"source":"target"))
+                        || !atom.similar(declaration.getJSONArray(side?"source":"target").getJSONObject(payment.declarationIndex())))return false;
+            }
+            var result=new org.json.JSONArray();
+            var operations=program.getJSONArray("phases").getJSONObject(owner).getJSONObject("program").getJSONArray("operations");
+            for(var choice:guardChoices) {
+                int index=-1,paid=0;
+                boolean whole=!choice.decision.kind().equals("node");
+                for(int i=0;i<operations.length();i++) {
+                    var op=operations.getJSONObject(i);
+                    String from=op.optString("source",""),to=op.optString("target","");
+                    boolean sourceInside=within(from,choice.sourcePath),targetInside=within(to,choice.targetPath);
+                    if(sourceInside||targetInside) {
+                        if((!sourceInside&&!from.isEmpty())||(!targetInside&&!to.isEmpty()))return false;
+                        paid=Math.addExact(paid,op.getInt("cost"));
+                    }
+                    if(!(choice.sourceSide?from:to).equals(choice.guardPath))continue;
+                    if(index>=0 || op.getInt("cost")!=(whole?1:choice.decision.headCost()))return false;
+                    if(whole) {
+                        if(!op.getString("kind").equals(choice.sourceSide?"delete":"insert")
+                                || !op.isNull(choice.sourceSide?"after":"before")
+                                || !occurrenceMatches(op.optJSONObject(choice.sourceSide?"before":"after"),choice.guard))return false;
+                    } else if(!from.equals(choice.sourcePath)||!to.equals(choice.targetPath)
+                            || !Set.of("update","metric-align","read-keep").contains(op.getString("kind"))
+                            || !occurrenceMatches(op.optJSONObject("before"),choice.decision.source())
+                            || !occurrenceMatches(op.optJSONObject("after"),choice.decision.target()))return false;
+                    index=i;
+                }
+                if(index<0||paid!=choice.decision.cost())return false;
+                var emitted=operations.getJSONObject(index);
+                result.put(new org.json.JSONObject().put("phase",owner).put("operationIndex",index)
+                        .put("guardSide",choice.sourceSide?"source":"target").put("guardPath",choice.guardPath)
+                        .put("guardOccurrence",choice.guard.getSourceOccurrenceLineage())
+                        .put("sourcePath",emitted.get("source")).put("targetPath",emitted.get("target"))
+                        .put("selectedSourceRoot",choice.sourcePath==null?org.json.JSONObject.NULL:choice.sourcePath)
+                        .put("selectedTargetRoot",choice.targetPath==null?org.json.JSONObject.NULL:choice.targetPath)
+                        .put("selectedKind",choice.decision.kind())
+                        .put("headCost",emitted.getInt("cost")).put("subtreeCost",paid));
+            }
+            guardOperations=result;
+            return true;
+        }
+
+        private boolean bindRead(MatrixDecision<EGraphNode> op,int phase,String from,String to,org.json.JSONArray result) {
+            if (op.kind().equals("select")) return bindRead(op.selected(),phase,from,to,result);
+            if (!op.kind().equals("node")) return true;
+            var a=op.source(); var b=op.target();
+            if (a.getOpcode()==EGraphNode.Opcode.VARIABLE && b.getOpcode()==EGraphNode.Opcode.VARIABLE
+                    && source.getName().equals(a.getAlphaName()) && target.getName().equals(b.getAlphaName())) {
+                if (!visible(phase) || op.headCost()!=0 || a.getExactAlloyType()==null || b.getExactAlloyType()==null
+                        || !source.getExactAlloyType().sameOccurrenceEvidenceAs(a.getExactAlloyType())
+                        || !target.getExactAlloyType().sameOccurrenceEvidenceAs(b.getExactAlloyType())) return false;
+                result.put(new org.json.JSONObject().put("phase",phase).put("sourcePath",from).put("targetPath",to)
+                        .put("sourceType",a.getExactAlloyType().stableString()).put("targetType",b.getExactAlloyType().stableString())
+                        .put("sourceOccurrence",a.getSourceOccurrenceLineage()).put("targetOccurrence",b.getSourceOccurrenceLineage()));
+            }
+            for (var edge:op.children())
+                if (!bindRead(edge.decision(),phase,from+"/child/"+edge.leftIndex(),to+"/child/"+edge.rightIndex(),result)) return false;
+            return true;
+        }
+
+        org.json.JSONObject evidence() {
+            var guards=new org.json.JSONArray();
+            if (reads==null || guardOperations==null || !visible(owner)
+                    || !frames(source,target,Collections.newSetFromMap(new IdentityHashMap<>()),guards,null))
+                throw new IllegalStateException("UNBOUND_PAID_SLOT_ROUTE");
+            var result=new org.json.JSONObject().put("owner",owner).put("source",source.getName()).put("target",target.getName())
+                    .put("sourceFrames",completionFrames(left,owner,List.of(source)))
+                    .put("targetFrames",completionFrames(right,owner,List.of(target)))
+                    .put("selectedReads",new org.json.JSONArray(reads.toString())).put("domainGuards",guards)
+                    .put("selectedGuardOperations",new org.json.JSONArray(guardOperations.toString()));
+            var payments=new org.json.JSONArray();
+            for(var payment:dependencyPayments())payments.put(new org.json.JSONObject()
+                    .put("sourceSide",payment.sourceSide()).put("binding",payment.binding().getName())
+                    .put("operationIndex",payment.operationIndex()).put("declarationIndex",payment.declarationIndex())
+                    .put("kind",payment.sourceSide()?"delete":"insert").put("cost",1)
+                    .put("frames",completionFrames(payment.sourceSide()?left:right,owner,List.of(payment.binding()))));
+            if(!payments.isEmpty())result.put("dependencyOperations",payments);
+            return result;
+        }
+    }
+
+    private static List<ImportDeclarations> selectedImportDeclarations(
+            Prepared left,Prepared right,MatrixAlignment selected,DecisionCapture capture) {
+        if(selected.importDeclarations!=null)return new ArrayList<>(selected.importDeclarations);
+        var result = new ArrayList<ImportDeclarations>();
+        for (int phase=0;phase<Math.min(left.normalForms.size(),right.normalForms.size());phase++) {
+            var a = canonicalQuantifierOrder(left.normalForms.get(phase).getMatrixQuantiVars());
+            var b = canonicalQuantifierOrder(right.normalForms.get(phase).getMatrixQuantiVars());
+            if (phase==0 && selected.sourceOrder!=null) {
+                a = is.fivefivefive.CanDis.metric.DeclarationMatrixLink.permute(a,selected.sourceOrder);
+                b = is.fivefivefive.CanDis.metric.DeclarationMatrixLink.permute(b,selected.targetOrder);
+            }
+            var source=a; var target=b;
+            var moves = phase==0 && selected.declarationPath!=null ? selected.declarationPath
+                    : capture!=null ? capture.declarationMoves.get(phase)
+                    : is.fivefivefive.CanDis.metric.DeclarationReplay.selectedMoves(
+                        quantificationDp(a,b),(x,y)->quantifierUpdateCost(source.get(x),target.get(y)));
+            result.add(new ImportDeclarations(a,b,moves));
+        }
+        return result;
+    }
+
+    private static Map<String,String> mergePaidCorrespondence(
+            Map<String,String> retained,Map<String,String> added) {
+        var result = retained==null ? new HashMap<String,String>() : new HashMap<>(retained);
+        for (var entry : added.entrySet()) {
+            String previous = result.putIfAbsent(entry.getKey(),entry.getValue());
+            if (previous!=null && !previous.equals(entry.getValue())) return null;
+        }
+        return new HashSet<>(result.values()).size()==result.size() ? result : null;
+    }
+
+    private static boolean sameExactTemporalRoute(Prepared a,Prepared b,int phase) {
+        var x=temporalOwnerRoute(a.temporalTree,a.normalForms.get(phase));
+        var y=temporalOwnerRoute(b.temporalTree,b.normalForms.get(phase));
+        if(x==null||y==null||x.size()!=y.size())return false;
+        for(int i=0;i<x.size();i++)if(!x.get(i).tree.label.equals(y.get(i).tree.label))return false;
+        return true;
+    }
+
+    private record DependencyOccurrences(List<QuantiVar> owners,List<Integer> occurrenceToOwner) {
+        static DependencyOccurrences of(List<QuantiVar> occurrences) {
+            var owners=new ArrayList<QuantiVar>();var indices=new ArrayList<Integer>();
+            var positions=new IdentityHashMap<QuantiVar,Integer>();
+            for(var occurrence:occurrences) {
+                Integer index=positions.get(occurrence);
+                if(index==null){index=owners.size();positions.put(occurrence,index);owners.add(occurrence);}
+                indices.add(index);
+            }
+            return new DependencyOccurrences(List.copyOf(owners),List.copyOf(indices));
+        }
+        boolean covers(List<QuantiVar> occurrences) {
+            if(occurrences.size()!=occurrenceToOwner.size())return false;
+            var unique=Collections.newSetFromMap(new IdentityHashMap<QuantiVar,Boolean>());
+            for(var owner:owners)if(!unique.add(owner))return false;
+            var used=new HashSet<Integer>();
+            for(int i=0;i<occurrences.size();i++) {
+                int index=occurrenceToOwner.get(i);
+                if(index<0||index>=owners.size()||owners.get(index)!=occurrences.get(i))return false;
+                used.add(index);
+            }
+            return used.size()==owners.size();
+        }
+    }
+
+    private static boolean projectedDependencies(QuantiVar source,QuantiVar target,Map<QuantiVar,QuantiVar> selected) {
+        if(selected.get(source)!=target)return false;
+        var a=source.getDeclarationFrames();var b=target.getDeclarationFrames();
+        if(a.isEmpty()||a.size()!=b.size())return false;
+        for(int i=0;i<a.size();i++) {
+            var x=a.get(i);var y=b.get(i);
+            if(x.variable()!=source||y.variable()!=target||!x.owner().ownsDeclarationFrame(x)||!y.owner().ownsDeclarationFrame(y)
+                    ||!x.owner().getPhasePath().equals(y.owner().getPhasePath()))return false;
+            var p=DependencyOccurrences.of(x.dependencies());var q=DependencyOccurrences.of(y.dependencies());
+            if(!p.covers(x.dependencies())||!q.covers(y.dependencies())||!p.occurrenceToOwner.equals(q.occurrenceToOwner)
+                    ||p.owners.size()!=q.owners.size())return false;
+            for(int j=0;j<p.owners.size();j++)if(!p.owners.get(j).getDeBruijnKey().equals(q.owners.get(j).getDeBruijnKey())
+                    ||!sameDeclarationFrame(p.owners.get(j),q.owners.get(j),selected,Collections.newSetFromMap(new IdentityHashMap<>())))return false;
+        }
+        return true;
+    }
+
+    static org.json.JSONObject dependencyOccurrenceEvidence(List<QuantiVar> occurrences) {
+        var env=DependencyOccurrences.of(occurrences);
+        if(!env.covers(occurrences))throw new IllegalStateException("INCOMPLETE_DEPENDENCY_OCCURRENCE_MAP");
+        var owners=new org.json.JSONArray();
+        for(var owner:env.owners)owners.put(new org.json.JSONObject().put("coordinate",owner.getDeBruijnKey())
+            .put("type",owner.getExactAlloyType().stableString())
+            .put("ownerPhases",new org.json.JSONArray(owner.getDeclarationFrames().stream().map(f->f.owner().getPhasePath()).toList())));
+        return new org.json.JSONObject().put("owners",owners).put("occurrenceToOwner",new org.json.JSONArray(env.occurrenceToOwner));
+    }
+
+    private static boolean retainPaidImportDependencies(QuantiVar source,
+            Map<QuantiVar,QuantiVar> selected, Map<String,String> paid, Map<String,String> fixed,
+            Set<QuantiVar> active) {
+        return retainPaidImportDependencies(source,selected,paid,fixed,active,Set.of());
+    }
+
+    private static boolean retainPaidImportDependencies(QuantiVar source,
+            Map<QuantiVar,QuantiVar> selected, Map<String,String> paid, Map<String,String> fixed,
+            Set<QuantiVar> active,Set<QuantiVar> deleted) {
+        if (!active.add(source)) return false;
+        try {
+            for (var frame : source.getDeclarationFrames()) for (var dependency : frame.dependencies()) {
+                if(deleted.contains(dependency)) {
+                    if(selected.containsKey(dependency)||fixed.containsKey(dependency.getName()))return false;
+                    continue;
+                }
+                var target = selected.get(dependency);
+                if (target == null || dependency.getQuantifier() != target.getQuantifier()
+                        && !target.getName().equals(paid.get(dependency.getName()))) return false;
+                String previous = fixed.putIfAbsent(dependency.getName(),target.getName());
+                if (previous != null && !previous.equals(target.getName())) return false;
+                if (!retainPaidImportDependencies(dependency,selected,paid,fixed,active,deleted)) return false;
+            }
+            return true;
+        } finally { active.remove(source); }
+    }
+
+    private static boolean paidImportFrame(CoherentVariable a, CoherentVariable b,
+            QuantiVar source, QuantiVar target, int phase, Map<QuantiVar,QuantiVar> selectedDeclarations) {
+        return paidImportIdentity(a,b,source,target,phase)
+                && sameDeclarationFrame(source,target,selectedDeclarations,
+                    java.util.Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private static boolean paidImportIdentity(CoherentVariable a,CoherentVariable b,QuantiVar source,QuantiVar target,int phase) {
+        return a != null && b != null && !a.ambiguous && !b.ambiguous
+                && a.descriptor.variable == source && b.descriptor.variable == target
+                && a.descriptor.role == BindingRole.MATRIX && b.descriptor.role == BindingRole.MATRIX
+                && a.ownerPhase == phase && b.ownerPhase == phase
+                && source.isFrozenForCertification() && target.isFrozenForCertification()
+                && source.getQuantifier() != target.getQuantifier()
+                && source.getCardinality() == target.getCardinality()
+                && source.getDisjointnessClass() == target.getDisjointnessClass()
+                && sameType(typeKey(source),typeKey(target))
+                && source.getExactAlloyType() != null && target.getExactAlloyType() != null
+                && source.getExactAlloyType().hasParserAuthenticatedAncestry()
+                && source.getExactAlloyType().sameOccurrenceEvidenceAs(target.getExactAlloyType());
+    }
+
+    private static boolean sameDeclarationFrame(QuantiVar source, QuantiVar target,
+            Map<QuantiVar,QuantiVar> selected, Set<QuantiVar> active) {
+        if (selected.get(source) != target || !active.add(source)) return false;
+        try {
+            var a = source.getDeclarationFrames(); var b = target.getDeclarationFrames();
+            if (a.isEmpty() || a.size() != b.size()
+                    || !source.isFrozenForCertification() || !target.isFrozenForCertification()
+                    || source.getCardinality() != target.getCardinality()
+                    || source.getDisjointnessClass() != target.getDisjointnessClass()
+                    || source.getExactAlloyType() == null || target.getExactAlloyType() == null
+                    || !source.getExactAlloyType().hasParserAuthenticatedAncestry()
+                    || !source.getExactAlloyType().sameOccurrenceEvidenceAs(target.getExactAlloyType())) return false;
+            for (int i = 0; i < a.size(); i++) {
+                var x = a.get(i); var y = b.get(i);
+                if (x.variable() != source || y.variable() != target
+                        || !x.owner().ownsDeclarationFrame(x) || !y.owner().ownsDeclarationFrame(y)
+                        || x.declarationOccurrence() <= 0 || y.declarationOccurrence() <= 0
+                        || x.variableOccurrence() <= 0 || y.variableOccurrence() <= 0
+                        || !x.owner().getPhasePath().equals(y.owner().getPhasePath())
+                        || !x.domain().equals(y.domain())
+                        || x.dependencies().size() != y.dependencies().size()) return false;
+                for (int j = 0; j < x.dependencies().size(); j++) {
+                    var p = x.dependencies().get(j); var q = y.dependencies().get(j);
+                    if (!p.getDeBruijnKey().equals(q.getDeBruijnKey())
+                            || !sameDeclarationFrame(p,q,selected,active)) return false;
+                }
+            }
+            return true;
+        } finally { active.remove(source); }
+    }
+
+    private static void temporalPostorder(TemporalTree tree,List<TemporalTree> out) {
+        for (var child : tree.children) temporalPostorder(child,out);
+        out.add(tree);
+    }
+
+    private static boolean sameSelectedTemporalRoute(Prepared a,Prepared b,int phase,
+            Map<TemporalTree,TemporalTree> selected) {
+        if (phase >= a.normalForms.size() || phase >= b.normalForms.size()) return false;
+        var source = temporalOwnerRoute(a.temporalTree,a.normalForms.get(phase));
+        var target = temporalOwnerRoute(b.temporalTree,b.normalForms.get(phase));
+        if (source == null || target == null || source.size() != target.size()) return false;
+        for (int i=0;i<source.size();i++) {
+            var x=source.get(i);var y=target.get(i);
+            if (selected.get(x.tree) != y.tree || x.role != y.role || x.branch != y.branch
+                    || x.tree.owners.size() != y.tree.owners.size()) return false;
+        }
+        return true;
+    }
+
+    private record TemporalOwnerStep(TemporalTree tree,int role,int branch) { }
+
+    /** A checked replacement for the binary/unary owner-count mismatch only. */
+    private static final class PaidBranchRoute {
+        final Prepared left,right;
+        final NormalForm.BranchRouteEndpoint a,b;
+        final int owner,kept,targetKept,dropped,side;
+        final QuantiVar sourceBinding,targetBinding;
+        final Map<QuantiVar,QuantiVar> declarations;
+        final Map<TemporalTree,TemporalTree> selected;
+        final org.json.JSONObject sourceEvidence,targetEvidence;
+        List<PhaseDecision> decisions;
+        List<is.fivefivefive.CanDis.metric.TemporalReplay.SelectedUpdate<TemporalTree>> temporalPayments;
+        private PaidBranchRoute(Prepared left,Prepared right,NormalForm.BranchRouteEndpoint a,
+                NormalForm.BranchRouteEndpoint b,int owner,int kept,int targetKept,int dropped,int side,Map<TemporalTree,TemporalTree> selected,
+                QuantiVar sourceBinding,QuantiVar targetBinding,Map<QuantiVar,QuantiVar> declarations){
+            this.left=left;this.right=right;this.a=a;this.b=b;this.owner=owner;this.kept=kept;this.dropped=dropped;this.side=side;
+            this.targetKept=targetKept;this.sourceBinding=sourceBinding;this.targetBinding=targetBinding;this.declarations=new IdentityHashMap<>(declarations);
+            this.selected=new IdentityHashMap<>(selected);sourceEvidence=a.evidence();targetEvidence=b.evidence();
+        }
+        static PaidBranchRoute create(Prepared left,Prepared right,int owner,QuantiVar x,QuantiVar y,
+                Map<TemporalTree,TemporalTree> selected,Map<QuantiVar,QuantiVar> declarations){
+            var match=authority(left,right,owner,x,y,selected,declarations);
+            return match!=null&&match.kept==match.targetKept&&match.dropped>=Math.min(left.normalForms.size(),right.normalForms.size())?match:null;
+        }
+        static PaidBranchRoute authority(Prepared left,Prepared right,int owner,QuantiVar x,QuantiVar y,
+                Map<TemporalTree,TemporalTree> selected,Map<QuantiVar,QuantiVar> declarations){
+            if(!paidImportFrame(coherentVariableSpace(left.normalForms).variables.get(x.getName()),
+                    coherentVariableSpace(right.normalForms).variables.get(y.getName()),x,y,owner,declarations))return null;
+            var a=left.normalForms.get(owner).branchRouteEndpoint(x);
+            var b=right.normalForms.get(owner).branchRouteEndpoint(y);
+            if(a==null||b==null||!((a.arity()==2&&b.arity()==1)||(a.arity()==1&&b.arity()==2)))return null;
+            var binary=a.arity()==2?a:b;var unary=a.arity()==1?a:b;
+            var binaryVar=a.arity()==2?x:y;var unaryVar=a.arity()==1?x:y;
+            if(binary.owner().getTemporalOp()!=TemporalOp.ALWAYS||unary.owner().getTemporalOp()!=TemporalOp.EVENTUALLY
+                    ||binaryVar.getQuantifier()!=QuantiVar.Quantifier.ALL||unaryVar.getQuantifier()!=QuantiVar.Quantifier.SOME
+                    ||binary.branch(0).getTemporalOp()!=TemporalOp.UNTILL||binary.branch(1).getTemporalOp()!=TemporalOp.UNTILR
+                    ||unary.branch(0).getTemporalOp()!=TemporalOp.ALWAYS||!binary.oppositeBody(0,1))return null;
+            for(int side=0;side<2;side++)if(binary.sameBody(side,unary,0)){
+                int ai=left.normalForms.indexOf(a.branch(a.arity()==2?side:0));
+                int bi=right.normalForms.indexOf(b.branch(b.arity()==2?side:0));
+                int drop=(a.arity()==2?left:right).normalForms.indexOf(binary.branch(1-side));
+                if(ai<0||bi<0||drop<0)continue;
+                var match=new PaidBranchRoute(left,right,a,b,owner,ai,bi,drop,side,selected,x,y,declarations);
+                if(match.authorityValid())return match;
+            }
+            return null;
+        }
+        boolean route(int phase){
+            return phase==kept&&kept==targetKept&&authorityValid();
+        }
+        boolean authorityValid(){
+            if(!a.valid()||!b.valid()||!sourceEvidence.similar(a.evidence())||!targetEvidence.similar(b.evidence())
+                    ||!paidImportFrame(coherentVariableSpace(left.normalForms).variables.get(sourceBinding.getName()),
+                    coherentVariableSpace(right.normalForms).variables.get(targetBinding.getName()),sourceBinding,targetBinding,owner,declarations))return false;
+            var xs=temporalOwnerRoute(left.temporalTree,left.normalForms.get(kept));
+            var ys=temporalOwnerRoute(right.temporalTree,right.normalForms.get(targetKept));
+            if(xs==null||ys==null||xs.size()!=ys.size()||xs.size()<2)return false;
+            for(int i=0;i<xs.size();i++){
+                var x=xs.get(i);var y=ys.get(i);
+                if(selected.get(x.tree)!=y.tree||x.branch!=y.branch)return false;
+                if(i==xs.size()-1){
+                    if(x.role!=(a.arity()==2?side:0)||y.role!=(b.arity()==2?side:0)
+                            ||x.tree.owners.size()!=a.arity()||y.tree.owners.size()!=b.arity()
+                            ||x.tree.owners.get(x.role)!=a.branch(a.arity()==2?side:0)
+                            ||y.tree.owners.get(y.role)!=b.branch(b.arity()==2?side:0))return false;
+                }else if(x.role!=y.role||x.tree.owners.size()!=y.tree.owners.size())return false;
+            }
+            if(!sameSelectedTemporalRoute(left,right,owner,selected))return false;
+            for(int phase:new int[]{owner,kept}){
+                var aRoute=temporalOwnerRoute(left.temporalTree,left.normalForms.get(phase));
+                var bRoute=temporalOwnerRoute(right.temporalTree,right.normalForms.get(phase==kept?targetKept:phase));
+                var aTree=aRoute.get(aRoute.size()-1).tree;var bTree=bRoute.get(bRoute.size()-1).tree;
+                if(selected.get(aTree)!=bTree||aTree.label.equals(bTree.label)
+                        ||!aTree.label.equals(naturalTemporalLabel(left.normalForms.get(phase).getTemporalOp()))
+                        ||!bTree.label.equals(naturalTemporalLabel(right.normalForms.get(phase==kept?targetKept:phase).getTemporalOp())))return false;
+            }
+            return true;
+        }
+        boolean bind(List<PhaseDecision> phases){decisions=List.copyOf(phases);return valid();}
+        boolean bindTemporal(List<is.fivefivefive.CanDis.metric.TemporalReplay.SelectedUpdate<TemporalTree>> updates,org.json.JSONObject program){
+            var owned=new ArrayList<is.fivefivefive.CanDis.metric.TemporalReplay.SelectedUpdate<TemporalTree>>();
+            for(int phase:new int[]{owner,kept}){
+                var xs=temporalOwnerRoute(left.temporalTree,left.normalForms.get(phase));
+                var ys=temporalOwnerRoute(right.temporalTree,right.normalForms.get(phase));
+                var x=xs.get(xs.size()-1).tree;var y=ys.get(ys.size()-1).tree;
+                var found=updates.stream().filter(u->u.source()==x&&u.target()==y).toList();
+                if(found.size()!=1)return false;owned.add(found.get(0));
+            }
+            // Preserve emission order, including any unrelated edits between these payments.
+            owned.sort(java.util.Comparator.comparingInt(u->u.operationIndex()));temporalPayments=List.copyOf(owned);
+            return temporalValid(program);
+        }
+        boolean temporalValid(org.json.JSONObject program){
+            if(temporalPayments==null||temporalPayments.size()!=2||!authorityValid())return false;
+            int previous=-1;var ops=program.getJSONArray("operations");
+            for(var payment:temporalPayments){
+                if(payment.operationIndex()<=previous||payment.operationIndex()>=ops.length()||payment.cost()!=1
+                        ||selected.get(payment.source())!=payment.target()||!payment.source().label.equals(payment.from())
+                        ||!payment.target().label.equals(payment.to())||payment.from().equals(payment.to()))return false;
+                var op=ops.getJSONObject(payment.operationIndex());
+                if(!op.getString("kind").equals("update")||op.getInt("cost")!=1||!op.getString("from").equals(payment.from())
+                        ||!op.getString("to").equals(payment.to())||!op.getJSONArray("path").similar(new org.json.JSONArray(payment.path())))return false;
+                previous=payment.operationIndex();
+            }
+            return true;
+        }
+        boolean valid(){
+            if(decisions==null||!route(kept)||!sourceEvidence.similar(a.evidence())||!targetEvidence.similar(b.evidence()))return false;
+            var o=decisions.get(owner).matrix;var k=decisions.get(kept).matrix;var d=decisions.get(dropped).matrix;
+            if(!"node".equals(o.kind())||o.source()!=a.root()||o.target()!=b.root()||o.cost()!=1||o.headCost()!=0||o.children().size()!=1)return false;
+            var edge=o.children().get(0);var ref=edge.decision();
+            if(edge.leftIndex()!=0||edge.rightIndex()!=0||!"node".equals(ref.kind())||ref.source()!=a.reference()
+                    ||ref.target()!=b.reference()||ref.cost()!=1||ref.headCost()!=1||!ref.children().isEmpty())return false;
+            if(!NormalForm.branchZeroDecision(k,a.nodes(a.arity()==2?side:0).get(0),b.nodes(b.arity()==2?side:0).get(0)))return false;
+            var binary=a.arity()==2?a:b;
+            return d.source()==(a.arity()==2?binary.nodes(1-side).get(0):null)
+                &&d.target()==(b.arity()==2?binary.nodes(1-side).get(0):null)
+                &&d.kind().equals(a.arity()==2?"delete":"insert")&&d.cost()==4&&d.children().isEmpty();
+        }
+        org.json.JSONObject evidence(){
+            var payments=new org.json.JSONArray();if(temporalPayments!=null)for(var p:temporalPayments)payments.put(new org.json.JSONObject()
+                .put("operationIndex",p.operationIndex()).put("path",new org.json.JSONArray(p.path())).put("kind","update").put("from",p.from()).put("to",p.to()).put("cost",p.cost()));
+            return new org.json.JSONObject().put("source",new org.json.JSONObject(sourceEvidence.toString()))
+            .put("target",new org.json.JSONObject(targetEvidence.toString())).put("ownerPhase",owner).put("retainedPhase",kept)
+            .put("discardedPhase",dropped).put("retainedRole",side).put("ownerCost",1).put("retainedCost",0).put("discardedCost",4).put("temporalPayments",payments);}
+    }
+
+    private static List<TemporalOwnerStep> temporalOwnerRoute(TemporalTree tree,NormalForm owner) {
+        for (int role=0;role<tree.owners.size();role++) if (tree.owners.get(role)==owner)
+            return new ArrayList<>(List.of(new TemporalOwnerStep(tree,role,-1)));
+        for (int branch=0;branch<tree.children.size();branch++) {
+            var child=tree.children.get(branch);
+            var route=temporalOwnerRoute(child,owner);
+            if (route != null) {
+                route.add(0,new TemporalOwnerStep(tree,child.incomingRole,branch));
+                return route;
+            }
+        }
+        return null;
     }
 
     private static void closeCoherentCandidateRegion(
@@ -1067,6 +2407,7 @@ public final class CanonicalDistance {
             if (matched != requiredMatches) {
                 return;
             }
+            var mappings=new ArrayList<Map<String,String>>();
             int distance = matrixDistanceWithFixedMapping(
                     left,
                     right,
@@ -1074,10 +2415,11 @@ public final class CanonicalDistance {
                     lockedLeftNames,
                     lockedRightNames,
                     leftMetadata,
-                    rightMetadata);
+                    rightMetadata,mappings);
             if (distance < best.distance) {
                 best.distance = distance;
                 best.mapping = new HashMap<>(mapping);
+                best.mappings=List.copyOf(mappings);
                 var capture=DECISIONS.get();if(capture!=null)best.phases=capture.phases;
             }
             return;
@@ -1086,7 +2428,7 @@ public final class CanonicalDistance {
         CoherentVariable leftVariable = leftSpace.variables.get(leftName);
         boolean mapped = false;
         for (String rightName : rightNames) {
-            if (usedRightNames.contains(rightName)
+            if (leftVariable == null || usedRightNames.contains(rightName)
                     || !leftVariable.compatibleWith(
                             rightSpace.variables.get(rightName))) {
                 continue;
@@ -1182,6 +2524,8 @@ public final class CanonicalDistance {
             Set<String> visitedRight) {
         is.fivefivefive.CanDis.WorkBudget.charge(1L + rightNames.size());
         CoherentVariable left = leftSpace.variables.get(leftName);
+        // Declaration locks may include slots absent from the matrix-read census.
+        if (left == null) return false;
         for (String rightName : rightNames) {
             if (!visitedRight.add(rightName)
                     || !left.compatibleWith(
@@ -1261,6 +2605,13 @@ public final class CanonicalDistance {
             Set<String> lockedRightNames,
             EGraphMetadata leftMetadata,
             EGraphMetadata rightMetadata) {
+        return matrixDistance(left,right,fixedMapping,lockedLeftNames,lockedRightNames,
+                leftMetadata,rightMetadata,null);
+    }
+
+    private static int matrixDistance(NormalForm left,NormalForm right,Map<String,String> fixedMapping,
+            Set<String> lockedLeftNames,Set<String> lockedRightNames,
+            EGraphMetadata leftMetadata,EGraphMetadata rightMetadata,BestMapping selected) {
         Map<String, BindingDescriptor> leftBindings = variableBindings(left);
         Map<String, BindingDescriptor> rightBindings = variableBindings(right);
         leftBindings.keySet().retainAll(matrixVariableNames(left.getMatrixEGraph()));
@@ -1274,7 +2625,8 @@ public final class CanonicalDistance {
         Map<String, String> mapping = new HashMap<>(fixedMapping);
         int requiredMatches = maximumCompatibleMatches(
                 leftNames, leftBindings, rightBindings);
-        var capture=DECISIONS.get();var selected=capture==null?null:new BestMapping();
+        var capture=DECISIONS.get();
+        if(capture!=null && selected==null)selected=new BestMapping();
         int result=bestMappedDistance(
                 left.getMatrixEGraph(),
                 right.getMatrixEGraph(),
@@ -1459,9 +2811,10 @@ public final class CanonicalDistance {
             if (matched != requiredMatches) {
                 return best;
             }
-            var context=new EGraphDistanceContext(mapping,leftMetadata,rightMetadata,selected!=null);
+            boolean capture=DECISIONS.get()!=null;
+            var context=new EGraphDistanceContext(mapping,leftMetadata,rightMetadata,capture);
             int candidate=context.distance(left,right);
-            if(selected!=null && candidate<best){selected.mapping=Map.copyOf(mapping);selected.decision=context.decision(left,right);}
+            if(selected!=null && candidate<best){selected.mapping=Map.copyOf(mapping);selected.decision=capture?context.decision(left,right):null;}
             return Math.min(best,candidate);
         }
         String leftName = leftNames.get(index);
@@ -1801,6 +3154,11 @@ public final class CanonicalDistance {
 
     private static int nodeUpdateCost(EGraphNode left, EGraphNode right, Map<String, String> variableMapping,
             EGraphMetadata leftMetadata, EGraphMetadata rightMetadata) {
+        var context=TEMPORAL_CONTEXT.get();
+        return nodeUpdateCost(left,right,variableMapping,leftMetadata,rightMetadata,context==null?null:context.payments());
+    }
+    private static int nodeUpdateCost(EGraphNode left,EGraphNode right,Map<String,String> variableMapping,
+            EGraphMetadata leftMetadata,EGraphMetadata rightMetadata,FastTemporalReferences.Payment payments) {
         if (left.getOpcode() != right.getOpcode()) {
             return 1;
         }
@@ -1811,6 +3169,10 @@ public final class CanonicalDistance {
         GraphType rightType = rightMetadata == null ? resultType(right) : rightMetadata.type(right);
         if (!Objects.equals(leftType, rightType)) {
             return 1;
+        }
+        if(left.getOpcode()==EGraphNode.Opcode.REF&&payments!=null) {
+            Integer cost=payments.updateCost(left,right);
+            if(cost!=null)return cost;
         }
         if (left.getOpcode() == EGraphNode.Opcode.GLOBALBINDING
                 || left.getOpcode() == EGraphNode.Opcode.CONSTANT
@@ -1903,6 +3265,8 @@ public final class CanonicalDistance {
         private final IdentityHashMap<EGraphNode, Integer> sizes = new IdentityHashMap<>();
         private final IdentityHashMap<EGraphNode, GraphType> resultTypes = new IdentityHashMap<>();
         private final IdentityHashMap<EGraphNode, List<EGraphNode>> metricChildren = new IdentityHashMap<>();
+        private final IdentityHashMap<EGraphNode, List<EGraphNode>> alternatives =
+                new IdentityHashMap<>();
 
         private EGraphMetadata(List<NormalForm> sourceForms,List<NormalForm> normalForms) {
             // Closed temporal dedup can change phase-list length. This authority
@@ -1912,6 +3276,14 @@ public final class CanonicalDistance {
             for (int i=0;i<normalForms.size();i++) {
                 NormalForm normalForm=normalForms.get(i);
                 prepare(normalForm.getMatrixEGraph());
+            }
+            for (NormalForm normalForm : normalForms) {
+                NormalForm source = normalForm.comparisonSource();
+                EGraphNode root = normalForm.getMatrixEGraph();
+                if (source == null || source == normalForm || root == null) continue;
+                for (var entry : FastBinderOrbit.build(source, root).entrySet()) {
+                    alternatives.put(entry.getKey(), List.copyOf(entry.getValue()));
+                }
             }
         }
 
@@ -1938,7 +3310,9 @@ public final class CanonicalDistance {
             return cached.orders.stream().map(int[]::clone).toList();
         }
 
-        private void prepare(EGraphNode node) {
+        // Prepared endpoints are shared by pool workers. Publish all three lazy
+        // indexes under the same endpoint-local monitor, including cache hits.
+        private synchronized void prepare(EGraphNode node) {
             if (node == null || sizes.containsKey(node)) {
                 return;
             }
@@ -1955,7 +3329,7 @@ public final class CanonicalDistance {
             resultTypes.put(node, resultType(node));
         }
 
-        private int size(EGraphNode node) {
+        private synchronized int size(EGraphNode node) {
             if (node == null) {
                 return 0;
             }
@@ -1967,25 +3341,40 @@ public final class CanonicalDistance {
             return size;
         }
 
-        private GraphType type(EGraphNode node) {
+        private synchronized GraphType type(EGraphNode node) {
             if (!resultTypes.containsKey(node)) {
                 prepare(node);
             }
             return resultTypes.get(node);
         }
 
-        private List<EGraphNode> children(EGraphNode node) {
+        private synchronized List<EGraphNode> children(EGraphNode node) {
             if (!metricChildren.containsKey(node)) prepare(node);
             return metricChildren.get(node);
+        }
+
+        private synchronized int entryCount() {
+            return sizes.size();
+        }
+
+        private List<EGraphNode> alternatives(EGraphNode node) {
+            if (node == null) return List.of();
+            List<EGraphNode> retained = alternatives.get(node);
+            return retained == null ? List.of() : List.copyOf(retained);
         }
 
     }
 
     private static final class EGraphDistanceContext {
+        private static final int MAX_RETAINED_MEMO_PAIRS = 131_072;
+        private final FastTemporalReferences.Payment temporalPayments;
         private final Map<String, String> variableMapping;
         private final EGraphMetadata leftMetadata;
         private final EGraphMetadata rightMetadata;
         private final IdentityHashMap<EGraphNode,IdentityHashMap<EGraphNode,MatrixDecision<EGraphNode>>> decisions;
+        private final IdentityHashMap<EGraphNode,IdentityHashMap<EGraphNode,Integer>> memo =
+                new IdentityHashMap<>();
+        private long memoPairs;
         private List<MatrixDecision.Edge<EGraphNode>> edges;
 
         private EGraphDistanceContext(
@@ -1999,6 +3388,8 @@ public final class CanonicalDistance {
             this.variableMapping = capture?Map.copyOf(variableMapping):variableMapping;
             this.leftMetadata = leftMetadata;
             this.rightMetadata = rightMetadata;
+            var temporal=TEMPORAL_CONTEXT.get();
+            this.temporalPayments=temporal==null?null:temporal.payments();
             decisions=capture?new IdentityHashMap<>():null;
         }
         private MatrixDecision<EGraphNode> decision(EGraphNode a,EGraphNode b) {
@@ -2017,6 +3408,52 @@ public final class CanonicalDistance {
             if (right == null) {
                 return nodeSize(left, true);
             }
+            IdentityHashMap<EGraphNode, Integer> known = memo.get(left);
+            if (known != null) {
+                Integer value = known.get(right);
+                if (value != null) {
+                    return value;
+                }
+            }
+            // Fuel above charges every visit. These rows live only for this
+            // comparison context, including its recursive calls. Bound them
+            // here, independently of cumulative request allocations.
+            is.fivefivefive.CanDis.WorkBudget.requireRetained(memoPairs + 1, MAX_RETAINED_MEMO_PAIRS);
+            memoPairs++;
+            List<EGraphNode> leftAlternatives = leftMetadata == null
+                    ? List.of() : leftMetadata.alternatives(left);
+            List<EGraphNode> rightAlternatives = rightMetadata == null
+                    ? List.of() : rightMetadata.alternatives(right);
+            if (!leftAlternatives.isEmpty() || !rightAlternatives.isEmpty()) {
+                List<EGraphNode> leftCandidates = leftAlternatives.isEmpty()
+                        ? List.of(left) : leftAlternatives;
+                List<EGraphNode> rightCandidates = rightAlternatives.isEmpty()
+                        ? List.of(right) : rightAlternatives;
+                int best = Integer.MAX_VALUE;
+                for (int leftIndex = 0; leftIndex < leftCandidates.size(); leftIndex++) {
+                    for (int rightIndex = 0; rightIndex < rightCandidates.size(); rightIndex++) {
+                        int candidate = distance(
+                                leftCandidates.get(leftIndex), rightCandidates.get(rightIndex));
+                        if (candidate < best) {
+                            best = candidate;
+                            if (decisions != null) {
+                                decisions.computeIfAbsent(left, k -> new IdentityHashMap<>()).put(right,
+                                        MatrixDecision.select(left, right,
+                                                leftAlternatives.isEmpty() ? -1 : leftIndex,
+                                                rightAlternatives.isEmpty() ? -1 : rightIndex,
+                                                decision(leftCandidates.get(leftIndex),
+                                                        rightCandidates.get(rightIndex))));
+                            }
+                        }
+                        if (best == 0) {
+                            remember(left, right, 0);
+                            return 0;
+                        }
+                    }
+                }
+                remember(left, right, best);
+                return best;
+            }
 
             List<EGraphNode> leftChildren = leftMetadata == null
                     ? FastChainGeometry.children(left) : leftMetadata.children(left);
@@ -2027,11 +3464,16 @@ public final class CanonicalDistance {
                     && right.isOrderInsensitive()
                     ? unorderedChildDistance(leftChildren, rightChildren)
                     : childDistance(leftChildren, rightChildren);
-            int head=nodeUpdateCost(left,right,variableMapping,leftMetadata,rightMetadata),total=head+childCost;
+            int head=nodeUpdateCost(left,right,variableMapping,leftMetadata,rightMetadata,temporalPayments),total=head+childCost;
             if(decisions!=null)decisions.computeIfAbsent(left,k->new IdentityHashMap<>()).put(right,
                     MatrixDecision.node(left,right,total,head,left.getOpcode()==right.getOpcode()
                             &&left.isOrderInsensitive()&&right.isOrderInsensitive(),edges));
+            remember(left, right, total);
             return total;
+        }
+
+        private void remember(EGraphNode left, EGraphNode right, int value) {
+            memo.computeIfAbsent(left, ignored -> new IdentityHashMap<>()).put(right, value);
         }
 
         private int unorderedChildDistance(List<EGraphNode> left, List<EGraphNode> right) {
@@ -2222,34 +3664,47 @@ public final class CanonicalDistance {
         return metadata == null ? eGraphSize(node) : metadata.size(node);
     }
 
+    private static FastTemporalReferences.Shape temporalShape(TemporalTree node) {
+        return new FastTemporalReferences.Shape(node.label,node.owners,node.incomingRole,
+                node.children.stream().map(CanonicalDistance::temporalShape).toList());
+    }
     private static TemporalTree temporalTree(List<NormalForm> nfs) {
         TemporalTree root = new TemporalTree(naturalTemporalLabel(TemporalOp.NONE));
         if (nfs.isEmpty()) {
             return root;
         }
+        root.owners.add(nfs.get(0));
         appendTemporalChildren(root, nfs.get(0).comparisonTemporalChildren());
         return root;
     }
 
     private static TemporalTree temporalTree(NormalForm nf) {
         TemporalTree tree = new TemporalTree(naturalTemporalLabel(nf.getTemporalOp()));
+        tree.owners.add(nf);
         appendTemporalChildren(tree, nf.comparisonTemporalChildren());
         return tree;
     }
 
     private static void appendTemporalChildren(TemporalTree parent, List<NormalForm> children) {
+        appendTemporalChildren(parent,children,0);
+    }
+
+    private static void appendTemporalChildren(TemporalTree parent, List<NormalForm> children,int incomingRole) {
         for (int i = 0; i < children.size(); i++) {
             NormalForm child = children.get(i);
             if (isLeftBinaryTemporal(child.getTemporalOp())
                     && i + 1 < children.size()
                     && matchingRightBinaryTemporal(child.getTemporalOp()) == children.get(i + 1).getTemporalOp()) {
                 TemporalTree binary = new TemporalTree(naturalTemporalLabel(child.getTemporalOp()));
-                appendTemporalChildren(binary, child.comparisonTemporalChildren());
-                appendTemporalChildren(binary, children.get(i + 1).comparisonTemporalChildren());
+                binary.owners.add(child); binary.owners.add(children.get(i+1));
+                binary.incomingRole = incomingRole;
+                appendTemporalChildren(binary, child.comparisonTemporalChildren(),0);
+                appendTemporalChildren(binary, children.get(i + 1).comparisonTemporalChildren(),1);
                 parent.children.add(binary);
                 i++;
             } else {
-                parent.children.add(temporalTree(child));
+                var tree=temporalTree(child); tree.incomingRole=incomingRole;
+                parent.children.add(tree);
             }
         }
     }
@@ -2799,7 +4254,9 @@ public final class CanonicalDistance {
         }
 
         private boolean isCoherent() {
-            return phases.size() > 1;
+            // A single imported use still belongs to its lexical owner, not
+            // to the later matrix where its alpha name happens to be read.
+            return phases.size() > 1 || !phases.contains(ownerPhase);
         }
     }
 
@@ -2823,15 +4280,22 @@ public final class CanonicalDistance {
 
     private static final class BestCoherentMapping {
         private List<PhaseDecision> phases;
+        private List<Map<String,String>> mappings;
         private int distance = Integer.MAX_VALUE;
         private Map<String, String> mapping = new HashMap<>();
     }
 
     private static final class MatrixAlignment {
+        private List<Map<String,String>> mappings;
+        private List<NormalForm.GuardedProjectionMatch> guardedProjections=List.of();
+        private List<NormalForm.PaidGuardEditMatch> paidGuardEdits=List.of();
+        private List<PaidBranchRoute> paidBranchRoutes=List.of();
+        private List<PaidSlotRoute> paidSlotRoutes=List.of();
         private List<PhaseDecision> phases;
         private Map<String,String> paidCorrespondence;
         private int[] sourceOrder,targetOrder;
         private List<is.fivefivefive.CanDis.metric.DeclarationReplay.Move> declarationPath;
+        private List<ImportDeclarations> importDeclarations;
         private final int distance;
         private final Map<String, String> mapping;
         private final Set<String> lockedLeftNames;
@@ -2866,6 +4330,8 @@ public final class CanonicalDistance {
     private static class TemporalTree {
         private String label;
         private List<TemporalTree> children;
+        private final List<NormalForm> owners = new ArrayList<>();
+        private int incomingRole;
 
         private TemporalTree(String label) {
             this.label = label;

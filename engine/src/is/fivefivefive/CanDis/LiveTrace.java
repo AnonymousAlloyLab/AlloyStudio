@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
  */
 public final class LiveTrace {
     private static final Class<?> METADATA = nested("EGraphMetadata");
-    private static final Method ALIGN = method("bestCoherentMatrixAlignment", List.class, List.class, METADATA, METADATA);
     private static final Method MAP = method("bestVariableMapping", NormalForm.class, NormalForm.class, Map.class, Set.class, Set.class);
     private static final Method UPDATE = method("nodeUpdateCost", EGraphNode.class, EGraphNode.class, Map.class, METADATA, METADATA);
     private static final Method VARIABLE = method("variableName", EGraphNode.class);
@@ -99,8 +98,10 @@ public final class LiveTrace {
         JSONObject evidence = trace.json();
         if (!evidence.getBoolean("metricRepresentationExecutionChecked"))
             throw new IllegalStateException("Native metric replay incomplete");
-        List<NormalForm> left = (List<NormalForm>) field(field(learner, "delegate"), "normalForms");
-        List<NormalForm> right = (List<NormalForm>) field(field(reference, "delegate"), "normalForms");
+        List<NormalForm> left = trace.comparisonForms(true);
+        List<NormalForm> right = trace.comparisonForms(false);
+        CanonicalDistance.Prepared learnerMetric = metricPrepared(learner);
+        CanonicalDistance.Prepared referenceMetric = metricPrepared(reference);
         Result result = new Result();
         JSONArray phases = evidence.getJSONArray("phases");
         for (int phase = 0; phase < phases.length(); phase++) {
@@ -126,21 +127,24 @@ public final class LiveTrace {
                 String address = insertion ? null : action.getString("source");
                 if (insertion) {
                     String parent = action.getString("target");
-                    while (parent.contains("/")) {
-                        parent = parent.substring(0, parent.lastIndexOf("/child/"));
+                    int edgeIndex;
+                    while ((edgeIndex = parent.lastIndexOf('/')) >= 0) {
+                        // Each pair of components is one native edge, including
+                        // a selected alternative that shares the displayed node.
+                        parent = parent.substring(0, parent.lastIndexOf('/', edgeIndex - 1));
                         if (targetAnchors.containsKey(parent)) { address = targetAnchors.get(parent); break; }
                     }
                 }
-                Located selected = address == null ? new Located(null, prefix) : metricNode(source, address, prefix);
-                EGraphNode replacement = deletion || insertion ? null : metricNode(target, action.getString("target"), "").node();
-                if (selected.node() != null) {
-                    EGraphNode original = learnerNode(learner, selected.path());
-                    if (original == null || original.getOpcode() != selected.node().getOpcode())
-                        throw new IllegalStateException("Native learner occurrence cannot be resolved: " + selected.path()
-                                + ": " + selected.node().getOpcode() + " vs " + (original == null ? "missing" : original.getOpcode()));
+                Located selected = address == null ? new Located(null, prefix)
+                        : metricNode(learnerMetric, source, address, prefix);
+                EGraphNode replacement = deletion || insertion ? null
+                        : metricNode(referenceMetric, target, action.getString("target"), "").node();
+                EGraphNode original = selected.node() == null ? null : learnerNode(learner, selected.path());
+                if (selected.node() != null && !sameOccurrence(original, selected.node())) {
+                    throw new IllegalStateException("Native learner occurrence cannot be resolved");
                 }
                 result.matrix.put(matrixOperation(insertion ? "insert" : deletion ? "delete" : "replace",
-                        selected.node(), replacement, selected.path(), insertion ? "insertion-anchor" : "affected"));
+                        original, replacement, selected.path(), insertion ? "insertion-anchor" : "affected"));
             }
             JSONArray declarations = evidence.getJSONArray("nativeDeclarationPrograms").getJSONObject(phase).getJSONArray("operations");
             for (Object value : declarations) {
@@ -157,9 +161,9 @@ public final class LiveTrace {
                         throw new IllegalStateException("Invalid native binding address");
                     binding = form.getMatrixQuantiVars().get(Integer.parseInt(occurrence[3]));
                     List<QuantiVar> ordered = (List<QuantiVar>) invoke(QUANTIFIER_ORDER, form.getMatrixQuantiVars());
-                    ordinal = ordered.indexOf(binding);
-                    if (ordinal < 0) throw new IllegalStateException("Native binding lost its display coordinate");
-                    if (binding == null) throw new IllegalStateException("Missing native binding occurrence");
+                    ordinal = 0;
+                    while (ordinal < ordered.size() && ordered.get(ordinal) != binding) ordinal++;
+                    if (ordinal == ordered.size()) throw new IllegalStateException("Native binding lost its display coordinate");
                 }
                 String kind = action.isNull("source") ? "insert" : action.isNull("target") ? "delete" : "modify";
                 JSONObject op = base(kind, "quantifier", "normalForm[" + originalPhase + "].quantifier[" + ordinal + "]");
@@ -207,26 +211,48 @@ public final class LiveTrace {
     }
 
     /** Same immutable phase view used by Canonical.irTemporalFol and its metric. */
-    @SuppressWarnings("unchecked")
     public static List<NormalForm> comparisonForms(Canonical.Prepared prepared) {
-        return (List<NormalForm>) field(field(prepared, "delegate"), "normalForms");
+        return metricPrepared(prepared).comparisonForms();
+    }
+
+    private static CanonicalDistance.Prepared metricPrepared(Canonical.Prepared prepared) {
+        return (CanonicalDistance.Prepared) field(prepared, "delegate");
     }
 
     private record Located(EGraphNode node, String path) { }
-    private static Located metricNode(EGraphNode node, String address, String prefix) {
+    private static Located metricNode(CanonicalDistance.Prepared prepared, EGraphNode node,
+                                      String address, String prefix) {
         String[] parts = address.split("/");
         if (!parts[0].equals("root") || parts.length % 2 != 1) throw new IllegalStateException("Invalid native node address");
         String path = prefix;
         for (int i = 1; i < parts.length; i += 2) {
-            if (node == null || !parts[i].equals("child")) throw new IllegalStateException("Unsupported native node edge");
-            int child = Integer.parseInt(parts[i + 1]);
+            if (node == null) throw new IllegalStateException("Missing native node");
+            int index = Integer.parseInt(parts[i + 1]);
+            if (parts[i].equals("alternative")) {
+                // The checked Fast binder orbit retains the occurrence and
+                // child indices while transporting bound alpha coordinates.
+                EGraphNode alternative = prepared.fastAlternatives(node).get(index);
+                if (!sameOccurrence(node, alternative))
+                    throw new IllegalStateException("Native alternative changed its owner occurrence");
+                node = alternative;
+                continue;
+            }
+            if (!parts[i].equals("child")) throw new IllegalStateException("Unsupported native node edge");
             List<EGraphNode> children = FastChainGeometry.children(node);
             List<String> suffixes = new ArrayList<>();
             collectMetricPaths(node, children, suffixes, "", new int[] {0}, true);
             if (suffixes.size() != children.size()) throw new IllegalStateException("Metric geometry lost source paths");
-            path += suffixes.get(child); node = children.get(child);
+            path += suffixes.get(index); node = children.get(index);
         }
         return new Located(node, path);
+    }
+
+    private static boolean sameOccurrence(EGraphNode left, EGraphNode right) {
+        return left == right || left != null && right != null
+                && left.getOpcode() == right.getOpcode()
+                && left.getSourceOccurrenceLineage() > 0
+                && left.getSourceOccurrenceLineage() == right.getSourceOccurrenceLineage()
+                && left.getCertificationOccurrenceLineage() == right.getCertificationOccurrenceLineage();
     }
     private static void collectMetricPaths(EGraphNode node, List<EGraphNode> wanted,
             List<String> paths, String path, int[] cursor, boolean root) {

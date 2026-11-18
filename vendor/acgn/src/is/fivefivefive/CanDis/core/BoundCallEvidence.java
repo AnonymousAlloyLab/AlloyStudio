@@ -32,10 +32,10 @@ public final class BoundCallEvidence {
         var pending=new ArrayDeque<EGraphNode>();pending.add(form.getCertificationMatrixEGraph());
         while(!pending.isEmpty()) {
             var n=pending.remove();if(!seen.add(n))continue;
-            if(seen.size()>4096)throw new IllegalStateException("BOUND_CALL_SOURCE_BUDGET");
+            if(seen.size()>4096)throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("BOUND_CALL_SOURCE_BUDGET");
             if(n.getOpcode()==EGraphNode.Opcode.CALL) {
                 var old=originals.putIfAbsent(n.getSourceOccurrenceLineage(),n);
-                if(originals.size()>64)throw new IllegalStateException("BOUND_CALL_COUNT_BUDGET");
+                if(originals.size()>64)throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("BOUND_CALL_COUNT_BUDGET");
                 if(old!=null && (!shape(old) || !shape(n) || !same(old,n,new int[]{512},0)))
                     throw new IllegalArgumentException("Conflicting original bound call lineage");
             }
@@ -105,7 +105,25 @@ public final class BoundCallEvidence {
         return same(original,comparison,new int[]{512},0,true);
     }
 
+    /** Source-anchored payload equality. The caller must still authenticate
+     * local owners and preserve every outer variable's identity and spelling. */
+    public static boolean sameSourceScopedCall(EGraphNode original,EGraphNode comparison) {
+        return original.sharesCallSourceAnchorWith(comparison)
+                && sameScopedCall(original,comparison);
+    }
+
     private static boolean same(EGraphNode a,EGraphNode b,int[] budget,int depth,boolean scoped) {
+        return same(a,b,budget,depth,scoped,false);
+    }
+
+    /** Closed arguments may permute relational PLUS operands, but every
+     * non-PLUS argument subtree remains an exact opaque source leaf. */
+    static boolean sameClosedCall(EGraphNode original,EGraphNode comparison) {
+        return original.sharesCallSourceAnchorWith(comparison)
+                && same(original,comparison,new int[]{512},0,false,true);
+    }
+
+    private static boolean same(EGraphNode a,EGraphNode b,int[] budget,int depth,boolean scoped,boolean union) {
         spend(budget,depth);
         if(a.getSourceOccurrenceLineage()!=b.getSourceOccurrenceLineage() || a.getOpcode()!=b.getOpcode()
                 || a.getMetatype()!=b.getMetatype() || a.isOrderInsensitive()!=b.isOrderInsensitive()
@@ -121,11 +139,17 @@ public final class BoundCallEvidence {
             var x=CallMetadata.require(a);var y=CallMetadata.require(b);
             if(x.occurrenceId()!=y.occurrenceId() || !CallMetadata.semanticKey(a).equals(CallMetadata.semanticKey(b)))return false;
         }
-        for(int i=0;i<a.getChildren().size();i++)if(!same(a.getChildren().get(i),b.getChildren().get(i),budget,depth+1,scoped))return false;
+        boolean plus=union && a.getOpcode()==EGraphNode.Opcode.PLUS && a.isOrderInsensitive()
+                && a.getChildren().size()==2 && a.getExactAlloyType().kind()==ExactAlloyType.Kind.RELATION;
+        boolean recurseUnion=plus || union && a.getOpcode()==EGraphNode.Opcode.CALL;
+        boolean swap=plus && a.getChildren().get(0).getSourceOccurrenceLineage()
+                !=b.getChildren().get(0).getSourceOccurrenceLineage();
+        for(int i=0;i<a.getChildren().size();i++)
+            if(!same(a.getChildren().get(i),b.getChildren().get(swap?1-i:i),budget,depth+1,scoped,recurseUnion))return false;
         return true;
     }
 
     private static void spend(int[] budget,int depth) {
-        if(--budget[0]<0 || depth>32)throw new IllegalStateException("BOUND_CALL_ARGUMENT_BUDGET");
+        if(--budget[0]<0 || depth>32)throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("BOUND_CALL_ARGUMENT_BUDGET");
     }
 }

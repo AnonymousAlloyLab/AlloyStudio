@@ -14,6 +14,7 @@ import is.fivefivefive.CanDis.LiveTrace;
 import is.fivefivefive.CanDis.LearnerStructure;
 import is.fivefivefive.CanDis.WorkBudget;
 import is.fivefivefive.CanDis.core.CanonicalDistance;
+import is.fivefivefive.CanDis.metric.TraceResources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -217,6 +218,7 @@ public final class LiveFeedback {
             return response;
         } catch (Throwable error) {
             WorkerSafety.rethrowFatal(error);
+            if (nativeResourceLimit(error)) return workLimit(METRIC);
             return failure("unsupported", "UNSUPPORTED_FORM", "The framework could not normalize this learner predicate.");
         }
 
@@ -344,6 +346,7 @@ public final class LiveFeedback {
     private static boolean nativeResourceLimit(Throwable error) {
         java.util.Set<Throwable> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (int depth = 0; error != null && depth < 64 && seen.add(error); depth++, error = error.getCause()) {
+            if (error instanceof TraceResources.Exhausted) return true;
             String message = error.getMessage();
             if (error instanceof IllegalStateException && message != null && (
                     message.matches("[A-Z][A-Z0-9_]*_BUDGET")

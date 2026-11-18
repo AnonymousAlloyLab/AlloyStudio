@@ -105,6 +105,22 @@ public class SigSymbol extends SetSymbol {
         return parserSignature != null;
     }
 
+    /** The unique live unary carrier, with inclusion checked in this module. */
+    public SigSymbol parserUnaryCarrier() {
+        if (parserModuleAuthority == null) return null;
+        ExactAlloyType exact = parserExactType();
+        if (exact.alternatives().size() != 1 || exact.alternatives().get(0).size() != 1) return null;
+        String column = exact.alternatives().get(0).get(0);
+        for (Sig sig : parserModuleAuthority.getAllReachableSigs()) {
+            if (sig instanceof Sig.PrimSig && !sig.builtin
+                    && ExactAlloyType.normalizeColumn(sig.label).equals(column)) {
+                SigSymbol carrier = fromParser(sig, parserModuleAuthority);
+                return isParserCertifiedSubsignatureOf(carrier) ? carrier : null;
+            }
+        }
+        return null;
+    }
+
     /** True only for a live parser declaration marked {@code var}. */
     public boolean isParserVariableSignature() {
         return parserSignature != null && parserSignature.isVariable != null;

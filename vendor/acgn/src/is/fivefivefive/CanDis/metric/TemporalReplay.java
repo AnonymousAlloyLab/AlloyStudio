@@ -15,6 +15,12 @@ public final class TemporalReplay {
     private TemporalReplay() { }
 
     private record Tree(String label, List<Tree> children) { }
+    public record SelectedUpdate<N>(N source,N target,int operationIndex,List<Integer> path,String from,String to,int cost) {
+        public SelectedUpdate { path=List.copyOf(path); }
+    }
+    public record Captured<N>(JSONObject program,List<SelectedUpdate<N>> updates) {
+        public Captured { updates=List.copyOf(updates); }
+    }
     private static final OrderedTreeEditDistance.Adapter<Tree> ADAPTER =
             new OrderedTreeEditDistance.Adapter<>() {
                 public String label(Tree n) { return n.label; }
@@ -29,8 +35,23 @@ public final class TemporalReplay {
     /** Uses the alignment retained by numeric evaluation, without solving again. */
     public static <N> JSONObject capture(N left,N right,int nativeCost,Function<N,String> label,
             Function<N,List<N>> children,OrderedTreeEditDistance.Alignment selected) {
+        return capture(left,right,nativeCost,label,children,selected,null);
+    }
+
+    /** Retains the actual selected objects at the instant each update is emitted. */
+    public static <N> Captured<N> captureWithUpdates(N left,N right,int nativeCost,Function<N,String> label,
+            Function<N,List<N>> children,OrderedTreeEditDistance.Alignment selected) {
+        var updates=new ArrayList<SelectedUpdate<N>>();
+        var program=capture(left,right,nativeCost,label,children,selected,updates);
+        return new Captured<>(program,updates);
+    }
+
+    private static <N> JSONObject capture(N left,N right,int nativeCost,Function<N,String> label,
+            Function<N,List<N>> children,OrderedTreeEditDistance.Alignment selected,List<SelectedUpdate<N>> updates) {
         Tree a = snapshot(left, label, children, new TraceResources());
         Tree b = snapshot(right, label, children, new TraceResources());
+        var actualSource=new ArrayList<N>();var actualTarget=new ArrayList<N>();
+        if(updates!=null){objectPostorder(left,children,actualSource);objectPostorder(right,children,actualTarget);}
         var alignment = selected==null?OrderedTreeEditDistance.alignment(a,b,ADAPTER):selected;
         require(alignment.cost() == nativeCost, "Temporal native cost mismatch");
         List<Tree> bs = new ArrayList<>();
@@ -56,6 +77,10 @@ public final class TemporalReplay {
                 if (!node.label.equals(destination.label)) {
                     JSONObject edit = edit("update", path(node)).put("from", node.label)
                             .put("to", destination.label);
+                    if(updates!=null){
+                        var address=new ArrayList<Integer>();for(Object value:edit.getJSONArray("path"))address.add((Integer)value);
+                        updates.add(new SelectedUpdate<>(actualSource.get(i),actualTarget.get(target-1),actions.length(),address,node.label,destination.label,1));
+                    }
                     apply(forest, edit); actions.put(edit);
                 }
             }
@@ -85,6 +110,10 @@ public final class TemporalReplay {
         result.put("selectedCorrespondence",correspondence).put("zeroCostReads",reads);
         verify(left, right, label, children, result);
         return result.put("sliceReplayChecked", true);
+    }
+
+    private static <N> void objectPostorder(N node,Function<N,List<N>> children,List<N> out){
+        for(var child:children.apply(node))objectPostorder(child,children,out);out.add(node);
     }
 
     private static void insertMissing(Tree target, Node parent, Map<Tree, Node> nodes,
@@ -189,7 +218,7 @@ public final class TemporalReplay {
                 for (Node child : inserted.children) child.parent = inserted;
                 node.children.add(index, inserted);
             }
-            default -> throw new IllegalArgumentException("Unknown temporal edit");
+            default -> throw new ReplayValidationException("Unknown temporal edit");
         }
     }
 
@@ -278,6 +307,6 @@ public final class TemporalReplay {
     }
 
     private static void require(boolean condition, String reason) {
-        if (!condition) throw new IllegalArgumentException(reason);
+        if (!condition) throw new ReplayValidationException(reason);
     }
 }

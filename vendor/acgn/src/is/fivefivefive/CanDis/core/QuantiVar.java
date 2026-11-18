@@ -40,6 +40,7 @@ public class QuantiVar {
     private EGraphNode.SourceOrigin sourceOrigin;
     private boolean sourceOriginAmbiguous;
     private ExactAlloyType exactAlloyType;
+    private final java.util.List<NormalForm.DeclarationFrame> declarationFrames = new java.util.ArrayList<>();
     private volatile boolean frozenForCertification;
     public QuantiVar(int id, String name, String typeName) {
         this(id, name, name, typeName);
@@ -146,6 +147,14 @@ public class QuantiVar {
     }
     public ExactAlloyType getExactAlloyType() {
         return exactAlloyType;
+    }
+    public java.util.List<NormalForm.DeclarationFrame> getDeclarationFrames() {
+        return java.util.List.copyOf(declarationFrames);
+    }
+    synchronized void retainDeclarationFrame(NormalForm.DeclarationFrame frame) {
+        requireMutable();
+        if (frame.variable() != this) throw new IllegalArgumentException("Foreign declaration frame");
+        declarationFrames.add(frame);
     }
     public synchronized void mergeExactAlloyType(ExactAlloyType evidence) {
         requireMutable();

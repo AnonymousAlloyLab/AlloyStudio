@@ -70,12 +70,12 @@ public final class DeclarationReplay {
 
     public static void requireBounded(int leftSize, int rightSize) {
         if (leftSize < 0 || rightSize < 0)
-            throw new IllegalStateException("DECLARATION_REPLAY_CELL_BUDGET");
+            throw new IllegalArgumentException("Negative declaration replay dimensions");
         TraceResources.requireCells((long)leftSize+1,(long)rightSize+1);
     }
 
-    /** Backtraces the arm's actual DP, optionally constrained to its selected paid correspondences. */
-    public static JSONObject capture(List<Atom> source, List<Atom> target, int[][] nativeDp,
+    /** Selects a minimum path in the captured DP under the actual retained map. */
+    public static List<Move> selectedMoves(List<Atom> source, List<Atom> target, int[][] nativeDp,
             AllowedMove allowed) {
         source = List.copyOf(source); target = List.copyOf(target);
         int n = source.size(), m = target.size();
@@ -96,24 +96,37 @@ public final class DeclarationReplay {
                     && nativeDp[i][j] == Math.addExact(nativeDp[i][j-1],1)) moves[i][j] = 3;
         }
         if (moves[n][m] == 0) throw new NoMatchingPath();
-        List<JSONObject> reversed = new ArrayList<>();
+        List<Move> reversed = new ArrayList<>();
         int i = n, j = m;
         while (i > 0 || j > 0) {
             byte move = moves[i][j];
             int l = move == 3 ? -1 : --i, r = move == 2 ? -1 : --j;
+            reversed.add(new Move(l,r));
+        }
+        Collections.reverse(reversed);
+        return List.copyOf(reversed);
+    }
+
+    /** Backtraces the arm's actual DP, optionally constrained to its selected paid correspondences. */
+    public static JSONObject capture(List<Atom> source, List<Atom> target, int[][] nativeDp,
+            AllowedMove allowed) {
+        source = List.copyOf(source); target = List.copyOf(target);
+        var operations = new JSONArray();
+        for (Move move : selectedMoves(source,target,nativeDp,allowed)) {
+            int l=move.left(),r=move.right();
             int cost = l < 0 || r < 0 ? 1 : update(source.get(l),target.get(r));
-            reversed.add(new JSONObject().put("kind", l < 0 ? "insert" : r < 0 ? "delete" : cost == 0 ? "keep" : "update")
+            operations.put(new JSONObject().put("kind", l < 0 ? "insert" : r < 0 ? "delete" : cost == 0 ? "keep" : "update")
                     .put("leftIndex",l).put("rightIndex",r).put("cost",cost)
                     .put("source",l < 0 ? JSONObject.NULL : source.get(l).json())
                     .put("target",r < 0 ? JSONObject.NULL : target.get(r).json()));
         }
-        Collections.reverse(reversed);
+        int expected=nativeDp[source.size()][target.size()];
         JSONObject receipt = new JSONObject().put("source",snapshot(source)).put("target",snapshot(target))
-                .put("operations",new JSONArray(reversed)).put("cost",nativeDp[n][m])
-                .put("replayedCost",nativeDp[n][m]).put("orderingAdmissionChecked",false)
+                .put("operations",operations).put("cost",expected)
+                .put("replayedCost",expected).put("orderingAdmissionChecked",false)
                 .put("complete",false);
         int checked = verify(source,target,receipt);
-        require(checked == nativeDp[n][m], "Native cost mismatch");
+        require(checked == expected, "Native cost mismatch");
         return receipt.put("sliceReplayChecked",true);
     }
 
@@ -181,9 +194,9 @@ public final class DeclarationReplay {
         Object value = object.get(key);
         require(value instanceof Number, "Non-numeric " + key);
         try { return new java.math.BigDecimal(value.toString()).intValueExact(); }
-        catch (ArithmeticException | NumberFormatException ex) { throw new IllegalArgumentException("Non-integral/out-of-range " + key,ex); }
+        catch (ArithmeticException | NumberFormatException ex) { throw new ReplayValidationException("Non-integral/out-of-range " + key,ex); }
     }
     static void require(boolean yes, String message) {
-        if (!yes) throw new IllegalArgumentException("DECLARATION_REPLAY_INVALID: " + message);
+        if (!yes) throw new ReplayValidationException("DECLARATION_REPLAY_INVALID: " + message);
     }
 }

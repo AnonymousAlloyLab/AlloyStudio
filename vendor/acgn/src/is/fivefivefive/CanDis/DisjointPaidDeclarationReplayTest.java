@@ -113,19 +113,21 @@ public final class DisjointPaidDeclarationReplayTest {
         for(String name:List.of("a","s"))check(supports(prepare(reduced,name,"b").a.normalizedForms()),"closed "+name+" disjoint group");
         var fixed=prepare(reduced,"fixedPrefix","b").a.normalizedForms();
         check(fixed.get(0).getLocalQuantiVars().isEmpty() && supports(fixed),"initial negative fixture is actually a closed fixed prefix");
-        check(!prepare(reduced,"local","b").a.normalizedForms().get(0).getLocalQuantiVars().isEmpty(),"negative actually retains a local owner");
-        for(String name:List.of("param","temporal","setVar","local"))check(!supports(prepare(reduced,name,"b").a.normalizedForms()),"unsupported scope "+name);
+        var retained=prepare(reduced,"local","b").a.normalizedForms();
+        check(!retained.get(0).getLocalQuantiVars().isEmpty(),"fixture actually retains a local owner");
+        check(supports(retained),"paid disjoint outer links preserve the checked retained owner");
+        for(String name:List.of("param","temporal","setVar"))check(!supports(prepare(reduced,name,"b").a.normalizedForms()),"unadmitted scope "+name);
         var controls=new JSONArray();
         for(var row:List.of(new String[]{"classroom_rl","both","D3n2EfPhBboewRm7z_inv14","inv14","20"},
                 new String[]{"classroom_fol","both","wdiLn4gC6q3bbYBad_inv3","inv3","7"},
                 new String[]{"classroom_fol","both","JoNXaXfKNJzGh3BFa_inv12","inv12","22"},
                 new String[]{"classroom_fol","both","SASEHD8jPo2HgsuoJ_inv14","inv14","27"},
                 new String[]{"coursesOld","both","xJnitBpFv9K74WNvf_inv14","inv14","49"},
-                new String[]{"classroom_fol","both","YKy8LYsKdapW3xqbn_inv14","inv14","20"})){
+                new String[]{"classroom_fol","both","YKy8LYsKdapW3xqbn_inv14","inv14","22"})){
             var pair=prepare(Files.readString(Path.of("classified-data",row[0],row[1],row[2]+".als")),row[3],row[3]+"c");
             for(var q:List.of(pair,pair.reverse())){var ca=CanonicalAlloyPipeline.prepare(q.a);var cb=CanonicalAlloyPipeline.prepare(q.b);
                 check(Canonical.distance(q.a,q.b)==Integer.parseInt(row[4])&&CanonicalAlloyPipeline.distance(ca,cb)==Integer.parseInt(row[4]),"prior cost "+row[2]);
-                if(row[2].startsWith("D3n2")||row[2].startsWith("wdi"))check(NativeOperationComparison.compare(q.a,q.b,ca,cb).status()==NativeOperationComparison.Status.MATCHED,"prior ordered native actions "+row[2]);}
+                if(row[2].startsWith("D3n2")||row[2].startsWith("wdi")||row[2].startsWith("YKy"))check(NativeOperationComparison.compare(q.a,q.b,ca,cb).status()==NativeOperationComparison.Status.MATCHED,"prior ordered native actions "+row[2]);}
             controls.put(row[2]);
         }
         Files.writeString(out.resolve("checks.json"),new JSONObject().put("checks",checks).put("controls",controls).put("certificationStatus","BLOCKED").toString(2),StandardOpenOption.CREATE_NEW);

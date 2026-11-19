@@ -513,6 +513,7 @@ public final class TheoryAlloyAdapter {
         private final List<List<Integer>> phaseSourceCoordinates;
         private final Map<EGraphNode, BinderBlockDescriptor> localBinderDescriptors;
         private final Map<EGraphNode, Map<String, Integer>> localBinderSourceCoordinates;
+        private final Map<EGraphNode,EGraphNode> localBinderProjectionSources;
         private final Map<NormalForm, List<PhaseLocalBindingCertificate>>
                 phaseLocalBindingCertificates;
         private final Map<EGraphNode, DependentChainCertificate>
@@ -539,6 +540,7 @@ public final class TheoryAlloyAdapter {
                 List<? extends List<Integer>> phaseSourceCoordinates,
                 Map<EGraphNode, BinderBlockDescriptor> localBinderDescriptors,
                 Map<EGraphNode, Map<String, Integer>> localBinderSourceCoordinates,
+                Map<EGraphNode,EGraphNode> localBinderProjectionSources,
                 Map<NormalForm, List<PhaseLocalBindingCertificate>>
                         phaseLocalBindingCertificates,
                 Map<EGraphNode, DependentChainSourceBinding>
@@ -586,6 +588,7 @@ public final class TheoryAlloyAdapter {
             }
             this.localBinderSourceCoordinates = Collections.unmodifiableMap(
                     localCoordinateCopies);
+            this.localBinderProjectionSources=Collections.unmodifiableMap(new IdentityHashMap<>(localBinderProjectionSources));
             IdentityHashMap<NormalForm, List<PhaseLocalBindingCertificate>>
                     phaseLocalCopies = new IdentityHashMap<>();
             for (Map.Entry<NormalForm, List<PhaseLocalBindingCertificate>> entry
@@ -677,6 +680,10 @@ public final class TheoryAlloyAdapter {
             return localBinderDescriptors;
         }
 
+        public EGraphNode localBinderProjectionSource(EGraphNode projectedOwner) {
+            return localBinderProjectionSources.get(projectedOwner);
+        }
+
         /** Source local-variable name to certified descriptor coordinate. */
         public Map<EGraphNode, Map<String, Integer>> localBinderSourceCoordinates() {
             return localBinderSourceCoordinates;
@@ -763,6 +770,7 @@ public final class TheoryAlloyAdapter {
                 new IdentityHashMap<>();
         private final Map<EGraphNode, Map<String, Integer>> localBinderSourceCoordinates =
                 new IdentityHashMap<>();
+        private final Map<EGraphNode,EGraphNode> localBinderProjectionSources = new IdentityHashMap<>();
         private final Map<NormalForm, List<PhaseLocalBindingCertificate>>
                 phaseLocalBindingCertificates = new IdentityHashMap<>();
         private final IdentityHashMap<NormalForm, Integer> phaseIndices =
@@ -1037,6 +1045,7 @@ public final class TheoryAlloyAdapter {
                     orderedSourceCoordinates,
                     localBinderDescriptors,
                     localBinderSourceCoordinates,
+                    localBinderProjectionSources,
                     phaseLocalBindingCertificates,
                     dependentChainSourceBindings,
                     repairedSetOperandPartitions,
@@ -1206,8 +1215,12 @@ public final class TheoryAlloyAdapter {
                     new LinkedHashMap<>();
             Map<Long, Map<String, Integer>> localCoordinatesByLineage =
                     new LinkedHashMap<>();
+            Map<Long,EGraphNode> originalOwners=new HashMap<>();
+            Set<Long> ambiguousOwners=new HashSet<>();
             for (EGraphNode source : new ArrayList<>(localBinderDescriptors.keySet())) {
                 long lineage = source.getSourceOccurrenceLineage();
+                EGraphNode priorOwner=originalOwners.putIfAbsent(lineage,source);
+                if(priorOwner!=null&&priorOwner!=source)ambiguousOwners.add(lineage);
                 BinderBlockDescriptor descriptor =
                         localBinderDescriptors.get(source);
                 Map<String, Integer> coordinates =
@@ -1254,6 +1267,7 @@ public final class TheoryAlloyAdapter {
                     }
                     localBinderDescriptors.put(candidate, descriptor);
                     localBinderSourceCoordinates.put(candidate, coordinates);
+                    if(!ambiguousOwners.contains(lineage))localBinderProjectionSources.put(candidate,originalOwners.get(lineage));
                 }
                 pending.addAll(candidate.getChildren());
             }
@@ -1849,8 +1863,7 @@ public final class TheoryAlloyAdapter {
             if (--budget[0] < 0 || depth > 64)
                 throw new IllegalArgumentException("Guarded JOIN source budget exceeded");
             DependentTypeDag exact = dependentTypeDagForSource(source, new HashSet<>());
-            if (exact.alternatives().size() != 1)
-                throw new IllegalArgumentException("Guarded JOIN source is not one exact product");
+            GuardedJoinTree.requireAdmittedJoinType(exact, "Guarded JOIN source");
             if (source.getOpcode() != Opcode.JOIN) {
                 OnePort port = buildOperand(source, names, context, bindings, temporalReferences);
                 return GuardedJoinTree.leaf(new DependentChainLeaf(port, exact, source.getExactAlloyType()));
@@ -2459,10 +2472,16 @@ public final class TheoryAlloyAdapter {
                     // an ambient dependency into a generated-name-free annotation.
                     OnePort operand = buildChildOperand(domainRef, declarationNames,
                             context, bindings, temporalReferences);
+                    // Source grouping must not duplicate an equal typed ambient
+                    // operand. Every original domain occurrence is still built below.
+                    int domainIndex = explicitDomains.indexOf(operand);
+                    if (domainIndex < 0) {
+                        domainIndex = explicitDomains.size();
+                        explicitDomains.add(operand);
+                    }
                     domainKey = StructuralKey.of("alloy-local-domain-port",
-                            List.of(Integer.toString(explicitDomains.size())),
+                            List.of(Integer.toString(domainIndex)),
                             List.of(TheoryKeys.type(operand.schema().type())));
-                    explicitDomains.add(operand);
                 }
                 String multiplicity = domainMultiplicity(domain);
                 int disjointnessClass = isDisjointDecl(child.getOpcode())
@@ -2622,7 +2641,7 @@ public final class TheoryAlloyAdapter {
                 TypedSlotContext context, Map<String, TypedSlot> bindings,
                 List<LocalCoordinate> preceding, int[] budget, int depth) {
             if (depth > 128 || --budget[0] < 0) {
-                throw new IllegalStateException("Local domain operand admission budget exceeded");
+                throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("Local domain operand admission budget exceeded");
             }
             EClassRef canonical = reference.canonical();
             EGraphNode node = canonical.getEClass().getRepresentative();

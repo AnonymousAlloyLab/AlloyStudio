@@ -8,6 +8,7 @@ import java.util.Objects;
 import is.fivefivefive.CanDis.canonical.CanonicalObservation;
 import is.fivefivefive.CanDis.core.NormalForm;
 import is.fivefivefive.CanDis.core.EGraphNode;
+import is.fivefivefive.CanDis.core.QuantiVar;
 import is.fivefivefive.CanDis.theory.SemanticProfile;
 import is.fivefivefive.CanDis.theory.StructuralKey;
 import is.fivefivefive.CanDis.theory.GraphType;
@@ -216,6 +217,9 @@ public final class RepairView {
         private final String ownerContext;
         private final List<Integer> certifiedOrbit;
         private final boolean prenexPathErasureCertified;
+        private final OriginalBinding originalBinding;
+        private record OriginalBinding(Binding issued,QuantiVar variable,Declaration declaration,
+                BindingRole role,int ordinal,int ownerPhase,int coordinate,String path,String context) {}
 
         Binding(
                 BindingRole role,
@@ -248,6 +252,13 @@ public final class RepairView {
                 String ownerContext,
                 List<Integer> certifiedOrbit,
                 boolean prenexPathErasureCertified) {
+            this(role,ordinal,ownerPhase,coordinate,declaration,bindingPath,ownerContext,
+                    certifiedOrbit,prenexPathErasureCertified,null);
+        }
+
+        private Binding(BindingRole role,int ordinal,int ownerPhase,int coordinate,
+                Declaration declaration,String bindingPath,String ownerContext,List<Integer> certifiedOrbit,
+                boolean prenexPathErasureCertified,QuantiVar original) {
             this.role = Objects.requireNonNull(role, "role");
             if (ordinal < 0) {
                 throw new IllegalArgumentException("Binding ordinal must be non-negative");
@@ -260,6 +271,8 @@ public final class RepairView {
             this.ownerContext = ownerContext == null ? "" : ownerContext;
             this.certifiedOrbit = immutableIntegers(certifiedOrbit);
             this.prenexPathErasureCertified = prenexPathErasureCertified;
+            this.originalBinding=original==null?null:new OriginalBinding(this,original,declaration,
+                    role,ordinal,ownerPhase,coordinate,this.bindingPath,this.ownerContext);
             for (int index = 0; index < this.certifiedOrbit.size(); index++) {
                 int value = this.certifiedOrbit.get(index);
                 if (value < 0 || index > 0
@@ -304,6 +317,20 @@ public final class RepairView {
 
         public BindingRole role() {
             return role;
+        }
+
+        Binding withOriginalBinding(QuantiVar original) {
+            return new Binding(role,ordinal,ownerPhase,coordinate,declaration,bindingPath,ownerContext,
+                    certifiedOrbit,prenexPathErasureCertified,original);
+        }
+
+        public QuantiVar originalBinding() {
+            var origin=originalBinding;
+            if(origin==null||origin.issued()!=this||origin.declaration()!=declaration||origin.role()!=role
+                    ||origin.ordinal()!=ordinal||origin.ownerPhase()!=ownerPhase||origin.coordinate()!=coordinate
+                    ||!origin.path().equals(bindingPath)||!origin.context().equals(ownerContext))
+                throw new IllegalArgumentException("Foreign original projected binding object");
+            return origin.variable();
         }
 
         public int ordinal() {
@@ -499,7 +526,15 @@ public final class RepairView {
         }
 
         EGraphNode sourceOccurrence() { return sourceOccurrence; }
+        /** Exact original source occurrence for bridge provenance; null means none. */
+        public EGraphNode originalSourceOccurrence() { return sourceOccurrence; }
+        public EGraphNode originalVariableSource() { return isVariable()?sourceOccurrence:null; }
+        public boolean hasDeclarationSource(EGraphNode original) {
+            return sourceOccurrence==original&&original!=null&&operator.equals(original.getOpcode().name())
+                &&(operator.equals("DISJ")||operator.equals("VAR")||operator.equals("DISJVAR"));
+        }
         NormalForm.TemporalReferenceOrigin referenceOrigin() { return referenceOrigin; }
+        public NormalForm.TemporalReferenceOrigin originalReferenceOrigin() { return referenceOrigin; }
 
         /** Null means a structural control node or an unannotated test fixture. */
         public GraphType observationType() { return observationType; }
@@ -629,6 +664,20 @@ public final class RepairView {
         }
     }
     private final List<PhaseCoordinate> phaseCoordinates;
+
+    NormalForm originalPhaseSource(int phase) {
+        if(!certifiedProjection||phase<0||phase>=phaseCoordinates.size())
+            throw new IllegalArgumentException("Missing original projected phase authority");
+        return phaseCoordinates.get(phase).source();
+    }
+
+    public List<NormalForm> originalPhaseSources(List<NormalForm> originals) {
+        if(!certifiedProjection)throw new ReplayValidationException("Uncertified phase projection");
+        for(var coordinate:phaseCoordinates)
+            if(coordinate.originalPhase()>=originals.size()||originals.get(coordinate.originalPhase())!=coordinate.source())
+                throw new ReplayValidationException("Foreign projected phase source object");
+        return phaseCoordinates.stream().map(PhaseCoordinate::source).toList();
+    }
 
     RepairView(
             TemporalNode temporalRoot,

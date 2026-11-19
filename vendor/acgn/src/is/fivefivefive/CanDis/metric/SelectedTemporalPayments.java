@@ -67,18 +67,22 @@ final class SelectedTemporalPayments {
         alignment=new OrderedTreeEditDistance.Alignment(0,List.of());
     }
     private SelectedTemporalPayments(RepairView a,RepairView b,OrderedTreeEditDistance.Alignment alignment) {
+        this(a.temporalRoot(),b.temporalRoot(),references(a),references(b),alignment);
+    }
+    private SelectedTemporalPayments(TemporalNode a,TemporalNode b,List<Set<Node>> aReferences,
+            List<Set<Node>> bReferences,OrderedTreeEditDistance.Alignment alignment) {
         this.alignment=Objects.requireNonNull(alignment);
         register(this);
-        sourceRoot=a.temporalRoot();targetRoot=b.temporalRoot();
-        leftReferences=references(a);rightReferences=references(b);
-        left=index(a.temporalRoot());right=index(b.temporalRoot());
-        registerReferences(a);registerReferences(b);
+        sourceRoot=a;targetRoot=b;
+        leftReferences=List.copyOf(aReferences);rightReferences=List.copyOf(bReferences);
+        left=index(a);right=index(b);
+        registerReferences(leftReferences);registerReferences(rightReferences);
         for(var occurrences:List.of(left,right))for(var occurrence:occurrences) {
             register(occurrence.node);
             if(occurrence.node.sourceOwner()!=null)register(occurrence.node.sourceOwner());
             for(var branch:occurrence.node.sourceBranches())register(branch);
         }
-        leftEdges=edges(left,a.phases().size());rightEdges=edges(right,b.phases().size());
+        leftEdges=edges(left,leftReferences.size());rightEdges=edges(right,rightReferences.size());
         var local=new HashMap<LocalEdge,List<Occurrence>>();
         for(var o:right)if(o.parent!=null&&o.sourceSlot()>=0)
             local.computeIfAbsent(o.localEdge(),unused->new ArrayList<>()).add(o);
@@ -102,21 +106,17 @@ final class SelectedTemporalPayments {
     static SelectedTemporalPayments from(RepairView left,RepairView right,OrderedTreeEditDistance.Alignment alignment) {
         return new SelectedTemporalPayments(left,right,alignment);
     }
-    private void registerReferences(RepairView view) {
-        var seen=Collections.newSetFromMap(new IdentityHashMap<Node,Boolean>());
-        for(var phase:view.phases()) {
-            var pending=new ArrayDeque<Node>();if(phase.matrix()!=null)pending.push(phase.matrix());
-            while(!pending.isEmpty()) {
-                var node=pending.pop();if(!seen.add(node))continue;
-                if(node.isTemporalReference()) {
-                    register(node);
-                    var origin=node.referenceOrigin();
-                    if(origin!=null) {
-                        register(origin.reference());register(origin.owner());
-                        for(var branch:origin.branches())register(branch);
-                    }
-                }
-                pending.addAll(node.children());pending.addAll(node.certifiedAlternatives());
+    static SelectedTemporalPayments from(TemporalNode left,TemporalNode right,List<Set<Node>> leftReferences,
+            List<Set<Node>> rightReferences,OrderedTreeEditDistance.Alignment alignment) {
+        return new SelectedTemporalPayments(left,right,leftReferences,rightReferences,alignment);
+    }
+    private void registerReferences(List<Set<Node>> references) {
+        for(var phase:references)for(var node:phase) {
+            register(node);
+            var origin=node.referenceOrigin();
+            if(origin!=null) {
+                register(origin.reference());register(origin.owner());
+                for(var branch:origin.branches())register(branch);
             }
         }
     }

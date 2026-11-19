@@ -13,6 +13,7 @@ import is.fivefivefive.CanDis.metric.TraceResources;
 import is.fivefivefive.CanDis.theory.CertificateVerifier;
 import is.fivefivefive.CanDis.theory.CertifiedSemanticArtifact;
 import is.fivefivefive.CanDis.theory.StructuralKey;
+import is.fivefivefive.CanDis.theory.StructuralKeyDag;
 import is.fivefivefive.CanDis.theory.TypedEqualityCertificate;
 
 /** Native between-endpoint traces; no cross-arm representation bridge is required. */
@@ -35,7 +36,7 @@ public final class CanonicalRepairTraces {
                 .put("source",construction(a,left.repairView().producerObservationDigest(),left.repairView().phaseRepresentation("source")))
                 .put("target",construction(b,right.repairView().producerObservationDigest(),right.repairView().phaseRepresentation("target")))
                 .put("constructionIsNotRepair",true).put("wireReplayChecked",false);
-        return trace.linkConstruction(links,()->{check(a);check(b);});
+        return trace.linkConstruction(links,()->{check(a);check(b);},a,b);
         } catch(RuntimeException failure) {throw NativeRepairTrace.captureFailure(trace.json(),failure);}
     }
 
@@ -79,36 +80,35 @@ public final class CanonicalRepairTraces {
                 .put("typedEndpoint",keys.id(call.sourceEndpoint().structuralKey())));
         var result=new JSONObject().put("artifactRoot",artifactRoot).put("projectionObservationDigest",projectionDigest)
                 .put("proofRoots",rootIds).put("proofs",proofs).put("structuralKeys",keys.rows)
+                .put("structuralKeyWork",keys.accounting())
                 .put("callPremises",calls).put("premisesCheckedInProcess",true)
                 .put("linkAuthority","Same retained Prepared producer owns this artifact and sealed projection; not independent wire correspondence");
         if(phaseRepresentation!=null)result.put("projectionPhaseRepresentation",phaseRepresentation);
         return result;
     }
 
-    /** Exact structural sharing, without recursively expanding equal proof subterms. */
+    /** Exact structural sharing, without recursively expanding equal proof subterms.
+     * The run-owned cache is consulted before child expansion; a hit allocates no
+     * row and performs no recursive walk. */
     private static final class KeyTable {
-        private record Visit(StructuralKey key,boolean finish) { }
-        private record Shape(String tag,List<String> scalars,List<Integer> children) { }
-        final IdentityHashMap<StructuralKey,Integer> ids=new IdentityHashMap<>();
-        final java.util.Map<Shape,Integer> intern=new java.util.HashMap<>();
-        final JSONArray rows=new JSONArray();
+        final JSONArray rows;
         final TraceResources resources;
-        KeyTable(TraceResources resources){this.resources=resources;}
-        int id(StructuralKey key) {
-            var pending=new ArrayDeque<Visit>();pending.push(new Visit(key,false));
-            while(!pending.isEmpty()) {
-                var visit=pending.pop();var value=visit.key;if(ids.containsKey(value))continue;
-                if(!visit.finish){resources.spend(32);pending.push(new Visit(value,true));
-                    for(var child:value.children())pending.push(new Visit(child,false));continue;}
-                var children=value.children().stream().map(ids::get).toList();
-                var shape=new Shape(value.tag(),value.scalars(),children);Integer id=intern.get(shape);
-                if(id==null){id=intern.size();intern.put(shape,id);resources.spend(128);
-                    for(var scalar:value.scalars())resources.spend(Math.multiplyExact(2L,scalar.length()));
-                    rows.put(new JSONObject().put("id",id).put("tag",value.tag()).put("scalars",new JSONArray(value.scalars()))
-                            .put("children",new JSONArray(children)));}
-                ids.put(value,id);
-            }
-            return ids.get(key);
+        private final StructuralKeyDag dag;
+        KeyTable(TraceResources resources) {
+            this.resources=resources;
+            // Construction-key depth is bounded by the 64 MiB TraceResources
+            // budget and the iterative traversal; the receipt JSON depth guard
+            // remains separate in NativeOperationComparison/Result.
+            this.dag=new StructuralKeyDag(Integer.MAX_VALUE,8_000_000,new StructuralKeyDag.Budget() {
+                @Override public void reference(StructuralKey key,int depth){resources.spend(32);}
+                @Override public void materialize(StructuralKey key){
+                    resources.spend(128);
+                    for(var scalar:key.scalars())resources.spend(Math.multiplyExact(2L,scalar.length()));
+                }
+            });
+            this.rows=dag.rows();
         }
+        int id(StructuralKey key) {return dag.intern(key,0);}
+        JSONObject accounting() {return dag.accounting();}
     }
 }

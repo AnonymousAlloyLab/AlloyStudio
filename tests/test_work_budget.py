@@ -125,6 +125,25 @@ def recovery_request():
                      and (ROOT / 'build/engine/classes/live/LiveFeedback.class').is_file(),
                      'Compiled engine and JDK required')
 class WorkBudgetTests(unittest.TestCase):
+    def test_matrix_memos_release_between_full_pool_comparisons(self):
+        exercise_id = 'socialMedia-inv8'
+        selection = json.loads((ROOT / 'benchmarks/alloy4fun/protocol/quality-selection-181.json').read_text())
+        draft = next(case['learner_body'] for case in selection['cases'] if case['exercise_id'] == exercise_id)
+        row, references, _ = next(item for item in calibrate_work_budget.catalogue() if item[0][0] == exercise_id)
+        open_engine_admission(ROOT)
+        pool = EnginePool(ROOT, shutil.which('java'), feedback_workers=1, behavior_workers=1,
+                          budget=ProcessBudget())
+        self.addCleanup(pool.close)
+
+        # Counting discarded scalar memo rows cumulatively exhausted the
+        # request allocation budget partway through this correct pool.
+        result = pool.evaluate('feedback', calibrate_work_budget.request(row, references, draft, 'canonical'), 12)
+        self.assertEqual((result['status'], result.get('distance')), ('ok', 27))
+        self.assertEqual(result['comparison'], {'strategy': 'nearest-known-correct', 'poolSize': 179,
+                                                'evaluatedCandidates': 179, 'complete': True})
+        self.assertTrue(result['trace']['matrixReplayVerified'])
+        self.assertEqual(sum(op['cost'] for op in result['operations']), 27)
+
     def test_java_boundary_self_test(self):
         scratch = ROOT / 'build/work-budget-tests'
         scratch.mkdir(parents=True, exist_ok=True)

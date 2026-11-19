@@ -23,6 +23,8 @@ class AcgnPerformanceTests(unittest.TestCase):
                             str(source / 'is/fivefivefive/CanDis/UnusedBindingDescopeTest.java'),
                             str(source / 'is/fivefivefive/CanDis/UnusedBindingD8Test.java'),
                             str(source / 'is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/core/V3WorkBudgetTest.java'),
+                            str(source / 'is/fivefivefive/CanDis/PreparedMetadataConcurrencyTest.java'),
                             str(source / 'is/fivefivefive/CanDis/PerformanceRegressionTest.java')],
                            cwd=ROOT, check=True, capture_output=True, timeout=90)
             result = subprocess.run(['java', '-Xmx256m', '-XX:ActiveProcessorCount=1',
@@ -39,13 +41,20 @@ class AcgnPerformanceTests(unittest.TestCase):
                                    cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
             self.assertIn('PreparedOrbitCacheTest passed', orbit.stdout)
             for name in ('PrefixBinderPlanTest', 'core.FastPrefixSourceTest',
-                         'UnusedBindingDescopeTest', 'core.UnusedBindingEvidenceTest'):
+                         'UnusedBindingDescopeTest', 'core.UnusedBindingEvidenceTest',
+                         'core.V3WorkBudgetTest'):
                 result = subprocess.run(['java', '-ea', '-Xmx256m', '-XX:ActiveProcessorCount=1',
                                          '-Djava.io.tmpdir=' + directory,
                                          '-cp', directory + os.pathsep + dependencies,
                                          'is.fivefivefive.CanDis.' + name],
                                         cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
                 self.assertIn('checks passed', result.stdout)
+            concurrent = subprocess.run(['java', '-ea', '-Xmx256m', '-XX:ActiveProcessorCount=2',
+                                         '-Djava.io.tmpdir=' + directory,
+                                         '-cp', directory + os.pathsep + dependencies,
+                                         'is.fivefivefive.CanDis.PreparedMetadataConcurrencyTest'],
+                                        cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)
+            self.assertIn('PreparedMetadataConcurrencyTest:', concurrent.stdout)
             result = subprocess.run(['java', '-ea', '-Xmx256m', '-XX:ActiveProcessorCount=1',
                                      '-Djava.io.tmpdir=' + directory,
                                      '-cp', directory + os.pathsep + dependencies,

@@ -46,6 +46,12 @@ public class NormalForm {
     // Only prenexRelDecl can create these witnesses. Publicly assembled binding
     // lists cannot manufacture a grouped ONE owner by relabelling SOME slots.
     private final List<GroupedOneOrigin> groupedOneOrigins = new ArrayList<>();
+    private final Map<QuantiVar,List<GuardedProjection>> guardedProjections = new java.util.IdentityHashMap<>();
+    private final Map<QuantiVar,List<GuardEditSource>> guardEditSources = new java.util.IdentityHashMap<>();
+    private final Map<QuantiVar,List<BranchRouteSource>> branchRouteSources = new java.util.IdentityHashMap<>();
+    private final Map<EGraphNode,StructuralDeclarationOrigin> structuralDeclarationOrigins = new java.util.IdentityHashMap<>();
+    record RelocatedDeclaration(EGraphNode declaration,List<EGraphNode> slots,List<DeclarationFrame> frames) { }
+    private final Map<Long,RelocatedDeclaration> relocatedDeclarations = new HashMap<>();
     private final List<UnusedBindingReduction> unusedBindingReductions = new ArrayList<>();
     /** Pre-prenex source coordinates, including removed slots, retained for audit. */
     public record UnusedBindingReduction(String scope, Opcode quantifier,
@@ -72,8 +78,1028 @@ public class NormalForm {
     }
     private record GroupedOneOrigin(long declaration, List<QuantiVar> bindings,
             List<String> keys, String owner) { }
+    private final List<DeclarationFrame> issuedDeclarationFrames = new ArrayList<>();
+    private final Map<DeclarationFrame, SourceDeclarationOccurrence> issuedDeclarationOrigins = new java.util.IdentityHashMap<>();
+    private final Map<DeclarationFrame, Boolean> issuedDomainLowerings = new java.util.IdentityHashMap<>();
+    private final Map<DeclarationFrame, DomainGuardOrigin> issuedDomainGuards = new java.util.IdentityHashMap<>();
+    private StructuralKey issuedDomainContext;
+
+    /** Private issuance authority, never reconstructed from a matching body atom. */
+    static final class DomainGuardOrigin {
+        private final DeclarationFrame frame;
+        private final int index;
+        private DomainGuardOrigin(DeclarationFrame frame, int index) {
+            this.frame = frame;
+            this.index = index;
+        }
+    }
+    static final class DomainContextOrigin {
+        private final long occurrence;
+        private final Opcode sourceOpcode, currentOpcode;
+        private DomainContextOrigin(EGraphNode node) {
+            occurrence = node.getSourceOccurrenceLineage();
+            sourceOpcode = currentOpcode = node.getOpcode();
+        }
+        private DomainContextOrigin(DomainContextOrigin source, Opcode currentOpcode) {
+            occurrence = source.occurrence;
+            sourceOpcode = source.sourceOpcode;
+            this.currentOpcode = currentOpcode;
+        }
+    }
+    private final Map<EGraphNode, Long> issuedMatrixReads = new java.util.IdentityHashMap<>();
+    private record SourceDeclarationOccurrence(long declaration, long variable, int tupleSlot,
+            String bindingPath, String coordinate, BindingSignature payload, StructuralKey domain,
+            List<QuantiVar> dependencies) {
+        private SourceDeclarationOccurrence { dependencies = List.copyOf(dependencies); }
+    }
+    /** Issued only while consuming an actual declaration, before its domain is lowered. */
+    public static final class DeclarationFrame {
+        private final NormalForm owner;
+        private final QuantiVar variable;
+        private final long declarationOccurrence, variableOccurrence;
+        private final int tupleSlot;
+        private final StructuralKey domain;
+        private final List<QuantiVar> dependencies;
+        private final is.fivefivefive.ACGN.alloy.SigSymbol signature;
+        private final GuardEditDomain guardEditDomain;
+        private final DomainNormalization domainNormalization;
+        private final String phasePath, bindingPath, coordinate, name, typeName, carrierType;
+        private final TemporalOp phaseRole;
+        private final int vectorIndex, variableId, disjointness;
+        private final Quantifier quantifier;
+        private final Cardinality cardinality;
+        private final is.fivefivefive.ACGN.alloy.ExactAlloyType exactType;
+        private final java.util.Set<String> sourceAliases;
+        private final SourceDeclarationOccurrence sourceOrigin;
+
+        private DeclarationFrame(NormalForm owner, QuantiVar variable, QuantiVar sourceCandidate, EGraphNode declaration,
+                EGraphNode sourceVariable, int tupleSlot, StructuralKey domain, List<QuantiVar> dependencies,
+                is.fivefivefive.ACGN.alloy.SigSymbol signature,GuardEditDomain guardEditDomain,
+                DomainNormalization domainNormalization) {
+            this.owner = owner;
+            this.variable = variable;
+            this.declarationOccurrence = declaration.getSourceOccurrenceLineage();
+            this.variableOccurrence = sourceVariable.getSourceOccurrenceLineage();
+            this.tupleSlot = tupleSlot;
+            this.domain = domain;
+            this.dependencies = List.copyOf(dependencies);
+            this.signature = signature;
+            this.guardEditDomain = guardEditDomain;
+            this.domainNormalization = domainNormalization;
+            phasePath = owner.phasePath;
+            phaseRole = owner.temporalOp;
+            vectorIndex = identityIndex(owner.matrixQuantiVars, variable);
+            variableId = variable.getId();
+            bindingPath = variable.getBindingPath();
+            coordinate = variable.getDeBruijnKey();
+            name = variable.getName();
+            typeName = variable.getTypeName();
+            carrierType = variable.getCarrierTypeName();
+            quantifier = variable.getQuantifier();
+            cardinality = variable.getCardinality();
+            disjointness = variable.getDisjointnessClass();
+            exactType = bindingTypeEvidence(sourceVariable, declaration.getChildren().get(0));
+            var aliases = new java.util.HashSet<String>();
+            for (String alias : new String[]{sourceVariable.getSourceName(), sourceVariable.getSemanticIdentity()})
+                if (alias != null && !alias.isEmpty()) aliases.add(alias);
+            sourceAliases = java.util.Set.copyOf(aliases);
+            sourceOrigin = new SourceDeclarationOccurrence(declarationOccurrence, variableOccurrence, tupleSlot,
+                    sourceCandidate.getBindingPath(), sourceCandidate.getDeBruijnKey(),
+                    new BindingSignature(sourceCandidate), domain, dependencies);
+            if (!sourceOrigin.payload.equals(new BindingSignature(variable)))
+                throw new IllegalStateException("Declaration representative changed source payload");
+        }
+        public NormalForm owner() { return owner; }
+        public QuantiVar variable() { return variable; }
+        public long declarationOccurrence() { return declarationOccurrence; }
+        public long variableOccurrence() { return variableOccurrence; }
+        public int tupleSlot() { return tupleSlot; }
+        public StructuralKey domain() { return domain; }
+        public List<QuantiVar> dependencies() { return dependencies; }
+
+        private boolean matchesIssuedBinding(NormalForm original, QuantiVar current, int index) {
+            return owner == original && variable == current && vectorIndex == index
+                    && original.issuedDeclarationOrigins.get(this) == sourceOrigin
+                    && declarationOccurrence == sourceOrigin.declaration && variableOccurrence == sourceOrigin.variable
+                    && tupleSlot == sourceOrigin.tupleSlot && domain != null && domain.equals(sourceOrigin.domain)
+                    && sameIdentities(dependencies, sourceOrigin.dependencies)
+                    && sourceOrigin.payload.equals(new BindingSignature(current))
+                    && sourceOrigin.coordinate.equals(sourceOrigin.bindingPath + "#" + tupleSlot
+                        + ":" + cardinality + ":" + normalizeType(typeName))
+                    && phasePath.equals(original.phasePath) && phaseRole == original.temporalOp
+                    && variableId == current.getId() && name.equals(current.getName())
+                    && bindingPath.equals(current.getBindingPath()) && coordinate.equals(current.getDeBruijnKey())
+                    && typeName.equals(current.getTypeName()) && carrierType.equals(current.getCarrierTypeName())
+                    && quantifier == current.getQuantifier() && cardinality == current.getCardinality()
+                    && disjointness == current.getDisjointnessClass()
+                    && exactType != null && exactType.hasParserAuthenticatedAncestry()
+                    && exactType.sameOccurrenceEvidenceAs(current.getExactAlloyType())
+                    && current.isFrozenForCertification() && domain != null && tupleSlot >= 0;
+        }
+    }
+
+    private record ProjectionMatrix(String kind, is.fivefivefive.ACGN.alloy.SigSymbol signature,
+            List<ProjectionMatrix> children) {
+        private ProjectionMatrix { children = List.copyOf(children); }
+        boolean same(ProjectionMatrix other) {
+            if (other == null || !kind.equals(other.kind) || children.size() != other.children.size()
+                    || (signature == null) != (other.signature == null)
+                    || signature != null && !signature.isSameParserSignatureAs(other.signature)) return false;
+            for (int i=0;i<children.size();i++) if (!children.get(i).same(other.children.get(i))) return false;
+            return true;
+        }
+        org.json.JSONObject evidence() {
+            var cs=new org.json.JSONArray();for(var child:children)cs.put(child.evidence());
+            return new org.json.JSONObject().put("kind",kind).put("signature",signature==null?org.json.JSONObject.NULL:signature.getSemanticIdentity()).put("children",cs);
+        }
+    }
+
+    /** Private pre-lowering authority. Neither an endpoint nor a receipt can issue it. */
+    private static final class GuardedProjection {
+        final NormalForm owner;
+        final DeclarationFrame frame;
+        final Quantifier quantifier;
+        final is.fivefivefive.ACGN.alloy.SigSymbol domain,carrier;
+        final ProjectionMatrix sourceBody,loweredBody;
+        private GuardedProjection(NormalForm owner,DeclarationFrame frame,ProjectionMatrix sourceBody) {
+            this.owner=owner;this.frame=frame;this.quantifier=frame.variable.getQuantifier();
+            this.domain=frame.signature;this.carrier=domain.parserUnaryCarrier();this.sourceBody=sourceBody;
+            var guard=new ProjectionMatrix("member",domain,List.of());
+            this.loweredBody=domain.isSameParserSignatureAs(carrier)?sourceBody:
+                new ProjectionMatrix(quantifier==Quantifier.ALL?"implies":"conj",null,List.of(guard,sourceBody));
+        }
+    }
+
+    private record ProjectionRead(NormalForm owner,EGraphNode variable,EGraphNode signature) { }
+
+    private record BranchMember(Opcode predicate,is.fivefivefive.ACGN.alloy.SigSymbol signature) {
+        boolean same(BranchMember other){return other!=null&&predicate==other.predicate&&signature.isSameParserSignatureAs(other.signature);}
+    }
+    private static final class BranchRouteSource {
+        final NormalForm owner;
+        final DeclarationFrame frame;
+        final TemporalReferenceAuthority reference;
+        final List<BranchMember> branches;
+        private BranchRouteSource(NormalForm owner,DeclarationFrame frame,TemporalReferenceAuthority reference,List<BranchMember> branches){
+            this.owner=owner;this.frame=frame;this.reference=reference;this.branches=List.copyOf(branches);
+        }
+    }
+    private BranchMember branchMember(QuantiVar variable,boolean original){
+        var root=matrixEGraphRoot;
+        if(!guardEditPhaseRoot(root))return null;
+        var member=root.getChildren().get(0);var cs=member.getChildren();
+        if((member.getOpcode()!=Opcode.IN&&member.getOpcode()!=Opcode.NOT_IN)||!EGraphNode.hasBooleanFormulaType(member)
+                ||cs.size()!=2||cs.get(0).getOpcode()!=Opcode.VARIABLE||cs.get(1).authenticatedSignature()==null
+                ||cs.get(0).getExactAlloyType()==null||!cs.get(0).getExactAlloyType().sameOccurrenceEvidenceAs(variable.getExactAlloyType()))return null;
+        if(original?!variable.getOriginalNames().contains(cs.get(0).getSemanticIdentity()):!boundGuardVariable(cs.get(0),variable))return null;
+        return new BranchMember(member.getOpcode(),cs.get(1).authenticatedSignature());
+    }
+    private void issueBranchRouteSource(QuantiVar variable,EGraphNode body){
+        if(body==null||body.getOpcode()!=Opcode.REF||variable.getCardinality()!=Cardinality.ONE||variable.isDisj()
+                ||variable.getQuantifier()!=Quantifier.ALL&&variable.getQuantifier()!=Quantifier.SOME)return;
+        int[] address=temporalReferenceTarget(body);if(address==null)return;
+        var authority=temporalReferenceAuthorities.get(body.temporalReferenceAuthorityId());
+        if(authority==null||!authority.matches(body,address[0],address[1]))return;
+        var members=new ArrayList<BranchMember>();
+        for(var branch:authority.children){var member=branch.branchMember(variable,true);if(member==null)return;members.add(member);}
+        for(var frame:variable.getDeclarationFrames())if(frame.owner==this&&frame.signature!=null
+                &&frame.signature.parserUnaryCarrier()!=null&&frame.signature.isSameParserSignatureAs(frame.signature.parserUnaryCarrier()))
+            branchRouteSources.computeIfAbsent(variable,k->new ArrayList<>()).add(new BranchRouteSource(this,frame,authority,members));
+    }
+
+    static final class BranchRouteEndpoint {
+        private final NormalForm owner;
+        private final QuantiVar binding;
+        private final BranchRouteSource source;
+        private final EGraphNode root,reference;
+        private final List<NormalForm> branches;
+        private final List<List<EGraphNode>> nodes;
+        private BranchRouteEndpoint(NormalForm owner,QuantiVar binding,BranchRouteSource source,EGraphNode root,EGraphNode reference,
+                List<NormalForm> branches,List<List<EGraphNode>> nodes){
+            this.owner=owner;this.binding=binding;this.source=source;this.root=root;this.reference=reference;
+            this.branches=List.copyOf(branches);this.nodes=List.copyOf(nodes);
+        }
+        NormalForm owner(){return owner;}
+        NormalForm branch(int i){return branches.get(i);}
+        int arity(){return branches.size();}
+        EGraphNode root(){return root;}
+        EGraphNode reference(){return reference;}
+        List<EGraphNode> nodes(int i){return nodes.get(i);}
+        boolean valid(){
+            var next=owner.branchRouteEndpoint(binding);
+            if(next==null||next.source!=source||next.root!=root||next.reference!=reference||next.nodes.size()!=nodes.size())return false;
+            for(int i=0;i<nodes.size();i++)for(int j=0;j<4;j++)if(next.nodes.get(i).get(j)!=nodes.get(i).get(j))return false;
+            return true;
+        }
+        boolean sameBody(int index,BranchRouteEndpoint other,int otherIndex){
+            return source.branches.get(index).same(other.source.branches.get(otherIndex));
+        }
+        boolean oppositeBody(int i,int j){
+            var a=source.branches.get(i);var b=source.branches.get(j);
+            return a.predicate!=b.predicate&&a.signature.isSameParserSignatureAs(b.signature);
+        }
+        org.json.JSONObject evidence(){
+            var out=new org.json.JSONObject().put("owner",owner.phasePath).put("binding",binding.getDeBruijnKey())
+                .put("ownerOperator",owner.temporalOp.name()).put("quantifier",binding.getQuantifier().name())
+                .put("declarationOccurrence",source.frame.declarationOccurrence).put("domain",source.frame.domain.stableString())
+                .put("referenceOccurrence",reference.getSourceOccurrenceLineage()).put("referenceAuthority",source.reference.authorityId)
+                .put("parserReferenceOccurrence",source.reference.parserOccurrenceId).put("arity",arity())
+                .put("dependencies",CanonicalDistance.dependencyOccurrenceEvidence(source.frame.dependencies));
+            var rows=new org.json.JSONArray();
+            for(int i=0;i<nodes.size();i++){
+                var ns=new org.json.JSONArray();for(var n:nodes.get(i))ns.put(new org.json.JSONObject().put("occurrence",n.getSourceOccurrenceLineage())
+                    .put("opcode",n.getOpcode().name()).put("type",n.getExactAlloyType()==null?"BOOL/owner-issued-phase-root":n.getExactAlloyType().stableString())
+                    .put("children",new org.json.JSONArray(n.getChildren().stream().map(EGraphNode::getSourceOccurrenceLineage).toList())));
+                rows.put(new org.json.JSONObject().put("role",i).put("phase",branches.get(i).phasePath).put("operator",branches.get(i).temporalOp.name()).put("nodes",ns));
+            }
+            return out.put("branches",rows);
+        }
+    }
+    BranchRouteEndpoint branchRouteEndpoint(QuantiVar variable){
+        if(!frozenForCertification||!variable.isFrozenForCertification()||variable.getCardinality()!=Cardinality.ONE||variable.isDisj())return null;
+        var seeds=comparisonSource().branchRouteSources.get(variable);
+        if(seeds==null||seeds.size()!=1||variable.getDeclarationFrames().size()!=1)return null;
+        var seed=seeds.get(0);
+        if(seed.owner!=comparisonSource()||seed.frame.variable!=variable||!ownsDeclarationFrame(seed.frame)||!guardEditPhaseRoot(matrixEGraphRoot))return null;
+        var ref=matrixEGraphRoot.getChildren().get(0);int[] address=temporalReferenceTarget(ref);if(address==null)return null;
+        var actual=temporalReferenceAuthorities.get(ref.temporalReferenceAuthorityId());
+        if(actual==null||!actual.matches(ref,address[0],address[1])||actual.sourceClaim!=seed.reference.sourceClaim
+                ||actual.children.size()!=seed.branches.size())return null;
+        var branches=new ArrayList<NormalForm>();var nodes=new ArrayList<List<EGraphNode>>();
+        var unique=Collections.newSetFromMap(new java.util.IdentityHashMap<EGraphNode,Boolean>());
+        for(int i=0;i<actual.children.size();i++){
+            if(actual.children.get(i)!=seed.reference.children.get(i))return null;
+            if(!seed.branches.get(i).same(actual.children.get(i).branchMember(variable,false)))return null;
+            NormalForm selected=null;for(var b:comparisonTemporalChildren())if(b.comparisonSource()==actual.children.get(i)){if(selected!=null)return null;selected=b;}
+            if(selected==null||!seed.branches.get(i).same(selected.branchMember(variable,false)))return null;
+            var root=selected.matrixEGraphRoot;var expr=root.getChildren().get(0);
+            var ns=List.of(root,expr,expr.getChildren().get(0),expr.getChildren().get(1));
+            for(var n:ns)if(!unique.add(n))return null;
+            branches.add(selected);nodes.add(ns);
+        }
+        return new BranchRouteEndpoint(this,variable,seed,matrixEGraphRoot,ref,branches,nodes);
+    }
+
+    static boolean branchZeroDecision(is.fivefivefive.CanDis.metric.MatrixDecision<EGraphNode> decision,EGraphNode a,EGraphNode b){
+        return PaidGuardEditMatch.zeroTree(decision,a,b);
+    }
+
+    private record GuardEditDomain(is.fivefivefive.ACGN.alloy.SigSymbol carrier,
+            is.fivefivefive.ACGN.alloy.SigSymbol subset) {
+        private static GuardEditDomain from(EGraphNode domain) {
+            if(domain.getExactAlloyType()==null||domain.getExactAlloyType().kind()!=is.fivefivefive.ACGN.alloy.ExactAlloyType.Kind.RELATION
+                    ||!domain.getExactAlloyType().hasParserAuthenticatedAncestry()
+                    ||domain.getExactAlloyType().relationArity()!=1)return null;
+            var direct=domain.authenticatedSignature();
+            if(direct!=null) {
+                var carrier=direct.parserUnaryCarrier();
+                return carrier!=null&&direct.isSameParserSignatureAs(carrier)?new GuardEditDomain(carrier,null):null;
+            }
+            if(domain.getOpcode()!=Opcode.INTERSECT||domain.getChildren().size()!=2)return null;
+            var x=domain.getChildren().get(0).authenticatedSignature();var y=domain.getChildren().get(1).authenticatedSignature();
+            if(x==null||y==null)return null;
+            for(var pair:List.of(List.of(x,y),List.of(y,x))) {
+                var carrier=pair.get(0).parserUnaryCarrier();var subset=pair.get(1);
+                if(carrier!=null&&pair.get(0).isSameParserSignatureAs(carrier)
+                        &&!subset.isSameParserSignatureAs(carrier)&&subset.isParserCertifiedSubsignatureOf(carrier)
+                        &&domain.getExactAlloyType().sameOccurrenceEvidenceAs(carrier.parserExactType())
+                        &&domain.getChildren().stream().allMatch(c->c.getSemanticProfile().equals(domain.getSemanticProfile())))return new GuardEditDomain(carrier,subset);
+            }
+            return null;
+        }
+    }
+
+    private static final class GuardEditSource {
+        final NormalForm owner,future;
+        final DeclarationFrame frame;
+        final TemporalReferenceAuthority reference;
+        final ProjectionMatrix futureBody;
+        final Quantifier quantifier;
+        private GuardEditSource(NormalForm owner,DeclarationFrame frame,TemporalReferenceAuthority reference,ProjectionMatrix futureBody) {
+            this.owner=owner;this.frame=frame;this.reference=reference;this.future=reference.children.get(0);
+            this.futureBody=futureBody;this.quantifier=frame.variable.getQuantifier();
+        }
+    }
+
+    private void issueGuardEditSource(QuantiVar variable,EGraphNode body) {
+        if(variable.getCardinality()!=Cardinality.ONE||variable.isDisj()||body==null||body.getOpcode()!=Opcode.REF)return;
+        int[] address=temporalReferenceTarget(body);
+        if(address==null||address[1]!=1)return;
+        var authority=temporalReferenceAuthorities.get(body.temporalReferenceAuthorityId());
+        if(authority==null||!authority.matches(body,address[0],1)||authority.children.get(0).temporalOp!=TemporalOp.ALWAYS)return;
+        var child=authority.children.get(0);
+        var model=child.projectionMatrix(child.matrixEGraphRoot,variable,true,new ArrayList<>(),Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        if(model==null||!model.kind.equals("member"))return;
+        for(var frame:variable.getDeclarationFrames())if(frame.owner==this&&frame.guardEditDomain!=null) {
+            boolean guarded=frame.guardEditDomain.subset!=null;
+            if(variable.getQuantifier()!=(guarded?Quantifier.ALL:Quantifier.SOME))continue;
+            if(guarded&&!model.signature.isSameParserSignatureAs(frame.guardEditDomain.subset))continue;
+            guardEditSources.computeIfAbsent(variable,k->new ArrayList<>()).add(new GuardEditSource(this,frame,authority,model));
+        }
+    }
+
+    private boolean boundGuardVariable(EGraphNode node,QuantiVar binding) {
+        if(node.getOpcode()!=Opcode.VARIABLE||node.getExactAlloyType()==null
+                ||!node.getExactAlloyType().sameOccurrenceEvidenceAs(binding.getExactAlloyType()))return false;
+        for(var bindings:List.of(params,matrixQuantiVars,inheritedQuantiVars,getLocalQuantiVars()))
+            for(var candidate:bindings)if(candidate==binding&&binding.getName().equals(node.getAlphaName()))return true;
+        return false;
+    }
+
+    private record GuardEditShape(List<EGraphNode> nodes,NormalForm future,EGraphNode futureRoot,
+            List<ProjectionRead> futureReads) { }
+
+    private GuardEditShape guardEditShape(GuardEditSource seed,QuantiVar binding) {
+        if(!ownsDeclarationFrame(seed.frame)||seed.owner!=comparisonSource()||seed.frame.variable!=binding
+                ||binding.getCardinality()!=Cardinality.ONE||binding.isDisj()||binding.getQuantifier()!=seed.quantifier)return null;
+        var domain=seed.frame.guardEditDomain;
+        if(domain==null||!domain.carrier.isParserCertifiedSubsignatureOf(domain.carrier)
+                ||domain.subset!=null&&!domain.subset.isParserCertifiedSubsignatureOf(domain.carrier))return null;
+        var root=matrixEGraphRoot;
+        if(!guardEditPhaseRoot(root))return null;
+        var nodes=new ArrayList<EGraphNode>();nodes.add(root);var body=root.getChildren().get(0);nodes.add(body);
+        EGraphNode reference=body;
+        if(domain.subset!=null) {
+            if(body.getOpcode()!=Opcode.OR||body.getChildren().size()!=2||!EGraphNode.hasBooleanRewriteAuthority(body))return null;
+            var guard=body.getChildren().get(0);reference=body.getChildren().get(1);
+            if(guard.getOpcode()!=Opcode.NOT_IN||guard.getChildren().size()!=2||!EGraphNode.hasBooleanFormulaType(guard))return null;
+            var value=guard.getChildren().get(0);var signature=guard.getChildren().get(1);
+            if(!boundGuardVariable(value,binding)||signature.authenticatedSignature()==null
+                    ||!signature.authenticatedSignature().isSameParserSignatureAs(domain.subset))return null;
+            nodes.add(guard);nodes.add(value);nodes.add(signature);nodes.add(reference);
+        }
+        int[] address=temporalReferenceTarget(reference);
+        if(address==null||address[1]!=1)return null;
+        var actual=temporalReferenceAuthorities.get(reference.temporalReferenceAuthorityId());
+        if(actual==null||!actual.matches(reference,address[0],1)||actual.sourceClaim!=seed.reference.sourceClaim
+                ||actual.children.get(0)!=seed.future)return null;
+        NormalForm future=null;
+        for(var child:comparisonTemporalChildren())if(child.comparisonSource()==seed.future){if(future!=null)return null;future=child;}
+        if(future==null||future.temporalOp!=TemporalOp.ALWAYS||!guardEditPhaseRoot(future.matrixEGraphRoot))return null;
+        var reads=new ArrayList<ProjectionRead>();
+        var model=future.projectionMatrix(future.matrixEGraphRoot,binding,false,reads,Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        if(!seed.futureBody.same(model)||reads.size()!=1)return null;
+        return new GuardEditShape(List.copyOf(nodes),future,future.matrixEGraphRoot,List.copyOf(reads));
+    }
+
+    private static boolean guardEditPhaseRoot(EGraphNode root) {
+        return root.getOpcode()==Opcode.TEMPORALROOT&&root.getMetatype()==Metatype.BOOLEAN&&root.getChildren().size()==1
+            &&(root.getExactAlloyType()==null||root.getExactAlloyType().kind()==is.fivefivefive.ACGN.alloy.ExactAlloyType.Kind.BOOL);
+    }
+
+    static final class PaidGuardEditMatch {
+        private final NormalForm a,b;
+        private final QuantiVar source,target;
+        private final GuardEditSource expectedSource,expectedTarget;
+        private final GuardEditShape left,right;
+        private is.fivefivefive.CanDis.metric.MatrixDecision<EGraphNode> selectedOwner,selectedFuture;
+        private PaidGuardEditMatch(NormalForm a,NormalForm b,QuantiVar source,QuantiVar target,GuardEditSource ea,GuardEditSource eb,GuardEditShape left,GuardEditShape right) {
+            this.a=a;this.b=b;this.source=source;this.target=target;this.expectedSource=ea;this.expectedTarget=eb;this.left=left;this.right=right;
+        }
+        NormalForm sourceOwner(){return a;}
+        NormalForm targetOwner(){return b;}
+        NormalForm sourceFuture(){return left.future;}
+        NormalForm targetFuture(){return right.future;}
+        boolean valid() {
+            var next=a.paidGuardEditMatch(b,source,target);
+            if(next==null||next.expectedSource!=expectedSource||next.expectedTarget!=expectedTarget
+                    ||next.left.futureRoot!=left.futureRoot||next.right.futureRoot!=right.futureRoot)return false;
+            for(int i=0;i<left.nodes.size();i++)if(next.left.nodes.get(i)!=left.nodes.get(i))return false;
+            for(int i=0;i<right.nodes.size();i++)if(next.right.nodes.get(i)!=right.nodes.get(i))return false;
+            return true;
+        }
+        private static boolean zeroTree(is.fivefivefive.CanDis.metric.MatrixDecision<EGraphNode> decision,EGraphNode a,EGraphNode b) {
+            if(decision.source()!=a||decision.target()!=b||!decision.kind().equals("node")||decision.cost()!=0||decision.headCost()!=0
+                    ||a.getOpcode()!=b.getOpcode()||!a.getSemanticProfile().equals(b.getSemanticProfile())
+                    ||!sameSelectedType(a,b)
+                    ||a.getChildren().size()!=b.getChildren().size()||decision.children().size()!=a.getChildren().size())return false;
+            for(int i=0;i<decision.children().size();i++){var edge=decision.children().get(i);
+                if(edge.leftIndex()!=i||edge.rightIndex()!=i||!zeroTree(edge.decision(),a.getChildren().get(i),b.getChildren().get(i)))return false;}
+            return true;
+        }
+        private static boolean sameSelectedType(EGraphNode a,EGraphNode b) {
+            if(a.getOpcode()==Opcode.TEMPORALROOT||b.getOpcode()==Opcode.TEMPORALROOT) {
+                if(!guardEditPhaseRoot(a)||!guardEditPhaseRoot(b))return false;
+            }
+            if(a.getExactAlloyType()!=null)return a.getExactAlloyType().sameOccurrenceEvidenceAs(b.getExactAlloyType());
+            // NormalForm's owner-issued transparent phase roots have constructor Boolean type, not parser leaf metadata.
+            return b.getExactAlloyType()==null&&a.getOpcode()==Opcode.TEMPORALROOT&&b.getOpcode()==Opcode.TEMPORALROOT
+                &&a.getMetatype()==Metatype.BOOLEAN&&b.getMetatype()==Metatype.BOOLEAN
+                &&a.getChildren().size()==1&&b.getChildren().size()==1;
+        }
+        boolean bindSelected(is.fivefivefive.CanDis.metric.MatrixDecision<EGraphNode> owner,is.fivefivefive.CanDis.metric.MatrixDecision<EGraphNode> future) {
+            if(!valid()||owner.source()!=left.nodes.get(0)||owner.target()!=right.nodes.get(0)||!owner.kind().equals("node")
+                    ||owner.cost()!=5||owner.headCost()!=0||owner.children().size()!=1)return false;
+            var rootEdge=owner.children().get(0);var body=rootEdge.decision();
+            if(rootEdge.leftIndex()!=0||rootEdge.rightIndex()!=0||!body.kind().equals("node")||body.source()!=left.nodes.get(1)
+                    ||body.target()!=right.nodes.get(1)||body.cost()!=5||body.headCost()!=1||body.children().size()!=2)return false;
+            boolean remove=left.nodes.size()==6;var guarded=remove?left:right;
+            for(int i=0;i<2;i++){var edge=body.children().get(i);var d=edge.decision();var node=guarded.nodes.get(i==0?2:5);
+                if(edge.leftIndex()!=(remove?i:-1)||edge.rightIndex()!=(remove?-1:i)||!d.kind().equals(remove?"delete":"insert")
+                        ||d.source()!=(remove?node:null)||d.target()!=(remove?null:node)||d.cost()!=(i==0?3:1))return false;}
+            if(!zeroTree(future,left.futureRoot,right.futureRoot))return false;
+            selectedOwner=owner;selectedFuture=future;return true;
+        }
+        boolean selectedValid(){return selectedOwner!=null&&selectedFuture!=null&&bindSelected(selectedOwner,selectedFuture);}
+        org.json.JSONObject evidence() {
+            var out=new org.json.JSONObject().put("direction",left.nodes.size()==6?"remove":"insert")
+                .put("sourceOwner",a.phasePath).put("targetOwner",b.phasePath).put("sourceBinding",source.getDeBruijnKey()).put("targetBinding",target.getDeBruijnKey())
+                .put("sourceDeclaration",expectedSource.frame.declarationOccurrence).put("targetDeclaration",expectedTarget.frame.declarationOccurrence);
+            var guarded=left.nodes.size()==6?left:right;
+            out.put("paidGuardOccurrence",guarded.nodes.get(3).getSourceOccurrenceLineage());
+            for(var side:List.of("source","target")){var shape=side.equals("source")?left:right;var seed=side.equals("source")?expectedSource:expectedTarget;
+                var snapshots=new org.json.JSONArray();for(var n:shape.nodes)snapshots.put(new org.json.JSONObject().put("opcode",n.getOpcode().name())
+                    .put("occurrence",n.getSourceOccurrenceLineage()).put("type",n.getExactAlloyType()==null&&n.getOpcode()==Opcode.TEMPORALROOT
+                        &&n.getMetatype()==Metatype.BOOLEAN?"BOOL/owner-issued-phase-root":n.getExactAlloyType().stableString())
+                    .put("children",new org.json.JSONArray(n.getChildren().stream().map(EGraphNode::getSourceOccurrenceLineage).toList())));
+                out.put(side+"Snapshot",snapshots).put(side+"Domain",seed.frame.domain.stableString())
+                    .put(side+"Dependencies",CanonicalDistance.dependencyOccurrenceEvidence(seed.frame.dependencies))
+                    .put(side+"RetainedRead",new org.json.JSONObject().put("owner",shape.future.phasePath).put("operator",shape.future.temporalOp.name())
+                        .put("occurrence",shape.futureReads.get(0).variable.getSourceOccurrenceLineage()).put("futureRoot",shape.futureRoot.getSourceOccurrenceLineage()));
+            }return out;
+        }
+    }
+
+    PaidGuardEditMatch paidGuardEditMatch(NormalForm other,QuantiVar source,QuantiVar target) {
+        if(!frozenForCertification||!other.frozenForCertification||!phasePath.equals(other.phasePath)
+                ||!matrixEGraphRoot.getSemanticProfile().equals(other.matrixEGraphRoot.getSemanticProfile()))return null;
+        var a=comparisonSource().guardEditSources.get(source);var b=other.comparisonSource().guardEditSources.get(target);
+        if(a==null||b==null||a.size()!=1||b.size()!=1||source.getDeclarationFrames().size()!=1||target.getDeclarationFrames().size()!=1)return null;
+        var x=a.get(0);var y=b.get(0);var dx=x.frame.guardEditDomain;var dy=y.frame.guardEditDomain;
+        if(dx==null||dy==null||(dx.subset==null)==(dy.subset==null)||!dx.carrier.isSameParserSignatureAs(dy.carrier)
+                ||!x.futureBody.same(y.futureBody))return null;
+        var left=guardEditShape(x,source);var right=other.guardEditShape(y,target);
+        if(left==null||right==null)return null;
+        var guarded=left.nodes.size()==6?left:right;
+        if(guarded.nodes.get(3)==guarded.futureReads.get(0).variable
+                ||guarded.nodes.get(3).getSourceOccurrenceLineage()==guarded.futureReads.get(0).variable.getSourceOccurrenceLineage())return null;
+        return new PaidGuardEditMatch(this,other,source,target,x,y,left,right);
+    }
+
+    private ProjectionMatrix projectionMatrix(EGraphNode node,QuantiVar variable,boolean source,
+            List<ProjectionRead> reads,java.util.Set<NormalForm> active) {
+        if (node == null || !node.getSemanticProfile().equals(matrixEGraphRoot.getSemanticProfile())) return null;
+        var cs=node.getChildren();
+        switch(node.getOpcode()) {
+            case TEMPORALROOT, PREDICATE -> {
+                return cs.size()==1?projectionMatrix(cs.get(0),variable,source,reads,active):null;
+            }
+            case CONSTANT -> {
+                return "true".equals(node.getSourceName())&&EGraphNode.hasBooleanFormulaType(node)
+                    ?new ProjectionMatrix("truth",null,List.of()):null;
+            }
+            case IN -> {
+                if (cs.size()!=2 || cs.get(0).getOpcode()!=Opcode.VARIABLE || cs.get(1).authenticatedSignature()==null
+                        || !EGraphNode.hasBooleanFormulaType(node)) return null;
+                var value=cs.get(0);var exact=value.getExactAlloyType();
+                if (exact==null || variable.getExactAlloyType()==null
+                        || !exact.sameOccurrenceEvidenceAs(variable.getExactAlloyType())) return null;
+                boolean bound=false;
+                if (source) bound=variable.getOriginalNames().contains(value.getSemanticIdentity());
+                else for(var bindings:List.of(params,matrixQuantiVars,inheritedQuantiVars,getLocalQuantiVars()))
+                    for(var q:bindings)if(q==variable&&q.getName().equals(value.getAlphaName()))bound=true;
+                if(!bound)return null;
+                reads.add(new ProjectionRead(this,value,cs.get(1)));
+                return new ProjectionMatrix("member",cs.get(1).authenticatedSignature(),List.of());
+            }
+            case IMPLIES, AND, OR -> {
+                if(cs.size()!=2 || !EGraphNode.hasBooleanRewriteAuthority(node) || !EGraphNode.hasBooleanOperands(node))return null;
+                EGraphNode left=cs.get(0),right=cs.get(1);
+                String kind=node.getOpcode()==Opcode.AND?"conj":"implies";
+                ProjectionMatrix a;
+                if(node.getOpcode()==Opcode.OR) {
+                    if(left.getOpcode()!=Opcode.NOT_IN) {var swap=left;left=right;right=swap;}
+                    if(left.getOpcode()!=Opcode.NOT_IN || left.getChildren().size()!=2
+                            || !EGraphNode.hasBooleanFormulaType(left))return null;
+                    // Interpret the actual NOT_IN operands without manufacturing an IN node.
+                    var operands=left.getChildren();var value=operands.get(0);var sig=operands.get(1);
+                    if(value.getOpcode()!=Opcode.VARIABLE || sig.authenticatedSignature()==null
+                            || value.getExactAlloyType()==null || !value.getExactAlloyType().sameOccurrenceEvidenceAs(variable.getExactAlloyType()))return null;
+                    boolean bound=source?variable.getOriginalNames().contains(value.getSemanticIdentity()):
+                        java.util.stream.Stream.of(params,matrixQuantiVars,inheritedQuantiVars,getLocalQuantiVars())
+                            .flatMap(List::stream).anyMatch(q->q==variable&&q.getName().equals(value.getAlphaName()));
+                    if(!bound)return null;
+                    reads.add(new ProjectionRead(this,value,sig));
+                    a=new ProjectionMatrix("member",sig.authenticatedSignature(),List.of());
+                } else a=projectionMatrix(left,variable,source,reads,active);
+                var b=projectionMatrix(right,variable,source,reads,active);
+                return a==null||b==null?null:new ProjectionMatrix(kind,null,List.of(a,b));
+            }
+            case REF -> {
+                int[] target=temporalReferenceTarget(node);
+                if(target==null || target[1]!=1)return null;
+                var authority=temporalReferenceAuthorities.get(node.temporalReferenceAuthorityId());
+                if(authority==null||!authority.matches(node,target[0],target[1]))return null;
+                var child=authority.children.get(0);
+                if(!source && comparisonSource!=null) {
+                    NormalForm selected=null;
+                    for(var candidate:comparisonTemporalChildren())if(candidate.comparisonSource()==child) {
+                        if(selected!=null)return null;
+                        selected=candidate;
+                    }
+                    if(selected==null)return null;
+                    child=selected;
+                }
+                if(child.temporalOp!=TemporalOp.HISTORICALLY||!active.add(child))return null;
+                var body=child.projectionMatrix(child.matrixEGraphRoot,variable,source,reads,active);active.remove(child);
+                return body==null?null:new ProjectionMatrix("historically",null,List.of(body));
+            }
+            default -> {return null;}
+        }
+    }
+
+    private void issueGuardedProjection(QuantiVar variable,EGraphNode body) {
+        if(variable.getCardinality()!=Cardinality.ONE||variable.isDisj()
+                || variable.getQuantifier()!=Quantifier.ALL&&variable.getQuantifier()!=Quantifier.SOME)return;
+        var matrix=projectionMatrix(body,variable,true,new ArrayList<>(),Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        if(matrix==null)return;
+        for(var frame:variable.getDeclarationFrames())if(frame.owner==this&&frame.signature!=null&&frame.signature.parserUnaryCarrier()!=null) {
+            guardedProjections.computeIfAbsent(variable,k->new ArrayList<>()).add(new GuardedProjection(this,frame,matrix));
+        }
+    }
+
+    static final class GuardedProjectionMatch {
+        private final NormalForm a,b;
+        private final QuantiVar source,target;
+        private final EGraphNode sourceRoot,targetRoot;
+        private final List<ProjectionRead> sourceReads,targetReads;
+        private GuardedProjectionMatch(NormalForm a,NormalForm b,QuantiVar source,QuantiVar target,
+                List<ProjectionRead> sourceReads,List<ProjectionRead> targetReads) {
+            this.a=a;this.b=b;this.source=source;this.target=target;
+            this.sourceRoot=a.matrixEGraphRoot;this.targetRoot=b.matrixEGraphRoot;
+            this.sourceReads=List.copyOf(sourceReads);this.targetReads=List.copyOf(targetReads);
+        }
+        boolean valid() {
+            return a.matrixEGraphRoot==sourceRoot&&b.matrixEGraphRoot==targetRoot
+                && a.guardedProjectionMatch(b,source,target)!=null;
+        }
+        org.json.JSONObject evidence() {
+            var out=new org.json.JSONObject().put("sourceOwner",a.phasePath).put("targetOwner",b.phasePath)
+                .put("sourceBinding",source.getDeBruijnKey()).put("targetBinding",target.getDeBruijnKey())
+                .put("sourceRoot",sourceRoot.getSourceOccurrenceLineage()).put("targetRoot",targetRoot.getSourceOccurrenceLineage());
+            for(var side:List.of("source","target")) {
+                var reads=new org.json.JSONArray();
+                for(var read:side.equals("source")?sourceReads:targetReads)reads.put(new org.json.JSONObject()
+                    .put("owner",read.owner.phasePath).put("temporalOperator",read.owner.temporalOp.name())
+                    .put("variableOccurrence",read.variable.getSourceOccurrenceLineage()).put("signatureOccurrence",read.signature.getSourceOccurrenceLineage()));
+                out.put(side+"Reads",reads);
+                var endpoint=side.equals("source")?a:b;var variable=side.equals("source")?source:target;
+                var frames=new org.json.JSONArray();
+                for(var seed:endpoint.comparisonSource().guardedProjections.get(variable))frames.put(new org.json.JSONObject()
+                    .put("declarationOccurrence",seed.frame.declarationOccurrence).put("variableOccurrence",seed.frame.variableOccurrence)
+                    .put("tupleSlot",seed.frame.tupleSlot).put("sourceDomain",seed.domain.getSemanticIdentity())
+                    .put("carrier",seed.carrier.getSemanticIdentity()).put("quantifier",seed.quantifier.name())
+                    .put("sourceBody",seed.sourceBody.evidence()).put("loweredBody",seed.loweredBody.evidence())
+                    .put("dependencies",CanonicalDistance.dependencyOccurrenceEvidence(seed.frame.dependencies)));
+                out.put(side+"Frames",frames);
+            }
+            return out;
+        }
+    }
+
+    GuardedProjectionMatch guardedProjectionMatch(NormalForm other,QuantiVar source,QuantiVar target) {
+        if(!isFrozenForCertification()||!other.isFrozenForCertification()
+                ||!matrixEGraphRoot.getSemanticProfile().equals(other.matrixEGraphRoot.getSemanticProfile()))return null;
+        var a=comparisonSource().guardedProjections.get(source);var b=other.comparisonSource().guardedProjections.get(target);
+        if(a==null||b==null||a.size()!=source.getDeclarationFrames().size()||b.size()!=target.getDeclarationFrames().size()||a.size()!=b.size())return null;
+        var ar=new ArrayList<ProjectionRead>();var br=new ArrayList<ProjectionRead>();
+        var am=projectionMatrix(matrixEGraphRoot,source,false,ar,Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        var bm=other.projectionMatrix(other.matrixEGraphRoot,target,false,br,Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        for(int i=0;i<a.size();i++) {
+            var x=a.get(i);var y=b.get(i);
+            if(x.owner!=comparisonSource()||y.owner!=other.comparisonSource()||x.frame.variable!=source||y.frame.variable!=target
+                    || !ownsDeclarationFrame(x.frame)||!other.ownsDeclarationFrame(y.frame)
+                    || x.quantifier!=source.getQuantifier()||y.quantifier!=target.getQuantifier()
+                    || x.frame.signature==null||y.frame.signature==null
+                    || !x.domain.isSameParserSignatureAs(x.frame.signature)||!y.domain.isSameParserSignatureAs(y.frame.signature)
+                    || source.getCardinality()!=Cardinality.ONE||target.getCardinality()!=Cardinality.ONE||source.isDisj()||target.isDisj()
+                    || !x.domain.isParserCertifiedSubsignatureOf(x.carrier)||!y.domain.isParserCertifiedSubsignatureOf(y.carrier)
+                    || !x.carrier.isSameParserSignatureAs(y.carrier)||!x.loweredBody.same(am)||!y.loweredBody.same(bm)||!am.same(bm))return null;
+        }
+        return new GuardedProjectionMatch(this,other,source,target,ar,br);
+    }
+
+    boolean ownsDeclarationFrame(DeclarationFrame frame) {
+        NormalForm original = comparisonSource == null ? this : comparisonSource;
+        if (frame.owner != original || !original.frozenForCertification) return false;
+        for (var bindings : List.of(original.params,original.matrixQuantiVars,original.getLocalQuantiVars()))
+            for (var binding : bindings) if (binding == frame.variable) return true;
+        return false;
+    }
+
+    boolean authenticDeclarationFrame(DeclarationFrame frame) {
+        var original = comparisonSource();
+        int index = identityIndex(original.matrixQuantiVars, frame.variable);
+        return frozenForCertification && original.frozenForCertification && index >= 0
+                && original.issuedDeclarationFrames.contains(frame)
+                && frame.matchesIssuedBinding(original, frame.variable, index);
+    }
+
+    /** A differing domain must still be represented, not just named in a receipt. */
+    boolean retainedDeclarationDomain(DeclarationFrame frame) {
+        return retainedDeclarationDomainEvidence(frame) != null;
+    }
+
+    org.json.JSONObject retainedDeclarationDomainEvidence(DeclarationFrame frame) {
+        if (!authenticDeclarationFrame(frame)) return null;
+        var original = comparisonSource();
+        Boolean required = original.issuedDomainLowerings.get(frame);
+        if (required == null) return null;
+        var evidence = new org.json.JSONObject().put("phase", phasePath).put("binding", frame.variable.getName())
+                .put("domain", frame.domain.stableString()).put("type", frame.exactType.stableString())
+                .put("dependencies", frame.dependencies.stream().map(QuantiVar::getName).toList());
+        if (!required) return evidence.put("kind", "declaration-carrier");
+        var origin = original.issuedDomainGuards.get(frame);
+        if (origin == null || origin.frame != frame || !phasePath.equals(original.phasePath)
+                || original.issuedDomainContext == null || matrixEGraphRoot == null
+                || !original.issuedDomainContext.equals(domainContextKey(matrixEGraphRoot))) return null;
+        var env = declarationGuardEnvironment();
+        record Occurrence(EGraphNode node, String path) { }
+        var pending = new java.util.ArrayDeque<Occurrence>();
+        if (matrixEGraphRoot != null) pending.add(new Occurrence(matrixEGraphRoot, "root"));
+        Opcode expected = frame.quantifier == Quantifier.ALL ? Opcode.NOT_IN : Opcode.IN;
+        org.json.JSONObject found = null;
+        while (!pending.isEmpty()) {
+            var occurrence = pending.removeFirst();
+            var node = occurrence.node();
+            if (node.domainGuardOrigin == origin && matchesDeclarationGuard(node, frame, env)) {
+                if (found != null) return null;
+                found = evidence.put("kind", "matrix-membership").put("path", occurrence.path())
+                        .put("opcode", expected.name()).put("occurrence", node.getSourceOccurrenceLineage())
+                        .put("issuer", origin.index).put("context", original.issuedDomainContext.stableString());
+                if (frame.domainNormalization != null)
+                    found.put("normalization", new org.json.JSONObject().put("rule", "full-carrier-intersection")
+                            .put("source", frame.domain.stableString())
+                            .put("target", frame.domainNormalization.key.stableString()));
+            }
+            for (int i = 0; i < node.getChildren().size(); i++)
+                pending.add(new Occurrence(node.getChildren().get(i), occurrence.path() + "/child/" + i));
+        }
+        return found;
+    }
+
+    private Map<String, QuantiVar> declarationGuardEnvironment() {
+        var env = new HashMap<String, QuantiVar>();
+        for (var q : comparisonSource().matrixQuantiVars) {
+            env.put(q.getName(), q);
+            for (var alias : q.getOriginalNames()) env.put(alias, q);
+        }
+        return env;
+    }
+
+    private boolean matchesDeclarationGuard(EGraphNode node, DeclarationFrame frame,
+            Map<String, QuantiVar> env) {
+        Opcode expected = frame.quantifier == Quantifier.ALL ? Opcode.NOT_IN : Opcode.IN;
+        if (node.getOpcode() != expected || node.getChildren().size() != 2) return false;
+        var read = node.getChildren().get(0);
+        var dependencies = new ArrayList<QuantiVar>();
+        var expectedDomain = retainedDomainKey(frame.domain, frame.dependencies);
+        if (expectedDomain == null || read.getOpcode() != Opcode.VARIABLE
+                || !frame.variable.getName().equals(read.getAlphaName())
+                || read.getExactAlloyType() == null
+                || frame.exactType == null
+                || !frame.exactType.sameOccurrenceEvidenceAs(read.getExactAlloyType())) return false;
+        var actualDomain = retainedDomainKey(
+                declarationDomainKey(node.getChildren().get(1), env, dependencies), dependencies);
+        if (expectedDomain.equals(actualDomain)) return true;
+        var normalized = frame.domainNormalization;
+        if (normalized == null) return false;
+        var normalizedDomain = retainedDomainKey(normalized.key, normalized.dependencies);
+        return normalizedDomain != null && normalizedDomain.equals(actualDomain);
+    }
+
+    /** Issue aliases only while the real guard is still present in its Boolean island. */
+    private void retainIdempotentGuardOrigins(EGraphNode node, Map<String, QuantiVar> env) {
+        boolean association = (node.getOpcode() == Opcode.AND || node.getOpcode() == Opcode.OR)
+                && EGraphNode.hasBooleanOperands(node);
+        var operands = new ArrayList<EGraphNode>();
+        if (association) collectGuardIsland(node, node, operands);
+        else operands.addAll(node.getChildren());
+        for (var operand : operands) retainIdempotentGuardOrigins(operand, env);
+        if (!association) return;
+        for (var guard : operands) {
+            var origin = guard.domainGuardOrigin;
+            if (origin == null || issuedDomainGuards.get(origin.frame) != origin
+                    || !matchesDeclarationGuard(guard, origin.frame, env)) continue;
+            for (var alias : operands) {
+                if (alias.domainGuardOrigin == null && alias.getExactAlloyType() != null
+                        && guard.getExactAlloyType() != null
+                        && guard.getExactAlloyType().sameOccurrenceEvidenceAs(alias.getExactAlloyType())
+                        && guard.getSemanticProfile().equals(alias.getSemanticProfile())
+                        && matchesDeclarationGuard(alias, origin.frame, env)) alias.domainGuardOrigin = origin;
+            }
+        }
+    }
+
+    private static void collectGuardIsland(EGraphNode owner, EGraphNode node, List<EGraphNode> operands) {
+        if (owner.sameFlatOperatorInstance(node))
+            for (var child : node.getChildren()) collectGuardIsland(owner, child, operands);
+        else operands.add(node);
+    }
+
+    private record DomainContext(StructuralKey key, boolean containsGuard) { }
+
+    /** Retain the whole Boolean context. Other subexpressions keep their typed
+     * source occurrence identity; their internal normalization is not re-proved here. */
+    private static StructuralKey domainContextKey(EGraphNode node) {
+        return domainContext(node, false).key();
+    }
+
+    private static DomainContext domainContext(EGraphNode node, boolean issue) {
+        var origin = node.domainGuardOrigin;
+        var scalars = List.of(String.valueOf(node.getExactAlloyType()), node.getSemanticProfile().fingerprint());
+        if (origin != null) return new DomainContext(StructuralKey.of("issued-guard",
+                List.of(Integer.toString(origin.index),node.getOpcode().name(),scalars.get(0),scalars.get(1)),List.of()),true);
+        var children = new ArrayList<StructuralKey>();
+        boolean containsGuard = false;
+        boolean booleanAssociation = (node.getOpcode() == Opcode.AND || node.getOpcode() == Opcode.OR)
+                && EGraphNode.hasBooleanOperands(node);
+        for (var child : node.getChildren()) {
+            var context = domainContext(child, issue);
+            containsGuard |= context.containsGuard();
+            var key = context.key();
+            if (booleanAssociation && key.tag().equals(node.getOpcode().name()) && key.scalars().equals(scalars))
+                children.addAll(key.children());
+            else children.add(key);
+        }
+        if (!containsGuard && !booleanAssociation) {
+            if (issue && node.domainContextOrigin==null) node.domainContextOrigin=new DomainContextOrigin(node);
+            var context=node.domainContextOrigin;
+            if (context != null && context.currentOpcode != node.getOpcode()) context = null;
+            return new DomainContext(StructuralKey.of("source-expression",
+                    List.of(context==null?"unissued":Long.toString(context.occurrence),
+                            (context==null?node.getOpcode():context.sourceOpcode).name(),scalars.get(0),scalars.get(1)),List.of()),false);
+        }
+        if (booleanAssociation) {
+            Collections.sort(children);
+            for (int i = children.size()-1; i > 0; i--)
+                if (children.get(i).tag().equals("issued-guard") && children.get(i).equals(children.get(i-1)))
+                    children.remove(i);
+            if (children.size() == 1) return new DomainContext(children.get(0), containsGuard);
+        }
+        return new DomainContext(StructuralKey.of(node.getOpcode().name(), scalars, children),containsGuard);
+    }
+
+    private StructuralKey retainedDomainKey(StructuralKey key, List<QuantiVar> dependencies) {
+        var coordinates = new HashMap<String, String>();
+        for (int i = 0; i < dependencies.size(); i++) {
+            int index = identityIndex(comparisonSource().matrixQuantiVars, dependencies.get(i));
+            if (index < 0) return null;
+            coordinates.put("dependency/" + i, "owner-slot/" + index);
+        }
+        return retainedDomainKey(key, coordinates);
+    }
+
+    private static StructuralKey retainedDomainKey(StructuralKey key, Map<String, String> coordinates) {
+        var scalars = new ArrayList<>(key.scalars());
+        if (key.tag().equals("VARIABLE") && !scalars.isEmpty() && coordinates.containsKey(scalars.get(0)))
+            scalars.set(0, coordinates.get(scalars.get(0)));
+        var children = new ArrayList<StructuralKey>();
+        for (var child : key.children()) children.add(retainedDomainKey(child, coordinates));
+        // Only INTERSECT is commuted here. Dependency identities are substituted
+        // before sorting, so different owners/slots cannot collapse by position.
+        if (key.tag().equals("INTERSECT")) Collections.sort(children);
+        return StructuralKey.of(key.tag(), scalars, children);
+    }
+
+    /** The original declaration inventory, independent of whether its slots are read. */
+    boolean hasIssuedGroupedDeclarations() {
+        var declarations = new java.util.HashMap<Long, java.util.Set<Integer>>();
+        for (var frame : comparisonSource().issuedDeclarationFrames) {
+            if (frame.vectorIndex < 0) continue;
+            var origin = comparisonSource().issuedDeclarationOrigins.get(frame);
+            if (origin == null) return true;
+            var slots = declarations.computeIfAbsent(origin.declaration, ignored -> new java.util.HashSet<>());
+            slots.add(origin.tupleSlot);
+            if (slots.size() > 1) return true;
+        }
+        return false;
+    }
+
+    boolean matrixDeclarationsMatchSource() {
+        NormalForm original = comparisonSource();
+        if (!frozenForCertification || !original.frozenForCertification
+                || !phasePath.equals(original.phasePath) || temporalOp != original.temporalOp
+                || !sameIdentities(matrixQuantiVars, original.matrixQuantiVars)) return false;
+        for (int index = 0; index < matrixQuantiVars.size(); index++) {
+            var q = matrixQuantiVars.get(index);
+            var frames = original.issuedDeclarationFrames.stream().filter(f -> f.variable == q).toList();
+            if (frames.isEmpty() || !frames.equals(q.getDeclarationFrames())) return false;
+            var aliases = new java.util.HashSet<String>();
+            for (var frame : frames) {
+                if (!frame.matchesIssuedBinding(original, q, index)) return false;
+                aliases.addAll(frame.sourceAliases);
+                for (var dependency : frame.dependencies) {
+                    int position = identityIndex(original.matrixQuantiVars, dependency);
+                    if (position < 0 || position >= index || !dependency.isFrozenForCertification()) return false;
+                }
+            }
+            if (!aliases.equals(q.getOriginalNames())) return false;
+        }
+        return true;
+    }
+
+    private static int identityIndex(List<QuantiVar> bindings, QuantiVar target) {
+        for (int i = 0; i < bindings.size(); i++) if (bindings.get(i) == target) return i;
+        return -1;
+    }
+
+    private static boolean sameIdentities(List<QuantiVar> left, List<QuantiVar> right) {
+        if (left.size() != right.size()) return false;
+        for (int i = 0; i < left.size(); i++) if (left.get(i) != right.get(i)) return false;
+        return true;
+    }
+
+    private void captureMatrixReadOccurrences() {
+        var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<EGraphNode, Boolean>());
+        var pending = new java.util.ArrayDeque<EGraphNode>();
+        if (certificationMatrixEGraphRoot != null) pending.add(certificationMatrixEGraphRoot);
+        while (!pending.isEmpty()) {
+            var node = pending.removeFirst();
+            if (!seen.add(node)) continue;
+            if (node.getOpcode() == Opcode.VARIABLE) issuedMatrixReads.put(node, node.getSourceOccurrenceLineage());
+            pending.addAll(node.getChildren());
+        }
+    }
+
+    boolean sourceReadInventoryMatches(java.util.Set<EGraphNode> reads) {
+        var issued = comparisonSource().issuedMatrixReads;
+        if (reads.size() != issued.size()) return false;
+        for (var read : reads) {
+            var occurrence = issued.get(read);
+            if (occurrence == null || occurrence.longValue() != read.getSourceOccurrenceLineage()) return false;
+        }
+        return true;
+    }
+
+    boolean matchesOriginalDeclarationDomain(DeclarationFrame frame,EGraphNode declaration){
+        if(frame.owner!=this)return false;
+        var relocated=relocatedDeclarations.get(declaration.getSourceOccurrenceLineage());
+        if(frame.declarationOccurrence!=declaration.getSourceOccurrenceLineage()
+                &&(relocated==null||relocated.frames.stream().noneMatch(f->f==frame)))return false;
+        var env=new HashMap<String,QuantiVar>();
+        var bindings=new ArrayList<QuantiVar>();bindings.addAll(params);bindings.addAll(matrixQuantiVars);bindings.addAll(inheritedQuantiVars);bindings.addAll(getLocalQuantiVars());
+        for(var q:bindings){env.put(q.getName(),q);for(var alias:q.getOriginalNames())env.put(alias,q);}
+        var actual=sourceDeclarationDomain(declaration,env);
+        if(actual==null||!frame.domain.equals(actual.key)||frame.dependencies.size()!=actual.dependencies.size())return false;
+        for(int i=0;i<frame.dependencies.size();i++)if(frame.dependencies.get(i)!=actual.dependencies.get(i))return false;
+        return true;
+    }
+
+    RelocatedDeclaration originalDeclarationTransport(EGraphNode declaration){return relocatedDeclarations.get(declaration.getSourceOccurrenceLineage());}
+
+    static final class CurrentDeclarationSlot {
+        private final NormalForm owner;
+        private final EGraphNode slot;
+        private final DeclarationFrame frame;
+        private final String phasePath,bindingPath,coordinate;
+        private final TemporalOp phaseRole;
+        private final is.fivefivefive.ACGN.alloy.ExactAlloyType type;
+        private final QuantiVar.Quantifier quantifier;
+        private final QuantiVar.Cardinality cardinality;
+        private final int disjointness;
+        private CurrentDeclarationSlot(NormalForm owner,EGraphNode slot,DeclarationFrame frame){
+            this.owner=owner;this.slot=slot;this.frame=frame;phasePath=owner.phasePath;phaseRole=owner.temporalOp;
+            var q=frame.variable;bindingPath=q.getBindingPath();coordinate=q.getDeBruijnKey();type=q.getExactAlloyType();
+            quantifier=q.getQuantifier();cardinality=q.getCardinality();disjointness=q.getDisjointnessClass();
+        }
+        private boolean matches(EGraphNode current){
+            var q=frame.variable;
+            return current==slot&&frame.owner==owner&&phasePath.equals(owner.phasePath)&&phaseRole==owner.temporalOp
+                &&current.getOpcode()==Opcode.VARIABLE&&current.getSourceOccurrenceLineage()==frame.variableOccurrence
+                &&q.getName().equals(current.getAlphaName())&&bindingPath.equals(q.getBindingPath())&&coordinate.equals(q.getDeBruijnKey())
+                &&type!=null&&type.sameOccurrenceEvidenceAs(q.getExactAlloyType())&&type.sameOccurrenceEvidenceAs(current.getExactAlloyType())
+                &&quantifier==q.getQuantifier()&&cardinality==q.getCardinality()&&disjointness==q.getDisjointnessClass();
+        }
+    }
+    private static void copyCurrentDeclarationSlot(EGraphNode source,EGraphNode copy){
+        var issued=source.currentDeclarationSlot;
+        if(issued!=null&&issued.matches(source)&&source.getOpcode()==copy.getOpcode())
+            copy.currentDeclarationSlot=new CurrentDeclarationSlot(issued.owner,copy,issued.frame);
+    }
+    private void captureDeclarationTransport(EGraphNode node,Map<EGraphNode,RelocatedDeclaration> captured){
+        var issued=new java.util.IdentityHashMap<QuantiVar,List<DeclarationFrame>>();
+        for(var q:getLocalQuantiVars())issued.put(q,q.getDeclarationFrames());
+        captureDeclarationTransport(node,captured,issued);
+    }
+    private void captureDeclarationTransport(EGraphNode node,Map<EGraphNode,RelocatedDeclaration> captured,
+            Map<QuantiVar,List<DeclarationFrame>> issued){
+        if(StructuralDeclarationOrigin.structural(node)){
+            var cs=node.getChildren();var frames=new ArrayList<DeclarationFrame>();
+            for(int i=1;i<cs.size();i++){
+                final int tuple=i-1;var slot=cs.get(i);
+                var association=slot.currentDeclarationSlot;
+                if(association==null||association.owner!=this||!association.matches(slot)){frames.clear();break;}
+                var current=association.frame.variable;
+                var found=issued.getOrDefault(current,List.of()).stream().filter(f->f.owner==this&&f.variable==current
+                    &&f.declarationOccurrence==node.getSourceOccurrenceLineage()&&f.variableOccurrence==slot.getSourceOccurrenceLineage()&&f.tupleSlot==tuple).toList();
+                if(found.size()!=1||found.get(0)!=association.frame||!matchesOriginalDeclarationDomain(found.get(0),node)){frames.clear();break;}frames.add(found.get(0));
+            }
+            if(!frames.isEmpty()&&frames.size()==cs.size()-1)captured.put(node,new RelocatedDeclaration(node,List.copyOf(cs.subList(1,cs.size())),List.copyOf(frames)));
+        }
+        for(var child:node.getChildren())captureDeclarationTransport(child,captured,issued);
+    }
+
+    public StructuralDeclarationOrigin structuralDeclarationOrigin(EGraphNode original){
+        synchronized(lifecycleLock){var origin=structuralDeclarationOrigins.get(original);return origin!=null&&origin.valid()?origin:null;}
+    }
+
+    private static StructuralKey declarationDomainKey(EGraphNode node, Map<String, QuantiVar> env,
+            List<QuantiVar> dependencies) {
+        QuantiVar dependency = node.getOpcode() == Opcode.VARIABLE ? env.get(bindingKey(node)) : null;
+        String label;
+        if (dependency != null) {
+            // Keep every reference in traversal order, including repeats. The
+            // selected declaration path must supply each corresponding owner.
+            int coordinate = dependencies.size();
+            dependencies.add(dependency);
+            label = "dependency/" + coordinate;
+        } else if (node.getOpcode() == Opcode.CALL) {
+            label = CallMetadata.semanticKey(node);
+        } else {
+            label = firstNonEmpty(node.getSemanticIdentity(), node.getSourceName(), node.getSourceType(), "");
+            if (label == null) label = "";
+        }
+        List<StructuralKey> children = new ArrayList<>();
+        for (EGraphNode child : node.getChildren()) children.add(declarationDomainKey(child, env, dependencies));
+        return StructuralKey.of(node.getOpcode().name(), List.of(label,
+                node.getExactAlloyType() == null ? "" : node.getExactAlloyType().stableString(),
+                node.getSemanticProfile().fingerprint()), children);
+    }
+
+    private record DomainNormalization(StructuralKey key, List<QuantiVar> dependencies) {
+        private DomainNormalization { dependencies = List.copyOf(dependencies); }
+    }
+
+    private static void collectDomainIntersection(EGraphNode owner, EGraphNode node, List<EGraphNode> operands) {
+        if (owner.sameFlatOperatorInstance(node))
+            for (var child : node.getChildren()) collectDomainIntersection(owner, child, operands);
+        else operands.add(node);
+    }
+
+    /** Issue from source parser authority, before the real guard is normalized. */
+    private static DomainNormalization declarationDomainNormalization(EGraphNode source, Map<String, QuantiVar> env) {
+        var dependencies=new ArrayList<QuantiVar>();
+        var key=normalizedDeclarationDomainKey(source,env,dependencies);
+        return key.equals(declarationDomainKey(source,env,new ArrayList<>()))?null:
+                new DomainNormalization(key,dependencies);
+    }
+
+    private static StructuralKey normalizedDeclarationDomainKey(EGraphNode source,Map<String,QuantiVar> env,
+            List<QuantiVar> dependencies) {
+        if(source.getOpcode()==Opcode.MINUS && source.getChildren().size()==2
+                && source.getExactAlloyType()!=null && source.getExactAlloyType().hasParserAuthenticatedAncestry()
+                && source.getChildren().stream().allMatch(c->c.getExactAlloyType()!=null
+                    && source.getExactAlloyType().sameOccurrenceEvidenceAs(c.getExactAlloyType())
+                    && source.getSemanticProfile().equals(c.getSemanticProfile()))) {
+            var head=declarationDomainKey(source,env,new ArrayList<>());
+            var children=new ArrayList<StructuralKey>();
+            for(var child:source.getChildren())children.add(normalizedDeclarationDomainKey(child,env,dependencies));
+            return StructuralKey.of(head.tag(),head.scalars(),children);
+        }
+        if (source.getOpcode() != Opcode.INTERSECT || source.getExactAlloyType() == null
+                || !source.getExactAlloyType().hasParserAuthenticatedAncestry())
+            return declarationDomainKey(source,env,dependencies);
+        var operands = new ArrayList<EGraphNode>();
+        collectDomainIntersection(source, source, operands);
+        if (operands.size() < 2) return declarationDomainKey(source,env,dependencies);
+        var retained = removeFullCarriersContainingSubrelations(operands);
+        if (retained.size() != 1) return declarationDomainKey(source,env,dependencies);
+        var result = retained.get(0);
+        if (result.getExactAlloyType() == null
+                || !source.getExactAlloyType().sameOccurrenceEvidenceAs(result.getExactAlloyType())
+                || !source.getSemanticProfile().equals(result.getSemanticProfile()))
+            return declarationDomainKey(source,env,dependencies);
+        return normalizedDeclarationDomainKey(result,env,dependencies);
+    }
+
+    private record SourceDeclarationDomain(StructuralKey key, List<QuantiVar> dependencies,
+            is.fivefivefive.ACGN.alloy.SigSymbol signature,GuardEditDomain guardEditDomain,
+            DomainNormalization normalization) { }
+
+    private static SourceDeclarationDomain sourceDeclarationDomain(EGraphNode declaration, Map<String, QuantiVar> env) {
+        if (declaration.getChildren().isEmpty()) return null;
+        EGraphNode sourceDomain = domainDescriptor(declaration.getChildren().get(0)).domain;
+        if (sourceDomain == null) return null;
+        var dependencies = new ArrayList<QuantiVar>();
+        var key = declarationDomainKey(sourceDomain, env, dependencies);
+        return new SourceDeclarationDomain(key, List.copyOf(dependencies), sourceDomain.authenticatedSignature(),
+                GuardEditDomain.from(sourceDomain), declarationDomainNormalization(sourceDomain, env));
+    }
+
+    private DeclarationFrame retainDeclarationFrame(QuantiVar variable, QuantiVar sourceCandidate, EGraphNode declaration,
+            EGraphNode sourceVariable, int tupleSlot, SourceDeclarationDomain domain) {
+        if(domain==null)return null;
+        var frame=new DeclarationFrame(this,variable,sourceCandidate,declaration,sourceVariable,tupleSlot,domain.key,domain.dependencies,domain.signature,domain.guardEditDomain,domain.normalization);
+        issuedDeclarationFrames.add(frame);
+        issuedDeclarationOrigins.put(frame, frame.sourceOrigin);
+        variable.retainDeclarationFrame(frame);return frame;
+    }
     private String phasePath;
     private List<NormalForm> temporalChildren;
+    private List<NormalForm> sourceTemporalChildren;
+    private final List<TemporalReferenceAuthority> retiredTemporalAuthorities = new ArrayList<>();
+    private final List<TemporalReferenceProjection> temporalReferenceProjections = new ArrayList<>();
     private List<NormalForm> comparisonTemporalChildren;
     private NormalForm comparisonSource;
     private final Map<Long, TemporalReferenceAuthority> temporalReferenceAuthorities;
@@ -114,6 +1140,9 @@ public class NormalForm {
         private final String ownerPhasePath;
         private final String targetPhasePath;
         private final String binderContext;
+        private final QuantiVar issuedVariable;
+        private final NormalForm issuedOwnerPhase;
+        private final EGraphNode issuedOwnerBinder;
 
         private PhaseLocalBindingImport(
                 QuantiVar variable,
@@ -138,6 +1167,9 @@ public class NormalForm {
                         "A phase-local import requires its lexical binder context");
             }
             this.binderContext = binderContext;
+            this.issuedVariable = variable;
+            this.issuedOwnerPhase = ownerPhase;
+            this.issuedOwnerBinder = ownerBinder;
         }
 
         public QuantiVar variable() {
@@ -254,6 +1286,7 @@ public class NormalForm {
         this.localBindingSeeds = new HashMap<>();
         this.phasePath = "phase[0]";
         this.temporalChildren = new ArrayList<>();
+        this.sourceTemporalChildren = this.temporalChildren;
         this.temporalReferenceAuthorities = new java.util.LinkedHashMap<>();
         this.lifecycleLock = new Object();
         this.temporalOp = TemporalOp.NONE;
@@ -287,8 +1320,14 @@ public class NormalForm {
             copy.temporalChildBindingImports.putAll(temporalChildBindingImports);
             copy.localBindingSeeds.putAll(localBindingSeeds);
             copy.groupedOneOrigins.addAll(groupedOneOrigins);
+            copy.guardedProjections.putAll(guardedProjections);
+            copy.guardEditSources.putAll(guardEditSources);
+            copy.branchRouteSources.putAll(branchRouteSources);
             copy.phasePath = phasePath;
             copy.temporalChildren = temporalChildren;
+            copy.sourceTemporalChildren = sourceTemporalChildren;
+            copy.retiredTemporalAuthorities.addAll(retiredTemporalAuthorities);
+            copy.temporalReferenceProjections.addAll(temporalReferenceProjections);
             copy.temporalReferenceAuthorities.putAll(temporalReferenceAuthorities);
             copy.temporalOp = temporalOp;
             copy.frozenForCertification = true;
@@ -303,7 +1342,7 @@ public class NormalForm {
         Map<NormalForm, Integer> incoming = new java.util.IdentityHashMap<>();
         for (NormalForm source : sources) copies.put(source, source.fastComparisonView());
         for (NormalForm source : sources) for (NormalForm child : source.temporalChildren) {
-            if (!copies.containsKey(child)) return sources.stream().map(NormalForm::fastComparisonView).toList();
+            if (!copies.containsKey(child)) throw new IllegalArgumentException("Foreign source phase child");
             incoming.merge(child, 1, Math::addExact);
         }
         java.util.Set<NormalForm> dropped = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
@@ -318,8 +1357,8 @@ public class NormalForm {
                 if (authority.owner != source || authority.children.size() != 1
                         || !before.contains(authority.authorityId)) continue;
                 NormalForm child = authority.children.get(0);
-                if (incoming.getOrDefault(child, 0) != 1 || !closedComparisonPhase(child)) continue;
-                String body = EGraphNode.closedFastMatrixKey(copies.get(child).matrixEGraphRoot);
+                if (incoming.getOrDefault(child, 0) != 1) continue;
+                String body = inheritedComparisonPhaseKey(source, child, copies.get(child).matrixEGraphRoot);
                 if (body != null) {
                     keyBytes = Math.addExact(keyBytes, body.length());
                     if (keyBytes > 1_000_000) { keys.clear(); break; }
@@ -367,6 +1406,45 @@ public class NormalForm {
     /** Original occurrence authority for a detached metric comparison view. */
     public NormalForm comparisonSource() { return comparisonSource==null?this:comparisonSource; }
 
+    /** Roots of the complete frozen source forest, not of a pruned view. */
+    public static List<NormalForm> originalPhaseRoots(List<NormalForm> sources) {
+        if (sources.isEmpty()) throw new IllegalArgumentException("Missing source phase roots");
+        var incoming = new java.util.IdentityHashMap<NormalForm,Integer>();
+        for (var source : sources) {
+            if (source == null || !source.isFrozenForCertification() || incoming.put(source, 0) != null)
+                throw new IllegalArgumentException("Missing, mutable or duplicate source phase");
+        }
+        for (var source : sources) for (var child : source.temporalChildren) {
+            Integer count = incoming.get(child);
+            if (count == null) throw new IllegalArgumentException("Foreign source phase child");
+            incoming.put(child, Math.addExact(count, 1));
+        }
+        var roots = sources.stream().filter(source -> incoming.get(source) == 0).toList();
+        var pending = new java.util.ArrayDeque<>(roots);
+        int visited = 0;
+        while (!pending.isEmpty()) {
+            var source = pending.removeFirst(); visited++;
+            for (var child : source.temporalChildren)
+                if (incoming.merge(child, -1, Integer::sum) == 0) pending.addLast(child);
+        }
+        if (visited != sources.size()) throw new IllegalArgumentException("Cyclic source phase graph");
+        return roots;
+    }
+
+    /**
+     * Metric-only replacement of the detached comparison matrix root after
+     * source-order SET deduplication. Source forms and certification roots are
+     * never replaced; the comparison root keeps sharing all retained children.
+     */
+    void replaceComparisonMatrixRoot(EGraphNode root) {
+        if (comparisonSource == null) {
+            throw new IllegalStateException(
+                    "Only a detached comparison form may replace its metric root");
+        }
+        java.util.Objects.requireNonNull(root, "root");
+        this.matrixEGraphRoot = root;
+    }
+
     /** Reindex whole owner-issued reference groups, never their ordered roles. */
     private static final class ComparisonPhaseOrder {
         final List<NormalForm> sources;
@@ -384,7 +1462,8 @@ public class NormalForm {
             this.sources=sources;this.copies=copies;this.dropped=dropped;this.closedKeys=closedKeys;
         }
         List<NormalForm> ordered() {
-            for(var source:sources)if(!dropped.contains(source)&&!visited.contains(source)) {
+            for(var source:originalPhaseRoots(sources)) {
+                if(dropped.contains(source))throw new IllegalStateException("Removed original phase root");
                 reserve(source);visit(source);
             }
             return List.copyOf(result);
@@ -467,6 +1546,47 @@ public class NormalForm {
         };
     }
 
+    /** Equality within one immutable owner's inherited environment, not alpha
+     * equivalence across owners or permission to move declarations in time. */
+    static String inheritedComparisonPhaseKey(NormalForm owner, NormalForm child, EGraphNode matrix) {
+        if (!owner.frozenForCertification || !child.frozenForCertification
+                || !owner.temporalChildren.contains(child)
+                || !child.params.isEmpty() || !child.matrixQuantiVars.isEmpty()
+                || !child.phaseLocalBindingImports.isEmpty() || !child.localBindingSeeds.isEmpty()
+                || !child.temporalChildren.isEmpty()) return null;
+        switch (child.temporalOp) {
+            case ALWAYS, EVENTUALLY, AFTER, BEFORE, HISTORICALLY, ONCE: break;
+            default: return null;
+        }
+        if (closedComparisonPhase(child)) return EGraphNode.closedFastMatrixKey(matrix);
+        var visible = new ArrayList<QuantiVar>();
+        visible.addAll(owner.params); visible.addAll(owner.inheritedQuantiVars); visible.addAll(owner.matrixQuantiVars);
+        var inherited = new HashMap<String, QuantiVar>();
+        for (var binding : child.inheritedQuantiVars) {
+            if (identityIndex(visible, binding) < 0 || binding.getExactAlloyType() == null
+                    || inherited.put(binding.getName(), binding) != null) return null;
+        }
+        var originals = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<EGraphNode, Boolean>());
+        var pending = new java.util.ArrayDeque<EGraphNode>(); pending.add(child.matrixEGraphRoot);
+        while (!pending.isEmpty()) {
+            var node = pending.removeFirst();
+            if (!originals.add(node)) continue;
+            if (originals.size() > 4096) return null;
+            pending.addAll(node.getChildren());
+        }
+        return EGraphNode.inheritedFastMatrixKey(matrix, inherited.keySet(), read -> {
+            var binding = inherited.get(read.getAlphaName());
+            var original = read.comparisonVariableSource();
+            if (binding == null || original == null || !originals.contains(original)
+                    || original.getOpcode() != Opcode.VARIABLE
+                    || !binding.getName().equals(original.getAlphaName())
+                    || original.getSourceOccurrenceLineage() != read.getSourceOccurrenceLineage()
+                    || !binding.getExactAlloyType().sameOccurrenceEvidenceAs(read.getExactAlloyType())
+                    || !binding.getExactAlloyType().sameOccurrenceEvidenceAs(original.getExactAlloyType())) return null;
+            return Integer.toString(identityIndex(visible, binding));
+        });
+    }
+
     private static java.util.Set<Long> comparisonReferenceIds(EGraphNode root) {
         java.util.Set<Long> result = new java.util.HashSet<>();
         java.util.Set<EGraphNode> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
@@ -504,6 +1624,7 @@ public class NormalForm {
         this.localBindingSeeds = new HashMap<>();
         this.phasePath = "unassigned";
         this.temporalChildren = new ArrayList<>();
+        this.sourceTemporalChildren = this.temporalChildren;
         this.temporalReferenceAuthorities = new java.util.LinkedHashMap<>();
         this.temporalOp = temporalOp;
         this.nextDisjointnessClass = 1;
@@ -620,6 +1741,57 @@ public class NormalForm {
             return Collections.unmodifiableList(new ArrayList<>(phaseLocalBindingImports));
         }
     }
+
+    /** Imports expose existing lexical owners; they are not declarations in this phase. */
+    public List<PhaseLocalBindingImport> checkedPhaseLocalBindingImports() {
+        NormalForm source = comparisonSource();
+        List<PhaseLocalBindingImport> imports = source.getPhaseLocalBindingImports();
+        var names = new java.util.HashSet<String>();
+        for (var group : List.of(source.params, source.matrixQuantiVars,
+                source.inheritedQuantiVars, source.getLocalQuantiVars()))
+            for (QuantiVar variable : group) names.add(variable.getName());
+        for (PhaseLocalBindingImport imported : imports) {
+            QuantiVar variable = imported.variable;
+            if (!names.add(variable.getName()))
+                throw new IllegalArgumentException("Imported local binding collides with another phase binding");
+            NormalForm owner = imported.ownerPhase;
+            LocalBindingSeed seed = owner.localBindingSeeds.get(variable.getName());
+            boolean declared = false;
+            for (EGraphNode declaration : imported.ownerBinder.getChildren()) {
+                if (!isRelDecl(declaration.getOpcode())) continue;
+                for (int i = 1; i < declaration.getChildren().size(); i++) {
+                    EGraphNode slot = declaration.getChildren().get(i);
+                    if (slot.getOpcode() == Opcode.VARIABLE
+                            && variable.getName().equals(slot.getAlphaName())
+                            && variable.getExactAlloyType() != null
+                            && variable.getExactAlloyType().sameOccurrenceEvidenceAs(slot.getExactAlloyType())) {
+                        // Normalization reseeds node occurrences. The seed/frame
+                        // retains the parser slot; it is not the reseeded ID.
+                        for (DeclarationFrame frame : variable.getDeclarationFrames())
+                            if (frame.owner == owner && frame.variable == variable
+                                    && frame.variableOccurrence == imported.sourceBinderLineage
+                                    && owner.issuedDeclarationOrigins.get(frame) == frame.sourceOrigin
+                                    && frame.sourceOrigin.payload.equals(new BindingSignature(variable))) declared = true;
+                    }
+                }
+            }
+            if (owner == source || owner != imported.issuedOwnerPhase
+                    || variable != imported.issuedVariable || imported.ownerBinder != imported.issuedOwnerBinder
+                    || seed == null || seed.variable != variable
+                    || seed.sourceBinderLineage != imported.sourceBinderLineage || !declared
+                    || !source.phasePath.equals(imported.targetPhasePath)
+                    || !owner.phasePath.equals(imported.ownerPhasePath)
+                    || !variable.getBindingPath().equals(imported.binderContext))
+                throw new IllegalArgumentException("Foreign phase-local import owner, slot or target: "
+                        + variable.getName() + ", owner=" + (owner != source)
+                        + ", seed=" + (seed != null && seed.variable == variable)
+                        + ", lineage=" + (seed != null && seed.sourceBinderLineage == imported.sourceBinderLineage)
+                        + ", declared=" + declared + ", target=" + source.phasePath.equals(imported.targetPhasePath)
+                        + ", ownerPath=" + owner.phasePath.equals(imported.ownerPhasePath)
+                        + ", context=" + variable.getBindingPath().equals(imported.binderContext));
+        }
+        return imports;
+    }
     public String getPhasePath() {
         synchronized (lifecycleLock) {
             return phasePath;
@@ -710,9 +1882,95 @@ public class NormalForm {
             return Collections.unmodifiableList(new ArrayList<>(this.temporalChildren));
         }
     }
+    /** Original parser child coordinates, retained after normalized reachability projection. */
+    public List<NormalForm> getSourceTemporalChildren() {
+        synchronized (lifecycleLock) {
+            return List.copyOf(sourceTemporalChildren);
+        }
+    }
+
+    public record TemporalReferenceProjection(long authorityId, long parserOccurrence,
+            long sourceOccurrence, int sourceSlot, int normalizedSlot,
+            List<NormalForm> branches) {
+        public TemporalReferenceProjection { branches = List.copyOf(branches); }
+    }
+
+    public List<TemporalReferenceProjection> getTemporalReferenceProjections() {
+        synchronized (lifecycleLock) { return List.copyOf(temporalReferenceProjections); }
+    }
+
+    /** Only a whole admitted occurrence absent from both matrices can be retired. */
+    public void projectReferencedTemporalChildren() {
+        synchronized (lifecycleLock) {
+            requireMutable();
+            requireAdmittedTemporalTree();
+            java.util.Set<Long> live = new java.util.LinkedHashSet<>();
+            for (EGraphNode root : new EGraphNode[] {matrixEGraphRoot, certificationMatrixEGraphRoot}) {
+                if (root == null) continue;
+                root.forEachAdmittedReachableNode(node -> {
+                    if (node.temporalReferenceAuthorityId() <= 0L) return;
+                    int[] target = temporalReferenceTarget(node);
+                    TemporalReferenceAuthority authority = temporalReferenceAuthorities.get(
+                            node.temporalReferenceAuthorityId());
+                    if (target == null || authority == null
+                            || !authority.matches(node, target[0], target[1])) {
+                        throw new IllegalStateException("Temporal projection lacks exact owner authority");
+                    }
+                    live.add(authority.authorityId);
+                });
+            }
+            if (live.size() == temporalReferenceAuthorities.size()) return;
+            List<NormalForm> children = new ArrayList<>();
+            Map<Long, TemporalReferenceAuthority> retained = new java.util.LinkedHashMap<>();
+            List<TemporalReferenceAuthority> retired = new ArrayList<>();
+            List<TemporalReferenceProjection> projections = new ArrayList<>();
+            for (TemporalReferenceAuthority authority : temporalReferenceAuthorities.values()) {
+                int target = -1;
+                if (live.contains(authority.authorityId)) {
+                    target = children.size();
+                    children.addAll(authority.children);
+                    retained.put(authority.authorityId, new TemporalReferenceAuthority(
+                            authority.authorityId, this, authority.sourceOpcode, authority.sourceClaim,
+                            authority.sourceOccurrenceLineage, authority.parserOccurrenceId,
+                            target, authority.children));
+                } else retired.add(authority);
+                projections.add(new TemporalReferenceProjection(authority.authorityId,
+                        authority.parserOccurrenceId, authority.sourceOccurrenceLineage,
+                        authority.sourceClaim.childIndex(), target, authority.children));
+            }
+            EGraphNode matrix = relocateTemporalReferences(matrixEGraphRoot, retained);
+            EGraphNode certificate = relocateTemporalReferences(certificationMatrixEGraphRoot, retained);
+            sourceTemporalChildren = List.copyOf(sourceTemporalChildren);
+            temporalChildren = children;
+            temporalReferenceAuthorities.clear();
+            temporalReferenceAuthorities.putAll(retained);
+            retiredTemporalAuthorities.addAll(retired);
+            temporalReferenceProjections.addAll(projections);
+            matrixEGraphRoot = matrix;
+            certificationMatrixEGraphRoot = certificate;
+            requireAdmittedTemporalTree();
+        }
+    }
+
+    private EGraphNode relocateTemporalReferences(EGraphNode node,
+            Map<Long, TemporalReferenceAuthority> retained) {
+        if (node == null) return null;
+        EGraphNode copy = copyShallow(node, node.getOpcode());
+        if (node.temporalReferenceAuthorityId() > 0L) {
+            TemporalReferenceAuthority authority = retained.get(node.temporalReferenceAuthorityId());
+            if (authority == null) throw new IllegalStateException("A live temporal occurrence was retired");
+            copy.setSourceName(temporalReferenceName(authority.childIndex, authority.children.size()));
+            copy.preserveTemporalReferenceAuthorityFrom(node);
+        }
+        for (EGraphNode child : node.getChildren()) copy.addNormalizedChild(relocateTemporalReferences(child, retained));
+        return copy;
+    }
     public void addTemporalChild(NormalForm child) {
         synchronized (lifecycleLock) {
             requireMutable();
+            if (sourceTemporalChildren != temporalChildren) {
+                throw new IllegalStateException("A projected temporal source cannot acquire new parser children");
+            }
             NormalForm checked = java.util.Objects.requireNonNull(
                     child, "temporal child");
             if (checked.lifecycleLock != lifecycleLock) {
@@ -845,7 +2103,7 @@ public class NormalForm {
         for (PhaseLocalBindingImport imported : phaseLocalBindingImports) {
             imported.variable().freezeForCertification();
         }
-        for (NormalForm child : temporalChildren) {
+        for (NormalForm child : sourceTemporalChildren) {
             child.freezeForCertification();
         }
         if (matrixEGraphRoot != null) {
@@ -855,7 +2113,10 @@ public class NormalForm {
             admitAndFreezeTemporalReferences(
                     certificationMatrixEGraphRoot, "certification matrix");
         }
+        captureMatrixReadOccurrences();
         sealTemporalReferenceEvidence();
+        if(!localBindingSeeds.isEmpty())
+            structuralDeclarationOrigins.putAll(StructuralDeclarationOrigin.seal(this));
         frozenForCertification = true;
         }
     }
@@ -870,6 +2131,7 @@ public class NormalForm {
                 : temporalReferenceAuthorities.values()) {
             authority.seal();
         }
+        for (TemporalReferenceAuthority authority : retiredTemporalAuthorities) authority.seal();
     }
 
     private void requireMutable() {
@@ -916,7 +2178,7 @@ public class NormalForm {
                     current.matrixEGraphRoot, "live matrix");
         }
         current.requireCompleteTemporalChildCoverage();
-        List<NormalForm> children = new ArrayList<>(current.temporalChildren);
+        List<NormalForm> children = new ArrayList<>(current.sourceTemporalChildren);
         for (NormalForm child : children) {
             requireAdmittedTemporalTree(child, admitted, active);
         }
@@ -962,6 +2224,26 @@ public class NormalForm {
     }
 
     private void requireCompleteTemporalChildCoverage() {
+        boolean[] sourceCovered = new boolean[sourceTemporalChildren.size()];
+        List<TemporalReferenceAuthority> sourceAuthorities = new ArrayList<>(temporalReferenceAuthorities.values());
+        sourceAuthorities.addAll(retiredTemporalAuthorities);
+        for (TemporalReferenceAuthority authority : sourceAuthorities) {
+            int start = authority.sourceClaim.childIndex();
+            if (authority.owner != this || !authority.sourceClaim.remainsValidFor(this)
+                    || start < 0 || start + authority.children.size() > sourceTemporalChildren.size()) {
+                throw new IllegalStateException("Temporal projection lost original parser authority");
+            }
+            for (int offset = 0; offset < authority.children.size(); offset++) {
+                int index = start + offset;
+                if (sourceCovered[index] || sourceTemporalChildren.get(index) != authority.children.get(offset)) {
+                    throw new IllegalStateException("Temporal projection changed original ordered branches");
+                }
+                sourceCovered[index] = true;
+            }
+        }
+        for (boolean present : sourceCovered) if (!present) {
+            throw new IllegalStateException("An original temporal child lacks parser authority");
+        }
         if (temporalChildren.isEmpty()) {
             if (!temporalReferenceAuthorities.isEmpty()) {
                 throw new IllegalStateException(
@@ -1060,7 +2342,11 @@ public class NormalForm {
                     dualizedReferences.add(reference.getSourceName());
                 }
                 changed[0] = true;
-                return cloneEGraph(reference);
+                var rewritten = cloneEGraph(reference);
+                // The staged temporal dual denotes this whole NOT, not its old REF child.
+                if (node.domainContextOrigin != null && node.domainContextOrigin.currentOpcode == Opcode.NOT)
+                    rewritten.domainContextOrigin = new DomainContextOrigin(node.domainContextOrigin, Opcode.REF);
+                return rewritten;
             }
         }
         EGraphNode rewritten = copyShallow(node, node.getOpcode());
@@ -1343,6 +2629,7 @@ public class NormalForm {
         NormalizationObserver stages = observer == null ? NO_OBSERVER : observer;
         matrixQuantiVars.clear();
         localBindingSeeds.clear();
+        relocatedDeclarations.clear();
         temporalChildBindingImports.clear();
         java.util.Set<QuantiVar> localImports = java.util.Collections.newSetFromMap(
                 new java.util.IdentityHashMap<>());
@@ -1370,13 +2657,22 @@ public class NormalForm {
         matrixEGraphRoot = removeEndNodes(matrixEGraphRoot);
         unusedBindingReductions.clear();
         unusedBindingProjections.clear();
-        stages.onStage("begin-unused-binding-descope", this);
-        matrixEGraphRoot = descopeUnusedBindings(matrixEGraphRoot, "root", false);
+        var snapshotNames = new java.util.HashSet<String>();
+        for (QuantiVar inherited : inheritedBindings.values()) {
+            if (isTemporalSnapshotBinding(inherited)) snapshotNames.add(inherited.getName());
+        }
+        markTemporalSnapshotReads(matrixEGraphRoot, snapshotNames);
+        // Expose checked source constants before liveness and NNF dualization;
+        // ACI still runs after the certification snapshot.
+        matrixEGraphRoot = normalizePrePrenexSourceRules(matrixEGraphRoot);
         matrixEGraphRoot = removeEndNodes(rewriteBranchConnectives(matrixEGraphRoot));
-        stages.onStage("alpha-beta-branch", this);
         stages.onStage("begin-nnf", this);
         matrixEGraphRoot = removeEndNodes(toNNF(matrixEGraphRoot, false));
         matrixEGraphRoot = flattenBooleanAssociationForPrenex(matrixEGraphRoot);
+        stages.onStage("begin-unused-binding-descope", this);
+        matrixEGraphRoot = descopeUnusedBindings(matrixEGraphRoot, "root", false);
+        matrixEGraphRoot = normalizePrePrenexSourceRules(matrixEGraphRoot);
+        stages.onStage("alpha-beta-branch", this);
         stages.onStage("nnf", this);
         stages.onStage("begin-prenex", this);
         Map<String, QuantiVar> prenexBindings = new HashMap<>(inheritedBindings);
@@ -1435,10 +2731,18 @@ public class NormalForm {
         stages.onStage("begin-post-prenex-nnf", this);
         matrixEGraphRoot = removeEndNodes(rewriteBranchConnectives(matrixEGraphRoot));
         matrixEGraphRoot = removeEndNodes(toNNF(matrixEGraphRoot, false));
+        if (!issuedDomainGuards.isEmpty()) {
+            retainIdempotentGuardOrigins(matrixEGraphRoot, declarationGuardEnvironment());
+            issuedDomainContext = domainContext(matrixEGraphRoot, true).key();
+        }
         matrixEGraphRoot = removeEndNodes(normalizeGuardedSourceRules(
                 matrixEGraphRoot, guardedBindingFacts()));
         stages.onStage("post-prenex-nnf", this);
+        var declarationTransport=new java.util.IdentityHashMap<EGraphNode,RelocatedDeclaration>();
+        if(!localBindingSeeds.isEmpty())captureDeclarationTransport(matrixEGraphRoot,declarationTransport);
         matrixEGraphRoot.reseedSourceOccurrenceLineages();
+        // Keys change, but these are the exact objects visited by the reseed, not matched metadata.
+        for(var entry:declarationTransport.entrySet())relocatedDeclarations.put(entry.getKey().getSourceOccurrenceLineage(),entry.getValue());
         certificationMatrixEGraphRoot = cloneEGraph(matrixEGraphRoot);
         captureTemporalPhaseLocalBindings();
         stages.onStage("begin-aci", this);
@@ -2054,6 +3358,7 @@ public class NormalForm {
             List<EGraphNode> localConstraints = new ArrayList<>();
             List<EGraphNode> bodyParts = new ArrayList<>();
             List<EGraphNode> children = node.getChildren();
+            List<QuantiVar> projectionBindings = new ArrayList<>();
             boolean bodyNegated = (node.getOpcode() == Opcode.NO && !negated)
                     || (negated && !consumesMatrixNegation(node.getOpcode()));
             for (int i = 0; i < children.size(); i++) {
@@ -2065,6 +3370,7 @@ public class NormalForm {
                         throw new IllegalStateException(
                                 "Quantifier-domain preflight disagreed with transformed domain");
                     }
+                    projectionBindings.addAll(relDecl.quantiVars);
                 }
             }
             List<Integer> bodyIndices = new ArrayList<>();
@@ -2114,6 +3420,7 @@ public class NormalForm {
                 }
             }
             EGraphNode body = conjoin(null, bodyParts);
+            for(var binding:projectionBindings){issueGuardedProjection(binding,body);issueGuardEditSource(binding,body);issueBranchRouteSource(binding,body);}
             body = applyDomainConstraints(body, localConstraints, quantifier);
             return body == null ? booleanConstant(node, true) : body;
         }
@@ -2521,6 +3828,7 @@ public class NormalForm {
             int localDepth,
             int[] localOrdinal,
             EGraphNode.SourceOrigin sourceOrigin) {
+        SourceDeclarationDomain sourceDomain = sourceDeclarationDomain(relDecl, env);
         EGraphNode copy = copyShallow(relDecl, relDecl.getOpcode());
         EGraphNode typeEGraph = null;
         if (!relDecl.getChildren().isEmpty()) {
@@ -2556,8 +3864,10 @@ public class NormalForm {
                         + ":" + qv.getCardinality()
                         + ":" + normalizeType(varType)
                         + "@" + bindingPath);
+                var frame=retainDeclarationFrame(qv, qv, relDecl, candidate, i - 1, sourceDomain);
                 checkUnusedBindingProjection(relDecl, candidate, i - 1, qv);
                 candidateCopy.setAlphaName(alphaName);
+                if(frame!=null)candidateCopy.currentDeclarationSlot=new CurrentDeclarationSlot(this,candidateCopy,frame);
                 LocalBindingSeed prior = localBindingSeeds.put(
                         alphaName,
                         new LocalBindingSeed(
@@ -2792,6 +4102,15 @@ public class NormalForm {
         return false;
     }
 
+    private static void markTemporalSnapshotReads(EGraphNode node, java.util.Set<String> names) {
+        if (names.isEmpty()) return;
+        // Alpha-renamed local declarations cannot alias an imported coordinate.
+        if (node.getOpcode() == Opcode.VARIABLE && names.contains(node.getAlphaName())) {
+            node.markTemporalSnapshotBinding();
+        }
+        for (EGraphNode child : node.getChildren()) markTemporalSnapshotReads(child, names);
+    }
+
     private boolean isTemporalSnapshotBinding(QuantiVar variable) {
         for (QuantiVar inherited : inheritedQuantiVars) {
             if (inherited == variable) {
@@ -2818,6 +4137,7 @@ public class NormalForm {
             String bindingPath,
             PrenexSlotAllocator slots,
             EGraphNode.SourceOrigin sourceOrigin) {
+        SourceDeclarationDomain sourceDomain = sourceDeclarationDomain(relDecl, env);
         EGraphNode typeEGraph = null;
         if (!relDecl.getChildren().isEmpty()) {
             PrenexSlotAllocator domainSlots = slots.domainView();
@@ -2859,6 +4179,8 @@ public class NormalForm {
             qv.setDeBruijnKey(deBruijnBase + "#" + (i - 1) + ":" + qv.getCardinality()
                     + ":" + normalizeType(varType));
             QuantiVar representative = parameterDecl ? qv : slots.bind(qv);
+            var frame = retainDeclarationFrame(representative, qv, relDecl, candidate, i - 1, sourceDomain);
+            if (frame != null) issuedDomainLowerings.put(frame, guardedDomain);
             checkUnusedBindingProjection(relDecl, candidate, i - 1, representative);
             if (representative == qv) {
                 nextVarId[0]++;
@@ -2866,7 +4188,13 @@ public class NormalForm {
             candidate.setAlphaName(representative.getName());
             quantiVars.add(representative);
             if (guardedDomain) {
-                constraints.add(domainConstraint(representative, candidate, domain.domain));
+                var guard = domainConstraint(representative, candidate, domain.domain);
+                if (frame != null) {
+                    var origin = new DomainGuardOrigin(frame, issuedDeclarationFrames.indexOf(frame));
+                    issuedDomainGuards.put(frame, origin);
+                    guard.domainGuardOrigin = origin;
+                }
+                constraints.add(guard);
             }
             if (parameterDecl) {
                 params.add(representative);
@@ -3019,6 +4347,27 @@ public class NormalForm {
                 target.putIfAbsent(original, variable);
             }
         }
+    }
+
+    private static EGraphNode normalizePrePrenexSourceRules(EGraphNode node) {
+        return normalizeGuardedSourceRules(
+                eliminatePrePrenexMembership(node), Collections.emptyMap());
+    }
+
+    // Preserve the checked membership shape before source-rule distribution.
+    // This walk is never used after declaration ownership has been issued.
+    @LeanVerifiedRewrite("R0-BIND-002")
+    private static EGraphNode eliminatePrePrenexMembership(EGraphNode node) {
+        if (node == null) return null;
+        EGraphNode eliminated = eliminateSingleMembershipQuantifier(node);
+        if (eliminated != null) node = eliminated;
+        if (node.getChildren().isEmpty()) return node;
+        List<EGraphNode> children = new ArrayList<>();
+        for (EGraphNode child : node.getChildren()) {
+            children.add(eliminatePrePrenexMembership(child));
+        }
+        node.setNormalizedChildren(children);
+        return node;
     }
 
     @LeanVerifiedRewrite({
@@ -3369,8 +4718,12 @@ public class NormalForm {
             return booleanConstant(node, node.getOpcode() == Opcode.NOT_IN);
         }
 
-        EGraphNode emptyRightSubset =
-                EGraphNode.parserCertifiedEmptyRightSubsetExpansion(
+        // Keep variable membership visible until the prefix supplies binding
+        // facts. The checked rule above can then consume ONE/SOME admissions.
+        boolean awaitingBindingFacts = bindings.isEmpty() && rewritten.size() == 2
+                && rewritten.get(0).getOpcode() == Opcode.VARIABLE;
+        EGraphNode emptyRightSubset = awaitingBindingFacts ? null
+                : EGraphNode.parserCertifiedEmptyRightSubsetExpansion(
                         node, node.getChildClasses());
         if (emptyRightSubset != null) {
             return normalizeGuardedSourceRules(emptyRightSubset, bindings);
@@ -3406,7 +4759,7 @@ public class NormalForm {
             }
         }
 
-        if (rewritten.size() == 1 && isNone(rewritten.get(0))) {
+        if (node.hasUnaryCardinalityOperand() && isNone(rewritten.get(0))) {
             switch (node.getOpcode()) {
                 case NO:
                 case LONE:
@@ -4164,6 +5517,8 @@ public class NormalForm {
         Opcode dual = negated ? dualOpcode(opcode) : opcode;
         if (dual != null) {
             EGraphNode rewritten = copyShallow(node, dual);
+            if ((opcode == Opcode.IN && dual == Opcode.NOT_IN) || (opcode == Opcode.NOT_IN && dual == Opcode.IN))
+                rewritten.domainGuardOrigin = node.domainGuardOrigin;
             for (EGraphNode child : node.getChildren()) {
                 EGraphNode rewrittenChild = toNNF(child, negated && dualNegatesChildren(opcode));
                 if (rewrittenChild != null) {
@@ -4458,7 +5813,10 @@ public class NormalForm {
         copy.setAlphaName(sameOpcode ? source.getAlphaName() : null);
         if (sameOpcode) {
             copy.preserveSourceOccurrenceLineageFrom(source);
+            copy.domainGuardOrigin = source.domainGuardOrigin;
+            copy.domainContextOrigin = source.domainContextOrigin;
             copy.attachUnusedBindingReduction(source.unusedBindingReduction());
+            copyCurrentDeclarationSlot(source,copy);
         }
         copy.setCallOccurrenceId(sameOpcode ? source.getCallOccurrenceId() : -1L);
         copy.setDeclaredArity(sameOpcode ? source.getDeclaredArity() : -1);
@@ -4655,7 +6013,10 @@ public class NormalForm {
         clone.setExactAlloyType(node.getExactAlloyType());
         clone.setAlphaName(node.getAlphaName());
         clone.preserveSourceOccurrenceLineageFrom(node);
+        clone.domainGuardOrigin = node.domainGuardOrigin;
+        clone.domainContextOrigin = node.domainContextOrigin;
         clone.attachUnusedBindingReduction(node.unusedBindingReduction());
+        copyCurrentDeclarationSlot(node,clone);
         clone.setCallOccurrenceId(node.getCallOccurrenceId());
         clone.setDeclaredArity(node.getDeclaredArity());
         clone.setCallArityAuthority(node.getCallArityAuthority());

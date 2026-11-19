@@ -11,7 +11,7 @@ public final class GuardedJoinSourceFiber {
     private final List<GuardedJoinCertificate> premises;
     private final GuardedJoinTree source, target;
     private final int ownerPhase;
-    private record Original(EGraphNode node, int phase) { }
+    record Original(EGraphNode node, int phase) { }
 
     private GuardedJoinSourceFiber(List<GuardedJoinCertificate> premises, int ownerPhase) {
         if (premises.isEmpty()) throw new IllegalArgumentException("Empty JOIN source fiber");
@@ -45,15 +45,18 @@ public final class GuardedJoinSourceFiber {
     }
 
     public record Binding(Map<EGraphNode,GuardedJoinSourceFiber> live,
-            List<GuardedJoinErasureEvidence> erased) {
+            List<GuardedJoinErasureEvidence> erased, List<GuardedJoinDuplicateEvidence> duplicates,
+            List<GuardedJoinFactorEvidence> factors) {
         public Binding {
             live=Collections.unmodifiableMap(new IdentityHashMap<>(live));
             erased=List.copyOf(erased);
+            duplicates=List.copyOf(duplicates);
+            factors=List.copyOf(factors);
         }
     }
 
     public static Binding bindWithEvidence(CertifiedSemanticArtifact artifact,List<NormalForm> forms) {
-        if (artifact.guardedJoinConstructions().isEmpty()) return new Binding(Map.of(),List.of());
+        if (artifact.guardedJoinConstructions().isEmpty()) return new Binding(Map.of(),List.of(),List.of(),List.of());
         Map<String, Original> originals = new HashMap<>();
         for (int i = 0; i < forms.size(); i++) {
             var root = forms.get(i).getCertificationMatrixEGraph();
@@ -102,13 +105,23 @@ public final class GuardedJoinSourceFiber {
             for (var child : node.getChildren()) pending.add(new Original(child, occurrence.phase()));
         }
         var erased=new ArrayList<GuardedJoinErasureEvidence>();
+        var duplicates=new ArrayList<GuardedJoinDuplicateEvidence>();
+        var factors=new ArrayList<GuardedJoinFactorEvidence>();
+        GuardedJoinDuplicateEvidence.Index duplicateIndex=null;
+        GuardedJoinFactorEvidence.Index factorIndex=null;
         for(var entry:groups.entrySet())if(!used.contains(entry.getKey())) {
             for(var proof:entry.getValue()) {
+                if(duplicateIndex==null)duplicateIndex=new GuardedJoinDuplicateEvidence.Index(forms,originals,visited);
+                var duplicate=GuardedJoinDuplicateEvidence.establish(duplicateIndex,owners.get(entry.getKey()),proof,result);
+                if(duplicate!=null) { duplicates.add(duplicate); continue; }
+                if(factorIndex==null)factorIndex=new GuardedJoinFactorEvidence.Index(duplicateIndex);
+                var factor=GuardedJoinFactorEvidence.establish(factorIndex,owners.get(entry.getKey()),proof,result);
+                if(factor!=null) { factors.add(factor); continue; }
                 if(erased.size()>=128)throw new IllegalArgumentException("JOIN Boolean erasure premise budget exceeded");
                 erased.add(GuardedJoinErasureEvidence.establish(forms,owners.get(entry.getKey()),proof));
             }
         }
-        return new Binding(result,erased);
+        return new Binding(result,erased,duplicates,factors);
     }
 
     private static void index(EGraphNode node, int phase, String path, int depth, Map<String, Original> output) {

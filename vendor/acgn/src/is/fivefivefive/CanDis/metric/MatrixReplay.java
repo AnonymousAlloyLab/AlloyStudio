@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.IdentityHashMap;
 import java.util.List;
+
+import is.fivefivefive.CanDis.WorkBudget;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -42,7 +44,11 @@ public final class MatrixReplay<N> {
     }
 
     private void spend(long amount) {
-        if (amount < 0 || amount > remaining) throw new IllegalStateException("MATRIX_REPLAY_BUDGET");
+        if (amount < 0) throw new IllegalArgumentException("Negative matrix replay work");
+        if (amount > remaining) throw new TraceResources.Exhausted("MATRIX_REPLAY_BUDGET");
+        // Wire lengths enforce the native replay cap, but source spelling and
+        // variable-length private evidence do not determine portal fuel.
+        WorkBudget.charge(1);
         remaining -= amount;
     }
 
@@ -390,7 +396,7 @@ public final class MatrixReplay<N> {
     }
 
     private static void require(boolean condition, String message) {
-        if (!condition) throw new IllegalArgumentException("MATRIX_REPLAY_INVALID: " + message);
+        if (!condition) throw new ReplayValidationException("MATRIX_REPLAY_INVALID: " + message);
     }
 
     private static int integer(JSONObject value, String key) {
@@ -398,7 +404,7 @@ public final class MatrixReplay<N> {
         require(number instanceof Number, "Non-numeric " + key);
         try { return new java.math.BigDecimal(number.toString()).intValueExact(); }
         catch (ArithmeticException | NumberFormatException ex) {
-            throw new IllegalArgumentException("MATRIX_REPLAY_INVALID: Non-integral/out-of-range " + key, ex);
+            throw new ReplayValidationException("MATRIX_REPLAY_INVALID: Non-integral/out-of-range " + key, ex);
         }
     }
 }

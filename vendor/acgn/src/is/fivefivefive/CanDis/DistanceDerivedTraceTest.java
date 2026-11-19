@@ -123,7 +123,7 @@ public final class DistanceDerivedTraceTest {
                 .equals("cb730511256d915356c7d3f1b3abce9058c43cbda6c5486391088ace60e3cddd"),"same retained nested family identity");
         check(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(nexts.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
                 .equals("cf6db4e8e4a550061b4ae3277233d1b6725a412474cc4f16e67826a27ffd36e6"),"same retained nexts family identity");
-        pair("7Xiq-nested",nested,"inv15","inv15c",56,out,rows);
+        pair("7Xiq-nested",nested,"inv15","inv15c",55,out,rows);
         pair("7Xiq-nexts",nexts,"inv15","inv15c",51,out,rows);
         String body="all x:A | some x.r implies (some y,z:B | y in prevs[z])";
         String identical="open util/ordering[B]\nsig A {r:set A}\nsig B {}\npred a {"+body+"}\npred b {"+body+"}\n";
@@ -138,7 +138,7 @@ public final class DistanceDerivedTraceTest {
                 new String[]{"coursesOld/both/3mNrsLxL8mPXSK6gH_inv13","inv13","14"},
                 new String[]{"coursesNew/correct/wnqMPtpNxnPYzru3g_inv14","inv14","16"},
                 new String[]{"coursesNew/both/LJrfWwJdKiTdyytci_inv14","inv14","26"},
-                new String[]{"coursesNew/both/5vxYh7NCpEPMmC47p_inv14","inv14","47"}))
+                new String[]{"coursesNew/both/5vxYh7NCpEPMmC47p_inv14","inv14","46"}))
             pair(row[0],Files.readString(Path.of("classified-data",row[0]+".als")),row[1],row[1]+"c",Integer.valueOf(row[2]),out,rows);
         var registry=new JSONObject(Files.readString(Path.of("docs/distance-parity-20261107/focused-witnesses.json")));
         for(Object value:registry.getJSONArray("witnesses")) {

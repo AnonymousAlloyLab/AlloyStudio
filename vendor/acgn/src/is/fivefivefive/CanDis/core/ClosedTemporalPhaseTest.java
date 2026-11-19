@@ -49,7 +49,9 @@ public final class ClosedTemporalPhaseTest {
     }
     private static void equal(Fixture left, Fixture right, String label) {
         check(CanonicalDistance.distance(left.fast,right.fast) == 0
-                && CanonicalDistance.distance(right.fast,left.fast) == 0, label+" Fast0 both directions");
+                && CanonicalDistance.distance(right.fast,left.fast) == 0, label+" Fast0 both directions: "
+                    +CanonicalDistance.evaluate(left.fast,right.fast)+" counts="+left.fast.normalFormCount()+","+right.fast.normalFormCount()
+                    +" left="+CanonicalDistance.irTemporalFol(left.fast)+" right="+CanonicalDistance.irTemporalFol(right.fast));
         check(CanonicalAlloyPipeline.distance(left.certified,right.certified) == 0
                 && CanonicalAlloyPipeline.distance(right.certified,left.certified) == 0, label+" certified0 both directions");
     }
@@ -87,7 +89,12 @@ public final class ClosedTemporalPhaseTest {
                 pred differentOp { (always no B) and (eventually no B) }
                 pred differentBody { (always no B) and (always some B) }
                 pred differentParent { always (always no B) and eventually (always no B) }
-                pred scoped { all x:A | (always some x.r) and (always some x.r) }
+                pred scopedField { all x:A | (always some x.r) and (always some x.r) }
+                pred scoped { all x:A | (always x in B) and (always x in B) }
+                pred scopedOnce { all x:A | always x in B }
+                pred foreignRead { all x,y:A | (always x in B) and (always y in B) }
+                pred dependent { all x:A,y:x.r | (always y in B) and (always y in B) }
+                pred dependentOnce { all x:A,y:x.r | always y in B }
                 pred parameter[x:A] { (always some x.r) and (always some x.r) }
                 pred localOwner { one x:A | (always some x.r) and (always some x.r) }
                 pred orderedParent { (always no B) implies (always no B) }
@@ -106,8 +113,42 @@ public final class ClosedTemporalPhaseTest {
                 && "temporal[2:1]".equals(r.comparisonTemporalReferenceName())), "tail source authority unchanged");
         mixed.source.get(0).requireAdmittedTemporalTree(); checks++;
         equal(prepare(module,"binaryTail"),prepare(module,"binaryTrimmed"),"binary temporal tail intact");
-        for (String name : List.of("differentOp","differentBody","differentParent","scoped","parameter","localOwner","orderedParent"))
+        equal(prepare(module,"scoped"),prepare(module,"scopedOnce"),"same inherited binding");
+        equal(prepare(module,"dependent"),prepare(module,"dependentOnce"),"same inherited dependent binding");
+        // The pre-existing field-without-semantic-identity path is retained.
+        // Its key correspondence is still an OPEN obligation, not an exclusion.
+        for (String name : List.of("differentOp","differentBody","differentParent","scopedField","foreignRead","parameter","localOwner","orderedParent"))
             noPrune(prepare(module,name,false),name);
+
+        var scoped=prepare(module,"scoped",false);
+        var owner=scoped.source.get(0);var child=owner.getTemporalChildren().get(0);
+        var scopedMatrix=child.fastComparisonView().getMatrixEGraph();
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)!=null,"authenticated inherited key");
+        var foreign=prepare(module,"scoped",false);
+        check(NormalForm.inheritedComparisonPhaseKey(foreign.source.get(0),child,scopedMatrix)==null,"same-typed foreign owner rejected");
+        var queue=new java.util.ArrayDeque<EGraphNode>();queue.add(scopedMatrix);EGraphNode read=null;
+        while(!queue.isEmpty()){var n=queue.removeFirst();if(n.getOpcode()==EGraphNode.Opcode.VARIABLE){read=n;break;}queue.addAll(n.getChildren());}
+        check(read!=null,"inherited read present");
+        var field=EGraphNode.class.getDeclaredField("exactAlloyType");field.setAccessible(true);var saved=field.get(read);
+        field.set(read,ExactAlloyType.boolType());
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)==null,"wrong read type rejected");field.set(read,saved);
+        field=EGraphNode.class.getDeclaredField("comparisonVariableSource");field.setAccessible(true);saved=field.get(read);field.set(read,null);
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)==null,"missing original read rejected");field.set(read,saved);
+        field=EGraphNode.class.getDeclaredField("alphaName");field.setAccessible(true);saved=field.get(read);field.set(read,"foreign");
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)==null,"unknown binding rejected");field.set(read,saved);
+        var edge=scopedMatrix.getChildClasses().get(0);
+        var redirected=new java.util.LinkedHashMap<>(edge.getSlotMap());redirected.replaceAll((a,b)->"foreign");
+        check(!redirected.isEmpty(),"effective inherited invocation present");
+        field=EGraphNode.class.getDeclaredField("childClasses");field.setAccessible(true);saved=field.get(scopedMatrix);
+        field.set(scopedMatrix,List.of(edge.getEClass().invoke(redirected)));
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)==null,"redirected invocation rejected");field.set(scopedMatrix,saved);
+        var imported=NormalForm.class.getDeclaredField("inheritedQuantiVars");imported.setAccessible(true);saved=imported.get(child);
+        var originalBinding=child.getInheritedQuantiVars().get(0);
+        var forged=new QuantiVar(originalBinding.getId(),originalBinding.getName(),originalBinding.getTypeName());
+        forged.mergeExactAlloyType(originalBinding.getExactAlloyType());
+        imported.set(child,List.of(forged));
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)==null,"same-named typed foreign binding rejected");imported.set(child,saved);
+        check(NormalForm.inheritedComparisonPhaseKey(owner,child,scopedMatrix)!=null,"original inherited evidence retained");
 
         EGraphNode bad = new EGraphNode(40001,EGraphNode.Opcode.CONSTANT,List.of(),false,0,false,EGraphNode.Metatype.BOOLEAN);
         EGraphNode wrapper = new EGraphNode(40002,EGraphNode.Opcode.TEMPORALROOT,List.of(bad),false,1,false,EGraphNode.Metatype.BOOLEAN);

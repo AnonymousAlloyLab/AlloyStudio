@@ -47,8 +47,7 @@ public final class CertificateVerifier {
             }
             certificate.verifyLocal();
             // Only completed proofs enter the memo; failed/in-progress objects do not.
-            if (CertificateVerificationScope.current() == null
-                    || verified.size() < CertificateVerificationScope.CAPACITY) verified.add(certificate);
+            verified.add(certificate);
         } finally {
             visiting.remove(certificate);
         }

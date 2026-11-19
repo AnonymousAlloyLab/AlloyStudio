@@ -423,7 +423,7 @@ public final class CapabilityBenchmark {
                 }
             }
             List<PairRecord> all = reports.values().stream().flatMap(report -> report.pairs.stream()).toList();
-            List<PairRecord> composed = all.stream().filter(pair -> pair.family.contains("_")).toList();
+            List<PairRecord> composed = all.stream().filter(pair -> isComposedFamily(pair.family)).toList();
             writeAggregateRows(writer, "__all__", all);
             writeAggregateRows(writer, "__composed__", composed);
         }
@@ -579,7 +579,7 @@ public final class CapabilityBenchmark {
             markdown.append(" |\n");
         }
         appendAggregateRecovery(markdown, "All composed families", reports.values().stream()
-                .flatMap(report -> report.pairs.stream()).filter(pair -> pair.family.contains("_")).toList());
+                .flatMap(report -> report.pairs.stream()).filter(pair -> isComposedFamily(pair.family)).toList());
         appendAggregateRecovery(markdown, "All families", reports.values().stream()
                 .flatMap(report -> report.pairs.stream()).toList());
 
@@ -808,6 +808,14 @@ public final class CapabilityBenchmark {
 
     private static String seedFormula(String seedPredicate, int value) {
         return "(" + seedPredicate + " and " + controlFormula(value) + ")";
+    }
+
+    static boolean isComposedFamily(String family) {
+        return switch (family) {
+            case "alpha_ac", "alpha_binder_permutation", "binder_permutation_prenex",
+                    "ac_logical", "mixed" -> true;
+            default -> false;
+        };
     }
 
     private enum Family {

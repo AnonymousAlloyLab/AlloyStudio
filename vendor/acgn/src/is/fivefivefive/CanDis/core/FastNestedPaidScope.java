@@ -103,7 +103,7 @@ final class FastNestedPaidScope {
     }
 
     private boolean walk(EGraphNode n,Map<String,QuantiVar> visible,Map<String,String> names,int depth,int height) {
-        if(++visits>MAX_VISITS || height>MAX_DEPTH) throw new IllegalStateException("NESTED_PAID_SCOPE_BUDGET");
+        if(++visits>MAX_VISITS || height>MAX_DEPTH) throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("NESTED_PAID_SCOPE_BUDGET");
         if(n.getOpcode()==EGraphNode.Opcode.CALL || n.getOpcode()==EGraphNode.Opcode.REF) return false;
         if(n.getOpcode()==EGraphNode.Opcode.VARIABLE) return variable(n,visible,names);
         boolean hasDeclaration=n.getChildren().stream().anyMatch(c->c.getOpcode()==EGraphNode.Opcode.GENERICRELDECL

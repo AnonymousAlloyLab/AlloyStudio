@@ -162,6 +162,32 @@ class SourceLocationTests(unittest.TestCase):
         form = result["canonicalForm"][span["formIndex"]]
         self.assertEqual(span["start"], form.index("p(A, A)") + 5)
 
+    def test_native_binder_alternative_locates_the_selected_repeated_relation(self):
+        environment = "module source_fixture\nsig P { r:set P, s:set P }\nsig T in P {}\n"
+        result, source = self.compare(
+            "some p:P | p in p.s implies (some disj t,u:T | p in u.r and t in u.s)",
+            "some p:P | p in p.s implies (some disj PRIVATE_FIRST,PRIVATE_SECOND:T | "
+            "p in PRIVATE_FIRST.r and PRIVATE_SECOND in PRIVATE_FIRST.r and some PRIVATE_SECOND.s)",
+            environment=environment)
+        self.assertEqual(result["distance"], 7)
+        self.assertEqual(len(result["operations"]), 7)
+        self.assertNotIn("PRIVATE_", json.dumps(result))
+        relation, = [op for op in result["operations"] if op["sourceTerm"] == "s"]
+        self.assertEqual(relation["kind"], "replace")
+        self.assertEqual(relation["sourceLocation"]["precision"], "node")
+        expected = source.index("u.s") + 2
+        self.assertEqual(relation["sourceLocation"]["ranges"], [{"start": expected, "end": expected + 1}])
+        span, = relation["canonicalLocation"]["ranges"]
+        form = result["canonicalForm"][span["formIndex"]]
+        self.assertEqual(span["start"], form.index("(u . s)") + len("(u . "))
+        self.assertEqual(utf16_slice(form, span["start"], span["end"]), "s")
+        insertions = [op for op in result["operations"] if op["kind"] == "insert"]
+        self.assertEqual(len(insertions), 4)
+        for operation in insertions:
+            self.assertEqual(operation["sourceRole"], "insertion-anchor")
+            self.assertEqual(operation["canonicalLocation"]["status"], "located")
+            self.assertNotIn("replacementOperator", operation)
+
     def test_identical_shadowed_binding_headers_select_inner_quantifier(self):
         operation, source = self.only_operation(
                 "all x: A | some x.r and (all x: A | lone x.r)",

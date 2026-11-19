@@ -9,18 +9,21 @@ public final class FastLocalPaidScope {
     private static final int MAX_DEPTH = 128;
     private static final long ROOT_OWNER = Long.MIN_VALUE;
     private final Map<String,QuantiVar> locals = new HashMap<>();
-    private final Set<String> usedOwners = new HashSet<>();
+    private final Set<Long> selectedOwners = new HashSet<>();
+    private final Map<QuantiVar,SlotOrigin> slotOrigins = new IdentityHashMap<>();
     private final Map<Long,LocalPlan> sourcePlans = new HashMap<>();
     private final Map<Long,QuantiVar> sourceVariables = new HashMap<>();
+    private final Map<EGraphNode,QuantiVar> lexicalBindings = new IdentityHashMap<>();
     private final Map<Long,EGraphNode> sourceCalls = new HashMap<>();
-    private final Set<QuantiVar> outerBindings = Collections.newSetFromMap(new IdentityHashMap<>());
     private final ExactAlloyType module;
     private int visits;
+    private int mapVisits;
     private boolean checkingSource = true;
 
     private record LocalSlot(QuantiVar binding,long variable) { }
-    private record LocalGroup(List<LocalSlot> slots,long declaration,EGraphNode domain) { }
+    private record LocalGroup(List<LocalSlot> slots,long declaration,EGraphNode domain,EGraphNode.Opcode opcode) { }
     private record LocalPlan(List<LocalGroup> groups,long parent) { }
+    private record SlotOrigin(long owner,long parent,long declaration,long variable,int ordinal) { }
 
     private FastLocalPaidScope(ExactAlloyType module) { this.module=module; }
 
@@ -33,23 +36,50 @@ public final class FastLocalPaidScope {
         for(var q:form.getMatrixQuantiVars()) if(outer.put(q.getName(),q)!=null) return 0;
         if(outer.isEmpty()) return 0;
         var check=new FastLocalPaidScope(form.getMatrixQuantiVars().get(0).getExactAlloyType());
-        check.outerBindings.addAll(form.getMatrixQuantiVars());
         for(var q:form.getLocalQuantiVars()) {
             if(outer.containsKey(q.getName()) || check.locals.put(q.getName(),q)!=null) return 0;
         }
         if(!check.walk(form.getCertificationMatrixEGraph(),outer,0,ROOT_OWNER) || check.sourcePlans.isEmpty()) return 0;
         // Distinct retained owners may share a parent. walk checks each actual
         // owner identity, parent edge and ordered slots; no scope is exchanged.
-        if(check.sourcePlans.size()>1) {
-            for(var plan:check.sourcePlans.values())
-                if((plan.groups().get(0).slots().get(0).binding().getQuantifier()!=QuantiVar.Quantifier.SOME
-                        && plan.groups().get(0).slots().get(0).binding().getQuantifier()!=QuantiVar.Quantifier.ALL)) return 0;
-        }
         check.checkingSource=false;
-        check.usedOwners.clear();
         return check.walk(form.getMatrixEGraph(),outer,0,ROOT_OWNER)
-                && check.usedOwners.size()==check.sourcePlans.values().stream()
-                        .flatMap(p->p.groups().stream()).mapToInt(g->g.slots().size()).sum()?check.sourcePlans.size():0;
+                && check.resolvedVariables(form.getCertificationMatrixEGraph())
+                && check.resolvedVariables(form.getMatrixEGraph())?check.selectedOwners.size():0;
+    }
+
+    private boolean resolvedVariables(EGraphNode root) {
+        var ref=root.getEClassRef();
+        return resolvedVariables(ref,ref.getSlotMap(),0);
+    }
+
+    /** A representative's spelling is not its invocation. Resolve the actual
+     * edge chain to the owned binding authenticated by the lexical walk. */
+    private boolean resolvedVariables(EGraphNode.EClassRef ref,Map<String,String> parent,int depth) {
+        if(++mapVisits>MAX_VISITS || depth>MAX_DEPTH)
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_LOCAL_SCOPE_BUDGET");
+        var canonical=ref.canonical();
+        if(canonical.getEClass()!=ref.getEClass())return false;
+        var effective=new HashMap<String,String>();
+        // canonical() restricts obsolete keys on unregistered e-classes, but
+        // every live slot must have a complete, agreeing caller resolution.
+        for(var slot:ref.getEClass().getSlots()) {
+            var caller=ref.getSlotMap().get(slot);
+            var target=parent.get(caller);
+            if(target==null || !target.equals(parent.get(canonical.getSlotMap().get(slot))))return false;
+            effective.put(slot,target);
+        }
+        var node=ref.getEClass().getRepresentative();
+        if(node.getOpcode()==EGraphNode.Opcode.VARIABLE) {
+            var name=effective.get(node.getAlphaName());
+            var expected=sourceVariables.get(node.getSourceOccurrenceLineage());
+            // Fresh original bindings have one alias per lexical scope. Check
+            // this invocation's actual representative, not a sibling's name.
+            if(name==null || expected==null || lexicalBindings.get(node)!=expected
+                    || !name.equals(node.getAlphaName()))return false;
+        }
+        for(var child:node.getChildClasses())if(!resolvedVariables(child,effective,depth+1))return false;
+        return true;
     }
 
     /** Actual nodes from a checked retained scope, not a permission by opcode.
@@ -64,7 +94,7 @@ public final class FastLocalPaidScope {
         var pending=new ArrayDeque<EGraphNode>();pending.add(form.getCertificationMatrixEGraph());pending.add(form.getMatrixEGraph());
         while(!pending.isEmpty()) {
             var n=pending.remove();if(!seen.add(n))continue;
-            if(seen.size()>MAX_VISITS)throw new IllegalStateException("SCOPED_CALL_NODE_BUDGET");
+            if(seen.size()>MAX_VISITS)throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("SCOPED_CALL_NODE_BUDGET");
             if(n.getOpcode()==EGraphNode.Opcode.CALL)result.add(n);
             pending.addAll(n.getChildren());
         }
@@ -84,47 +114,41 @@ public final class FastLocalPaidScope {
             case EXISTS -> QuantiVar.Quantifier.SOME;
             case ONE -> QuantiVar.Quantifier.ONE;
             case LONE -> QuantiVar.Quantifier.LONE;
+            case COMPREHENSION -> QuantiVar.Quantifier.COMPREHENSION;
             default -> null;
         };
     }
 
-    private boolean retainedDomain(EGraphNode domain,QuantiVar q,Map<String,QuantiVar> visible,
-            int depth,long parent) {
-        if(domain.getOpcode()!=EGraphNode.Opcode.ONE || domain.getChildren().size()!=1
-                || !typed(domain,q)) return false;
-        var expression=domain.getChildren().get(0);
-        if(!typed(expression,q)) return false;
-        if(expression.getOpcode()==EGraphNode.Opcode.GLOBALBINDING)
-            return expression.getChildren().isEmpty();
-        // A retained unary carrier-minus-outer domain is not hoisted or erased.
-        // Check its dependency before introducing the local owner (Lean:
-        // RetainedDifferenceDomain.no_capture/domain_transport).
-        if(expression.getOpcode()!=EGraphNode.Opcode.MINUS || expression.getChildren().size()!=2
-                || q.getExactAlloyType().relationArity()!=1) return false;
-        var carrier=expression.getChildren().get(0); var dependency=expression.getChildren().get(1);
-        var outer=visible.get(dependency.getAlphaName());
-        return carrier.getOpcode()==EGraphNode.Opcode.GLOBALBINDING && carrier.getChildren().isEmpty()
-                && typed(carrier,q) && dependency.getOpcode()==EGraphNode.Opcode.VARIABLE
-                && typed(dependency,q) && outerBindings.contains(outer)
-                && walk(dependency,visible,depth+1,parent);
-    }
-
-    /** Called only after both endpoints satisfy the at-most-five-node domain grammar. */
+    /** Exact retained expression, not a rewrite or free cross-carrier transport. */
     private static boolean sameDomain(EGraphNode original,EGraphNode comparison) {
         if(original.getOpcode()!=comparison.getOpcode()
+                || original.getMetatype()!=comparison.getMetatype()
+                || original.isOrderInsensitive()!=comparison.isOrderInsensitive()
+                || original.isFlexibleArity()!=comparison.isFlexibleArity()
+                || original.getMaxArity()!=comparison.getMaxArity()
                 || original.getSourceOccurrenceLineage()!=comparison.getSourceOccurrenceLineage()
+                || original.getExactAlloyType()==null
                 || !original.getExactAlloyType().sameOccurrenceEvidenceAs(comparison.getExactAlloyType())
+                || !original.getSemanticProfile().equals(comparison.getSemanticProfile())
                 || !Objects.equals(original.getSemanticIdentity(),comparison.getSemanticIdentity())
                 || !Objects.equals(original.getSourceName(),comparison.getSourceName())
+                || (original.getOpcode()!=EGraphNode.Opcode.VARIABLE
+                    && !Objects.equals(original.getAlphaName(),comparison.getAlphaName()))
                 || original.getChildren().size()!=comparison.getChildren().size()) return false;
+        if(original.getOpcode()==EGraphNode.Opcode.CALL
+                && !original.sharesCallSourceAnchorWith(comparison)) return false;
         for(int i=0;i<original.getChildren().size();i++)
             if(!sameDomain(original.getChildren().get(i),comparison.getChildren().get(i))) return false;
         return true;
     }
 
     private boolean walk(EGraphNode n,Map<String,QuantiVar> visible,int depth,long parent) {
+        return walk(n,visible,depth,parent,false);
+    }
+
+    private boolean walk(EGraphNode n,Map<String,QuantiVar> visible,int depth,long parent,boolean negated) {
         if(++visits>MAX_VISITS || depth>MAX_DEPTH)
-            throw new IllegalStateException("PAID_DECLARATION_LOCAL_SCOPE_BUDGET");
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("PAID_DECLARATION_LOCAL_SCOPE_BUDGET");
         if(n.getOpcode()==EGraphNode.Opcode.REF) return false;
         if(n.getOpcode()==EGraphNode.Opcode.CALL) {
             var c=CallMetadata.require(n);var type=n.getExactAlloyType();
@@ -151,31 +175,50 @@ public final class FastLocalPaidScope {
             if(n.getExactAlloyType().hasParserAuthenticatedAncestry() && !typed(n,q)) return false;
             if(checkingSource) {
                 var prior=sourceVariables.putIfAbsent(n.getSourceOccurrenceLineage(),q);
-                return prior==null || prior==q;
-            }
-            return sourceVariables.get(n.getSourceOccurrenceLineage())==q;
+                if(prior!=null && prior!=q)return false;
+            } else if(sourceVariables.get(n.getSourceOccurrenceLineage())!=q)return false;
+            var prior=lexicalBindings.putIfAbsent(n,q);
+            return prior==null || prior==q;
         }
-        boolean declares=n.getChildren().stream().anyMatch(c->switch(c.getOpcode()) {
+        var children=n.getChildren();
+        if(!checkingSource) {
+            // Restore the captured ordered groups before checking their actual
+            // source owners and domains; a merged display tuple is not a scope.
+            var restored=new ArrayList<EGraphNode>();
+            for(var child:children)
+                restored.addAll(child.comparisonDeclarationGroups(n));
+            children=restored;
+        }
+        boolean declares=children.stream().anyMatch(c->switch(c.getOpcode()) {
             case GENERICRELDECL,DISJ,VAR,DISJVAR -> true;
             default -> false;
         });
         if(declares || n.getOpcode()==EGraphNode.Opcode.EXISTS || n.getOpcode()==EGraphNode.Opcode.FORALL) {
             var kind=localKind(n.getOpcode());
+            if(negated)kind=kind==QuantiVar.Quantifier.ONE?QuantiVar.Quantifier.NOTONE
+                    :kind==QuantiVar.Quantifier.LONE?QuantiVar.Quantifier.NOTLONE:null;
             if(kind==null) return false;
-            if(n.getChildren().size()<2) return false;
+            if(children.size()<2) return false;
             var plan=sourcePlans.get(n.getSourceOccurrenceLineage());
-            int groupCount=n.getChildren().size()-1;
-            if(!checkingSource && (plan==null || plan.parent()!=parent || plan.groups().size()!=groupCount))return false;
+            int groupCount=children.size()-1;
+            if(plan==null && !checkingSource
+                    || plan!=null && (plan.parent()!=parent || plan.groups().size()!=groupCount))return false;
             var scoped=new HashMap<>(visible);var groups=new ArrayList<LocalGroup>();
             int ordinal=0;String ownerPath=null;
             for(int groupIndex=0;groupIndex<groupCount;groupIndex++) {
-            var decl=n.getChildren().get(groupIndex);
-            if(decl.getOpcode()!=EGraphNode.Opcode.GENERICRELDECL || decl.getChildren().size()<2) return false;
+            var decl=children.get(groupIndex);
+            boolean disjoint=decl.getOpcode()==EGraphNode.Opcode.DISJ;
+            if((!disjoint && decl.getOpcode()!=EGraphNode.Opcode.GENERICRELDECL)
+                    || decl.getChildren().size()<2) return false;
             var domain=decl.getChildren().get(0);
-            var previous=checkingSource?null:plan.groups().get(groupIndex);
-            if(!checkingSource && previous.slots().size()!=decl.getChildren().size()-1)return false;
-            // Each domain is checked before this declaration's tuple enters scope.
-            var domainScope=new HashMap<>(scoped);var slots=new ArrayList<LocalSlot>();String bindingPath=null;
+            if(domain.getOpcode()!=EGraphNode.Opcode.ONE || domain.getChildren().size()!=1)return false;
+            var previous=plan==null?null:plan.groups().get(groupIndex);
+            if(previous!=null && (previous.slots().size()!=decl.getChildren().size()-1
+                    || previous.opcode()!=decl.getOpcode()))return false;
+            // RetainedDomainAdmission: check the domain once in the enclosing
+            // scope, before any slot from this declaration group is introduced.
+            if(!walk(domain.getChildren().get(0),scoped,depth+1,parent))return false;
+            var slots=new ArrayList<LocalSlot>();String bindingPath=null;Integer disjointGroup=null;
             for(int i=1;i<decl.getChildren().size();i++) {
               var variable=decl.getChildren().get(i);
               if(variable.getOpcode()!=EGraphNode.Opcode.VARIABLE)return false;
@@ -183,9 +226,18 @@ public final class FastLocalPaidScope {
               String name=variable.getAlphaName();
               if(q==null || name==null || !q.isFrozenForCertification() || scoped.containsKey(name)
                     || q.getBindingPath().isEmpty() || q.getQuantifier()!=kind
-                    || q.getCardinality()!=QuantiVar.Cardinality.ONE || q.getDisjointnessClass()!=0
-                    || !typed(variable,q) || !retainedDomain(domain,q,domainScope,depth,parent)
-                    || !usedOwners.add(q.getName())) return false;
+                    || q.getCardinality()!=QuantiVar.Cardinality.ONE
+                    || (disjoint?q.getDisjointnessClass()<=0:q.getDisjointnessClass()!=0)
+                    || !typed(variable,q) || !typed(domain,q) || !typed(domain.getChildren().get(0),q)) return false;
+              if(disjointGroup==null)disjointGroup=q.getDisjointnessClass();
+              if(disjointGroup!=q.getDisjointnessClass())return false;
+              // Cloned uses of one source binder are visits, not fresh owners.
+              // Register the exact slot origin; still check every body and edge.
+              var origin=new SlotOrigin(n.getSourceOccurrenceLineage(),parent,
+                      decl.getSourceOccurrenceLineage(),variable.getSourceOccurrenceLineage(),ordinal);
+              var issued=slotOrigins.get(q);
+              if(checkingSource && issued==null)slotOrigins.put(q,origin);
+              else if(!origin.equals(issued))return false;
               if(bindingPath==null)bindingPath=q.getBindingPath();
               if(!bindingPath.equals(q.getBindingPath()))return false;
               if((groupCount>1 || decl.getChildren().size()>2) && !q.getDeBruijnKey().matches("local#[0-9]+#"+ordinal+":ONE:.*@"+java.util.regex.Pattern.quote(bindingPath)))return false;
@@ -199,23 +251,30 @@ public final class FastLocalPaidScope {
               ordinal++;
               slots.add(new LocalSlot(q,variable.getSourceOccurrenceLineage()));scoped.put(name,q);
             }
-            if(!checkingSource && (previous.declaration()!=decl.getSourceOccurrenceLineage()
+            if(previous!=null && (previous.declaration()!=decl.getSourceOccurrenceLineage()
                     || !sameSlots(previous.slots(),slots)
                     || !sameDomain(previous.domain(),domain))) return false;
-            groups.add(new LocalGroup(List.copyOf(slots),decl.getSourceOccurrenceLineage(),domain));
+            groups.add(new LocalGroup(List.copyOf(slots),decl.getSourceOccurrenceLineage(),domain,decl.getOpcode()));
             // Fast's local spelling differs from the original alpha name. The
             // actual owner/declaration/variable lineage licenses that transfer.
             // All ordered tuple slots share this owner, never an outer scope.
             for(int i=1;i<decl.getChildren().size();i++)
                 if(!walk(decl.getChildren().get(i),scoped,depth+1,n.getSourceOccurrenceLineage()))return false;
             }
-            if(checkingSource && sourcePlans.putIfAbsent(n.getSourceOccurrenceLineage(),
-                    new LocalPlan(List.copyOf(groups),parent))!=null)return false;
-            return walk(n.getChildren().get(groupCount),scoped,depth+1,n.getSourceOccurrenceLineage());
+            if(checkingSource)sourcePlans.putIfAbsent(n.getSourceOccurrenceLineage(),
+                    new LocalPlan(List.copyOf(groups),parent));
+            else selectedOwners.add(n.getSourceOccurrenceLineage());
+            return walk(children.get(groupCount),scoped,depth+1,n.getSourceOccurrenceLineage());
         }
         switch(n.getOpcode()) {
             case GENERICRELDECL, DISJ, VAR, DISJVAR -> { return false; }
             default -> { }
+        }
+        if(n.getOpcode()==EGraphNode.Opcode.NOT && children.size()==1) {
+            var child=children.get(0);
+            if(child.getChildren().size()>1 && (child.getOpcode()==EGraphNode.Opcode.ONE
+                    || child.getOpcode()==EGraphNode.Opcode.LONE))
+                return walk(child,visible,depth+1,parent,true);
         }
         for(var child:n.getChildren()) if(!walk(child,visible,depth+1,parent)) return false;
         return true;

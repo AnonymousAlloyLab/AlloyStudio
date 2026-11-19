@@ -152,7 +152,7 @@ public final class BinderAutomorphismGroup {
             TypedPermutation current = pending.removeFirst();
             visited = Math.addExact(visited, 1L);
             if (visited > FinitePermutationTraversal.maximumElements()) {
-                throw new CanonicalizationDomainException(
+                throw CanonicalizationDomainException.resourceLimit(
                         "Binder proof search exceeds configured group bound");
             }
             StructuralKey currentKey = actionKey(current);
@@ -265,7 +265,13 @@ public final class BinderAutomorphismGroup {
     public List<TypedPermutation> elements() {
         List<TypedPermutation> snapshot = new ArrayList<>();
         forEachElement(snapshot::add);
-        snapshot.sort(java.util.Comparator.comparing(this::actionKey));
+        // The identity/source coordinate is the first admitted representative;
+        // ties must retain the first path (OrbitMetricTransport.select). The
+        // remaining elements keep the deterministic action-key order.
+        TypedPermutation identity = TypedPermutation.identity(context);
+        snapshot.sort(java.util.Comparator
+                .comparing((TypedPermutation permutation) -> permutation.equals(identity) ? 0 : 1)
+                .thenComparing(this::actionKey));
         return Collections.unmodifiableList(snapshot);
     }
 

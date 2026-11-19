@@ -93,13 +93,21 @@ public final class SeparatePrefixOrbitReplayTest {
             if(name.equals("allSame")||name.equals("someSame")) {
                 check(f.getMatrixQuantiVars().size()==2&&!f.getMatrixQuantiVars().get(0).getBindingPath().equals(f.getMatrixQuantiVars().get(1).getBindingPath()),"actual separate source paths "+name);
                 check(choices.size()==2,"source-proven same-kind independent exchange "+name);
+            } else if(name.equals("disjoint")) {
+                var slots=f.getMatrixQuantiVars();
+                check(slots.size()==2&&slots.get(0).getDisjointnessClass()>0
+                        &&slots.get(0).getDisjointnessClass()==slots.get(1).getDisjointnessClass()
+                        &&slots.get(0).getBindingPath().equals(slots.get(1).getBindingPath()),"one original disjoint declaration group");
+                check(choices.size()==2&&choices.stream().anyMatch(o->Arrays.equals(o,new int[]{0,1}))
+                        &&choices.stream().anyMatch(o->Arrays.equals(o,new int[]{1,0})),"certified same-group disjoint exchange");
             } else check(choices.size()==1,"no extra order for actual negative "+name);
         }
         var controls=new JSONArray();
-        for(var row:List.of(new String[]{"ft2Q8x9bQa59gFBR4_inv14","inv14","17"},new String[]{"Wq9Au27ys6iRip6CD_inv14","inv14","36"},new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"8dTfKqTs26w6fL87K_inv15","inv15","18"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","20"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
+        for(var row:List.of(new String[]{"ft2Q8x9bQa59gFBR4_inv14","inv14","17"},new String[]{"Wq9Au27ys6iRip6CD_inv14","inv14","36"},new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"8dTfKqTs26w6fL87K_inv15","inv15","18"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","22"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
             var control=source(row[0],row[1]);
             for(int d=0;d<2;d++){
                 var q=d==0?control:control.reverse();var report=DistanceReplayDiagnostics.capture(q.a,q.b,q.ca,q.cb);
+                Files.writeString(out.resolve(row[0]+"-"+d+".json"),report.toString(2),StandardOpenOption.CREATE_NEW);
                 for(String arm:List.of("fast","certified"))check(report.getJSONObject(arm).getInt("distance")==Integer.parseInt(row[2])&&report.getJSONObject(arm).getBoolean("matrixReplayChecked")&&report.getJSONObject(arm).getJSONObject("declarationSlice").getBoolean("selectedMatrixDeclarationLinksChecked"),"prior cost and joint native linkage "+row[0]);
                 if(row[0].startsWith("ft2")||row[0].startsWith("Wq")||row[0].startsWith("SASE")||row[0].startsWith("85t")||row[0].startsWith("JoNX"))check(NativeOperationComparison.compare(q.a,q.b,q.ca,q.cb).status()==NativeOperationComparison.Status.MATCHED,"prior complete native action slice "+row[0]);
                 if(row[0].startsWith("ft2"))Files.writeString(out.resolve("grouped-control-"+d+".json"),report.toString(2),StandardOpenOption.CREATE_NEW);

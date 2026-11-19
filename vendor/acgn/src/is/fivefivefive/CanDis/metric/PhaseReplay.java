@@ -93,9 +93,9 @@ public final class PhaseReplay {
 
     private static <N> JSONArray tree(N node,Function<N,String> label,Function<N,List<N>> children,
             int[] budget,int depth) {
-        if (depth > 128 || --budget[0] < 0) throw new IllegalStateException("TEMPORAL_REPLAY_BUDGET");
+        if (depth > 128 || --budget[0] < 0) throw new TraceResources.Exhausted("TEMPORAL_REPLAY_BUDGET");
         String head = label.apply(node);
-        if (head.length() > budget[0]) throw new IllegalStateException("TEMPORAL_REPLAY_BUDGET");
+        if (head.length() > budget[0]) throw new TraceResources.Exhausted("TEMPORAL_REPLAY_BUDGET");
         budget[0] -= head.length();
         JSONArray values = new JSONArray();
         for (N child : children.apply(node)) values.put(tree(child,label,children,budget,depth+1));
@@ -111,7 +111,7 @@ public final class PhaseReplay {
         for (int i = 0; i < components.length(); i++) {
             JSONObject component=components.getJSONObject(i);
             if(component.has("connectingPermutation")) {
-                if(--budget[0]<0) throw new IllegalStateException("DIAGNOSTIC_ORDER_BUDGET");
+                if(--budget[0]<0) throw new TraceResources.Exhausted("DIAGNOSTIC_ORDER_BUDGET");
                 JSONObject permutation=component.getJSONObject("connectingPermutation");
                 DeclarationReplay.require(DeclarationReplay.integer(permutation,"cost")==0,"Connecting permutation charge");
                 actions.put(new JSONObject().put("phaseKind","declarationPermutation")
@@ -120,7 +120,7 @@ public final class PhaseReplay {
             }
             JSONArray ops = component.getJSONObject("receipt").getJSONArray("operations");
             for (int j = 0; j < ops.length(); j++) {
-                if (--budget[0] < 0) throw new IllegalStateException("DIAGNOSTIC_ORDER_BUDGET");
+                if (--budget[0] < 0) throw new TraceResources.Exhausted("DIAGNOSTIC_ORDER_BUDGET");
                 actions.put(new JSONObject().put("phaseKind","declaration")
                         .put("receiptPath","/declarationSlice/components/"+i+"/receipt/operations/"+j)
                         .put("operation",new JSONObject(ops.getJSONObject(j).toString()))
@@ -134,7 +134,7 @@ public final class PhaseReplay {
     }
 
     private static void flatten(JSONObject node,String path,JSONArray actions,int[] budget,int depth) {
-        if (depth > 128 || --budget[0] < 0) throw new IllegalStateException("DIAGNOSTIC_ORDER_BUDGET");
+        if (depth > 128 || --budget[0] < 0) throw new TraceResources.Exhausted("DIAGNOSTIC_ORDER_BUDGET");
         String kind = node.getString("kind");
         JSONObject event = new JSONObject().put("phaseKind","matrix").put("receiptPath",path)
                 .put("kind",kind).put("sourceHead",node.getString("sourceHead"))

@@ -55,78 +55,42 @@ public final class UnusedDeclarationCompletionTest {
         reject(()->new DeclarationMatrixLink(List.of("a"),List.of("b"),Map.of(),Set.of(),Set.of(),true)
                 .completeAndVerify(a,changed,paid),"nonzero diagonal needs paid admission, not absence");
     }
-    private static Set<String> used(EGraphNode n) {
-        Set<String> names=new HashSet<>();
-        if(n.getOpcode()==EGraphNode.Opcode.VARIABLE) names.add(n.getAlphaName()==null?n.getSourceName():n.getAlphaName());
-        for(var c:n.getChildren()) names.addAll(used(c)); return names;
-    }
-    private static Set<String> used(RepairView.Node n) {
-        Set<String> names=new HashSet<>();
-        if(n.isVariable() && n.bindingIndex()>=0) names.add(Integer.toString(n.bindingIndex()));
-        for(var c:n.children()) names.addAll(used(c));
-        for(var c:n.certifiedAlternatives()) names.addAll(used(c)); return names;
-    }
-    private static Map<String,String> map(JSONObject o) {
-        var result=new LinkedHashMap<String,String>(); for(String k:o.keySet()) result.put(k,o.getString(k)); return result;
-    }
-    private static MatrixReplay<RepairView.Node> certChecker(int[] labels,int[] costs) {
-        return new MatrixReplay<>(new MatrixReplay.NativeCost<RepairView.Node>() {
-            public String label(RepairView.Node n) { return new JSONArray().put(n.operator()).put(n.semanticPayload()).put(n.bindingIndex())
-                    .put(String.valueOf(n.lexicalVariable())).put(n.containerKind().toString()).put(n.orderInsensitive()).put(Arrays.toString(labels)).toString(); }
-            public List<RepairView.Node> children(RepairView.Node n) { return n.children(); }
-            public List<RepairView.Node> alternatives(RepairView.Node n) { return n.certifiedAlternatives(); }
-            public boolean unordered(RepairView.Node a,RepairView.Node b) { return a.operator().equals(b.operator()) && a.orderInsensitive() && b.orderInsensitive(); }
-            public int size(RepairView.Node n) { if(n==null)return 0; int sum=1; for(var c:n.children())sum+=size(c); return sum; }
-            public int update(RepairView.Node a,RepairView.Node b) {
-                if(!a.operator().equals(b.operator()))return 1;
-                if(!a.isVariable())return Objects.equals(a.semanticPayload(),b.semanticPayload())?0:1;
-                if((a.bindingIndex()>=0)!=(b.bindingIndex()>=0))return 1;
-                if(a.bindingIndex()<0)return Objects.equals(a.lexicalVariable(),b.lexicalVariable())?0:1;
-                return costs[a.bindingIndex()]>=0 && costs[a.bindingIndex()]==b.bindingIndex()?0:1;
-            }
-            public int distance(RepairView.Node a,RepairView.Node b) { throw new AssertionError("Independent replay must not search"); }
-        });
-    }
     private static JSONObject affected() throws Exception {
         var m=CompUtil.parseEverything_fromString(A4Reporter.NOP,Files.readString(BoundVariableShorterReplayTest.SOURCE));
         var p=prepare(m,"inv14"); var q=prepare(m,"inv14c");
-        var pv=NestedPaidDeclarationReplayTest.checkedProjection(p,q); var qv=NestedPaidDeclarationReplayTest.checkedProjection(q,p);
         var out=new JSONObject();
         for(boolean reverse:new boolean[]{false,true}) {
-            var a=reverse?q:p; var b=reverse?p:q; var av=reverse?qv:pv; var bv=reverse?pv:qv;
-            var x=BoundVariableCostTest.comparison(a.normalizedForms().get(0)); var y=BoundVariableCostTest.comparison(b.normalizedForms().get(0));
-            var report=DistanceReplayDiagnostics.capture(a,b);
+            var a=reverse?q:p; var b=reverse?p:q;
+            var fast=CanonicalRepairTraces.fast(a,b);
+            var certified=CanonicalRepairTraces.certified(CanonicalAlloyPipeline.prepare(a),CanonicalAlloyPipeline.prepare(b));
+            fast.replay(fast.json());certified.replay(certified.json());
+            var comparison=NativeOperationComparison.compare(a,b,fast,certified);
+            check(comparison.status()==NativeOperationComparison.Status.MATCHED,"actual current original-coordinate actions");
+            var report=comparison.evidence().getJSONObject("diagnostic");
+            check(NativeOperationComparison.compareCaptured(a,b,report).status()==NativeOperationComparison.Status.MATCHED,"independent endpoint replay");
             for(String name:List.of("fast","certified")) {
-                var arm=report.getJSONObject(name); var phase=arm.getJSONArray("phases").getJSONObject(0);
-                check(arm.getInt("distance")==20 && arm.getInt("matrixDistance")==18 && arm.getBoolean("numericalCostCoverage"),"native20 and full numeric slices "+name);
+                var arm=report.getJSONObject(name);
+                // The frozen pre-patch build already has two live declarations,
+                // cost 22 = 1 + 21, and no absent-slot completion on this source.
+                check(arm.getInt("distance")==22 && arm.getInt("quantifierDistance")==1
+                        && arm.getInt("matrixDistance")==21 && arm.getBoolean("numericalCostCoverage"),"current baseline components "+name);
                 var receipt=arm.getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(name.equals("fast")?0:1).getJSONObject("receipt");
-                var c=receipt.getJSONObject("matrixCorrespondenceCompletion");
-                check(c.getBoolean("matrixActionsUnchanged") && c.getInt("replayedMatrixCost")==18,"all existing matrix charges replayed");
-                check(c.getJSONArray("absencePremises").length()==1,"one missing zero keep");
-                var premise=c.getJSONArray("absencePremises").getJSONObject(0);
-                check(premise.getBoolean("sourceAbsent")==!reverse && premise.getBoolean("targetAbsent")==reverse,"actual one-sided absence");
-                var original=map(c.getJSONObject("selectedMapping")); var completed=map(c.getJSONObject("completedMapping"));
-                List<DeclarationReplay.Atom> da,db; List<String> ka,kb; Set<String> ua,ub;
-                if(name.equals("fast")) {
-                    da=NestedPaidDeclarationReplayTest.declarations(a.normalizedForms().get(0)); db=NestedPaidDeclarationReplayTest.declarations(b.normalizedForms().get(0));
-                    ka=da.stream().map(v->new JSONArray(v.admission()).getString(0)).toList(); kb=db.stream().map(v->new JSONArray(v.admission()).getString(0)).toList();
-                    ua=used(x); ub=used(y);
-                    check(NestedPaidDeclarationReplayTest.checker(original,completed).verify(x,y,phase.getJSONObject("receipt"))==18,"independent Fast extension replay");
-                    var invalid=new HashMap<>(original); invalid.put("_q0","_q0");
-                    reject(()->NestedPaidDeclarationReplayTest.checker(original,invalid).verify(x,y,phase.getJSONObject("receipt")),"observed pair would change an existing head charge");
-                } else {
-                    da=NestedPaidDeclarationReplayTest.atoms(av.phases().get(0),receipt.getJSONArray("source")); db=NestedPaidDeclarationReplayTest.atoms(bv.phases().get(0),receipt.getJSONArray("target"));
-                    ka=da.stream().map(v->Integer.toString(new JSONArray(v.occurrence()).getInt(4))).toList(); kb=db.stream().map(v->Integer.toString(new JSONArray(v.occurrence()).getInt(4))).toList();
-                    ua=used(av.phases().get(0).matrix()); ub=used(bv.phases().get(0).matrix());
-                    int[] labels=phase.getJSONArray("alphaMapping").toList().stream().mapToInt(v->((Number)v).intValue()).toArray();
-                    int[] costs=labels.clone(); for(var e:completed.entrySet())costs[Integer.parseInt(e.getKey())]=Integer.parseInt(e.getValue());
-                    check(certChecker(labels,costs).verify(av.phases().get(0).matrix(),bv.phases().get(0).matrix(),phase.getJSONObject("receipt"))==18,"independent certified extension replay");
+                check(receipt.getJSONArray("source").length()==2 && receipt.getJSONArray("target").length()==2
+                        && !receipt.has("matrixCorrespondenceCompletion"),"no orphan slot or fabricated absence receipt");
+                check(arm.getJSONObject("declarationSlice").getBoolean("selectedMatrixDeclarationLinksChecked"),"all declaration links checked");
+                for(String mode:List.of("owner","type","payment","mapping","operation")) {
+                    var bad=copy(report);var data=bad.getJSONObject(name);
+                    var program=data.getJSONArray("nativeDeclarationPrograms").getJSONObject(name.equals("fast")?0:1);
+                    switch(mode) {
+                        case "owner" -> program.getJSONArray("source").getJSONObject(0).put("occurrence","foreign");
+                        case "type" -> program.getJSONArray("source").getJSONObject(0).getJSONArray("tuple").put(1,"ForeignType");
+                        case "payment" -> data.put("distance",23);
+                        case "mapping" -> data.getJSONArray("phases").getJSONObject(0).put("alphaMapping",new JSONArray());
+                        case "operation" -> program.getJSONArray("operations").remove(0);
+                    }
+                    check(NativeOperationComparison.compareCaptured(a,b,fast,certified,bad).status()==NativeOperationComparison.Status.INVALID_REPLAY,
+                            "current native evidence rejects "+name+" "+mode);
                 }
-                var joint=new DeclarationMatrixLink(ka,kb,original,ua,ub,true);
-                joint.verifyCompletion(da,db,receipt,c);
-                check(new DeclarationMatrixLink(ka,kb,completed,ua,ub).verify(da,db,receipt)==2,"fixed completed map reconciles every original keep/delete");
-                var forged=copy(c); forged.getJSONArray("absencePremises").getJSONObject(0).put("sourceAbsent",reverse);
-                reject(()->joint.verifyCompletion(da,db,receipt,forged),"original endpoint census rejects forged absence");
                 check(!report.getBoolean("complete") && !report.getBoolean("publicSequenceLinked"),"public proof remains blocked");
             }
             out.put(reverse?"reverse":"forward",report);
@@ -167,6 +131,6 @@ public final class UnusedDeclarationCompletionTest {
         consumers("classroom_fol/both/2KmASqDBmqEueukiz_inv5.als","inv5","inv5c",10);
         result.put("checks",checks).put("complete",false);
         if(args.length>0) Files.writeString(Path.of(args[withConsumer?1:0]),result.toString(2),StandardOpenOption.CREATE_NEW);
-        System.out.println("UnusedDeclarationCompletionTest: "+checks+" checks passed; explicit absence completion20, unchanged matrix actions; public BLOCKED");
+        System.out.println("UnusedDeclarationCompletionTest: "+checks+" checks passed; absence unit controls and current native22 both directions; public BLOCKED");
     }
 }

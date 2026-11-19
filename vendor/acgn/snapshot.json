@@ -1,6 +1,6 @@
 {
   "source": "/home/augustus/ACGN",
-  "commit": "f955150dec4fc92e35b4ee543a7d71b82381c686",
+  "commit": "8770cb4b5f7133bad78058d9bc214f0ca36130d0",
   "files": [
     {
       "path": "LICENSE",
@@ -144,7 +144,7 @@
     },
     {
       "path": "src/is/fivefivefive/ACGN/alloy/SigSymbol.java",
-      "sha256": "0e6ea6554dcb2e4b0a3d7847c212c2e1a4b8d835785c30a91a9598ffe6963bde"
+      "sha256": "e8b28f829055f8cbd5ba87861b011c9f50fd022f19e7b7660d06dc89756c250b"
     },
     {
       "path": "src/is/fivefivefive/ACGN/alloy/SubsetRelation.java",
@@ -407,6 +407,10 @@
       "sha256": "1a9d65f1bd4c5e57c4da33d459c5ccc9af1ba019b633e42e191550a16e0398d2"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/AlignedPhaseReadCensusTest.java",
+      "sha256": "831b0b94b58cc91d078b739d3fd2c6cdbe2e0e7bf5290d26ea74fe6f4433db61"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/Alloy4FunAugmenter.java",
       "sha256": "038b4b640fee2ecad19670c168f6dff9385a531392e44ffba935767a069a601e"
     },
@@ -431,8 +435,20 @@
       "sha256": "1ed4b15fb4f213026ffc41aa7f2c765ef15abc44d08b7731b69e18d79cb7554c"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/AuthenticatedOccurrenceTest.java",
+      "sha256": "dc4834c89f130a998b927d3fa49b7afbc62fb4211aec440f9af3a5b50fb5522b"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/AuthenticatedPhaseTransportTest.java",
+      "sha256": "b4871051c55667b9ed5ceeb2a2e600f81f8b3bb400648ac810827673958f052f"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/BatchOperationFailureTest.java",
+      "sha256": "62e0cd790635a9aa3d63a0164e654d0893418d89bd3c21c960564d64dc30e3d8"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/BatchParityGate.java",
-      "sha256": "3b30340dfd952522eb6d25dcc86b1c9b9b052deb9f79948ad4da2d83ef2e98bd"
+      "sha256": "58f441731fa3cb8145a65bd9d9dd22607841b649c851e1706b79e7d541b0d22f"
     },
     {
       "path": "src/is/fivefivefive/CanDis/BatchParityGateTest.java",
@@ -441,6 +457,10 @@
     {
       "path": "src/is/fivefivefive/CanDis/BinaryPhaseEnumerationTest.java",
       "sha256": "e6566925c6975425c2dfdc5add8ca594ba176fabb33293f0d78500094249e1ff"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/BothLocalPaidReplayTest.java",
+      "sha256": "d8b6c1676709e895ad0ef42fe132fa62934c4567a797f5bd09c359bfad74d1a3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/BoundCallPaidReplayTest.java",
@@ -492,7 +512,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/CanonicalBatchTest.java",
-      "sha256": "f36c3889aae3b84d2dd8461abeb0f5aa4772725ef895d57de5da12781888b1de"
+      "sha256": "89e14a68e99fc3f9624d2f555993f8bddcd2d9f83d9e87d9fbfe3b3de2befeaa"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CanonicalMemoryAttribution.java",
@@ -504,11 +524,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/CanonicalRepairTraces.java",
-      "sha256": "baedd49f6dd2d191b34f6b15344e9a53019759a1b272c17fb74cb7dcbcd1f16a"
+      "sha256": "a64e818b97e64a4a0dd567cf0d402ca37b2f2bd34815d875b66cefb9cdbae2dd"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CapabilityBenchmark.java",
-      "sha256": "67fd53e033f8293347a4335faf28a3acfd67dcc9f547b405da8bdf7d03454e13"
+      "sha256": "43df0259faaff1443b170bdd2185f72ebed9e35f3063c5b75d81ac304907f2dc"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CapabilitySoundnessCheck.java",
@@ -519,8 +539,16 @@
       "sha256": "71500c9dbc269a4ccef3eb1d916597606ae5ab114b2cc3fdc0b1629ebdb0f81c"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/CapabilitySourceSchedulingTest.java",
+      "sha256": "6c4fb4420c12eee19a139da06a77d375a0334f260e1fd579bd3270ca674774b8"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/CapturedSelectionAuthorityTest.java",
       "sha256": "1d231db32e0c060d2aa9e4e9c13453cd1632b9cc64de2dc727d1475975cfb017"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/CarrierFrameMultiplicityTest.java",
+      "sha256": "9fa35571d80e5ddaf3d06c1e993f40db5d19d12b60450a4d03df06ea1d30d4f6"
     },
     {
       "path": "src/is/fivefivefive/CanDis/CertificateVerifierExportSmoke.java",
@@ -539,8 +567,20 @@
       "sha256": "c73d27f04aaafeac0b0a25c741712457b2e8c6f87cdf3903945acb3ceb556b83"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/ClosedSourceCensusTest.java",
+      "sha256": "c91b39c72c09d4d28c1ed83f18a4bdb5f9d8e01d19b6dd04f10a05751728d898"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/CrossReferenceAdmissionTest.java",
+      "sha256": "062c0a86bd6b5a27c20efc9a372de31b6136a38e9df2da816840ef7d20ac3c47"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/DatasetConventions.java",
       "sha256": "6b64af3ca3f90dcc8c68acd9f4c7f93c3467c2b75be7b2bf3f1a2e16c4b94f65"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/DeclarationKeepTransportTest.java",
+      "sha256": "cbb740f173bb348fd740e1190b0d0f82c5f54efefc031c76cdf3d974df0808f7"
     },
     {
       "path": "src/is/fivefivefive/CanDis/DeclarationOrbitSourceTest.java",
@@ -551,20 +591,32 @@
       "sha256": "34f2cad9e620a5e76ca95bddaa5cc18d4a056a49a3b53a2fb88af5857a74d902"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/DependencyOrbitTest.java",
+      "sha256": "2e8d5feb4bb0f87e1675ac23425f12bc7225e43d504def21c55850cfc534d5f9"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/DependentDeclarationExtractionRegressionTest.java",
       "sha256": "0467e3d94531d260783808ff31cb9d0a0823bfc62899fbdf25b6a439e338ec46"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/DisjointGroupPermutationTest.java",
+      "sha256": "05561271d4a4a5083c1025bd8fe7a4038333960a298ec523c16556096b54521c"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/DisjointPaidDeclarationReplayTest.java",
-      "sha256": "a01bf30623733657e20c58d625b29c90fbf403167654c99be809fe292575fbde"
+      "sha256": "a350bf1dd8eaed1abeb90d01f574272cbc26fc7bb23aefa9ea532ce785871ccf"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/DisjointPrefixSelectionTest.java",
+      "sha256": "efb03daa1d3f0ddacd0ba5632886b849a11120ebef2fbaf94ca637de93548a1a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/DistanceDerivedTraceTest.java",
-      "sha256": "f95b09f6d50a3d20a2351872e3e2b69ac61c5d9a6a3edaa5bf2a85c1135a6b59"
+      "sha256": "6a6ca4f569434998dc83cca3922f6103c0c8d2df9a51c799220ae78a0fe43cea"
     },
     {
       "path": "src/is/fivefivefive/CanDis/DistanceReplayDiagnostics.java",
-      "sha256": "920d697d6fe1318ccb81fa8277d80b3c1fc8544726cf0b95d0880260071dc212"
+      "sha256": "cd7e2da9b010af74c76a77333f1e356f31fcaba2ce6f240c0d3846afa9de5393"
     },
     {
       "path": "src/is/fivefivefive/CanDis/DistanceReplayDiagnosticsTest.java",
@@ -615,8 +667,16 @@
       "sha256": "60d7667635d75152f96c269555b3525ea4c5d72909d0cb909e13b5e6348bbcd0"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/FastOrbitCorrespondenceTest.java",
+      "sha256": "cf6eca6f18b7d1b9d130e631b2004b905e8aaf07872e41d69e3cc2c0f694deb4"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/FastProductGeometryTest.java",
       "sha256": "d3a190ab2e0e4220807f8e0ce9e6f3036b4be4c89772e28325c0356e42cd5920"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/FastRepresentativeAuthentication.java",
+      "sha256": "ceb54aad29508624931ef5a341968783613f046ac08fa6b0d2e83ebbe14b9554"
     },
     {
       "path": "src/is/fivefivefive/CanDis/FastResultTypeCostTest.java",
@@ -627,8 +687,16 @@
       "sha256": "39b0ef88160b0f321daa5ba8dfefc17500aca80aef7c418f7d62f616958e0e24"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/FastTemporalReferenceTest.java",
+      "sha256": "5cb165063088d0036205810487a256be229b664f820e383ea48d8b23e12f085c"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/FirstIncidentReplayTest.java",
       "sha256": "f602b5cf054c9c7980c0ee22c9913f465b059838573cf299d7407ee76e61fed8"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/FixedDeclarationProgramTest.java",
+      "sha256": "e225426f42c4d8fc054dab95bb38eee025009aef0d269c3814d5801d0d627cb3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/FormulaCallReplayTest.java",
@@ -644,7 +712,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/GroupedOnePaidReplayTest.java",
-      "sha256": "533fe859cbf4a025ee36b9d49e0dc8531b617e90537ab74ba48da53798abd201"
+      "sha256": "6feb5a230985b986c6a73f1d5b2dba7d8bdbb6eb77efcb7b39c186f8da60748a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/GroupedPaidDeclarationShorterReplayTest.java",
@@ -652,19 +720,35 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/GroupedPaidOrbitReplayTest.java",
-      "sha256": "1a168c69e20c55b78eb31d65a731233ab8df089b1d5e45a1aa200b1ec2adb1d1"
+      "sha256": "dfceb317397e7201d39b39cb58e93f300bddb427cfd585e9b9ab43968733b86e"
     },
     {
       "path": "src/is/fivefivefive/CanDis/GroupedRetainedScopeReplayTest.java",
       "sha256": "0ff7c1000bdc4c98ffbf7d43c33bdb2a248ed3f18623c9b32f1d480a44f1a0b4"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/GuardedDomainProjectionTest.java",
+      "sha256": "5aa5a1851aed36beb1f3fe39eb03e5dd27d74b2ebef8dae5fb332fc15c0c50ba"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/GuardedJoinDuplicateReplayTest.java",
+      "sha256": "4544128feb6b69fd3ab0079ed477ee14dd67a195322e8c1eb5ba6ee6660a1887"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/GuardedJoinErasureReplayTest.java",
-      "sha256": "9377d00514f39ee708969277c54ea97d7c605967f9c81cf93ffeaa4329c6ee92"
+      "sha256": "902bbc8ad93f13df86aa7fa8c6aca777902d73f865e5f146616957c27f47d816"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/GuardedJoinFactoringTest.java",
+      "sha256": "c965406e32482e64afdcfc58d987a8c413208a7cb9702be260a4d772e3c577c4"
     },
     {
       "path": "src/is/fivefivefive/CanDis/GuardedJoinOccurrenceReplayTest.java",
       "sha256": "6dfed22caa429acb91cebe631ad85506afa45f8191659e5c828905751aab6421"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/GuardedJoinRelationalDuplicateTest.java",
+      "sha256": "c55707eb2803e93d1c5f0f798f94084148895380fc1abf8d45e3b27d5a2d64f5"
     },
     {
       "path": "src/is/fivefivefive/CanDis/HeterogeneousPrefixReplayTest.java",
@@ -679,8 +763,52 @@
       "sha256": "372da576219c8e1a32b54e1d79112b8be7d796a1ede6a8615318b576930ec5cd"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/ImportedPhaseScopeTest.java",
+      "sha256": "50701b9a6f29a201c24561ebedcabd5df2ab1d7b8d1b15fb8bd1da8a9b4a991a"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ImportedSingleUseBindingTest.java",
+      "sha256": "391e09c45c1beb893b940990c4c5aaa495753456af7ce84e95f4b4ea9aa3f02a"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/InheritedTemporalPhaseTest.java",
+      "sha256": "c54130b0c5fdd1232f5ffcc6eea54dbd3987c0aeb07e2f36f2f90afd701d0877"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/InvocationCopyTest.java",
+      "sha256": "c24160db0235c9e019b9c86c24e0396113eb69a80300320abd6c15b3f86e69d5"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/JoinSegmentationTest.java",
+      "sha256": "8d7a92aef5e32e9d457cc54f1b8ac1a30b1cea6328f4626613e14f4cc7cee79d"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/JoinSeqRepairTest.java",
+      "sha256": "735226e4f5d7796dd68507b53d9ead3a230681136cfc80fcb11de6fa7c8c4dbc"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/JointDeclarationMinimumTest.java",
+      "sha256": "210de87efee96fcc763aa48637f2645b22ce16e118413a92e66cd362786f2558"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/JointDeclarationTieReplayTest.java",
       "sha256": "80b921f1e5dc1b79adaae5ec97dd07f542a890889f3ea4177b30b5e7d692aceb"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/LivePhaseSupportTest.java",
+      "sha256": "2e139c10d46d1e87ff1e8775fed5b1f95896a0bd824ab6da51da37c99c5aaaea"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/LiveReadMapTest.java",
+      "sha256": "5d7adf06cbe5d01131258b1f8f06c10edd9184e8f871ae53ea8bef47b66223c0"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/LocalDeclarationProjectionTest.java",
+      "sha256": "919df3f6a1266e2dc8ce8f601a75fa2eafc8bab6493ca30264a42939f28dc2a9"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/LocalDomainPortSharingTest.java",
+      "sha256": "5733dfeeeb8c1c8c053fec11ae03beb23ad0d2cccc209ca34182571fec5d7275"
     },
     {
       "path": "src/is/fivefivefive/CanDis/LocalDomainSingletonTest.java",
@@ -692,7 +820,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/LocalOwnerCorrespondence.java",
-      "sha256": "262e09e0bca76f469701cb685cd9d935caa1d118dd0cdb6913a88f5bbe5bc620"
+      "sha256": "e30046bdb8584daae955c4bd5baea0ad2f676d77280a28369fc25de2ef0a0b86"
     },
     {
       "path": "src/is/fivefivefive/CanDis/LocalOwnerTraceTest.java",
@@ -711,6 +839,10 @@
       "sha256": "88a01a59b93046982f432a04562c54b5c5558bbc3813077d9958f0351ed6f1c5"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/MatrixCaptureTest.java",
+      "sha256": "77f49fc8e5614481e09fcdd1230599e3afa33c67e3a2431d2b8c69a1196ce5a3"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/MixedPaidDeclarationShorterReplayTest.java",
       "sha256": "dddc188a5a749e927d4db6632c3289e1569aba5cf89ea2e35a57d9356f587493"
     },
@@ -719,8 +851,12 @@
       "sha256": "389670d9dcfc5f4a78995d1fbd667edd646d5116ad01200fce657214ef61da72"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/NativeDeclarationTraceCoherenceTest.java",
+      "sha256": "47f5040df81b9c22566d5563eb8543f75c2e5767aeffbd41ee0aacf3cf1b00b4"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/NativeOperationComparison.java",
-      "sha256": "50ab63461851cab9233ac7cfa77852f5e2d40d5aeedfab3d2fce6a02cdd17052"
+      "sha256": "183688e9848e9b0e7ac7f1da3fb2d9d54eea9517bd148e87867a4308556abf00"
     },
     {
       "path": "src/is/fivefivefive/CanDis/NativeOperationComparisonTest.java",
@@ -728,7 +864,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/NativeOperationGateTest.java",
-      "sha256": "dc0b1d44bd20266aa0e7577df135a3857a2c7ad40026f5abf32f5bda50b6be5e"
+      "sha256": "8ed817331361ac2b931a463bf2df7125c2d00436a377fd6a7a93d025cba8c74c"
     },
     {
       "path": "src/is/fivefivefive/CanDis/NativePhaseReplayTest.java",
@@ -739,8 +875,20 @@
       "sha256": "7aef527347a0353345b5de7b72d42971607b7a4c78d501455047d53d6431b9ec"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/NormalizedDeclarationDomainTest.java",
+      "sha256": "caf983a828820e7499200578752520c09a3be5b7938a7b710353056c157b900f"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/NullarySourceCallTest.java",
+      "sha256": "5dbc0c201b47979eecf60e343b4a3f217e2dd383042f18b3dbdd84110904ded5"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/OnePaidDeclarationShorterReplayTest.java",
       "sha256": "6a8b4acf8dc7f0d8049ab2106b303978000b0febe012e9c5a23580b53f75ced4"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/OneSidedDependencyTest.java",
+      "sha256": "a2870a3d911b6c8d14a045e0cec9cb5a63eea996619d1adfd4631c0a473307d0"
     },
     {
       "path": "src/is/fivefivefive/CanDis/OrderedCallValidationRegressionTest.java",
@@ -755,12 +903,44 @@
       "sha256": "6bb3c6d8cebb4ea095f161afbfcc9014fa19f09e1a97df552dda1457000ae007"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/OwnerLinkedDeclarationSelectionTest.java",
+      "sha256": "a78b4c2609f31164d14e48777b18c9a9c1bd13e3ad07c7e39bb72f5ed1dea3f9"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/P06ShorterReplayTest.java",
       "sha256": "b76d3454e9f81602eee77fcfa363349b7936ae8f62c94723aa4366e308ee250b"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/PaidAlignmentExtensionTest.java",
+      "sha256": "de0cbba3cb3d98affcad2bc43ebc5909f5219043dd40d2ea083a4a6aec559b31"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PaidBranchRouteTest.java",
+      "sha256": "55365c05fa0333f410540a63df2686cd1f536da2fc5fdafc973aaad66b0a6446"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/PaidDeclarationShorterReplayTest.java",
       "sha256": "8f2520f316aa099c777b8bcf31d29e203b7099adec4792e749e057e281a7c66e"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PaidGuardEditTest.java",
+      "sha256": "a9342180e51d760b95834b4be72d4a79ceb0b979b91f092bf6b9e6a3f59f27a1"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PaidImportedBindingTest.java",
+      "sha256": "3c7ab3bb19979cebedf8f73b7fdb64eb8104d2ed1c741539e66148af0b2fa859"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PaidOrbitTieOrderTest.java",
+      "sha256": "89232f8e87c261089ca37b07a6b5fa8945fdd73c993a57b615d668a8472b42c0"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PaidSlotTransportTest.java",
+      "sha256": "83f7ffaaf96e3f3bf357397ebe25656b549d3350691d66a6803df66192cd9a1f"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PartialCoherentMatchingTest.java",
+      "sha256": "f1bddfa3300620a41af2a5c6d9248f1bab2f26970867b342b071f87aeb8d91bd"
     },
     {
       "path": "src/is/fivefivefive/CanDis/PartialJoinCompositionTest.java",
@@ -771,12 +951,32 @@
       "sha256": "7dc62bc0d7dd2c4204d64393b1469b0ac0a0cf604725c6746c94487f9b10b5ed"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/PhaseIdentityJoin.java",
+      "sha256": "fbdf07b0c9d52a2a75d7a5782008e2114c7d48f006eabe680a96a15cf31ab10c"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/PrefixBinderPlanTest.java",
       "sha256": "f005f22aae44e365bb4c2aadcf873105dea8b2a1c3cef3ceeb190fd10f7fe4ab"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/PrefixCallCorrespondenceTest.java",
+      "sha256": "dc057033df8ac8e5f31aa25cb9bfc996d960ecb094b92a6a777f4a051a91c838"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PreparedMetadataConcurrencyTest.java",
+      "sha256": "123accec499a4428d1d971f725a3bdeea0be0206cde9adb1ee09915045849008"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/PrimaryAlternativeCongruenceTest.java",
+      "sha256": "fe31c7c0fe1484681e8769f8f87bb7caab73c28cf323f1053c19c691c105972c"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/ProductShorterReplayTest.java",
       "sha256": "8fca0c5a55eec0f3e1de501385f70b66ef93b02068e6bf662d8e9f91614e6f64"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/QueueProbe.java",
+      "sha256": "3afff0d18d6de562cb2a94f6b330c89fa09e280765b15bee90b26aee494df0da"
     },
     {
       "path": "src/is/fivefivefive/CanDis/QueuedPatternReplayTest.java",
@@ -787,8 +987,16 @@
       "sha256": "68a4f6a1173d494a1beec2aeb9dcd5613f1e7c6c12531c8a5643d70a213adbaa"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/RepeatedOccurrenceGate.java",
+      "sha256": "f26a0a838519adba4c2f0251be66f033888a182051e5564773e4b318e694ba26"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/RequiredPolicyCoverageTest.java",
       "sha256": "21dcb0f5655c94b3dd439d116b4d9d0baefbca396c45affdd5606dec0b812955"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/RetainedComprehensionPaidTest.java",
+      "sha256": "580455e0b7b0ffa31ae6f5b50b78991e56b09fa734b964af65c7a614d051fd77"
     },
     {
       "path": "src/is/fivefivefive/CanDis/RetainedDifferenceDomainReplayTest.java",
@@ -803,12 +1011,20 @@
       "sha256": "47ebe61791473ad7c2fbac6579c4577dfb524d36ba6fd6e06d4cd700b855d8f3"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/RetainedOwnerAdmissionTest.java",
+      "sha256": "2d492bc791c0554f8b526fcea3a3ad1a97f7176a729efb1f21ef17a118a2fc4b"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/RetainedPaidCandidateReplayTest.java",
-      "sha256": "f7c73500bff61cd4feef2ffa8c3acd9fe235c4f9db2e64bc11307b9bbe17133b"
+      "sha256": "b88cde26af90327da2298ec5f86764a460eabb4b6178d7915c7c41cf09d63a42"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/RetainedPrefixCandidateTest.java",
+      "sha256": "4e29dfc4be3ed0a03c0ac2601a4487f488fafd9496c45e4050ab523e2bc6aab3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/RetainedTupleCallReplayTest.java",
-      "sha256": "980889ca58d06f09d7786b669634409ff67399789c1053fb8a1697f715d57c09"
+      "sha256": "defd738d534a9ecd7bc7fd53329841982f23d8a640cfbc4a236deb93e6ce6988"
     },
     {
       "path": "src/is/fivefivefive/CanDis/RewriteRuleTraceability.java",
@@ -816,11 +1032,19 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/RewriteRuleTraceabilityTest.java",
-      "sha256": "a38e99a09d924edd4bb88252a7ea6592226bd2fefb84e34220ca154818682eb5"
+      "sha256": "4820cd1a339de574fc5fccfb4d1eafde271f17ba15371a72be8986fc0cecdad4"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/SamePhasePrefixGroupingTest.java",
+      "sha256": "f66c79dd6164246899a57ccc228e8394a605ff8f04e182b72188178200f44be2"
     },
     {
       "path": "src/is/fivefivefive/CanDis/ScopeBlockTieReplayTest.java",
-      "sha256": "49dc8f973c143e20f6c0415189b39fd1d306300aa0bab26c52fb5666da9137e3"
+      "sha256": "b13e5620e5463f59f8f5b22f6f574211325ea370ec5899ce7daed94e9c4a544e"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ScopedCallCorrespondenceTest.java",
+      "sha256": "56e77c1294a9b7ee04f977b39eccb45a9805f6045cf892f8ee6262bdddc5e1d3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/ScopedPaidAdmissionReplayTest.java",
@@ -835,12 +1059,24 @@
       "sha256": "c695980bdd4b8a734484b81427b708cf93a223f7a66b1ca47b035dfe5a0bfb7f"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/SelectedDeclarationCompletionTest.java",
+      "sha256": "9395063cfe0bb511a95b31aa8292ce6d42d1aad827ece1e75f6e17c96d95961b"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/SelectedIdentityAlternativeTest.java",
+      "sha256": "f404e70865b382933b94ef719ad49ac183e05409b4ed199211a1a965289c5b62"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/SemanticProfileSourceCommandTest.java",
       "sha256": "383153def4aac70c0ca7689113954df11eb4ff65e212de2a89c92e6c91145ff8"
     },
     {
       "path": "src/is/fivefivefive/CanDis/SeparatePrefixOrbitReplayTest.java",
-      "sha256": "cb0ca55c6e4210946cd5e2e9de7ba26571a0d8476f207d1f3801b639045c4d0e"
+      "sha256": "269997aac4f20268669f8fbb44a52406db897a3f00b7227a0bf970d2e39dfc53"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/SharedActionBoundaryTest.java",
+      "sha256": "c85ffcbf7e5193e4f4ee9b08e2075e2a4cf31c7736b57e3092c2ce481f03f6b3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/SlotBindingDatasetValidator.java",
@@ -849,6 +1085,18 @@
     {
       "path": "src/is/fivefivefive/CanDis/SlotTypingSyntheticWorker.java",
       "sha256": "41cf4a93be2e469c3a03e1430360977c3176d419d37d285cb07fbe401e873e4f"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/SourceOwnedFrameSelectionTest.java",
+      "sha256": "3b531787ef59be1ff3d72b02a13c1efa3473fd30736fa06df2e9d3a1df06fbf8"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/StructuralDeclarationTypingTest.java",
+      "sha256": "74fb10deff296ce6c70e72bc4b2357256a56e9029749146e826678d2472aecb7"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/StructuralSharingTest.java",
+      "sha256": "c6d22d47deefc5f83d15c2a180fea6261a17f4d0a8575bdb443014ab5ccef495"
     },
     {
       "path": "src/is/fivefivefive/CanDis/TemporalCorrespondenceTest.java",
@@ -860,7 +1108,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/TemporalOperationCorrespondence.java",
-      "sha256": "8693cd590ce9ace56ca4861c41ef3a9c04acf2f6378d4d5e5f2b9f99c7dce46e"
+      "sha256": "5870a66bc15849e46c87e36cda3ecfedc038d9b1db8674c30a16f3c122b459a6"
     },
     {
       "path": "src/is/fivefivefive/CanDis/TemporalReferenceReconstructionTest.java",
@@ -869,6 +1117,14 @@
     {
       "path": "src/is/fivefivefive/CanDis/TheoryLawPolicyRegressionTest.java",
       "sha256": "e8e78e18b8edd6357c4175095fd73c6604daf405e212cb63e3ca6d67bfaf465a"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/UnaryPortMetadataTest.java",
+      "sha256": "29887e457be148716cc80dd5db20bf65be845ce8fa092e555e3aa607c7a9beb7"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/UniversalDeclarationProjectionTest.java",
+      "sha256": "c408ede351bb512d4af4aa88cd735cc8fda8617a28a350bfcbd8f86fdc8a8687"
     },
     {
       "path": "src/is/fivefivefive/CanDis/UnusedBindingD8Test.java",
@@ -880,7 +1136,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/UnusedDeclarationCompletionTest.java",
-      "sha256": "696d9752852534a0a714617935e4dc1f893475f5d049602e7f0ce3ceb424d887"
+      "sha256": "66f7f354097acb90db4fd6c1d075b1d273feb0a2cff83681fd5e64f0f7411521"
     },
     {
       "path": "src/is/fivefivefive/CanDis/UsedTargetPhaseMappingTest.java",
@@ -933,6 +1189,22 @@
     {
       "path": "src/is/fivefivefive/CanDis/ablation/SlotTypingSyntheticTest.java",
       "sha256": "86b85c55eaa565da117d1c0c816b3a2e197bdb7677a6c0003ce50e76ea2f45f5"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ablation/soundness/comprehension_order_inv2.als",
+      "sha256": "685d233de04ba1b347cd7ce76951f6260328adcb8d8fe2e0045fc1f35ae2e4f7"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ablation/soundness/let_shadow_inv1.als",
+      "sha256": "b6cf25f4242f23121da7e97f0a9d7dcdb39b0e193399c4aec7c89604f682a2ff"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ablation/soundness/signature_shadow_inv3.als",
+      "sha256": "f50aa94bffae9f918607fc1e27991ce623d70143d9f1726425bf035e8b16dba3"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/ablation/soundness/temporal_implication_inv4.als",
+      "sha256": "840e31c993b90cbbb204cf2806e9317aaf7130191fa2e04a62770b9a0e161fe2"
     },
     {
       "path": "src/is/fivefivefive/CanDis/adapter/AlloyAstTermAdapter.java",
@@ -1008,7 +1280,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/BoundCallEvidence.java",
-      "sha256": "d660ed3123a12c8408bb410ba0e63c11e1a77acf43a595ecae4ca0d79961d00f"
+      "sha256": "67adcf73416d0b99bb298f5007ae8145403408f32a9e3fe161f13e8371885894"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/BoundVariableCostTest.java",
@@ -1020,47 +1292,55 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-      "sha256": "8efc94723f3fd45ee962eb984cbf6f6bc5fa7735fd64d0ffc3eaff05c8bb163b"
+      "sha256": "bcfd80ca453e39bc0283c76b8190375b680c6da6497e6d71f3d22c5f22a817ce"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/ClosedCallEvidence.java",
-      "sha256": "d5573ba83a3c833cf5fedcf1cbdedaea04fc04fcdb171bf083c7ccd8fe95a5ab"
+      "sha256": "26d48a190366b2dcff5ebdff5ef3b8401a1c90777eb7cc67bcafc1c0763045fc"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/ClosedTemporalPhaseTest.java",
-      "sha256": "1ea462bd80e384d4ba07893bfbb72a6ef79ffe1e67cc0368075316ab03fcbf89"
+      "sha256": "c655add38f40758f27b8e4aea4d8025395659ffd0c5dca05e4a41b3746ef52d9"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/DeclarationOrbitShorterReplayTest.java",
       "sha256": "41c4c3f7d12bdd91f8b2c89ef621711fed02a89cd5975df4da80a3e76f547d7a"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/core/DeclaredSlotReplayTest.java",
+      "sha256": "2bffbbcda0cf10770e7c9f72ccca7d282075c24ffb7fe3c3a806c924753b36e2"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-      "sha256": "871bb5d4468ef60aa2db96c256e96a5a44ea3cbc63f6e7653805b84eeb8ee6b2"
+      "sha256": "67c8098145c483e35ff48ef1b561128ba9b5279dbe6fb8617543da4b8d4bcfda"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/FastBinderOrbit.java",
+      "sha256": "c209c278607b6847c41bff9c93d334b0568fd387884b15848fafb225a0132f09"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastChainGeometry.java",
-      "sha256": "6dea98807d0dfbea8c68fd55b41bd2594cc92e0045079acb29dbc1771e618445"
+      "sha256": "aac9075ea9a9b4a137b505b2175cdd068254e560dca70d35dc0293d5051aed9a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastDeclarationPermutation.java",
-      "sha256": "1eb780b49cf1ed8be2a7ada92aca63f0a6559f1d9bc47ba3b0e0ee5d48c14297"
+      "sha256": "f1136804b0bccb11b32acc4d9a78872ea92c9462a4051ee8bf02804838ac23ae"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java",
-      "sha256": "8ffab0f0e11c0f57b25ad57c53243dfa3009043ef8a63b3ed32cacc2086a4719"
+      "sha256": "3f39462a903f81053daa05b2fa10cf79127257417ee894ee4ed48c23098bb619"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastLocalPaidScope.java",
-      "sha256": "0b35e313f08f711997e30c8ff1c14af07d4af919b5a08cdc011b0b0719e8771d"
+      "sha256": "a5fc457e22f1092120c794b131511abbd4520f33e79d7e1f84ece1e19cb64f92"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastLocalPaidScopeTest.java",
-      "sha256": "ccc2d02d443f67b91adc407661ef4a9071c4815cd2327cadfcbf46f62766e282"
+      "sha256": "9f097c6b67d008ea3a15f7acdcc2758d6428caa145fd5c897ca207230360e6f1"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastNestedPaidScope.java",
-      "sha256": "c5e057b8a1353979ad7812cc45172d644fa5a2f7683f2e95444b800e9099ee93"
+      "sha256": "fae21204b2c72d6fbc1e12cbfb98b532a26efe241b7f06d8653bf7954d4ed688"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastNestedPaidScopeTest.java",
@@ -1068,15 +1348,15 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java",
-      "sha256": "7b7f6fd019f9520402f02c869db285e502dd4db8b63993d4964e75d8fee02f0d"
+      "sha256": "0feeb44485a96f46f228c7d1f9a03bfabb7a4cc91e2faf708c6e092882070562"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignmentTest.java",
-      "sha256": "04d112068f5d7783aca399a030171329ad6af24622ef4cf2ead65f6fbb662fd6"
+      "sha256": "a02c77dc70ee84ee4cb831ef8d88bd0482d78d59e849dce0502c5d9a4838bb98"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastPrefixSource.java",
-      "sha256": "69e91309deb26fd5280125267df59247c79f7172bc4753c37b85180a704fd9a6"
+      "sha256": "f1eeda5e352fbdec43de372bf2ff27d709936a0eb7fdcb08e8e1283c1af4b236"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/FastPrefixSourceTest.java",
@@ -1087,8 +1367,16 @@
       "sha256": "d5c2ce43e676055ebda66b37bf9a97db5aa9ea9f959f85c2c3aa16fd21c17884"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/core/FastSamePhasePrefix.java",
+      "sha256": "5625304b65e7b171a7b215bc49c3fac6fbe4ad08c68562a30c203e966a09d8f1"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/FastSetDedup.java",
+      "sha256": "10fe047c732ebf1c346e9da9dba337e86965a9550acdcb4ce60a58d88085f1bc"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/core/GroupedPaidDeclarationAlignmentTest.java",
-      "sha256": "94cf806de6a1cf01ef38dc37f54d12fd4efc6f0e63d0ff06d7312a3ea7525088"
+      "sha256": "c6e0a4331cbee47eae881af5afb8409407f1f42eb67ad5640d696aafa52786f4"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/InjectiveVariableFallbackTest.java",
@@ -1099,12 +1387,24 @@
       "sha256": "b5535d3e3e121a3c5c7b2730dba7c8c0f2bf88d26755365fb9d5c0a54b4b1d74"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/core/JoinSegmentation.java",
+      "sha256": "f0ae0abe1939aa0e85edb2b23734f47ad9a903f98c61148240549009395d24f6"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/LocalBinderTransport.java",
+      "sha256": "7df231b98731d6c4b4c07034ff15e3a2bf246498e3fa6c3c40e876fee21e80d4"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/LocalBinderTransportTest.java",
+      "sha256": "f1b01174d8e3182c5446bf8afeb3160bfde628aa2469292e3ddfc68319f35d93"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/core/LonePaidDeclarationAlignmentTest.java",
       "sha256": "94265bfb0d481d551f74cc833270d6500a4d82298f7cd3916b3145d66fa56e75"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
-      "sha256": "9ada6d76a745045d34d86db25ba8e30a4d758796ada6df9fe58c4905ee50e223"
+      "sha256": "27f81ae983c52ede7fb00202cf69d0859ccfc68b313c92bc3a755d6f12fb332c"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/OnePaidDeclarationAlignmentTest.java",
@@ -1112,7 +1412,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
-      "sha256": "a54123323249c019dd72ca8eece4fa9a093c648ba3bc2ecac2e921030329f4f6"
+      "sha256": "657d5b8536b55bf3dd658eac0fcc49c6f0e56e1f7545ec1cbb9490823388130a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java",
@@ -1120,7 +1420,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
-      "sha256": "8da4e25d08f77cd2a1ae2add79d1083c10ed90a5bc31723ead4aab4d206e84a3"
+      "sha256": "869ffafa29b916185523c1e568815dbac148674512863313756f8863e9df3e10"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/RenamedIdUnionFind.java",
@@ -1147,12 +1447,24 @@
       "sha256": "3b1af313dce3e371f44170992bc2c1b3f8eb554492765fbbc15af8d608fd8c65"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/core/StructuralDeclarationOrigin.java",
+      "sha256": "fe5eb84ce9f8ef52ec08856205f89008ad8f33c3065b4ee86c44b047951afa29"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/core/TemporalOccurrenceAccountingTest.java",
       "sha256": "a2badd3cff51a0730bef51ef2e75d0b0f4c4420669c459ba496ce7e7b8cdc844"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/core/TemporalReachabilityTest.java",
+      "sha256": "7a269ceb5bbd22e3e096d5dcecce0fc9c77b56a402d4ef6c2d07b03c9fd1f1b5"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java",
-      "sha256": "8d06a001fa5d4a31ac49bc13ecc989a9b1f82d3fbe2c469bda7048bebbf9bf6d"
+      "sha256": "b3aec3cdd09d29f9bc9d167c3ac1a04a75ff77c6288ba980c93e291dea08a0e3"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/core/V3WorkBudgetTest.java",
+      "sha256": "dbcad8f85c428aea4022fc66d19dc88ecc28f068d66b737da37bfe469df917dc"
     },
     {
       "path": "src/is/fivefivefive/CanDis/core/egraph/AblationEngine.java",
@@ -1236,7 +1548,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
-      "sha256": "eb7eaa9dea9d6f267e6edb8fc3b698774dd3f5e4e14d21f9fc6e8fe6b01f4114"
+      "sha256": "9f5c0bfbf40fea35b49c97a8aa505f5cc9a4c6f7207925fda66bd1b1fd3a972b"
     },
     {
       "path": "src/is/fivefivefive/CanDis/macros/ModelEnv.java",
@@ -1244,11 +1556,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/CertifiedDeclarationOrbit.java",
-      "sha256": "0da1a918295ab365d6590963791ff9a00f57ab6143ffc1248df423e70df200a7"
+      "sha256": "cf39ea146bb6bf585d83e042cd7398c3c5ee3775d2b8d0786ad6e4f9affb5356"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/CertifiedDeclarationOrbitTest.java",
-      "sha256": "d5e9578269140a14c3424ae3a1cc530a16b55e1c18f2ae495c0f8ba160804a08"
+      "sha256": "0110f3cbeb59f36920ac095860981be81da0868247ca5ea4fb65b257f8da2ad0"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/ConcreteRepairMetricRefinementTest.java",
@@ -1256,7 +1568,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/DeclarationMatrixLink.java",
-      "sha256": "2f1bce386b4944134121cfd8b556ead845ccb8fc7aa1ebaa093678adfe798b3d"
+      "sha256": "4311eb87628e3b4c1575985e8538d8b1ea084b34b20bf34fc057801f329d9d28"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/metric/DeclarationOrbitQuotient.java",
+      "sha256": "c10fd7494fb051e5180d03e63f4c2125edf825cef6006be5b57d5cb0ea47007e"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/DeclarationPresentation.java",
@@ -1264,7 +1580,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/DeclarationReplay.java",
-      "sha256": "5fae8d3b479f22fbc146c23a7a6fdbc6643ddaf61ea8c0e372d9cc5229100890"
+      "sha256": "b85ccc7750179036ae9a0ad01dba2c948d49ca340352c008425ab1442466de8b"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/metric/FastTemporalReferences.java",
+      "sha256": "cc80857ac374b93ab916a5abd7f66f1d2b0127d1b961fca8631ae41aa3af7eb9"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/MatrixDecision.java",
@@ -1276,7 +1596,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/MatrixReplay.java",
-      "sha256": "dfd245afffdc14968b7b134404ab104e01446b7d5103306fc79163935f3ee53b"
+      "sha256": "a548a6086c86e9d28d7d336fbb21384c365e7286763c0bb3cc1dd28f769d3a40"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/MatrixReplayTest.java",
@@ -1288,7 +1608,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/NativeRepairTrace.java",
-      "sha256": "563de419b6a65066a26a42d4a9d63e7c799d0af6ff9751bb6a9fc18064ac58d2"
+      "sha256": "811c1d71cdbb67e10bf3bf6f8ee921ceec81595d1d8dac3bc024b539eb6378bc"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/PaidTemporalRoutingTest.java",
@@ -1296,7 +1616,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/PhaseReplay.java",
-      "sha256": "3bbf8a5bdcafdef9b6c42431d0a2431ab104c5d1c4c3c784085fd3211ea2b9bc"
+      "sha256": "cd70531785ceebf8c80ba5b06aee00f579c06197b73178a065feed3c49009e5a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/PhaseReplayTest.java",
@@ -1304,7 +1624,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/QuotientRepairDistance.java",
-      "sha256": "bf8c75a2fd6dd6322d41344b3045fce8c7e49704879e47c9683ebb125c4741e9"
+      "sha256": "0d24d10f4e35a6843ab6277483b6d9b073ce456189c4af9b7e501d3f129a4846"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/QuotientRepairDistanceTest.java",
@@ -1312,7 +1632,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/RepairProjection.java",
-      "sha256": "5a1076c4c90477891e379faf05d6111c938f026949183e9cbd0d387be2a9a4ef"
+      "sha256": "236a648de43272ba05980de62ffb1460d7a471d3799d51d028f36fa765a3c87e"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/RepairProjectionPermutationTest.java",
@@ -1320,7 +1640,15 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/RepairView.java",
-      "sha256": "2b1d0998389e6f698e2aed5e4d45e879bd90da021889fd18b136699b629c4149"
+      "sha256": "51f85394263c08a4361b72c07b0d954b979a806a5c8f73a9d452218152b73e69"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/metric/ReplayValidationException.java",
+      "sha256": "298cc0d9795ba380f7753d84e3c85152afa6d23b794d2f14eb8c73b0051094da"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/metric/SelectedDeclarationCompletion.java",
+      "sha256": "a50f147a354dfb904238252355aa519eb8efee4f013e6859c804ee5ca47e04cf"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/SelectedTemporalPaymentTest.java",
@@ -1328,7 +1656,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/SelectedTemporalPayments.java",
-      "sha256": "2d36b4d33c64ba5fe3cf3e1893ca32ac5233c26f1ae169c42dafc5e2c2f683f1"
+      "sha256": "39c3b47fae60d5ae209463650ff15bd8dfc5b3b4c69d5a708ee15e7280b0296e"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/TemporalReferenceChargeTest.java",
@@ -1336,7 +1664,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/TemporalReplay.java",
-      "sha256": "d5fe198cbe321c7bdef538d14705ce2e2f0b34521b1eaa7b7ca503e61dd25315"
+      "sha256": "5751e8826400cc8a1facc5e62d2766afb99e79d998ad95219ecb55a01c180b93"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/TemporalReplayTest.java",
@@ -1344,7 +1672,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/TraceResources.java",
-      "sha256": "7b93761b3d1fced34226090310560ec3bde9e835d413ac32ff59af25804a0eee"
+      "sha256": "30c412eb6d72f904d6ad40e7a6bee16588d4847de52723497c2e130dbfe55571"
     },
     {
       "path": "src/is/fivefivefive/CanDis/metric/TypedTemporalDerivation.java",
@@ -1357,6 +1685,10 @@
     {
       "path": "src/is/fivefivefive/CanDis/metric/package-info.java",
       "sha256": "3da4b0a011a3b0a30c239b9386a958eafabe0d0004c83f6a4e5be943abd0d14f"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/testdata/permutation_inv.als",
+      "sha256": "3f6b57f2b69be9079d4bc6303169b4ddc72acd7886ac0c3824434a59ac0958f4"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/AlloyLawRegistry.java",
@@ -1404,7 +1736,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/BinderAutomorphismGroup.java",
-      "sha256": "2b567b3ff168e7d50a079b1937d50292aaa30cd8a89c074382588786d446a2ee"
+      "sha256": "8472019f3b53db6c92de9f1dde3f1bd3d1c97f57f9f3088d997f14ba88ee46b3"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/BinderBlockDescriptor.java",
@@ -1435,8 +1767,12 @@
       "sha256": "b748829e42053e4ba7f51373728c01deb415563674938c5e925e52075e36157f"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/theory/CallContextWeakeningTest.java",
+      "sha256": "b4705d031ad6208396786bf97edf0e3bd5f92463dcc7540de09d4a628ba46a62"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/theory/CallOccurrenceCertificate.java",
-      "sha256": "723437a7e23cbf345ff4a4e621ded3d409a028226b290c7d1beef88a5d045897"
+      "sha256": "763556981e6b451e92147ab03a7ef7aeb455a34e3d887a6e0fcc756da4b9b492"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CanonicalOrbitCertificate.java",
@@ -1460,7 +1796,7 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CanonicalizationDomainException.java",
-      "sha256": "5eaf8dd3c7f14855c0c9b0e642c6615296155bbc780acd10e59e455cfa621092"
+      "sha256": "ba087206ed2219609a55577f3bf828029dd50677e831b7d20fb20836c3e0fe47"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CanonicalizationMetrics.java",
@@ -1524,11 +1860,15 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CertificateVerificationScope.java",
-      "sha256": "d87d02d974ed8c6333bfba3afe3eeb477a070bed04bdbd152b8869d162d35912"
+      "sha256": "937dc1a44c1dd1b9a68fe7d485919af5e1db85f2826ed8247ccbca369f76d206"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/theory/CertificateVerificationScopeTest.java",
+      "sha256": "5450ad15123c4fcb7fa919d82223ff21747171f05f2583ee7fc2d80fd2daa21d"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CertificateVerifier.java",
-      "sha256": "547eb37d96c38723971ef5b6634d99e0260f00a993c83c643da8624b20103373"
+      "sha256": "e80eb8a02af5cd06694ecca7239ee1489608334350328a430439ff118598f320"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/CertificateWriteMetrics.java",
@@ -1775,8 +2115,16 @@
       "sha256": "146fde7d8efe6c315fbf31ee4298dce09c56357628f046787a8ca9a8d78009d4"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinDuplicateEvidence.java",
+      "sha256": "a65795238d82ab1ab238d315edcadffd7a29786fea8bba627c4da5c8f378b350"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinErasureEvidence.java",
       "sha256": "618d4d3d65a614e369dd7a2841fdce58e0537497d7cc671d611241f7c5d22ae9"
+    },
+    {
+      "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinFactorEvidence.java",
+      "sha256": "87ccbd5425086f22bed0004db506cd842b71d800f8dfbea62034fced7a1c0b00"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinNodeCertificate.java",
@@ -1788,11 +2136,11 @@
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinSourceFiber.java",
-      "sha256": "1dae8088c63a89d1dd14a93d7759ad63a803efea495e68b75958180fd60f0fae"
+      "sha256": "c89f77b6ff3e2ca39b70bcc5f36509e7a0617b44bc5218d13694ab54f046067f"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/GuardedJoinTree.java",
-      "sha256": "3ba8e7cc1aafb27826b75a11418cd99d9b2380cdbe99ddbc2ff5626a6b4eea06"
+      "sha256": "59ca4e5690d335fab7875ef2b34727b6760df9bda7e7062e5133dd93751c88e1"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/HasSlotSupport.java",
@@ -2015,12 +2363,16 @@
       "sha256": "ceb4fb845d3a06f6f2ee7940d9d547226e726dfa58a198fcfc9f4caf0767ec46"
     },
     {
+      "path": "src/is/fivefivefive/CanDis/theory/StructuralKeyDag.java",
+      "sha256": "c718a1369bbefbc12a38081b8e101d4237eeacb5c8a7448603534153a40ca109"
+    },
+    {
       "path": "src/is/fivefivefive/CanDis/theory/SymmetryCertificate.java",
       "sha256": "cc9226113409a1886da715789d8f56c6adfa95f58c9d3695549be745575ff02c"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java",
-      "sha256": "9a83a7c3a9d50c7d05789e8952451ec0bc27294797ba9e954f4dd03315834648"
+      "sha256": "12990ed5fce6717a72f0fd15f2dc3eb580a4c121acef8cd9360b536e8f14a76a"
     },
     {
       "path": "src/is/fivefivefive/CanDis/theory/TheoryCanonicalizationTest.java",
@@ -2170,23 +2522,23 @@
         },
         {
           "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-          "baseSha256": "33f8ccb1bb0908893c248b703f45a12e7ac61cb6189d5d7755e4d3738252afd3"
+          "baseSha256": "2a3338ccb5d5cf65625ea0bd665cf9d879d23e1af0ff83a865ccf7fabf6476f5"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-          "baseSha256": "bf65d81cbc92b7553ef4d3f242ae223abcc8dda224371ee75b98154adfd1602b"
+          "baseSha256": "c9a317e15e828238d5270f337ad6292f2e1143f325ce88ae025100948c2cf64b"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
-          "baseSha256": "7fca9c9ff31fe0014b099d86f5413abec882f23fc60f76dc71cf6a6524bf56d3"
+          "baseSha256": "7f184d2ca998d2e79966e20a5d0e08f90a48d7a711b5171437b44cabcf9f8f85"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/QuantiVar.java",
-          "baseSha256": "fa87624fdd2eb8af2e576c557ec2b9c843a3dc3135104d9510602750fec86f91"
+          "baseSha256": "0fe487ea7a71b0e9b0c694cd8b7e27801b2597fe2c59cd24465cdaa77f74f2cd"
         },
         {
           "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
-          "baseSha256": "72c3f57102ef7c96d27aa02df2fc39d85fa3a42e2c73c90511892ccd4c929da0"
+          "baseSha256": "cd67492fc8e7e77937e3e34e5650e91a75a2994cc7282895e217c0d23c48c112"
         }
       ]
     },
@@ -2196,7 +2548,7 @@
       "files": [
         {
           "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-          "baseSha256": "3999fa9b351f9660204c52a476338f05716e92241b4360c2270ce32f12d639e0"
+          "baseSha256": "0bac9738024c21f47a4fd7d4f4dfde0f3ac91de616f0fd3652c5447608cc1ff1"
         }
       ]
     },
@@ -2214,35 +2566,63 @@
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-          "baseSha256": "3999fa9b351f9660204c52a476338f05716e92241b4360c2270ce32f12d639e0"
+          "baseSha256": "0bac9738024c21f47a4fd7d4f4dfde0f3ac91de616f0fd3652c5447608cc1ff1"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-          "baseSha256": "bf65d81cbc92b7553ef4d3f242ae223abcc8dda224371ee75b98154adfd1602b"
+          "baseSha256": "c9a317e15e828238d5270f337ad6292f2e1143f325ce88ae025100948c2cf64b"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/FastBinderOrbit.java",
+          "baseSha256": "d282e04868e680d2767d5b7f25928a50d299f799ce59198976163f731e4aadc3"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java",
+          "baseSha256": "2d96a45d1017b0054dcc94d871a82ed342d077a22e5e1a3e7e6d6bd2b206d4af"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java",
+          "baseSha256": "fb803d8a7d431a4b2a15808a78f560b6a8eb274e952f4aba75551a618d795621"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/FastSetDedup.java",
+          "baseSha256": "95e09bed702edfd09f93484d1de258f55a0cd3a73e1dcd09bbaababd34fa595a"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/JoinSegmentation.java",
+          "baseSha256": "0b4cd1b244868c2f51593f0a8342ab9f3e7905a7a65720046ded95867d511c05"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/LocalBinderTransport.java",
+          "baseSha256": "0a0885b656603ccbd01d9e6fabb8783fd855472b8ff1ee31c280ad5d07285f6f"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/OrderedTreeEditDistance.java",
-          "baseSha256": "1f77f618e8dde7a8de9aca4aea86c72dbe0fd62bd350aebdc85d683a25132b23"
+          "baseSha256": "d50a8032ccbdae714cee4c0412f1618f79dbc739d2201b5509d3802a27897ac7"
         },
         {
           "path": "src/is/fivefivefive/CanDis/core/SlotPermutationGroup.java",
           "baseSha256": "95db42194d614b7f716f708c9bac999932f8fb7cc7ed66f3729d2990d626efa8"
         },
         {
+          "path": "src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java",
+          "baseSha256": "53d1020d4030cf1a588d4c5cdcba2de0ac7723262bfcd0c1187c919c52d82083"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/core/V3WorkBudgetTest.java",
+          "added": true
+        },
+        {
           "path": "src/is/fivefivefive/CanDis/ir/IRAgent.java",
-          "baseSha256": "72c3f57102ef7c96d27aa02df2fc39d85fa3a42e2c73c90511892ccd4c929da0"
+          "baseSha256": "cd67492fc8e7e77937e3e34e5650e91a75a2994cc7282895e217c0d23c48c112"
+        },
+        {
+          "path": "src/is/fivefivefive/CanDis/metric/MatrixReplay.java",
+          "baseSha256": "f4b5b823592feeac826d8527048d2f00536ef872aa57f020041a2d55ed04e83d"
         },
         {
           "path": "src/is/fivefivefive/CanDis/metric/TraceResources.java",
-          "baseSha256": "dd4fc16a8647f9639b7c1ab4098f7f3bf2ce2b1c57437da81dd53f07a698aef2"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java",
-          "baseSha256": "cb113cb43ba9ff637589f0b5ebd9c849da1418a88ff510d89706398f3d51133f"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/FastPaidDeclarationAlignment.java",
-          "baseSha256": "c800ee937b262bd14cc04ebc88b040019e80eec1ba403c0f7d5c33c035f27588"
+          "baseSha256": "84f67fe6dd7235ac3b5aeb16f865afd12344c02d1514aca32e3653a72ed26bbe"
         }
       ]
     },
@@ -2255,132 +2635,17 @@
           "baseSha256": "4238cb04cab230dbd0e1c96d173e7943101e0f3c2c50a84b40ca0294acd23037"
         },
         {
+          "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
+          "baseSha256": "2a3338ccb5d5cf65625ea0bd665cf9d879d23e1af0ff83a865ccf7fabf6476f5"
+        },
+        {
           "path": "src/is/fivefivefive/CanDis/CallAuthorityTransitionsRegressionTest.java",
           "baseSha256": "fcb0ab6ebbc091afaeeaa8f2442d86b1e76c3cfe5aea5273c9a85914ce7ee21e"
-        },
-        {
-          "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-          "baseSha256": "33f8ccb1bb0908893c248b703f45a12e7ac61cb6189d5d7755e4d3738252afd3"
-        }
-      ]
-    },
-    {
-      "id": "scoped-positive-verification-and-prepared-orbits",
-      "description": "Ported from ACGN 4b22429df6d79ef11ac77eef028837abbac17a0f: reuse successful immutable certificate checks within one adapter invocation and admitted declaration orders within one frozen Prepared endpoint. Identity/policy scoped, bounded proof retention, no failed-result caching; retain source/type checks, complete reference pools, trace replay and charged-work instrumentation.",
-      "files": [
-        {
-          "path": "src/is/fivefivefive/CanDis/core/CanonicalDistance.java",
-          "baseSha256": "e785abdbb51112a7f28b5853ad8d766daa3dff7eddcc45456bc61046487a0ec2"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/theory/CertificateVerifier.java",
-          "baseSha256": "b799022c48ca8523c643fae54140308a648e219546d5f931efc1f1a4f34c4982"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java",
-          "baseSha256": "f358983fa695651438e044a9674bee348f37a602e8c2c7b28614f1b6dd528a30"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/theory/CertificateVerificationScope.java",
-          "added": true
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java",
-          "added": true
-        }
-      ]
-    },
-    {
-      "id": "source-checked-fast-prefix-admission",
-      "description": "Share typed prefix metadata without full semantic graph construction in grouped distance search; retain source/type/owner, automorphism and request-work-budget checks. Includes exact old/new rejection, transport and Lean witness controls. Bounded review accepted; no universal parity claim.",
-      "reviewedCandidateManifestSha256": "9a47f28c10e683ce27bc0c76441830b7512d2b5c999692ed92a83a44549b2018",
-      "files": [
-        {
-          "path": "src/is/fivefivefive/CanDis/theory/TheoryAlloyAdapter.java",
-          "baseSha256": "770a7a89dbd5fcb6bd73abd7d9c02990360824d4056b7a26b2a91b059b49f108"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/FastGroupedDeclarationOrbit.java",
-          "baseSha256": "717da4eb8c3423e337e219142af8853aa4eebf746088b6af248fcacf0beadc75"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/PreparedOrbitCacheTest.java",
-          "baseSha256": "08b9640a7ff2fe563e76f97318cea98f2d6ab6e55f3922912122b05de53bd77d"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/FastPrefixSource.java",
-          "added": true
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/FastPrefixSourceTest.java",
-          "added": true
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/PrefixBinderPlanTest.java",
-          "added": true
-        },
-        {
-          "path": "docs/distance-parity-20261107/FastPrefixExchange.lean",
-          "added": true
-        }
-      ]
-    },
-    {
-      "id": "bottom-up-unused-binding-normalization",
-      "description": "Port reviewed shared Boolean binder normalization and actual typed source-slot transport; retain AlloyStudio source origins and work budgets. Includes both-direction native replay, invalid evidence and compiled Lean controls. Temporal liveness remains conservative; no full corpus parity claim.",
-      "upstreamIntegratedCommit": "8579d93f514d5f957729a6aa1a08ade67268d8fd",
-      "reviewedCandidateManifestSha256": "0768f56ff73d9e646f88d3582686275326b1dbb3da6e5d0ffb45409c159a12e9",
-      "originalUpstreamIntegratedCommit": "ef46feaeaa22d9c12475cde38159fbf65021c748",
-      "originalReviewedCandidateManifestSha256": "cf74d01ddd41ce2e1ccbb299948eb366ea512683be723980da8f2de7c0c48992",
-      "correctiveIntegration": "Initialize exposed-slot interfaces before snapshot insertion; dispatch reflexive comparison only for supported relation operators. Full reference-pool and both-path typed replay controls retained.",
-      "boundedSourceModelReports": {
-        "fourth": "8274a21d1bfbcbc8945f90beb6a4002b3ea7fd68c111a65ed418b1aef56b1a10",
-        "fifth": "b6be69c1acf3231073a511f614f98d09e0238f913a7eee8ff791448885848df0"
-      },
-      "files": [
-        {
-          "path": "src/is/fivefivefive/ACGN/visitor/MASGVisitor.java",
-          "baseSha256": "cdc6d1809e1bb12c3f2062d2e23e5cff4d9445b20653a0578f85837431b86f63"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/NormalForm.java",
-          "baseSha256": "007f2d55a8f01880cf2f64490e3d44bb2cfc6171f54dca10170dd63c4065c794"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/EGraphNode.java",
-          "baseSha256": "311796e8459d274cd96e6f274011f3592b732a24fb57798a0507db84ff3b3518"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/MASGVisitorTypeRegressionTest.java",
-          "baseSha256": "cb3aa7e0abecb044d33b61c1bbe88a6edd7b6fc8a97975643e9be0c78b09a4da"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/GroupedPaidDeclarationAlignmentTest.java",
-          "baseSha256": "b226ad9c00840c26dfd31ea48c1955d0cc7ecd97c736e5e2dba944d74d6be17d"
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/UnusedBindingDescopeTest.java",
-          "added": true
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/UnusedBindingD8Test.java",
-          "added": true
-        },
-        {
-          "path": "src/is/fivefivefive/CanDis/core/UnusedBindingEvidenceTest.java",
-          "added": true
-        },
-        {
-          "path": "docs/section3-repair-audit/formal/UnusedGroupedBindings.lean",
-          "added": true
-        },
-        {
-          "path": "docs/distance-parity-20261107/UNUSED_BINDER_NORMALIZATION.md",
-          "added": true
         }
       ]
     }
   ],
-  "previousUpstreamCommit": "8c9bd4b922ecee99d496be2515fa78cb09f3e12b",
-  "astViewVersion": "acgn-semantic-ast-noop-body-erasure-v1"
+  "previousUpstreamCommit": "f955150dec4fc92e35b4ee543a7d71b82381c686",
+  "astViewVersion": "acgn-semantic-ast-noop-body-erasure-v1",
+  "upstreamTag": "v3"
 }

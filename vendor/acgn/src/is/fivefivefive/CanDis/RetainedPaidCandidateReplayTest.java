@@ -68,7 +68,11 @@ public final class RetainedPaidCandidateReplayTest {
             Files.writeString(out.resolve("after-"+direction+".json"),e.toString(2),StandardOpenOption.CREATE_NEW);
             check(result.status()==NativeOperationComparison.Status.MATCHED,"typed ordered actions match: "+e.opt("firstDifference"));
             check(result.bindScanCosts(new int[]{36,0,1,35},new int[]{36,0,1,35}).status()==NativeOperationComparison.Status.MATCHED,"original scalar components");
-            check(e.getInt("fastActionCount")==20&&e.getInt("certifiedActionCount")==20,"actual20 actions, no suppressed action");
+            check(e.getInt("fastActionCount")==21&&e.getInt("certifiedActionCount")==21,"actual21 actions, including identity permutation");
+            check(e.getJSONArray("fastActions").getJSONObject(0).similar(new JSONObject()
+                    .put("stage","declarationPermutation").put("cost",0)
+                    .put("source",new JSONArray(List.of(0,1))).put("target",new JSONArray(List.of(0,1)))),
+                    "explicit identity permutation retained and checked");
             check(e.getJSONArray("fastActions").similar(e.getJSONArray("certifiedActions")),"all ordered actions including zero keeps");
             check(e.getBoolean("sourceCertificatesChecked")&&e.getBoolean("fixedChoiceReplaysChecked")&&e.getBoolean("endpointCorrespondenceChecked"),"source certificate/type/binder premise replay");
             var report=e.getJSONObject("diagnostic");var fast=report.getJSONObject("fast");
@@ -77,7 +81,7 @@ public final class RetainedPaidCandidateReplayTest {
             check(fast.getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping").similar(new JSONObject(Map.of("_q0","_q0","_q1","_q1"))),"selected complete matrix mapping");
             check(!fast.getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(0).has("connectingPermutation"),"native emitter requires no exchange for this attaining path");
             for(int i=0;i<2;i++) {
-                var action=e.getJSONArray("fastActions").getJSONObject(i);
+                var action=e.getJSONArray("fastActions").getJSONObject(i+1);
                 check(action.getString("stage").equals("declaration")&&action.getString("kind").equals(i==0?"update":"keep")&&action.getInt("cost")==1-i,"diagonal update then zero keep");
             }
             check(!e.getBoolean("complete")&&!e.getBoolean("publicSequenceLinked")&&!e.getBoolean("javaLeanCorrespondenceChecked"),"public proof remains blocked");
@@ -87,8 +91,27 @@ public final class RetainedPaidCandidateReplayTest {
             bad=copy(report);bad.getJSONObject("certified").getJSONArray("selectedGlobalMapping").put(0,999);invalid(q,bad,"foreign certified coordinate");
             bad=copy(report);bad.getJSONObject("fast").getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(0).getJSONObject("receipt").getJSONArray("source").getJSONObject(0).getJSONArray("tuple").put(1,"ForeignType");invalid(q,bad,"declaration type substitution");
             bad=copy(report);bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("receipt").put("cost",34);invalid(q,bad,"wrong matrix charge");
+            var added=new JSONObject(fast.getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping").toString());
+            for(String paid:fast.getJSONObject("selectedPaidDeclarationCorrespondence").keySet())added.remove(paid);
+            check(added.similar(new JSONObject(Map.of("_q1","_q1"))),"actual compatible base link beyond the paid map");
+            bad=copy(report);
+            bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping").put("_q1","_q0");
+            invalid(q,bad,"additional base map cannot occupy the paid target");
+            var localForm=direction==0?a.get(0):b.get(0);
+            var local=new ArrayList<String>();collectLocals(localForm.getMatrixEGraph(),local);
+            check(!local.isEmpty(),"source-linked retained local alias exists");
+            bad=copy(report);var badMap=bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping");
+            if(direction==0){badMap.remove("_q1");badMap.put(local.get(0),"_q1");}
+            else badMap.put("_q1",local.get(0));
+            invalid(q,bad,"additional compatible map cannot capture a retained local slot");
         }
-        check(!supports("supportsSupplementalPair",views(p.a),views(p.a)),"no local/local widening");
+        check(!supports("supportsPair",views(p.a),views(p.a)),"direct local/local gate remains unchanged");
+        check(supports("supportsSupplementalPair",views(p.a),views(p.a)),"checked both-local supplemental candidate admitted");
+        var identity=NativeOperationComparison.compare(p.a,p.a,p.ca,p.ca);
+        check(identity.status()==NativeOperationComparison.Status.MATCHED,"both-local identity actions match");
+        var identityFast=identity.evidence().getJSONObject("diagnostic").getJSONObject("fast");
+        check(identityFast.getInt("distance")==0&&identityFast.has("selectedPaidDeclarationCorrespondence"),"canonical paid candidate wins the zero-cost tie");
+        Files.writeString(out.resolve("both-local-identity.json"),identity.evidence().toString(2),StandardOpenOption.CREATE_NEW);
         corrupt(p,f->field(owners(f).get(1),"sourceOccurrenceLineage",-1L),"foreign retained owner");
         corrupt(p,f->field(f,"matrixEGraphRoot",owners(f).get(1)),"wrong parent edge");
         corrupt(p,f->field(owners(f).get(1).getChildren().get(0),"sourceOccurrenceLineage",-1L),"foreign local declaration");
@@ -103,22 +126,28 @@ public final class RetainedPaidCandidateReplayTest {
         corrupt(p,f->field(f,"params",List.of(f.getMatrixQuantiVars().get(0))),"parameter boundary");
         corrupt(p,f->field(f,"inheritedQuantiVars",List.of(f.getMatrixQuantiVars().get(0))),"imported owner boundary");
         var controls=new JSONArray();
-        for(var row:List.of(new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"4g8G2qHXAbDJFACM7_inv15","inv15","49"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","20"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
+        for(var row:List.of(new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"4g8G2qHXAbDJFACM7_inv15","inv15","49"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","22"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
             var control=source(row[0],row[1]);
             for(int d=0;d<2;d++) {
                 var q=d==0?control:control.reverse();var report=DistanceReplayDiagnostics.capture(q.a,q.b,q.ca,q.cb);
                 for(String arm:List.of("fast","certified"))check(report.getJSONObject(arm).getInt("distance")==Integer.parseInt(row[2])&&report.getJSONObject(arm).getBoolean("matrixReplayChecked")&&report.getJSONObject(arm).getJSONObject("declarationSlice").getBoolean("selectedMatrixDeclarationLinksChecked"),"prior cost and native linkage "+row[0]);
-                if(row[0].startsWith("SASE")||row[0].startsWith("85t")||row[0].startsWith("4g8")||row[0].startsWith("JoNX"))check(NativeOperationComparison.compare(q.a,q.b,q.ca,q.cb).status()==NativeOperationComparison.Status.MATCHED,"prior ordered native actions "+row[0]);
+                if(row[0].startsWith("SASE")||row[0].startsWith("85t")||row[0].startsWith("4g8")||row[0].startsWith("JoNX")||row[0].startsWith("YKy"))check(NativeOperationComparison.compare(q.a,q.b,q.ca,q.cb).status()==NativeOperationComparison.Status.MATCHED,"prior ordered native actions "+row[0]);
                 if(row[0].startsWith("SASE")) {
                     check(supports("supportsSupplementalPair",views(q.a),views(q.b)),"SASE also has extra candidate");
-                    check(!report.getJSONObject("fast").has("selectedPaidDeclarationCorrespondence"),"cheaper source exchange family not discarded");
-                    check(report.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping").similar(new JSONObject(d==0?Map.of("_q0","_q1"):Map.of("_q1","_q0"))),"old SASE selected map retained");
+                    check(report.getJSONObject("fast").getJSONObject("selectedPaidDeclarationCorrespondence")
+                            .similar(new JSONObject(d==0?Map.of("_q1","_q0"):Map.of("_q0","_q1"))),"source-certified SASE paid transposition retained");
+                    check(report.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping")
+                            .similar(new JSONObject(Map.of("_q0","_q1","_q1","_q0"))),"SASE selected paid plus compatible map retained");
                     Files.writeString(out.resolve("sase-"+d+".json"),report.toString(2),StandardOpenOption.CREATE_NEW);
                 }
             }
             controls.put(new JSONObject().put("source",row[0]).put("distance",Integer.parseInt(row[2])));
         }
         Files.writeString(out.resolve("checks.json"),new JSONObject().put("checks",checks).put("controls",controls).put("certificationStatus","BLOCKED").toString(2),StandardOpenOption.CREATE_NEW);
-        System.out.println("RetainedPaidCandidateReplayTest: "+checks+" checks passed;36/actions20 both directions; cheaper SASE exchange preserved");
+        System.out.println("RetainedPaidCandidateReplayTest: "+checks+" checks passed;36/actions21 both directions; prior SASE paid exchange preserved");
+    }
+    private static void collectLocals(EGraphNode node,List<String> names){
+        if(node.hasComparisonLocalCoordinate())names.add(node.getAlphaName());
+        for(var child:node.getChildren())collectLocals(child,names);
     }
 }

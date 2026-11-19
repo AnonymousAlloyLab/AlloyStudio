@@ -54,7 +54,8 @@ final class FastPrefixSource {
             node.requireAdmittedArity();
             // Only the checked local-owner traversal licenses a declaration
             // container without an expression result type, never its opcode.
-            if (node.getOpcode() == EGraphNode.Opcode.GENERICRELDECL) {
+            if (node.getOpcode() == EGraphNode.Opcode.GENERICRELDECL
+                    || node.getOpcode() == EGraphNode.Opcode.DISJ) {
                 require(checkedLocals, "Unowned prefix declaration");
             } else {
                 TheoryAlloyAdapter.requireOccurrenceOutputType(node);

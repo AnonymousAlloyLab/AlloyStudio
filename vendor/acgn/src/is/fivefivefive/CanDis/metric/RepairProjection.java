@@ -58,7 +58,7 @@ import is.fivefivefive.CanDis.theory.TheoryAlloyAdapter.DependentChainSourceBind
  * scope/container legality obtained from the faithful certified artifact.
  */
 public final class RepairProjection {
-    public static final String VERSION = "faithful-fast-rewrite-repair-projection-v25-typed-branch-reservation";
+    public static final String VERSION = "faithful-fast-rewrite-repair-projection-v26-typed-unary-ports";
     private static final int MAX_BOOLEAN_FLATTEN_ALTERNATIVES = 4096;
     private static final long MAX_BOOLEAN_FLATTEN_CHILD_REFERENCES = 1_000_000L;
     private static final int MAX_PROJECTED_COMPARISON_STEPS = 1_000_000;
@@ -338,7 +338,7 @@ public final class RepairProjection {
             QuantiVar variable,
             Binding binding) {
         int index = bindings.size();
-        bindings.add(binding);
+        bindings.add(binding.withOriginalBinding(variable));
         putAlias(aliases, variable.getName(), index);
         putAlias(aliases, variable.getDeBruijnKey(), index);
     }
@@ -433,6 +433,7 @@ public final class RepairProjection {
             throw new IllegalStateException(
                     "A projected local binder has uncertified automorphisms");
         }
+        EGraphNode.requireClosedLocalBinder(source, sourceCoordinates.keySet());
 
         List<Node> alternatives = new ArrayList<>();
         Map<String, GraphType> scopedTypes = new LinkedHashMap<>(localTypes);
@@ -447,16 +448,23 @@ public final class RepairProjection {
                     entry.getKey(),
                     descriptor.coordinates().get(coordinate).canonicalSlot().type());
         }
+        Map<String, String> identityAliases = new LinkedHashMap<>(localAliases);
+        sourceCoordinates.forEach((name, coordinate) ->
+                identityAliases.put(name, "@local[" + localDepth + ":" + coordinate + "]"));
+        Node identity = projectOrdinaryNode(source, aliases, aliasTypes, identityAliases, scopedTypes,
+                localDepth + 1, localBinderDescriptors, localBinderSourceCoordinates, containers, chains, true);
         for (TypedPermutation permutation : descriptor.automorphisms().elements()) {
             Map<String, String> scopedAliases = new LinkedHashMap<>(localAliases);
+            Map<String, String> transport = new LinkedHashMap<>();
             for (Map.Entry<String, Integer> entry : sourceCoordinates.entrySet()) {
                 int target = permutedCoordinate(
                         descriptor, permutation, entry.getValue());
                 scopedAliases.put(
                         entry.getKey(),
                         "@local[" + localDepth + ":" + target + "]");
+                transport.put(identityAliases.get(entry.getKey()), scopedAliases.get(entry.getKey()));
             }
-            Node alternative = projectOrdinaryNode(
+            Node alternative = scopedAliases.equals(identityAliases) ? identity : projectOrdinaryNode(
                     source,
                     aliases,
                     aliasTypes,
@@ -468,6 +476,10 @@ public final class RepairProjection {
                     containers,
                     chains,
                     true);
+            // Descriptor dependencies are not source authority. Check the actual
+            // domain/body projection, including every nested selected alternative.
+            is.fivefivefive.CanDis.core.LocalBinderTransport.requireRenamed(
+                    identity, alternative, transport, BINDER_TRANSPORT);
             boolean duplicate = false;
             for (Node retained : alternatives) {
                 if (sameProjectedNode(retained, alternative)) {
@@ -498,6 +510,25 @@ public final class RepairProjection {
                 primary.children(),
                 alternatives).withObservationFrom(primary);
     }
+
+    private static final is.fivefivefive.CanDis.core.LocalBinderTransport.View<Node> BINDER_TRANSPORT =
+            new is.fivefivefive.CanDis.core.LocalBinderTransport.View<>() {
+        public String operator(Node n) { return n.operator(); }
+        public String variable(Node n) { return n.isVariable() ? n.lexicalVariable() : null; }
+        public Object type(Node n) { return n.observationType(); }
+        public List<Node> children(Node n) { return n.children(); }
+        public List<Node> alternatives(Node n) { return n.certifiedAlternatives(); }
+        public boolean sameHead(Node a, Node b) {
+            return a.operator().equals(b.operator()) && Objects.equals(a.payload(), b.payload())
+                    && Objects.equals(a.semanticPayload(), b.semanticPayload()) && a.bindingIndex() == b.bindingIndex()
+                    && a.containerKind() == b.containerKind() && a.orderInsensitive() == b.orderInsensitive()
+                    && Objects.equals(a.observationType(), b.observationType())
+                    && a.observationPhases().equals(b.observationPhases())
+                    && Objects.equals(a.observationTemporalOperator(), b.observationTemporalOperator())
+                    && a.originalSourceOccurrence() == b.originalSourceOccurrence()
+                    && a.originalReferenceOrigin() == b.originalReferenceOrigin();
+        }
+    };
 
     private static int permutedCoordinate(
             BinderBlockDescriptor descriptor,
@@ -625,6 +656,7 @@ public final class RepairProjection {
                     source.isOrderInsensitive(), children).withObservation(
                             isRelDecl(source.getOpcode()) ? null : requireExactResultType(source), List.of(), null);
             if (source.getOpcode() == Opcode.REF) projected = projected.withSourceOccurrence(source);
+            if (isRelDecl(source.getOpcode())) projected = projected.withSourceOccurrence(source);
             return (source.getOpcode() == Opcode.AND || source.getOpcode() == Opcode.OR)
                     && source.hasFlatLicense() && containerKind == ContainerKind.SET
                     ? flattenProjectedBoolean(projected) : projected;
@@ -638,7 +670,7 @@ public final class RepairProjection {
         if (localVariable != null) {
             return new Node(operator, null, localVariable, -1, containerKind,
                     source.isOrderInsensitive(), children).withObservation(
-                            dependentLeafType(source, aliasTypes, localTypes), List.of(), null);
+                            dependentLeafType(source, aliasTypes, localTypes), List.of(), null).withSourceOccurrence(source);
         }
         Integer bindingIndex = aliases.get(variable);
         if (bindingIndex == null && source.getSourceName() != null) {
@@ -649,7 +681,7 @@ public final class RepairProjection {
                         source.isOrderInsensitive(), children)
                 : new Node(operator, null, variable, bindingIndex, containerKind,
                         source.isOrderInsensitive(), children)).withObservation(
-                                dependentLeafType(source, aliasTypes, localTypes), List.of(), null);
+                                dependentLeafType(source, aliasTypes, localTypes), List.of(), null).withSourceOccurrence(source);
     }
 
     private static Node projectGuardedJoin(GuardedJoinTree tree, Map<GuardedJoinTree, Node> leaves) {
@@ -923,7 +955,7 @@ public final class RepairProjection {
 
     private static void requireProjectedComparisonStep(int[] budget) {
         if (budget[0] <= 0) {
-            throw new IllegalStateException("Projected duplicate comparison exceeds its finite step budget");
+            throw new TraceResources.Exhausted("Projected duplicate comparison exceeds its finite step budget");
         }
         budget[0]--;
     }
@@ -980,7 +1012,7 @@ public final class RepairProjection {
     private static void requireBooleanFlattenBudget(long alternatives, long references) {
         if (alternatives > MAX_BOOLEAN_FLATTEN_ALTERNATIVES
                 || references > MAX_BOOLEAN_FLATTEN_CHILD_REFERENCES) {
-            throw new IllegalStateException("Certified Boolean flattening exceeds its finite budget: "
+            throw new TraceResources.Exhausted("Certified Boolean flattening exceeds its finite budget: "
                     + alternatives + " alternatives, " + references + " child references");
         }
     }
@@ -1044,7 +1076,8 @@ public final class RepairProjection {
         if (quotient == SiblingQuotient.COMMUTATIVE_BAG) {
             return ContainerKind.BAG;
         }
-        if (!node.isFlexibleArity() && node.getChildren().size() == 1) {
+        if (node.hasUnaryCardinalityOperand()
+                || (!node.isFlexibleArity() && node.getChildren().size() == 1)) {
             return ContainerKind.ONE;
         }
         return ContainerKind.SEQUENCE;
@@ -1404,7 +1437,7 @@ public final class RepairProjection {
                         binding.bindingPath(),
                         binding.ownerContext(),
                         binding.certifiedOrbit(),
-                        binding.prenexPathErasureCertified()));
+                        binding.prenexPathErasureCertified()).withOriginalBinding(binding.originalBinding()));
             }
             return new Phase(
                     phase.quantifiers(),
@@ -1870,6 +1903,8 @@ public final class RepairProjection {
         private final Map<EGraphNode, DependentChainCertificate> certificates;
         private final Map<EGraphNode, GuardedJoinSourceFiber> rotations;
         private final List<is.fivefivefive.CanDis.theory.GuardedJoinErasureEvidence> erasedJoinPremises;
+        private final List<is.fivefivefive.CanDis.theory.GuardedJoinDuplicateEvidence> duplicateJoinPremises;
+        private final List<is.fivefivefive.CanDis.theory.GuardedJoinFactorEvidence> factoredJoinPremises;
 
         private CertifiedDependentChains(
                 Map<EGraphNode, DependentChainCertificate> certificates,
@@ -1877,6 +1912,8 @@ public final class RepairProjection {
             this.certificates = certificates;
             this.rotations = rotations.live();
             this.erasedJoinPremises = rotations.erased();
+            this.duplicateJoinPremises = rotations.duplicates();
+            this.factoredJoinPremises = rotations.factors();
         }
 
         private static CertifiedDependentChains from(

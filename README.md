@@ -4,13 +4,14 @@ A local web portal for practicing Alloy predicates using the ACGN / CanDis
 canonical metric or raw AST Zhang–Shasha distance. It includes 181 exercises, live feedback, redacted edit
 operations, the learner's canonical form, saved drafts, and configurable AI guidance.
 
-**Current release: [v0.0.9-alpha.1.r](docs/releases/v0.0.9-alpha.1.r.md).**
+**Development backend update**
 
-This backend update pins ACGN `f955150d`, uses its replay-checked canonical
-repair programs, and removes decorative `Body`/`NOOP` nodes before AST counting
-and Zhang–Shasha distance. Canonical remains the default. See the
-[rebase contract, updated paper figure and corpus rerun](docs/acgn-rebase-20261109.md).
-TAR and HiGenA retain their previous measured results.
+This checkout uses ACGN / CanDis v3. Canonical remains the default, and the
+Zhang–Shasha mode excludes decorative `Body` and `NOOP` nodes from its AST.
+The [v0.0.9-alpha.1.r notes](docs/releases/v0.0.9-alpha.1.r.md) and
+[November 9 rebase record](docs/acgn-rebase-20261109.md) describe the prior
+backend, paper figure and corpus reruns. Historical measurements and formal
+evidence remain tied to their recorded revisions.
 
 **Previous maintenance release: [v0.0.9-alpha.1](docs/releases/v0.0.9-alpha.1.md).**
 
@@ -933,11 +934,9 @@ and execution time. For shared hosting, use a separately configured authenticate
 HTTPS reverse proxy; access control and multi-tenant deployment are outside this
 local portal's verification surface.
 
-ACGN base snapshot: `f955150dec4fc92e35b4ee543a7d71b82381c686`.
-The vendored copy includes a local presentation metadata patch that carries parser
-origins through canonicalization for the locators. `vendor/acgn/snapshot.json`
-records the delivered file hashes; this copy is not byte-identical to the base
-snapshot. The upstream checkout remains unchanged. See `vendor/acgn/LICENSE` for
-its license.
+The ACGN v3 tag resolves to `8770cb4b5f7133bad78058d9bc214f0ca36130d0`.
+The [vendor snapshot](vendor/acgn/snapshot.json) records the delivered SHA-256
+hashes and local changes for source locators, canonical display, request budgets,
+and Alloy library calls. See the [vendored license](vendor/acgn/LICENSE).
 
-New exercise navigation and private storage are described in [private exercise administration](docs/private-exercises.md). Canonical remains the default distance mode.
+New exercise navigation and private storage are described in [private exercise administration](docs/private-exercises.md).

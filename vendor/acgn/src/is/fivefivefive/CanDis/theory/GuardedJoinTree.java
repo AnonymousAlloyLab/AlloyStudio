@@ -3,6 +3,7 @@ package is.fivefivefive.CanDis.theory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import is.fivefivefive.CanDis.core.JoinSegmentation;
 
 /** Binary JOIN syntax: unlike a flat chain, unary interior leaves are retained. */
 public final class GuardedJoinTree {
@@ -31,9 +32,27 @@ public final class GuardedJoinTree {
                     type.structuralKey(), StructuralKey.branch("cases", combination.cases().stream()
                             .map(DependentTypeDag.CombinationCase::structuralKey).toList())));
         }
-        // Deliberately bounded initial admission: correlated unions/empty types
-        // remain with the existing dependent-chain implementation.
-        if (type.alternatives().size() != 1) throw new IllegalArgumentException("Guarded JOIN requires one exact product");
+        requireAdmittedJoinType(type, "Guarded JOIN");
+    }
+
+    /**
+     * Admission for one JOIN intermediate. A typed-empty family has zero
+     * correlated alternatives but still retains its positive relation arity;
+     * empty is not missing type. Families with more than one correlated product
+     * remain OPEN until checked case-wise composition is implemented.
+     */
+    public static void requireAdmittedJoinType(DependentTypeDag type, String where) {
+        Objects.requireNonNull(type, "type");
+        if (type.alternatives().size() > 1) {
+            throw new IllegalArgumentException(where + " requires one exact product");
+        }
+        if (type.alternatives().isEmpty()) {
+            Integer retained = AlloyTypeBridge.emptyRelationArity(type.relationType());
+            if (retained == null || retained <= 0 || retained != type.arity()) {
+                throw new IllegalArgumentException(
+                        where + " typed-empty family lost its retained positive arity");
+            }
+        }
     }
     public static GuardedJoinTree leaf(DependentChainLeaf leaf) {
         return new GuardedJoinTree(Objects.requireNonNull(leaf), null, null);
@@ -51,18 +70,36 @@ public final class GuardedJoinTree {
     public List<GuardedJoinTree> leaves() {
         var result = new ArrayList<GuardedJoinTree>(); collect(this, result); return List.copyOf(result);
     }
+    /**
+     * Maximal ordered segments. Endpoints may be unary; a unary interior operand
+     * is a barrier and becomes one nested typed segment at its parent. The
+     * segment's exact type fold is checked against the retained result DAG. If the
+     * checked segmentation cannot be established, the original binary children
+     * are retained rather than flattened across the barrier.
+     */
     public List<GuardedJoinTree> presentationOperands() {
         if (isLeaf()) throw new IllegalArgumentException("A JOIN leaf has no operands");
-        List<GuardedJoinTree> operands = leaves();
+        var operands = JoinSegmentation.of(this,
+                t -> t.isLeaf() ? List.of() : List.of(t.left, t.right),
+                t -> t.type.arity(), 127).operands();
+        return soundSegment(operands, type) ? operands : List.of(left, right);
+    }
+
+    private static boolean soundSegment(List<GuardedJoinTree> operands,
+            DependentTypeDag expected) {
+        if (operands.size() < 2) return false;
         try {
-            DependentChainTheory.requireSoundFlatteningEvidence(DependentChainKind.JOIN,
-                    operands.stream().map(GuardedJoinTree::leaf).toList());
-            if (!DependentTypeDag.fold(DependentChainKind.JOIN,
-                    operands.stream().map(GuardedJoinTree::type).toList()).equals(type))
-                throw new IllegalArgumentException("Guarded JOIN presentation changed its result DAG");
-            return operands;
-        } catch (DependentChainTheory.UnsupportedFlattening unsupported) {
-            return List.of(left, right);
+            List<Integer> arities = new ArrayList<>(operands.size());
+            for (GuardedJoinTree operand : operands) {
+                arities.add(AlloyTypeBridge.relationArity(operand.type().relationType()));
+            }
+            for (int index = 1; index + 1 < arities.size(); index++) {
+                if (arities.get(index) < 2) return false;
+            }
+            return DependentTypeDag.fold(DependentChainKind.JOIN,
+                    operands.stream().map(GuardedJoinTree::type).toList()).equals(expected);
+        } catch (IllegalArgumentException unsupported) {
+            return false;
         }
     }
     private static void collect(GuardedJoinTree tree, List<GuardedJoinTree> result) {

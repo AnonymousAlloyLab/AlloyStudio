@@ -62,7 +62,8 @@ public class CanonicalBatchTest {
         Files.createDirectories(options.outputDir);
         options.parityGate = new BatchParityGate(options.outputDir, options.diagnosticOperations
                 ? BatchParityGate.Mode.DIAGNOSTIC_OPERATIONS : options.diagnosticComponents
-                    ? BatchParityGate.Mode.DIAGNOSTIC_COMPONENTS : BatchParityGate.Mode.STRICT_CERTIFIED);
+                    ? BatchParityGate.Mode.DIAGNOSTIC_COMPONENTS : BatchParityGate.Mode.STRICT_CERTIFIED,
+                options.collectDiscrepancies);
         String prefix = options.diagnosticOperations ? "diagnostic-operations-" : options.diagnosticComponents ? "diagnostic-" : "";
         Path jsonPath = options.outputDir.resolve(prefix + "distances.json");
         Path partialJsonPath = options.outputDir.resolve(prefix + "distances.partial.json");
@@ -268,6 +269,8 @@ public class CanonicalBatchTest {
             Semaphore memoryIntensivePermits) {
         options.parityGate.checkRunning();
         FileResult result = processFile(options.inputDir, file, options, memoryIntensivePermits);
+        if (result.error != null)
+            options.parityGate.recordFileFailure(file,result.leftPredicate,result.rightPredicate,result.error);
         return new IndexedResult(index, result);
     }
 
@@ -777,6 +780,7 @@ public class CanonicalBatchTest {
         writer.write("  \"parityPolicy\": \"" + (options.diagnosticOperations ? "diagnostic-native-operations-v1" : options.diagnosticComponents
                 ? "diagnostic-stop-first-component-mismatch-v1" : "stop-on-first-distance-or-replay-incident-v1") + "\",\n");
         writer.write("  \"diagnosticOnly\": " + (options.diagnosticComponents || options.diagnosticOperations) + ",\n");
+        writer.write("  \"discrepancyPolicy\": \"" + (options.collectDiscrepancies?"COLLECT_ALL":"STOP_FIRST") + "\",\n");
         if(options.diagnosticOperations) writer.write("  \"nativeOperationComparisonSchema\": \""+NativeOperationComparison.SCHEMA+"\",\n");
         writer.write("  \"publicationAllowed\": false,\n");
         writer.write("  \"certificationStatus\": \"BLOCKED\",\n");
@@ -813,6 +817,7 @@ public class CanonicalBatchTest {
     private static void writeJsonFooter(Writer writer, Summary summary, Options options) throws IOException {
         writer.write("\n  ],\n");
         writer.write("  \"summary\": {\n");
+        writer.write("    \"discrepancyFindings\": "+options.parityGate.discrepancyCoverage().toString()+",\n");
         if(options.diagnosticOperations) writer.write("    \"nativeOperationReplay\": "+options.parityGate.operationCoverage().toString()+",\n");
         writer.write("    \"total\": " + summary.total + ",\n");
         writer.write("    \"successes\": " + summary.successes + ",\n");
@@ -1285,6 +1290,7 @@ public class CanonicalBatchTest {
         private boolean skipRewards;
         private boolean diagnosticComponents;
         private boolean diagnosticOperations;
+        private boolean collectDiscrepancies;
         private BatchParityGate parityGate;
 
         private static Options parse(String[] args) {
@@ -1305,6 +1311,8 @@ public class CanonicalBatchTest {
                     options.diagnosticComponents = true;
                 } else if ("--diagnostic-operations".equals(args[i])) {
                     options.diagnosticOperations = true;
+                } else if ("--collect-discrepancies".equals(args[i])) {
+                    options.collectDiscrepancies = true;
                 } else if (args[i].startsWith("--")) {
                     throw new IllegalArgumentException("Unknown or incomplete option: " + args[i]);
                 } else if (positional == 0) {
@@ -1319,6 +1327,8 @@ public class CanonicalBatchTest {
             }
             if(options.diagnosticComponents && options.diagnosticOperations)
                 throw new IllegalArgumentException("Choose only one diagnostic mode");
+            if(options.collectDiscrepancies && !options.diagnosticOperations)
+                throw new IllegalArgumentException("--collect-discrepancies requires --diagnostic-operations");
             return options;
         }
     }

@@ -16,7 +16,7 @@ final class FastDeclarationPermutation {
         return (i,j) -> {
             QuantiVar a=ordered.get(i),b=ordered.get(j);
             return supported && owned.contains(a) && owned.contains(b)
-                    && a.getDisjointnessClass()==0 && b.getDisjointnessClass()==0
+                    && a.getDisjointnessClass()==b.getDisjointnessClass()
                     && (a.getQuantifier()==QuantiVar.Quantifier.ALL || a.getQuantifier()==QuantiVar.Quantifier.SOME)
                     && a.getQuantifier()==b.getQuantifier()
                     && a.getBindingPath().equals(b.getBindingPath())

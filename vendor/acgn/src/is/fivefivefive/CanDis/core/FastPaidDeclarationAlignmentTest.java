@@ -24,6 +24,15 @@ public final class FastPaidDeclarationAlignmentTest {
         checks++; try { action.run(); } catch(IllegalArgumentException | IllegalStateException expected) { return; }
         throw new AssertionError(why);
     }
+    private static void exhausted(Runnable action,String code) {
+        checks++;
+        try { action.run(); }
+        catch(TraceResources.Exhausted expected) {
+            check(code.equals(expected.getMessage()),"exact resource failure: "+code);
+            return;
+        }
+        throw new AssertionError("Incomplete search must not return a candidate: "+code);
+    }
     private static String variable(EGraphNode n) { return n.getAlphaName()==null?n.getSourceName():n.getAlphaName(); }
     private static GraphType type(EGraphNode n) {
         if(n.getOpcode()==EGraphNode.Opcode.VARIABLE || n.getOpcode()==EGraphNode.Opcode.GENERICRELDECL) return null;
@@ -288,10 +297,13 @@ public final class FastPaidDeclarationAlignmentTest {
             for(var map:actual) check(new HashSet<>(map.values()).size()==map.size(),"injective occurrence links");
         }
         var many=vars("x",20,"A"); var fewer=vars("y",10,"B");
-        reject(() -> FastPaidDeclarationAlignment.enumerate(many,fewer,dp(many,fewer),
-                FastPaidDeclarationAlignmentTest::update,ignored -> {}),"adversarial path count budget");
-        reject(() -> FastPaidDeclarationAlignment.enumerate(vars("x",65,"A"),List.of(),new int[0][],
-                FastPaidDeclarationAlignmentTest::update,ignored -> {}),"size budget before table traversal");
+        exhausted(() -> FastPaidDeclarationAlignment.enumerate(many,fewer,dp(many,fewer),
+                FastPaidDeclarationAlignmentTest::update,ignored -> {}),"PAID_DECLARATION_PATH_BUDGET");
+        exhausted(() -> FastPaidDeclarationAlignment.enumerate(vars("x",65,"A"),List.of(),new int[0][],
+                FastPaidDeclarationAlignmentTest::update,ignored -> {}),"PAID_DECLARATION_SIZE_BUDGET");
+        var orbitBudget=new FastGroupedDeclarationOrbit.Budget();
+        for(int i=0;i<100_000;i++)orbitBudget.spend();
+        exhausted(orbitBudget::spend,"FAST_GROUPED_ORBIT_BUDGET");
         System.out.println("FastPaidDeclarationAlignmentTest: "+checks+" checks passed; native paid alignment only, full alignment BLOCKED");
     }
 }

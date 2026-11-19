@@ -33,24 +33,40 @@ public final class GroupedOnePaidReplayTest {
     private static JSONObject copy(JSONObject j){return new JSONObject(j.toString());}
     private static int[] map(JSONArray j){int[] a=new int[j.length()];for(int i=0;i<a.length;i++)a[i]=j.getInt(i);return a;}
     private static Map<String,String> map(JSONObject j){var m=new TreeMap<String,String>();for(String k:j.keySet())m.put(k,j.getString(k));return m;}
+    private static List<DeclarationReplay.Atom> atoms(RepairView.Phase phase,JSONArray ordered,int[] order){
+        check(ordered.length()==order.length,"permuted declaration coverage");
+        var original=new JSONArray();var seen=new HashSet<Integer>();
+        for(int i=0;i<order.length;i++){
+            check(order[i]>=0&&order[i]<order.length&&seen.add(order[i]),"declaration order bijection");
+            original.put(order[i],ordered.getJSONObject(i));
+        }
+        return DeclarationMatrixLink.permute(NestedPaidDeclarationReplayTest.atoms(phase,original),order);
+    }
     private static void malformed(Pair p,JSONObject j,String why){check(NativeOperationComparison.compareCaptured(p.a,p.b,j).status()==NativeOperationComparison.Status.INVALID_REPLAY,why);}
     private static JSONObject replay(Pair p,JSONObject old){
         var va=NestedPaidDeclarationReplayTest.checkedProjection(p.a,p.b);var vb=NestedPaidDeclarationReplayTest.checkedProjection(p.b,p.a);
         var ca=CanonicalAlloyPipeline.prepare(p.a);var cb=CanonicalAlloyPipeline.prepare(p.b);var capture=DistanceReplayDiagnostics.capture(p.a,p.b,ca,cb);var cert=capture.getJSONObject("certified");var cp=cert.getJSONArray("phases").getJSONObject(0);var cm=map(cp.getJSONArray("alphaMapping"));
-        check(QuotientRepairDistance.verifyFixedMatrixReplay(va,vb,cm,cm,cp.getJSONObject("receipt"))==28,"shorter certified original matrix28 first");
+        check(QuotientRepairDistance.verifyFixedMatrixReplay(va,vb,cm,cm,cp.getJSONObject("receipt"))==27,"certified original matrix27 first");
         if(old!=null){check(old.getJSONObject("certified").getJSONArray("phases").similar(cert.getJSONArray("phases")),"certified matrix unchanged");check(old.getJSONObject("certified").getJSONObject("declarationSlice").similar(cert.getJSONObject("declarationSlice")),"certified declaration unchanged");}
         var na=p.a.normalizedForms().get(0).getMatrixQuantiVars().stream().map(QuantiVar::getName).toList();var nb=p.b.normalizedForms().get(0).getMatrixQuantiVars().stream().map(QuantiVar::getName).toList();var chosen=new TreeMap<String,String>();for(int i=0;i<cm.length;i++)if(cm[i]>=0)chosen.put(na.get(i),nb.get(cm[i]));
-        var cd=cert.getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(1).getJSONObject("receipt");var aa=NestedPaidDeclarationReplayTest.atoms(va.phases().get(0),cd.getJSONArray("source"));var bb=NestedPaidDeclarationReplayTest.atoms(vb.phases().get(0),cd.getJSONArray("target"));
-        check(new DeclarationMatrixLink(na,nb,chosen,Set.copyOf(na),Set.copyOf(nb)).verify(aa,bb,cd)==4,"original linked delete-or-insert1 plus three updates1");
-        reject(()->new DeclarationMatrixLink(na,nb,Map.of(),Set.copyOf(na),Set.copyOf(nb)).verify(aa,bb,cd),"old unlinked correspondence rejected");
+        var component=cert.getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(1);var cd=component.getJSONObject("receipt");
+        var permutation=component.getJSONObject("connectingPermutation");var leftOrder=map(permutation.getJSONArray("source"));var rightOrder=map(permutation.getJSONArray("target"));
+        check(Arrays.equals(leftOrder,map(cert.getJSONObject("selectedDeclarationPermutation").getJSONArray("left")))&&Arrays.equals(rightOrder,map(cert.getJSONObject("selectedDeclarationPermutation").getJSONArray("right"))),"same selected and emitted declaration order");
+        var nativeCertificate=copy(cert);
+        check("MATRIX_REPLAY_CHECKED".equals(nativeCertificate.remove("diagnosticStatus")),"diagnostic wrapper field");
+        CanonicalRepairTraces.certified(ca,cb).replay(nativeCertificate);
+        var aa=atoms(va.phases().get(0),cd.getJSONArray("source"),leftOrder);var bb=atoms(vb.phases().get(0),cd.getJSONArray("target"),rightOrder);
+        var orderedA=DeclarationMatrixLink.permute(na,leftOrder);var orderedB=DeclarationMatrixLink.permute(nb,rightOrder);
+        check(new DeclarationMatrixLink(orderedA,orderedB,chosen,Set.copyOf(na),Set.copyOf(nb)).verify(aa,bb,cd)==4,"original linked delete-or-insert1 plus three updates1");
+        reject(()->new DeclarationMatrixLink(orderedA,orderedB,Map.of(),Set.copyOf(na),Set.copyOf(nb)).verify(aa,bb,cd),"old unlinked correspondence rejected");
         var fast=capture.getJSONObject("fast");var fp=fast.getJSONArray("phases").getJSONObject(0);var fm=map(fp.getJSONObject("alphaMapping"));check(fm.equals(chosen),"same original paid mapping");
-        check(CanonicalDistance.verifyFixedMatrixReplay(CanonicalDistance.prepare(p.a.normalizedForms()),CanonicalDistance.prepare(p.b.normalizedForms()),fm,fm,fp.getJSONObject("receipt"))==28,"Fast fixed original matrix28");
-        for(var arm:List.of(fast,cert))check(arm.getInt("distance")==32&&arm.getInt("quantifierDistance")==4&&arm.getInt("temporalDistance")==0&&arm.getJSONObject("declarationSlice").getBoolean("selectedMatrixDeclarationLinksChecked"),"joint original coverage32");
+        check(CanonicalDistance.verifyFixedMatrixReplay(CanonicalDistance.prepare(p.a.normalizedForms()),CanonicalDistance.prepare(p.b.normalizedForms()),fm,fm,fp.getJSONObject("receipt"))==27,"Fast fixed original matrix27");
+        for(var arm:List.of(fast,cert))check(arm.getInt("distance")==31&&arm.getInt("quantifierDistance")==4&&arm.getInt("temporalDistance")==0&&arm.getJSONObject("declarationSlice").getBoolean("selectedMatrixDeclarationLinksChecked"),"joint original coverage31");
         var cmp=NativeOperationComparison.compare(p.a,p.b,ca,cb);var e=cmp.evidence();check(cmp.status()==NativeOperationComparison.Status.MATCHED,"ordered grouped ONE actions "+cmp.reason()+" "+e.opt("firstDifference"));check(e.getJSONArray("fastActions").similar(e.getJSONArray("certifiedActions")),"all ordered native actions equal");check(e.getBoolean("sourceCertificatesChecked")&&e.getBoolean("fixedChoiceReplaysChecked")&&e.getBoolean("endpointCorrespondenceChecked"),"source/binder/type correspondence checked");check(!e.getBoolean("complete")&&!e.getBoolean("publicSequenceLinked")&&!e.getBoolean("javaLeanCorrespondenceChecked"),"full certification BLOCKED");
         var bad=copy(e.getJSONObject("diagnostic"));bad.getJSONArray("nativeOperationEndpoints").put(0,"foreign");malformed(p,bad,"foreign endpoint");
         bad=copy(e.getJSONObject("diagnostic"));bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("alphaMapping").put("_q2","_q0");malformed(p,bad,"capturing paid correspondence");
         bad=copy(e.getJSONObject("diagnostic"));bad.getJSONObject("certified").getJSONObject("declarationSlice").getJSONArray("components").getJSONObject(1).getJSONObject("receipt").getJSONArray("source").getJSONObject(0).getJSONArray("tuple").put(0,"LONE");malformed(p,bad,"forged source kind");
-        bad=copy(e.getJSONObject("diagnostic"));bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("receipt").put("cost",27);malformed(p,bad,"forged action cost");
+        bad=copy(e.getJSONObject("diagnostic"));bad.getJSONObject("fast").getJSONArray("phases").getJSONObject(0).getJSONObject("receipt").put("cost",26);malformed(p,bad,"forged action cost");
         return e;
     }
     public static void main(String[] args)throws Exception{
@@ -75,9 +91,17 @@ public final class GroupedOnePaidReplayTest {
         String base="sig A { r:set A } pred b {some A} ";
         for(String kind:List.of("one","all","some")){var general=prepare(base+"pred a {"+kind+" x,y:A | x->y in r}","a","b");check(supports(general.a.normalizedForms()),"source-observed general group "+kind);}
         var some=prepare(base+"pred a {some x,y:A | x->y in r}","a","b");var forged=comparison(some.a);var changed=new ArrayList<QuantiVar>();for(var q:forged.getMatrixQuantiVars()){var c=cloneBinding(q);c.setQuantifier(QuantiVar.Quantifier.ONE);c.freezeForCertification();changed.add(c);}field(forged,"matrixQuantiVars",changed);check(!supports(List.of(forged)),"prior forged SOME-to-ONE negative remains rejected");
-        for(String body:List.of("lone x,y:A | x->y in r","one disj x,y:A | x->y in r","one x,y:set A | x->y in r","one x,y:A | x->x in r","one x,y:A | always x->y in r","one x,y:A | x->y in r and (one z:A | z in x.r)"))check(!supports(prepare(base+"pred a {"+body+"}","a","b").a.normalizedForms()),"unsupported grouped boundary "+body);
+        // Later source-issued paid paths admit these rigid groups, but never
+        // authorize a free exchange of their ONE/LONE slots.
+        for(String body:List.of("lone x,y:A | x->y in r","one disj x,y:A | x->y in r","one x,y:A | x->x in r","one x,y:A | x->y in r and (one z:A | z in x.r)")){
+            var rigid=prepare(base+"pred a {"+body+"}","a","b").a;var rsf=rigid.normalizedForms().get(0);
+            check(supports(rigid.normalizedForms()),"source-issued rigid paid path "+body);
+            var rigidOrders=(List<?>)invoke("is.fivefivefive.CanDis.core.FastGroupedDeclarationOrbit","orders",new Class[]{NormalForm.class,NormalForm.class,List.class},rsf,comparison(rigid),rsf.getMatrixQuantiVars());
+            check(rigidOrders.size()==1,"rigid groups remain ordered "+body);
+        }
+        for(String body:List.of("one x,y:set A | x->y in r","one x,y:A | always x->y in r"))check(!supports(prepare(base+"pred a {"+body+"}","a","b").a.normalizedForms()),"outside fixed ONE-valued non-temporal paid slice "+body);
         check(!supports(prepare(base+"pred a[z:A] {one x,y:A | x->y in r and y in z.r}","a","b").a.normalizedForms()),"parameter boundary");
-        var controls=new JSONArray();for(var row:List.of(new String[]{"coursesNew/correct/wnqMPtpNxnPYzru3g_inv14","inv14","16"},new String[]{"coursesNew/both/LJrfWwJdKiTdyytci_inv14","inv14","26"},new String[]{"coursesNew/both/5vxYh7NCpEPMmC47p_inv14","inv14","47"},new String[]{"classroom_fol/both/JoNXaXfKNJzGh3BFa_inv12","inv12","22"})){
+        var controls=new JSONArray();for(var row:List.of(new String[]{"coursesNew/correct/wnqMPtpNxnPYzru3g_inv14","inv14","16"},new String[]{"coursesNew/both/LJrfWwJdKiTdyytci_inv14","inv14","26"},new String[]{"coursesNew/both/5vxYh7NCpEPMmC47p_inv14","inv14","46"},new String[]{"classroom_fol/both/JoNXaXfKNJzGh3BFa_inv12","inv12","22"})){
             var pair=prepare(Files.readString(Path.of("classified-data",row[0]+".als")),row[1],row[1]+"c");for(var dir:List.of(pair,pair.reverse()))check(Canonical.distance(dir.a,dir.b)==Integer.parseInt(row[2])&&CanonicalAlloyPipeline.distance(CanonicalAlloyPipeline.prepare(dir.a),CanonicalAlloyPipeline.prepare(dir.b))==Integer.parseInt(row[2]),"prior family "+row[0]);controls.put(row[0]);}
         Files.writeString(out.resolve("checks.json"),new JSONObject().put("checks",checks).put("controls",controls).put("certificationStatus","BLOCKED").toString(2),StandardOpenOption.CREATE_NEW);System.out.println("GroupedOnePaidReplayTest: "+checks+" checks passed");
     }

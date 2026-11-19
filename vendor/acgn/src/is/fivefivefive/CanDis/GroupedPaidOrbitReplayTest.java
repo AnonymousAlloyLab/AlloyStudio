@@ -86,7 +86,11 @@ public final class GroupedPaidOrbitReplayTest {
         for(var f:QuantiVar.class.getDeclaredFields())if(!Modifier.isStatic(f.getModifiers())){f.setAccessible(true);f.set(sameId,f.get(qs.get(0)));}
         var badView=view(p.a);var list=new ArrayList<>(qs);list.set(0,sameId);field(badView,"matrixQuantiVars",List.copyOf(list));
         check(sameId.equals(qs.get(0))&&sameId!=qs.get(0),"same numeric id is not source authority");
-        reject(()->orders(original,badView,qs),"same-id foreign comparison binding");
+        var rejectedOrders=orders(original,badView,qs);
+        check(rejectedOrders.size()==1&&Arrays.equals(rejectedOrders.get(0),new int[]{0,1,2,3}),
+                "foreign grouped source admits no extra orbit");
+        reject(()->call("requireOrder",types,original,badView,qs,new int[]{1,0,2,3}),
+                "same-id foreign comparison cannot authorize an exchange");
         for(String field:List.of("params","inheritedQuantiVars")) {
             var v=view(p.a);field(v,field,List.of(qs.get(0)));
             check(orders(original,v,qs).size()==1,"no new orbit for "+field);
@@ -99,7 +103,7 @@ public final class GroupedPaidOrbitReplayTest {
         boolean exhausted=false;try{spend.invoke(budget);}catch(InvocationTargetException ex){exhausted=ex.getCause() instanceof IllegalStateException;}
         check(exhausted,"finite shared product budget fails before another evaluation");
         var controls=new JSONArray();
-        for(var row:List.of(new String[]{"Wq9Au27ys6iRip6CD_inv14","inv14","36"},new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"8dTfKqTs26w6fL87K_inv15","inv15","18"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","20"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
+        for(var row:List.of(new String[]{"Wq9Au27ys6iRip6CD_inv14","inv14","36"},new String[]{"SASEHD8jPo2HgsuoJ_inv14","inv14","27"},new String[]{"85tWoTeBhoEDhCKmw_inv14","inv14","37"},new String[]{"JoNXaXfKNJzGh3BFa_inv12","inv12","22"},new String[]{"8dTfKqTs26w6fL87K_inv15","inv15","18"},new String[]{"YKy8LYsKdapW3xqbn_inv14","inv14","22"},new String[]{"xJnitBpFv9K74WNvf_inv14","inv14","49"})) {
             var control=source(row[0],row[1]);
             for(int d=0;d<2;d++) {
                 var q=d==0?control:control.reverse();var report=DistanceReplayDiagnostics.capture(q.a,q.b,q.ca,q.cb);

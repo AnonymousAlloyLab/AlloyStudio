@@ -192,7 +192,7 @@ public class IRAgent {
                             "Temporal source visit contains an uncommitted child edge");
                 }
             }
-            if (consuming && childIndex + arity > owner.getTemporalChildren().size()) {
+            if (consuming && childIndex + arity > owner.getSourceTemporalChildren().size()) {
                 throw new IllegalStateException(
                         "Temporal parser occurrence has no complete child phase group");
             }
@@ -478,6 +478,14 @@ public class IRAgent {
             stages.onStage("reachable-egraph", null, nfs);
             EGraphNode.endGraph();
         }
+        java.util.Set<NormalForm> reachable = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+        java.util.ArrayDeque<NormalForm> pending = new java.util.ArrayDeque<>();
+        pending.add(nfs.get(0));
+        while (!pending.isEmpty()) {
+            NormalForm phase = pending.removeFirst();
+            if (reachable.add(phase)) pending.addAll(phase.getTemporalChildren());
+        }
+        nfs.removeIf(phase -> !reachable.contains(phase));
     }
 
     private EGraphNode buildEGraph(
@@ -515,7 +523,7 @@ public class IRAgent {
         } else {
             current = new EGraphNode(
                     currentId, opcode, new ArrayList<>(), isCommutative(opcode),
-                    maxArity(node, opcode), isFlexibleArity(opcode),
+                    maxArity(node, opcode), isFlexibleArity(node, opcode),
                     metatypeOf(node, opcode, exactType),
                     semanticProfile);
         }
@@ -661,6 +669,8 @@ public class IRAgent {
         observer.onStage("begin-temporal-negation", normalForm, nfs);
         normalForm.pushTemporalNegations();
         observer.onStage("temporal-negation", normalForm, nfs);
+        normalForm.projectReferencedTemporalChildren();
+        observer.onStage("temporal-reachability", normalForm, nfs);
         Map<String, QuantiVar> descendants = new HashMap<>(inherited);
         for (QuantiVar variable : normalForm.getParams()) {
             for (String alias : variable.getOriginalNames()) {
@@ -1305,7 +1315,7 @@ public class IRAgent {
         if (opcode == Opcode.CALL) {
             return requireCallSymbol(node).getDeclaredArity();
         }
-        if (isFlexibleArity(opcode)) {
+        if (isFlexibleArity(node, opcode)) {
             return -1;
         }
         if (isLeaf(opcode)) {
@@ -1329,7 +1339,12 @@ public class IRAgent {
                 || opcode == Opcode.END;
     }
 
-    private static boolean isFlexibleArity(Opcode opcode) {
+    private static boolean isFlexibleArity(AugmentedNode node, Opcode opcode) {
+        int syntax = node.getSyntactic();
+        // NO/ONE/LONE also name quantifiers; source syntax distinguishes their unary forms.
+        if (isUnary(opcode) && (syntax == -6 || syntax == 6 || syntax == 16)) {
+            return false;
+        }
         return isAssociative(opcode) || opcode == Opcode.LIST
                 || opcode == Opcode.DISJOINT || opcode == Opcode.DISJOINT_LIST
                 || opcode == Opcode.TOTALORDER_LIST

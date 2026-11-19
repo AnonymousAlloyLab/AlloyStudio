@@ -49,6 +49,12 @@ public final class EGraphNode {
     private Opcode opcode; // the semantic operator of this node with a corresponding opcode
     private List<EClassRef> childClasses;
     private final List<EGraphNode> childrenView;
+    private EGraphNode comparisonDeclarationSource;
+    private EGraphNode comparisonVariableSource;
+    NormalForm.CurrentDeclarationSlot currentDeclarationSlot;
+    NormalForm.DomainGuardOrigin domainGuardOrigin;
+    NormalForm.DomainContextOrigin domainContextOrigin;
+    private Map<EGraphNode,List<ComparisonDeclarationGrouping.InvocationBinding>> comparisonDeclarationInvocations;
     private EClass eClass;
     private final EGraphArena arena;
     private boolean isCommutative; // whether the operator of this node is commutative, which can help to capture the symmetry of the formula
@@ -64,6 +70,7 @@ public final class EGraphNode {
     private String alphaName;
     /* Issued only by the existing detached local-binder comparison projection. */
     private boolean comparisonLocalCoordinate;
+    private ComparisonDeclarationGrouping comparisonDeclarationGrouping;
     private boolean comparisonRegisteredBinding;
     private String semanticIdentity;
     private BuiltinConstantKind builtinConstantKind;
@@ -81,6 +88,7 @@ public final class EGraphNode {
     private boolean temporalSnapshotBinding;
     /* Parser-owned CALL provenance; excluded from semantic keys and repair cost. */
     private long callOccurrenceId = -1L;
+    private Object callSourceAnchor;
     private int declaredArity = -1;
     private String callArityAuthority;
     /* Internal derivation evidence; generic Bool metadata alone is not authority. */
@@ -261,6 +269,7 @@ public final class EGraphNode {
         is.fivefivefive.CanDis.WorkBudget.allocate(1L + (children == null ? 0 : children.size()));
         this.id = id;
         this.opcode = opcode;
+        this.callSourceAnchor = opcode == Opcode.CALL ? new Object() : null;
         this.arena = java.util.Objects.requireNonNull(arena, "e-graph arena");
         this.childClasses = new ArrayList<>();
         this.childrenView = new AbstractList<EGraphNode>() {
@@ -1183,6 +1192,11 @@ public final class EGraphNode {
     long temporalReferenceAuthorityId() {
         return temporalReferenceAuthorityId;
     }
+
+    /** Presence is not admission; the frozen owner must resolve this authority. */
+    public boolean hasTemporalReferenceAuthority() {
+        return temporalReferenceAuthorityId > 0;
+    }
     public String getAlphaName() {
         requireLiveNode();
         return alphaName;
@@ -1199,6 +1213,11 @@ public final class EGraphNode {
     public String getSemanticIdentity() {
         requireLiveNode();
         return semanticIdentity;
+    }
+
+    SigSymbol authenticatedSignature() {
+        requireLiveNode();
+        return isParserAuthenticatedFullSignature(this) ? parserSignatureEvidence : null;
     }
 
     /** Binds a nullary signature leaf to its live parser declaration. */
@@ -1440,6 +1459,8 @@ public final class EGraphNode {
                         "A source occurrence lineage must be positive");
             }
             sourceOccurrenceLineage = source.sourceOccurrenceLineage;
+            if (opcode == Opcode.CALL && source.opcode == Opcode.CALL)
+                callSourceAnchor = source.callSourceAnchor;
             certificationOccurrenceLineage =
                     source.certificationOccurrenceLineage;
         });
@@ -1470,6 +1491,10 @@ public final class EGraphNode {
     public long getCallOccurrenceId() {
         requireLiveNode();
         return callOccurrenceId;
+    }
+    boolean sharesCallSourceAnchorWith(EGraphNode other) {
+        return other != null && callSourceAnchor != null
+                && callSourceAnchor == other.callSourceAnchor;
     }
     public void setCallOccurrenceId(long callOccurrenceId) {
         arena.mutate(this, () -> {
@@ -3872,6 +3897,7 @@ public final class EGraphNode {
         parserSignatureEvidence = replacement.parserSignatureEvidence;
         sourceOccurrenceLineage = replacement.sourceOccurrenceLineage;
         callOccurrenceId = replacement.callOccurrenceId;
+        callSourceAnchor = replacement.callSourceAnchor;
         declaredArity = replacement.declaredArity;
         callArityAuthority = replacement.callArityAuthority;
         derivedBooleanRewriteOpcode = replacement.derivedBooleanRewriteOpcode;
@@ -3894,6 +3920,7 @@ public final class EGraphNode {
         builtinConstantKind = null;
         parserSignatureEvidence = null;
         callOccurrenceId = -1L;
+        callSourceAnchor = null;
         declaredArity = -1;
         callArityAuthority = null;
         derivedBooleanRewriteOpcode = null;
@@ -3957,6 +3984,17 @@ public final class EGraphNode {
                 && node.getExactAlloyType() != null
                 && node.getExactAlloyType().kind() == ExactAlloyType.Kind.BOOL
                 && isBooleanFormulaSourceType(node.getSourceType());
+    }
+
+    /** Typed cardinality operand, not a declaration-bearing quantifier. */
+    public boolean hasUnaryCardinalityOperand() {
+        List<EGraphNode> children = getChildren();
+        return (opcode == Opcode.NO || opcode == Opcode.SOME
+                || opcode == Opcode.ONE || opcode == Opcode.LONE)
+                && hasBooleanFormulaType(this) && children.size() == 1
+                && !FastComparison.declaration(children.get(0))
+                && children.get(0).exactAlloyType != null
+                && children.get(0).exactAlloyType.kind() != ExactAlloyType.Kind.BOOL;
     }
 
     static boolean hasBooleanRewriteAuthority(EGraphNode node) {
@@ -6833,6 +6871,11 @@ public final class EGraphNode {
                         left.getEClassRef(), right.getEClassRef());
     }
 
+    /** Content index for a frozen invocation. It carries no arena/owner authority. */
+    public String semanticInvocationContentKey() {
+        return certifiedContainerInvocationKey(getEClassRef());
+    }
+
     /**
      * Compares source invocations in the certified ACI container quotient without
      * mutating either operand. This lets an enclosing source rule consume an
@@ -7088,8 +7131,271 @@ public final class EGraphNode {
         return result;
     }
 
+    /**
+     * Metric-only primary member of an exact owner-local orbit. It shares the
+     * source children, so nested orbit registrations keyed by those children
+     * remain valid. It is a distinct object so the replay's alternative list is
+     * never self-referential.
+     */
+    static EGraphNode comparisonPrimaryMember(EGraphNode source) {
+        Objects.requireNonNull(source, "source");
+        return comparisonCopy(source, source.getChildren(), source.arena, true);
+    }
+
+    /**
+     * Metric-only subtree copy with an exact owner-local alpha renaming. Only
+     * alpha coordinates of VARIABLE nodes change; payload, owner, type,
+     * occurrence lineage, order flag and every child reference are retained.
+     */
+    static EGraphNode comparisonRenameSubtree(
+            EGraphNode source, Map<String, String> renames, int[] budget) {
+        Objects.requireNonNull(source, "source");
+        Objects.requireNonNull(renames, "renames");
+        Objects.requireNonNull(budget, "budget");
+        if (--budget[0] < 0) {
+            throw new is.fivefivefive.CanDis.metric.TraceResources.Exhausted("FAST_ORBIT_BUDGET");
+        }
+        if (source.opcode == Opcode.VARIABLE) {
+            EGraphNode copy = comparisonCopy(source, Collections.emptyList(), source.arena, false);
+            copy.alphaName = renames.getOrDefault(source.alphaName, source.alphaName);
+            copy.comparisonVariableSource = source.comparisonVariableSource;
+            copy.comparisonLocalCoordinate = source.comparisonLocalCoordinate;
+            copy.comparisonRegisteredBinding = source.comparisonRegisteredBinding;
+            return copy;
+        }
+        List<EGraphNode> children = new ArrayList<>(source.childClasses.size());
+        for (EGraphNode child : source.getChildren()) {
+            children.add(comparisonRenameSubtree(child, renames, budget));
+        }
+        EGraphNode copy = comparisonCopy(source, children, source.arena, true);
+        for (int i = 0; i < children.size(); i++) {
+            Map<String, String> slots = LocalBinderTransport.moveInvocation(
+                    source.childClasses.get(i).getSlotMap(), renames);
+            if (!slots.isEmpty()) copy.childClasses.set(i,
+                    new EClassRef(copy.childClasses.get(i).getEClass(), slots));
+        }
+        if (FastComparison.declaration(copy)
+                && source.hasUnchangedComparisonDeclarationInvocations()) {
+            copy.sealComparisonDeclarationInvocations();
+        }
+        return copy;
+    }
+
+    static final LocalBinderTransport.View<EGraphNode> BINDER_TRANSPORT = new LocalBinderTransport.View<>() {
+        public String operator(EGraphNode n) { return n.opcode.name(); }
+        public String variable(EGraphNode n) { return n.opcode == Opcode.VARIABLE ? n.alphaName : null; }
+        public Object type(EGraphNode n) { return n.exactAlloyType; }
+        public List<EGraphNode> children(EGraphNode n) { return n.getChildren(); }
+        public Map<String, String> invocation(EGraphNode n, int i) { return n.childClasses.get(i).getSlotMap(); }
+        public void requireSource(EGraphNode n) {
+            if (n.comparisonDeclarationSource != null && !n.hasUnchangedComparisonDeclarationInvocations())
+                throw new IllegalArgumentException("LOCAL_BINDER_TRANSPORT: stale declaration invocation seal");
+        }
+        public boolean sameHead(EGraphNode a, EGraphNode b) {
+            return a.opcode == b.opcode && a.metatype == b.metatype && a.maxArity == b.maxArity
+                    && a.flexibleArity == b.flexibleArity && a.isCommutative == b.isCommutative
+                    && a.semanticProfile.equals(b.semanticProfile)
+                    && Objects.equals(a.sourceName, b.sourceName) && Objects.equals(a.sourceType, b.sourceType)
+                    && Objects.equals(a.exactAlloyType, b.exactAlloyType)
+                    && Objects.equals(a.semanticIdentity, b.semanticIdentity)
+                    && a.builtinConstantKind == b.builtinConstantKind
+                    && a.parserSignatureEvidence == b.parserSignatureEvidence
+                    && a.sourceOccurrenceLineage == b.sourceOccurrenceLineage
+                    && a.certificationOccurrenceLineage == b.certificationOccurrenceLineage
+                    && a.unusedBindingReduction == b.unusedBindingReduction
+                    && a.domainGuardOrigin == b.domainGuardOrigin && a.domainContextOrigin == b.domainContextOrigin
+                    && a.callOccurrenceId == b.callOccurrenceId && a.callSourceAnchor == b.callSourceAnchor
+                    && a.declaredArity == b.declaredArity && Objects.equals(a.callArityAuthority, b.callArityAuthority)
+                    && a.derivedBooleanRewriteOpcode == b.derivedBooleanRewriteOpcode
+                    && a.temporalReferenceAuthorityId == b.temporalReferenceAuthorityId
+                    && a.temporalSnapshotBinding == b.temporalSnapshotBinding
+                    && a.comparisonLocalCoordinate == b.comparisonLocalCoordinate
+                    && a.comparisonVariableSource == b.comparisonVariableSource
+                    && a.comparisonDeclarationSource == b.comparisonDeclarationSource
+                    && a.comparisonRegisteredBinding == b.comparisonRegisteredBinding
+                    && Objects.equals(a.comparisonTemporalReferenceName, b.comparisonTemporalReferenceName);
+        }
+    };
+
+    public static void requireClosedLocalBinder(EGraphNode source, Set<String> names) {
+        LocalBinderTransport.requireClosed(source, names, BINDER_TRANSPORT);
+    }
+
+    /**
+     * Metric-only copy used by SET deduplication. Child slot maps are preserved
+     * only when the arity is unchanged; a removed duplicate is a formula child
+     * with no ambient slot map.
+     */
+    static EGraphNode comparisonWithChildren(EGraphNode source, List<EGraphNode> children) {
+        List<Integer> identity = new ArrayList<>(children.size());
+        for (int index = 0; index < children.size(); index++) identity.add(index);
+        return comparisonWithChildren(source, children, identity);
+    }
+
+    /**
+     * Metric-only copy whose child refs are the retained source refs. The source
+     * index list preserves each retained child's exact ambient slot map even
+     * when an idempotent SET duplicate was removed.
+     */
+    static EGraphNode comparisonWithChildren(
+            EGraphNode source, List<EGraphNode> children, List<Integer> sourceIndices) {
+        Objects.requireNonNull(source, "source");
+        Objects.requireNonNull(children, "children");
+        Objects.requireNonNull(sourceIndices, "sourceIndices");
+        if (children.size() != sourceIndices.size()) {
+            throw new IllegalArgumentException("child/source-index arity");
+        }
+        EGraphNode copy = comparisonCopy(source, children, source.arena, false);
+        for (int index = 0; index < children.size(); index++) {
+            int sourceIndex = sourceIndices.get(index);
+            if (sourceIndex < 0 || sourceIndex >= source.childClasses.size()) {
+                throw new IllegalArgumentException("child source index outside the source node");
+            }
+            Map<String, String> slots = source.childClasses.get(sourceIndex).getSlotMap();
+            if (!slots.isEmpty()) {
+                copy.childClasses.set(index, new EClassRef(
+                        copy.childClasses.get(index).getEClass(), slots));
+            }
+        }
+        return copy;
+    }
+
+    private static EGraphNode comparisonCopy(
+            EGraphNode source, List<EGraphNode> children, EGraphArena arena,
+            boolean preserveSlotMaps) {
+        EGraphNode copy = new EGraphNode(
+                source.id, source.opcode, children, source.isCommutative,
+                source.maxArity, source.flexibleArity, source.metatype,
+                source.semanticProfile, true, arena);
+        source.copyPayloadTo(copy);
+        copy.comparisonLocalCoordinate = source.comparisonLocalCoordinate;
+        copy.comparisonVariableSource = source.comparisonVariableSource;
+        copy.comparisonDeclarationSource = source.comparisonDeclarationSource;
+        copy.comparisonRegisteredBinding = source.comparisonRegisteredBinding;
+        copy.comparisonTemporalReferenceName = source.comparisonTemporalReferenceName;
+        if (preserveSlotMaps && children.size() == source.childClasses.size()) {
+            for (int index = 0; index < children.size(); index++) {
+                Map<String, String> slots = source.childClasses.get(index).getSlotMap();
+                if (!slots.isEmpty()) {
+                    copy.childClasses.set(index, new EClassRef(
+                            copy.childClasses.get(index).getEClass(), slots));
+                }
+            }
+        }
+        return copy;
+    }
+
     public boolean hasComparisonLocalCoordinate() { return comparisonLocalCoordinate; }
+    public EGraphNode comparisonDeclarationSource() { return comparisonDeclarationSource; }
+    public EGraphNode comparisonVariableSource() { return comparisonVariableSource; }
+    private void sealComparisonDeclarationInvocations() {
+        var bindings = new IdentityHashMap<EGraphNode,List<ComparisonDeclarationGrouping.InvocationBinding>>();
+        var pending = new ArrayDeque<EGraphNode>();
+        pending.add(this);
+        while (!pending.isEmpty()) {
+            var node = pending.remove();
+            if (bindings.containsKey(node)) continue;
+            bindings.put(node, ComparisonDeclarationGrouping.captureInvocations(node.childClasses));
+            pending.addAll(node.getChildren());
+        }
+        comparisonDeclarationInvocations = Collections.unmodifiableMap(bindings);
+    }
+    public boolean hasUnchangedComparisonDeclarationInvocations() {
+        if(comparisonDeclarationInvocations==null||!comparisonDeclarationInvocations.containsKey(this))return false;
+        for(var entry:comparisonDeclarationInvocations.entrySet()){
+            if(!ComparisonDeclarationGrouping.sameInvocations(entry.getValue(),entry.getKey().childClasses))return false;
+            for(var child:entry.getKey().getChildren())if(!comparisonDeclarationInvocations.containsKey(child))return false;
+        }
+        return true;
+    }
     boolean hasComparisonRegisteredBinding() { return comparisonRegisteredBinding; }
+
+    /** Recover the actual projected source groups, not a metadata reconstruction. */
+    public List<EGraphNode> comparisonDeclarationGroups(EGraphNode owner) {
+        if (comparisonDeclarationGrouping == null) return List.of(this);
+        return comparisonDeclarationGrouping.checkedGroups(owner, this);
+    }
+
+    private static final class ComparisonDeclarationGrouping {
+        private record InvocationBinding(EClass target, Map<String, String> slots) {
+            private static InvocationBinding capture(EClassRef ref) {
+                return new InvocationBinding(ref.getEClass(), Map.copyOf(ref.getSlotMap()));
+            }
+            private boolean matches(EClassRef ref) {
+                return target == ref.getEClass() && slots.equals(ref.getSlotMap());
+            }
+        }
+        private final EGraphNode owner;
+        private final EGraphNode selected;
+        private final int ownerIndex;
+        private final InvocationBinding ownerInvocation;
+        private final List<EGraphNode> groups;
+        private final List<List<EGraphNode>> originalChildren;
+        private final List<EGraphNode> selectedChildren;
+        private final List<List<InvocationBinding>> originalInvocations;
+        private final List<InvocationBinding> selectedInvocations;
+        private final String domainKey;
+
+        private ComparisonDeclarationGrouping(EGraphNode owner, EGraphNode selected,
+                int ownerIndex, List<EGraphNode> groups) {
+            this.owner = owner;
+            this.selected = selected;
+            this.ownerIndex = ownerIndex;
+            this.ownerInvocation = InvocationBinding.capture(owner.childClasses.get(ownerIndex));
+            this.groups = List.copyOf(groups);
+            this.originalChildren = groups.stream().map(g -> List.copyOf(g.getChildren())).toList();
+            this.selectedChildren = List.copyOf(selected.getChildren());
+            this.originalInvocations = groups.stream().map(g -> captureInvocations(g.childClasses)).toList();
+            this.selectedInvocations = captureInvocations(selected.childClasses);
+            this.domainKey = certifiedContainerInvocationKey(groups.get(0).childClasses.get(0));
+        }
+
+        private static List<InvocationBinding> captureInvocations(List<EClassRef> refs) {
+            return refs.stream().map(InvocationBinding::capture).toList();
+        }
+
+        private static boolean sameInvocations(List<InvocationBinding> captured, List<EClassRef> actual) {
+            if (captured.size() != actual.size()) return false;
+            for (int i = 0; i < captured.size(); i++) if (!captured.get(i).matches(actual.get(i))) return false;
+            return true;
+        }
+
+        private static void require(boolean condition) {
+            if (!condition) throw new IllegalArgumentException("LOCAL_DECLARATION_GROUPING: changed source objects or domain");
+        }
+
+        private static boolean sameObjects(List<EGraphNode> a, List<EGraphNode> b) {
+            if (a.size() != b.size()) return false;
+            for (int i = 0; i < a.size(); i++) if (a.get(i) != b.get(i)) return false;
+            return true;
+        }
+
+        private List<EGraphNode> checkedGroups(EGraphNode actualOwner, EGraphNode actualSelected) {
+            require(owner == actualOwner && selected == actualSelected && groups.size() > 1);
+            require((owner.opcode == Opcode.COMPREHENSION || owner.opcode == Opcode.FORALL)
+                    && selected.opcode == Opcode.GENERICRELDECL);
+            require(ownerIndex < owner.childClasses.size() && ownerInvocation.matches(owner.childClasses.get(ownerIndex)));
+            require(sameObjects(selectedChildren, selected.getChildren()));
+            require(sameInvocations(selectedInvocations, selected.childClasses));
+            require(selected.sourceOccurrenceLineage == groups.get(0).sourceOccurrenceLineage);
+            var concatenated = new ArrayList<EGraphNode>();
+            var concatenatedInvocations = new ArrayList<InvocationBinding>();
+            concatenated.add(originalChildren.get(0).get(0));
+            concatenatedInvocations.add(originalInvocations.get(0).get(0));
+            for (int i = 0; i < groups.size(); i++) {
+                EGraphNode group = groups.get(i);
+                require(group.opcode == Opcode.GENERICRELDECL && originalChildren.get(i).size() >= 2);
+                require(sameObjects(originalChildren.get(i), group.getChildren()));
+                require(sameInvocations(originalInvocations.get(i), group.childClasses));
+                require(domainKey.equals(certifiedContainerInvocationKey(group.childClasses.get(0))));
+                concatenated.addAll(originalChildren.get(i).subList(1, originalChildren.get(i).size()));
+                concatenatedInvocations.addAll(originalInvocations.get(i).subList(1, originalInvocations.get(i).size()));
+            }
+            require(sameObjects(concatenated, selectedChildren));
+            require(sameInvocations(concatenatedInvocations, selected.childClasses));
+            return groups;
+        }
+    }
 
     private static final class FastComparison {
         private final EGraphArena target = new EGraphArena();
@@ -7109,6 +7415,9 @@ public final class EGraphNode {
                     source.isCommutative, source.maxArity, source.flexibleArity,
                     source.metatype, source.semanticProfile, true, target);
             source.copyPayloadTo(copy);
+            if(source.opcode==Opcode.VARIABLE)copy.comparisonVariableSource=source.comparisonVariableSource==null?source:source.comparisonVariableSource;
+            if(declaration(source))copy.comparisonDeclarationSource=source.comparisonDeclarationSource==null?source:source.comparisonDeclarationSource;
+            if (declaration(copy)) copy.sealComparisonDeclarationInvocations();
             if (copy.opcode == Opcode.REF && referenceCoordinates.containsKey(copy.temporalReferenceAuthorityId))
                 copy.comparisonTemporalReferenceName = referenceCoordinates.get(copy.temporalReferenceAuthorityId);
             return copy;
@@ -7193,14 +7502,8 @@ public final class EGraphNode {
                         variable.comparisonLocalCoordinate = true;
                         parts.add(variable);
                     }
-                    if (source.opcode == Opcode.COMPREHENSION
-                            && decl.opcode == Opcode.GENERICRELDECL) {
-                        for (int i = 1; i < parts.size(); i++) {
-                            children.add(head(decl, List.of(parts.get(0), parts.get(i))));
-                        }
-                    } else {
-                        children.add(head(decl, parts));
-                    }
+                    // Alpha coordinates do not change the source declaration group.
+                    children.add(head(decl, parts));
                 }
             } else {
                 boolean childRename = rename && !localBinder(source);
@@ -7208,7 +7511,9 @@ public final class EGraphNode {
                     children.add(child(ref, ambient, scope, depth, childRename));
                 }
             }
-            if (rename && source.opcode == Opcode.FORALL && !containsTemporalReference(source)) {
+            Map<EGraphNode, List<EGraphNode>> regroupedSources = new IdentityHashMap<>();
+            if (rename && (source.opcode == Opcode.FORALL || source.opcode == Opcode.COMPREHENSION)
+                    && !containsTemporalReference(source)) {
                 List<EGraphNode> grouped = new ArrayList<>();
                 for (EGraphNode next : children) {
                     EGraphNode previous = grouped.isEmpty() ? null : grouped.get(grouped.size() - 1);
@@ -7219,7 +7524,11 @@ public final class EGraphNode {
                                     .equals(certifiedContainerInvocationKey(next.childClasses.get(0)))) {
                         List<EGraphNode> parts = new ArrayList<>(previous.getChildren());
                         parts.addAll(next.getChildren().subList(1, next.getChildren().size()));
-                        grouped.set(grouped.size() - 1, head(previous, parts));
+                        EGraphNode merged = head(previous, parts);
+                        var originals = new ArrayList<>(regroupedSources.getOrDefault(previous, List.of(previous)));
+                        originals.add(next);
+                        regroupedSources.put(merged, List.copyOf(originals));
+                        grouped.set(grouped.size() - 1, merged);
                     } else {
                         grouped.add(next);
                     }
@@ -7227,6 +7536,14 @@ public final class EGraphNode {
                 children = grouped;
             }
             EGraphNode result = head(source, children);
+            for (int childIndex = 0; childIndex < children.size(); childIndex++) {
+                EGraphNode child = children.get(childIndex);
+                List<EGraphNode> originals = regroupedSources.get(child);
+                if (originals != null) {
+                    child.comparisonDeclarationGrouping = new ComparisonDeclarationGrouping(result, child, childIndex, originals);
+                    for (EGraphNode original : originals) original.freezeForCertification();
+                }
+            }
             if ((result.opcode == Opcode.IN || result.opcode == Opcode.NOT_IN
                     || result.opcode == Opcode.EQUALS || result.opcode == Opcode.NOT_EQUALS)
                     && hasBooleanFormulaType(result) && children.size() == 2
@@ -7234,12 +7551,7 @@ public final class EGraphNode {
                     && children.get(1).exactAlloyType != null) {
                 result.sourceName = null;
             }
-            if ((result.opcode == Opcode.NO || result.opcode == Opcode.SOME
-                    || result.opcode == Opcode.ONE || result.opcode == Opcode.LONE)
-                    && hasBooleanFormulaType(result) && children.size() == 1
-                    && !declaration(children.get(0))
-                    && children.get(0).exactAlloyType != null
-                    && children.get(0).exactAlloyType.kind() != ExactAlloyType.Kind.BOOL) {
+            if (result.hasUnaryCardinalityOperand()) {
                 result.maxArity = 1;
                 result.flexibleArity = false;
                 result.isCommutative = false;
@@ -7316,25 +7628,35 @@ public final class EGraphNode {
      * Ordered syntax and every exact type/head are retained. Expanded DAG visits
      * and emitted text are bounded before recursive serialization can grow. */
     static String closedFastMatrixKey(EGraphNode root) {
-        if (root == null || root.opcode != Opcode.TEMPORALROOT) return null;
-        StringBuilder key = new StringBuilder();
-        return appendClosedFastKey(root, key, new int[]{1024}, 0) ? key.toString() : null;
+        return inheritedFastMatrixKey(root, Set.of(), unused -> null);
     }
 
-    private static boolean appendClosedFastKey(EGraphNode node, StringBuilder key, int[] visits, int depth) {
+    static String inheritedFastMatrixKey(EGraphNode root, Set<String> bindings,
+            java.util.function.Function<EGraphNode, String> readKey) {
+        if (root == null || root.opcode != Opcode.TEMPORALROOT) return null;
+        StringBuilder key = new StringBuilder();
+        return appendClosedFastKey(root, key, new int[]{1024}, 0, bindings, readKey) ? key.toString() : null;
+    }
+
+    private static boolean appendClosedFastKey(EGraphNode node, StringBuilder key, int[] visits, int depth,
+            Set<String> bindings, java.util.function.Function<EGraphNode, String> readKey) {
         if (--visits[0] < 0 || depth > 64) return false;
         if (node.opcode != Opcode.TEMPORALROOT && node.exactAlloyType == null) return false;
+        String binding = null;
         switch (node.opcode) {
             case TEMPORALROOT:
                 if (depth != 0 || node.metatype != Metatype.BOOLEAN || node.childClasses.size() != 1
                         || node.sourceName != null || node.semanticIdentity != null || node.alphaName != null
-                        || !node.eClass.getSlots().isEmpty()
+                        || !bindings.containsAll(node.eClass.getSlots())
                         || (node.exactAlloyType != null && node.exactAlloyType.kind() != ExactAlloyType.Kind.BOOL)) return false;
                 EGraphNode body = node.childClasses.get(0).getEClass().getRepresentative();
                 if (body.exactAlloyType == null || body.exactAlloyType.kind() != ExactAlloyType.Kind.BOOL) return false;
                 break;
             case GLOBALBINDING:
                 if (node.semanticIdentity == null || !node.childClasses.isEmpty()) return false;
+                break;
+            case VARIABLE:
+                if (!node.childClasses.isEmpty() || (binding = readKey.apply(node)) == null) return false;
                 break;
             case CONSTANT: case NOT: case NO: case SOME: case ONE: case LONE:
             case AND: case OR: case IN: case NOT_IN: case EQUALS: case NOT_EQUALS:
@@ -7345,18 +7667,22 @@ public final class EGraphNode {
                 return false;
         }
         StringBuilder head = new StringBuilder(); appendSemanticHead(node, head);
+        if (binding != null) appendLengthEncoded(head, binding);
         if (head.length() > 8192 || key.length() + head.length() + 32 > 131072) return false;
         appendLengthEncoded(key, head.toString());
         key.append('[').append(node.childClasses.size()).append(':');
         for (EClassRef child : node.childClasses) {
-            if (!child.getSlotMap().isEmpty()
-                    || !appendClosedFastKey(child.getEClass().getRepresentative(), key, visits, depth+1)) return false;
+            for (var slot : child.getSlotMap().entrySet())
+                if (!bindings.contains(slot.getKey()) || !slot.getKey().equals(slot.getValue())) return false;
+            if (!appendClosedFastKey(child.getEClass().getRepresentative(), key, visits, depth+1, bindings, readKey)) return false;
         }
         key.append(']');
         return key.length() <= 131072;
     }
 
     private void copyPayloadTo(EGraphNode copy) {
+        copy.domainGuardOrigin = domainGuardOrigin;
+        copy.domainContextOrigin = domainContextOrigin;
         copy.comparisonTemporalReferenceName = comparisonTemporalReferenceName;
         copy.sourceName = sourceName;
         copy.sourceOrigin = getSourceOrigin();
@@ -7370,6 +7696,7 @@ public final class EGraphNode {
         copy.unusedBindingReduction = unusedBindingReduction;
         copy.certificationOccurrenceLineage = certificationOccurrenceLineage;
         copy.callOccurrenceId = callOccurrenceId;
+        copy.callSourceAnchor = callSourceAnchor;
         copy.declaredArity = declaredArity;
         copy.callArityAuthority = callArityAuthority;
         copy.derivedBooleanRewriteOpcode = derivedBooleanRewriteOpcode;
@@ -7419,8 +7746,13 @@ public final class EGraphNode {
         builtinConstantKind = null;
         parserSignatureEvidence = null;
         sourceOccurrenceLineage = 0L;
+        currentDeclarationSlot = null;
+        domainGuardOrigin = null;
+        domainContextOrigin = null;
+        comparisonVariableSource = null;
         certificationOccurrenceLineage = 0L;
         callOccurrenceId = -1L;
+        callSourceAnchor = null;
         declaredArity = -1;
         callArityAuthority = null;
         derivedBooleanRewriteOpcode = null;
